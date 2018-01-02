@@ -166,8 +166,18 @@ protected:
     }
   }
 
-  void updateMenu(State state)
+  void updateMenu(State state, System system)
   {
+    static const UINT all_system_items[] =
+    {
+      IDM_SYSTEM_STELLA, IDM_SYSTEM_SNES9X
+    };
+
+    static const System all_systems[] =
+    {
+      System::kStella, System::kSnes9x
+    };
+
     static const UINT error_items[] =
     {
       IDM_EXIT, IDM_ABOUT
@@ -270,6 +280,11 @@ protected:
       {
         EnableMenuItem(_menu, load_state_items[ndx], MF_DISABLED);
       }
+    }
+
+    for (size_t i = 0; i < sizeof(all_systems) / sizeof(all_systems[0]); i++)
+    {
+      EnableMenuItem(_menu, all_system_items[i], _system != all_systems[i] ? MF_ENABLED : MF_DISABLED);
     }
   }
 
@@ -477,6 +492,7 @@ protected:
 
     RA_ClearMemoryBanks();
     RA_OnLoadNewRom((BYTE*)data, size);
+    free(data);
 
     switch (_system)
     {
@@ -499,7 +515,6 @@ protected:
       break;
     }
 
-    free(data);
     _gamePath = game_path;
     _states = 0;
 
@@ -516,7 +531,7 @@ protected:
 
     _state = State::kGameRunning;
     _input.setDefaultController();
-    updateMenu(_state);
+    updateMenu(_state, _system);
   }
 
   std::string getStatePath(unsigned ndx)
@@ -585,8 +600,9 @@ protected:
     }
 
     fclose(file);
+    free(data);
     _states |= 1 << ndx;
-    updateMenu(_state);
+    updateMenu(_state, _system);
   }
 
   void loadState(unsigned ndx)
@@ -662,15 +678,27 @@ protected:
       switch (cmd)
       {
       case IDM_SYSTEM_STELLA:
+        if (_state == State::kGameRunning || _state == State::kGamePaused)
+        {
+          RA_ClearMemoryBanks();
+          _core.destroy();
+        }
+
         _state = State::kCoreLoaded;
         _system = System::kStella;
-        updateMenu(_state);
+        updateMenu(_state, _system);
         break;
       
       case IDM_SYSTEM_SNES9X:
+        if (_state == State::kGameRunning || _state == State::kGamePaused)
+        {
+          RA_ClearMemoryBanks();
+          _core.destroy();
+        }
+        
         _state = State::kCoreLoaded;
         _system = System::kSnes9x;
-        updateMenu(_state);
+        updateMenu(_state, _system);
         break;
 
       case IDM_LOAD_GAME:
@@ -680,13 +708,13 @@ protected:
       case IDM_PAUSE_GAME:
         _state = State::kGamePaused;
         RA_SetPaused(true);
-        updateMenu(_state);
+        updateMenu(_state, _system);
         break;
 
       case IDM_RESUME_GAME:
         _state = State::kGameRunning;
         RA_SetPaused(false);
-        updateMenu(_state);
+        updateMenu(_state, _system);
         break;
       
       case IDM_RESET_GAME:
@@ -695,8 +723,9 @@ protected:
       
       case IDM_CLOSE_GAME:
         _state = State::kCoreLoaded;
+        RA_ClearMemoryBanks();
         _core.destroy();
-        updateMenu(_state);
+        updateMenu(_state, _system);
         break;
 
       case IDM_SAVE_STATE_0:
@@ -799,8 +828,9 @@ protected:
         if (cmd >= IDM_RA_MENUSTART && cmd < IDM_RA_MENUEND)
         {
           RA_InvokeDialog(cmd);
-          break;
         }
+
+        break;
       }
     }
   }
@@ -970,7 +1000,7 @@ public:
     SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
     _state = State::kInitialized;
     _system = System::kNone;
-    updateMenu(_state);
+    updateMenu(_state, _system);
     return true;
 
   error:
@@ -992,7 +1022,7 @@ public:
 
     _state = State::kError;
     _system = System::kNone;
-    updateMenu(_state);
+    updateMenu(_state, _system);
     return false;
   }
 
@@ -1071,6 +1101,7 @@ public:
         }
         else
         {
+          Uint32 t1 = SDL_GetTicks();
           HDC hdc = GetDC(g_mainWindow);
 
           if (hdc != NULL)
@@ -1087,12 +1118,11 @@ public:
             RECT size;
             GetClientRect(g_mainWindow, &size);
 
-            Uint32 t1 = SDL_GetTicks();
-
             RA_UpdateRenderOverlay(hdc, &input, (t1 - t0) / 1000.0f, &size, false, _state == State::kGamePaused);
-
-            t0 = t1;
+            ReleaseDC(g_mainWindow, hdc);
           }
+
+          t0 = t1;
         }
       }
 
@@ -1130,14 +1160,14 @@ public:
   {
     _state = State::kGamePaused;
     RA_SetPaused(true);
-    updateMenu(_state);
+    updateMenu(_state, _system);
   }
 
   void resume()
   {
     _state = State::kGameRunning;
     RA_SetPaused(false);
-    updateMenu(_state);
+    updateMenu(_state, _system);
   }
 
   void reset()
