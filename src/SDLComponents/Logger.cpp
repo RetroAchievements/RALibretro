@@ -41,7 +41,7 @@ void Logger::vprintf(enum retro_log_level level, const char* fmt, va_list args)
       read(meta, 3);
       skip(meta[1] | meta[2] << 8); // Little endian.
     }
-    while ( length > _avail );
+    while (length > _avail);
   }
   
   length -= 3;
@@ -53,23 +53,8 @@ void Logger::vprintf(enum retro_log_level level, const char* fmt, va_list args)
   write(meta, 3);
   write(line, length);
 
-  SDL_LogPriority priority;
-
-  switch (level)
-  {
-  case RETRO_LOG_DEBUG: priority = SDL_LOG_PRIORITY_DEBUG; break;
-  case RETRO_LOG_INFO:  priority = SDL_LOG_PRIORITY_INFO; break;
-  case RETRO_LOG_WARN:  priority = SDL_LOG_PRIORITY_WARN; break;
-  default: // fallthrough
-  case RETRO_LOG_ERROR: priority = SDL_LOG_PRIORITY_ERROR; break;
-  }
-
-  //SDL_LogMessageV(SDL_LOG_CATEGORY_APPLICATION, priority, "%s\n", line);
-
-  if (level == RETRO_LOG_ERROR)
-  {
-    MessageBox(g_mainWindow, line, "Error", MB_ICONERROR);
-  }
+  ::printf("%s\n", line);
+  fflush(stdout);
 }
 
 void Logger::debug(const char* format, ...)
