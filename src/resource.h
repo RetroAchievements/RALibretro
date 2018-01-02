@@ -2,7 +2,7 @@
 #define IDC_STATIC (-1)
 #endif
 
-#define IDM_ATARI_2600                          40000
+#define IDM_SYSTEM_STELLA                       40000
 #define IDC_LOG                                 40001
 #define IDM_LOAD_GAME                           40001
 #define IDM_SAVE_STATE_0                        40002
@@ -33,3 +33,4 @@
 #define IDM_CLOSE_GAME                          40027
 #define IDM_PAUSE_GAME                          40028
 #define IDM_RESUME_GAME                         40029
+#define IDM_SYSTEM_SNES9X                       40030

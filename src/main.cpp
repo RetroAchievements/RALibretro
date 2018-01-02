@@ -25,6 +25,9 @@ HWND g_mainWindow;
 static unsigned char memoryRead(unsigned int);
 static void memoryWrite(unsigned int, unsigned int);
 
+static unsigned char memoryRead2(unsigned int);
+static void memoryWrite2(unsigned int, unsigned int);
+
 class Application
 {
 protected:
@@ -40,7 +43,8 @@ protected:
   enum class System
   {
     kNone,
-    kAtari2600
+    kStella,
+    kSnes9x
   };
 
   State  _state;
@@ -65,6 +69,11 @@ protected:
 
   std::string _gamePath;
   unsigned    _states;
+
+  uint8_t* _memoryData1;
+  uint8_t* _memoryData2;
+  size_t   _memorySize1;
+  size_t   _memorySize2;
 
   HMENU _menu;
 
@@ -132,7 +141,7 @@ protected:
   {
     static const UINT all_items[] =
     {
-      IDM_ATARI_2600,
+      IDM_SYSTEM_STELLA, IDM_SYSTEM_SNES9X,
       IDM_LOAD_GAME,
       IDM_PAUSE_GAME, IDM_RESUME_GAME, IDM_RESET_GAME, IDM_CLOSE_GAME,
       IDM_SAVE_STATE_0, IDM_SAVE_STATE_1, IDM_SAVE_STATE_2, IDM_SAVE_STATE_3, IDM_SAVE_STATE_4,
@@ -166,12 +175,12 @@ protected:
 
     static const UINT initialized_items[] =
     {
-      IDM_ATARI_2600, IDM_EXIT, IDM_ABOUT
+      IDM_SYSTEM_STELLA, IDM_SYSTEM_SNES9X, IDM_EXIT, IDM_ABOUT
     };
 
     static const UINT core_loaded_items[] =
     {
-      IDM_LOAD_GAME, IDM_EXIT, IDM_CORE, IDM_INPUT, IDM_ABOUT
+      IDM_LOAD_GAME, IDM_EXIT, IDM_ABOUT
     };
 
     static const UINT running_items[] =
@@ -274,9 +283,14 @@ protected:
       case System::kNone:
         return;
 
-      case System::kAtari2600:
+      case System::kStella:
         core_path = "stella_libretro.dll";
         RA_SetConsoleID(VCS);
+        break;
+
+      case System::kSnes9x:
+        core_path = "snes9x_libretro.dll";
+        RA_SetConsoleID(SNES);
         break;
       }
 
@@ -389,9 +403,14 @@ protected:
       case System::kNone:
         return;
 
-      case System::kAtari2600:
+      case System::kStella:
         core_path = "stella_libretro.dll";
         RA_SetConsoleID(VCS);
+        break;
+
+      case System::kSnes9x:
+        core_path = "snes9x_libretro.dll";
+        RA_SetConsoleID(SNES);
         break;
       }
 
@@ -464,8 +483,19 @@ protected:
     case System::kNone:
       break;
 
-    case System::kAtari2600:
-      RA_InstallMemoryBank(0,	(void*)::memoryRead, (void*)::memoryWrite, 128);
+    case System::kStella:
+      _memoryData1 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
+      _memorySize1 = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
+      RA_InstallMemoryBank(0,	(void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
+      break;
+
+    case System::kSnes9x:
+      _memoryData1 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
+      _memorySize1 = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
+      RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
+      _memoryData2 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
+      _memorySize2 = _core.getMemorySize(RETRO_MEMORY_SAVE_RAM);
+      RA_InstallMemoryBank(1, (void*)::memoryRead2, (void*)::memoryWrite2, _memorySize2);
       break;
     }
 
@@ -611,7 +641,7 @@ protected:
 
   void configureCore()
   {
-
+    _config.showDialog();
   }
 
   void configureInput()
@@ -631,9 +661,15 @@ protected:
 
       switch (cmd)
       {
-      case IDM_ATARI_2600:
+      case IDM_SYSTEM_STELLA:
         _state = State::kCoreLoaded;
-        _system = System::kAtari2600;
+        _system = System::kStella;
+        updateMenu(_state);
+        break;
+      
+      case IDM_SYSTEM_SNES9X:
+        _state = State::kCoreLoaded;
+        _system = System::kSnes9x;
         updateMenu(_state);
         break;
 
@@ -1067,36 +1103,22 @@ public:
 
   unsigned char memoryRead(unsigned int addr)
   {
-    uint8_t* data;
-
-    switch (_system)
-    {
-    case System::kNone:
-      return 0;
-
-    case System::kAtari2600:
-      data = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
-      break;
-    }
-
-    return data[addr];
+    return _memoryData1[addr];
   }
 
   void memoryWrite(unsigned int addr, unsigned int value)
   {
-    uint8_t* data;
+    _memoryData1[addr] = value;
+  }
 
-    switch (_system)
-    {
-    case System::kNone:
-      return;
+  unsigned char memoryRead2(unsigned int addr)
+  {
+    return _memoryData2[addr];
+  }
 
-    case System::kAtari2600:
-      data = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
-      break;
-    }
-
-    data[addr] = value;
+  void memoryWrite2(unsigned int addr, unsigned int value)
+  {
+    _memoryData2[addr] = value;
   }
 
   bool isGameActive() const
@@ -1139,6 +1161,16 @@ static unsigned char memoryRead(unsigned int addr)
 static void memoryWrite(unsigned int addr, unsigned int value)
 {
 	app.memoryWrite(addr, value);
+}
+
+static unsigned char memoryRead2(unsigned int addr)
+{
+	return app.memoryRead2(addr);
+}
+
+static void memoryWrite2(unsigned int addr, unsigned int value)
+{
+	app.memoryWrite2(addr, value);
 }
 
 bool isGameActive()

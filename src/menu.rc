@@ -20,7 +20,8 @@ main MENU
     {
         POPUP "&System"
         {
-            MENUITEM "&1. Atari 2600 (Stella)", IDM_ATARI_2600
+            MENUITEM "&1. Atari 2600 (Stella)", IDM_SYSTEM_STELLA
+            MENUITEM "&2. Super Nintendo (Snes9x)", IDM_SYSTEM_SNES9X
         }
         MENUITEM SEPARATOR
         MENUITEM "&Load Game", IDM_LOAD_GAME
@@ -81,6 +82,19 @@ FONT 8, "Ms Shell Dlg"
     LTEXT           "RALibretro \xA9 2017 Andre Leiradella @leiradel", 0, 5, 160, 144, 9, SS_LEFT, WS_EX_LEFT
     EDITTEXT        IDC_LOG, 5, 5, 270, 143, WS_VSCROLL | NOT WS_TABSTOP | ES_AUTOHSCROLL | ES_MULTILINE | ES_READONLY, WS_EX_LEFT
     DEFPUSHBUTTON   "OK", IDOK, 225, 155, 50, 15, 0, WS_EX_LEFT
+}
+
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+settings DIALOG 0, 0, 281, 176
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP
+EXSTYLE WS_EX_WINDOWEDGE
+CAPTION "Settings"
+FONT 8, "Ms Shell Dlg"
+{
+    DEFPUSHBUTTON   "Cancel", IDCANCEL, 225, 155, 50, 14, 0, WS_EX_LEFT
+    DEFPUSHBUTTON   "OK", IDOK, 170, 155, 50, 15, 0, WS_EX_LEFT
 }
 
 
