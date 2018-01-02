@@ -35,12 +35,12 @@ OBJS=\
 %.res: %.rc
 	$(RC) $< -O coff -o $@
 
-all: bin/RA_Libretro
+all: bin/RALibretro
 
-bin/RA_Libretro: $(OBJS)
+bin/RALibretro: $(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LIBS)
 
 clean:
-	rm -f bin/RA_Libretro $(OBJS)
+	rm -f bin/RALibretro $(OBJS)
 
 .PHONY: clean
