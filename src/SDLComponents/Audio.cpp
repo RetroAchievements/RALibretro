@@ -104,13 +104,17 @@ size_t Fifo::free()
   return avail;
 }
 
-bool Audio::init(libretro::LoggerComponent* logger, unsigned sample_rate, Fifo* fifo)
+bool Audio::init(libretro::LoggerComponent* logger, double sample_rate, Fifo* fifo)
 {
   _coreRate = 0;
   _resampler = NULL;
 
   _logger = logger;
   _sampleRate = sample_rate;
+
+  _rateControlDelta = 0.005;
+  _currentRatio = 0.0;
+  _originalRatio = 0.0;
 
   _fifo = fifo;
   return true;
@@ -131,26 +135,20 @@ bool Audio::setRate(double rate)
     speex_resampler_destroy(_resampler);
   }
 
-  _coreRate = floor(rate + 0.5);
+  _coreRate = rate;
+  _currentRatio = _originalRatio = _sampleRate / _coreRate;
 
-  if (_coreRate != _sampleRate)
+  int error;
+  _resampler = speex_resampler_init(2, _coreRate, _sampleRate, SPEEX_RESAMPLER_QUALITY_DEFAULT, &error);
+
+  if (_resampler == NULL)
   {
-    int error;
-    _resampler = speex_resampler_init(2, _coreRate, _sampleRate, SPEEX_RESAMPLER_QUALITY_DEFAULT, &error);
-
-    if (_resampler == NULL)
-    {
-      _logger->printf(RETRO_LOG_ERROR, "speex_resampler_init: %s", speex_resampler_strerror(error));
-    }
-    else
-    {
-      _logger->printf(RETRO_LOG_INFO, "Resampler initialized to convert from %u to %u", _coreRate, _sampleRate);
-    }
+    _logger->printf(RETRO_LOG_ERROR, "speex_resampler_init: %s", speex_resampler_strerror(error));
+    return false;
   }
   else
   {
-    _resampler = NULL;
-    _logger->printf(RETRO_LOG_INFO, "Frequencies are equal, resampler will copy samples unchanged");
+    _logger->printf(RETRO_LOG_INFO, "Resampler initialized to convert from %u to %u", _coreRate, _sampleRate);
   }
 
   return true;
@@ -158,14 +156,19 @@ bool Audio::setRate(double rate)
 
 void Audio::mix(const int16_t* samples, size_t frames)
 {
+  /* Readjust the audio input rate. */
+  int      half_size = (int)_fifo->size() / 2;
+  int      avail     = (int)_fifo->free();
+  int      delta_mid = avail - half_size;
+  double   direction = (double)delta_mid / (double)half_size;
+  double   adjust    = 1.0 + _rateControlDelta * direction;
+
+  _currentRatio = _originalRatio * adjust;
+  _logger->printf(RETRO_LOG_ERROR, "AVAIL %6lu %f %f %f", avail, adjust, _originalRatio, _currentRatio);
+
   spx_uint32_t in_len = frames * 2;
-  spx_uint32_t out_len = (spx_uint32_t)(in_len * _sampleRate / _coreRate);
-
-  if ((out_len & 1) != 0)
-  {
-    out_len++;
-  }
-
+  spx_uint32_t out_len = (spx_uint32_t)(in_len * _currentRatio);
+  out_len += out_len & 1;
   int16_t* output = (int16_t*)alloca(out_len * 2);
 
   if (output == NULL)
@@ -191,13 +194,15 @@ void Audio::mix(const int16_t* samples, size_t frames)
   size_t size = out_len * 2;
   
 again:
-  size_t avail = _fifo->free();
-  
-  if (size > avail)
   {
-    SDL_Delay(1);
-    goto again;
+    size_t avail = _fifo->free();
+
+    if (size > avail)
+    {
+      SDL_Delay(1);
+      goto again;
+    }
+    
+    _fifo->write(output, size);
   }
-  
-  _fifo->write(output, size);
 }

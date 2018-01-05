@@ -16,11 +16,12 @@ public:
   void read(void* data, size_t size);
   void write(const void* data, size_t size);
 
+  inline size_t size() { return _size; }
+
   size_t occupied();
   size_t free();
 
 protected:
-
   SDL_mutex* _mutex;
   uint8_t*   _buffer;
   size_t     _size;
@@ -32,7 +33,7 @@ protected:
 class Audio: public libretro::AudioComponent
 {
 public:
-  bool init(libretro::LoggerComponent* logger, unsigned sample_rate, Fifo* fifo);
+  bool init(libretro::LoggerComponent* logger, double sample_rate, Fifo* fifo);
   void destroy();
 
   virtual bool setRate(double rate) override;
@@ -41,8 +42,12 @@ public:
 protected:
   libretro::LoggerComponent* _logger;
 
-  unsigned _sampleRate;
-  unsigned _coreRate;
+  double _sampleRate;
+  double _coreRate;
+
+  double _rateControlDelta;
+  double _currentRatio;
+  double _originalRatio;
   SpeexResamplerState* _resampler;
 
   Fifo* _fifo;

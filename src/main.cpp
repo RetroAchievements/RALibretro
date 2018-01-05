@@ -945,7 +945,7 @@ public:
     SDL_PauseAudioDevice(_audioDev, 0);
 
     // Initialize the rest of the components
-    if (!_audio.init(&_logger, _audioSpec.freq, &_fifo))
+    if (!_audio.init(&_logger, (double)_audioSpec.freq, &_fifo))
     {
       goto error;
     }
