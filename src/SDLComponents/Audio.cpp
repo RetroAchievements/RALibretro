@@ -164,11 +164,11 @@ void Audio::mix(const int16_t* samples, size_t frames)
   double   adjust    = 1.0 + _rateControlDelta * direction;
 
   _currentRatio = _originalRatio * adjust;
-  _logger->printf(RETRO_LOG_ERROR, "AVAIL %6lu %f %f %f", avail, adjust, _originalRatio, _currentRatio);
 
   spx_uint32_t in_len = frames * 2;
   spx_uint32_t out_len = (spx_uint32_t)(in_len * _currentRatio);
   out_len += out_len & 1;
+
   size_t size = out_len * 2;
   int16_t* output = (int16_t*)alloca(size);
 
