@@ -158,8 +158,8 @@ void Audio::mix(const int16_t* samples, size_t frames)
 {
   /* Readjust the audio input rate. */
   int      half_size = (int)_fifo->size() / 2;
-  int      avail     = (int)_fifo->free();
-  int      delta_mid = avail - half_size;
+  size_t   avail     = _fifo->free();
+  int      delta_mid = (int)avail - half_size;
   double   direction = (double)delta_mid / (double)half_size;
   double   adjust    = 1.0 + _rateControlDelta * direction;
 
@@ -169,7 +169,8 @@ void Audio::mix(const int16_t* samples, size_t frames)
   spx_uint32_t in_len = frames * 2;
   spx_uint32_t out_len = (spx_uint32_t)(in_len * _currentRatio);
   out_len += out_len & 1;
-  int16_t* output = (int16_t*)alloca(out_len * 2);
+  size_t size = out_len * 2;
+  int16_t* output = (int16_t*)alloca(size);
 
   if (output == NULL)
   {
@@ -177,32 +178,20 @@ void Audio::mix(const int16_t* samples, size_t frames)
     return;
   }
 
-  if (_resampler != NULL)
-  {
-    int error = speex_resampler_process_int(_resampler, 0, samples, &in_len, output, &out_len);
+  int error = speex_resampler_process_int(_resampler, 0, samples, &in_len, output, &out_len);
 
-    if (error != RESAMPLER_ERR_SUCCESS)
-    {
-      _logger->printf(RETRO_LOG_ERROR, "speex_resampler_process_int: %s", speex_resampler_strerror(error));
-    }
-  }
-  else
+  if (error != RESAMPLER_ERR_SUCCESS)
   {
-    memcpy(output, samples, out_len * 2);
+    memset(output, 0, size);
+    _logger->printf(RETRO_LOG_ERROR, "speex_resampler_process_int: %s", speex_resampler_strerror(error));
+    return;
   }
 
-  size_t size = out_len * 2;
+  while (size > avail)
+  {
+    SDL_Delay(1);
+    avail = _fifo->free();
+  }
   
-again:
-  {
-    size_t avail = _fifo->free();
-
-    if (size > avail)
-    {
-      SDL_Delay(1);
-      goto again;
-    }
-    
-    _fifo->write(output, size);
-  }
+  _fifo->write(output, size);
 }
