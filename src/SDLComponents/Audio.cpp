@@ -148,7 +148,7 @@ bool Audio::setRate(double rate)
   }
   else
   {
-    _logger->printf(RETRO_LOG_INFO, "Resampler initialized to convert from %u to %u", _coreRate, _sampleRate);
+    _logger->printf(RETRO_LOG_INFO, "Resampler initialized to convert from %f to %f", _coreRate, _sampleRate);
   }
 
   return true;
@@ -159,10 +159,10 @@ void Audio::mix(const int16_t* samples, size_t frames)
   size_t avail = _fifo->free();
 
   /* Readjust the audio input rate. */
-  int      half_size = (int)_fifo->size() / 2;
-  int      delta_mid = (int)avail - half_size;
-  double   direction = (double)delta_mid / (double)half_size;
-  double   adjust    = 1.0 + _rateControlDelta * direction;
+  int    half_size = (int)_fifo->size() / 2;
+  int    delta_mid = (int)avail - half_size;
+  double direction = (double)delta_mid / (double)half_size;
+  double adjust    = 1.0 + _rateControlDelta * direction;
 
   _currentRatio = _originalRatio * adjust;
 
@@ -177,7 +177,6 @@ void Audio::mix(const int16_t* samples, size_t frames)
     return;
   }
 
-  spx_uint32_t before = out_len;
   int error = speex_resampler_process_int(_resampler, 0, samples, &in_len, output, &out_len);
 
   if (error != RESAMPLER_ERR_SUCCESS)
