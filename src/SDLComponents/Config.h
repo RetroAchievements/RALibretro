@@ -32,7 +32,13 @@ protected:
 
   std::vector<Variable> _variables;
 
+  bool _preserveAspect;
+  bool _bilinearFilter;
+
+  bool _updated;
+
   static INT_PTR CALLBACK s_dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
-  void addControls(HWND hwnd);
+  void initControls(HWND hwnd);
+  void updateVariables(HWND hwnd);
 };
