@@ -1,13 +1,14 @@
 #pragma once
 
 #include "libretro/Components.h"
+#include "Config.h"
 
 #include <SDL_render.h>
 
 class Video: public libretro::VideoComponent
 {
 public:
-  bool init(libretro::LoggerComponent* logger, SDL_Renderer* renderer);
+  bool init(libretro::LoggerComponent* logger, Config* config, SDL_Renderer* renderer);
   void destroy();
 
   void draw();
@@ -23,9 +24,11 @@ public:
 
 protected:
   libretro::LoggerComponent* _logger;
+  Config* _config;
 
   SDL_Renderer*           _renderer;
   SDL_Texture*            _texture;
+  bool                    _linearFilter;
   unsigned                _textureWidth;
   unsigned                _textureHeight;
   enum retro_pixel_format _pixelFormat;

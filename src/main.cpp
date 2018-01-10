@@ -967,7 +967,7 @@ public:
 
     inited = kInputInited;
 
-    if (!_video.init(&_logger, _renderer))
+    if (!_video.init(&_logger, &_config, _renderer))
     {
       goto error;
     }

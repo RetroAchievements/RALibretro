@@ -26,11 +26,11 @@ public:
     return _preserveAspect;
   }
 
-  bool bilinearFilter()
+  bool linearFilter()
   {
-    return _bilinearFilter;
+    return _linearFilter;
   }
-  
+
 protected:
   struct Variable
   {
@@ -44,7 +44,7 @@ protected:
   std::vector<Variable> _variables;
 
   bool _preserveAspect;
-  bool _bilinearFilter;
+  bool _linearFilter;
 
   bool _updated;
 

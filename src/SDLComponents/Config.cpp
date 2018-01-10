@@ -89,7 +89,7 @@ bool Config::init(libretro::LoggerComponent* logger)
 void Config::reset()
 {
   _preserveAspect = true;
-  _bilinearFilter = false;
+  _linearFilter = false;
 
   _variables.clear();
   _updated = false;
@@ -245,7 +245,7 @@ void Config::showDialog()
   db.write<WORD>(8);
   db.write<DWORD>(51002);
   db.write<DWORD>(0x0080ffff);
-  db.writeWide(L"Bilinear filtering");
+  db.writeWide(L"Linear filtering");
   db.write<WORD>(0);
   y += LINE;
 
@@ -373,7 +373,7 @@ void Config::initControls(HWND hwnd)
   }
 
   CheckDlgButton(hwnd, 51001, _preserveAspect ? BST_CHECKED : BST_UNCHECKED);
-  CheckDlgButton(hwnd, 51002, _bilinearFilter ? BST_CHECKED : BST_UNCHECKED);
+  CheckDlgButton(hwnd, 51002, _linearFilter ? BST_CHECKED : BST_UNCHECKED);
 }
 
 void Config::updateVariables(HWND hwnd)
@@ -391,5 +391,5 @@ void Config::updateVariables(HWND hwnd)
   }
 
   _preserveAspect = IsDlgButtonChecked(hwnd, 51001) == BST_CHECKED;
-  _bilinearFilter = IsDlgButtonChecked(hwnd, 51002) == BST_CHECKED;
+  _linearFilter = IsDlgButtonChecked(hwnd, 51002) == BST_CHECKED;
 }

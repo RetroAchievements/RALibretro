@@ -1,10 +1,14 @@
 #include "Video.h"
 
-bool Video::init(libretro::LoggerComponent* logger, SDL_Renderer* renderer)
+#include <SDL_Hints.h>
+
+bool Video::init(libretro::LoggerComponent* logger, Config* config, SDL_Renderer* renderer)
 {
-  _renderer = renderer;
   _logger = logger;
+  _config = config;
+  _renderer = renderer;
   _texture = NULL;
+  _linearFilter = false;
   _width = _height = 0;
   return true;
 }
@@ -22,6 +26,16 @@ void Video::draw()
 {
   if (_texture != NULL)
   {
+    bool linearFilter = _config->linearFilter();
+
+    if (linearFilter != _linearFilter)
+    {
+      SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, linearFilter ? "linear" : "nearest");
+      _linearFilter = linearFilter;
+
+      setGeometry(_width, _height, _aspect, _pixelFormat, false);
+    }
+
     int w, h;
 
     if (SDL_GetRendererOutputSize(_renderer, &w, &h) != 0)
@@ -44,12 +58,24 @@ void Video::draw()
     src.w = _width;
     src.h = _height;
 
-    SDL_Rect dst;
-    dst.x = dst.y = 0;
-    dst.w = ceil(width);
-    dst.h = ceil(height);
+    int res;
 
-    if (SDL_RenderCopy(_renderer, _texture, &src, &dst) != 0)
+    if (_config->preserveAspect())
+    {
+      SDL_Rect dst;
+      dst.w = ceil(width);
+      dst.h = ceil(height);
+      dst.x = (w - dst.w) / 2;
+      dst.y = (h - dst.h) / 2;
+
+      res = SDL_RenderCopy(_renderer, _texture, &src, &dst);
+    }
+    else
+    {
+      res = SDL_RenderCopy(_renderer, _texture, &src, NULL);
+    }
+
+    if (res != 0)
     {
       _logger->printf(RETRO_LOG_ERROR, "SDL_RenderCopy: %s", SDL_GetError());
       return;
