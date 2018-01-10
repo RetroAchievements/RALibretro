@@ -22,6 +22,7 @@ main MENU
         {
             MENUITEM "&1. Atari 2600 (Stella)", IDM_SYSTEM_STELLA
             MENUITEM "&2. Super Nintendo (Snes9x)", IDM_SYSTEM_SNES9X
+            MENUITEM "&3. Master System/Mega Drive (PicoDrive)", IDM_SYSTEM_PICODRIVE
         }
         MENUITEM SEPARATOR
         MENUITEM "&Load Game", IDM_LOAD_GAME

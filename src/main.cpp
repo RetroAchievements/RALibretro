@@ -44,7 +44,8 @@ protected:
   {
     kNone,
     kStella,
-    kSnes9x
+    kSnes9x,
+    kPicoDrive
   };
 
   State  _state;
@@ -141,7 +142,6 @@ protected:
   {
     static const UINT all_items[] =
     {
-      IDM_SYSTEM_STELLA, IDM_SYSTEM_SNES9X,
       IDM_LOAD_GAME,
       IDM_PAUSE_GAME, IDM_RESUME_GAME, IDM_RESET_GAME, IDM_CLOSE_GAME,
       IDM_SAVE_STATE_0, IDM_SAVE_STATE_1, IDM_SAVE_STATE_2, IDM_SAVE_STATE_3, IDM_SAVE_STATE_4,
@@ -170,12 +170,12 @@ protected:
   {
     static const UINT all_system_items[] =
     {
-      IDM_SYSTEM_STELLA, IDM_SYSTEM_SNES9X
+      IDM_SYSTEM_STELLA, IDM_SYSTEM_SNES9X, IDM_SYSTEM_PICODRIVE
     };
 
     static const System all_systems[] =
     {
-      System::kStella, System::kSnes9x
+      System::kStella, System::kSnes9x, System::kPicoDrive
     };
 
     static const UINT error_items[] =
@@ -185,7 +185,7 @@ protected:
 
     static const UINT initialized_items[] =
     {
-      IDM_SYSTEM_STELLA, IDM_SYSTEM_SNES9X, IDM_EXIT, IDM_ABOUT
+      IDM_EXIT, IDM_ABOUT
     };
 
     static const UINT core_loaded_items[] =
@@ -288,38 +288,46 @@ protected:
     }
   }
 
+  void initCore()
+  {
+    const char* core_path;
+
+    switch (_system)
+    {
+    case System::kNone:
+      return;
+
+    case System::kStella:
+      core_path = "stella_libretro.dll";
+      RA_SetConsoleID(VCS);
+      break;
+
+    case System::kSnes9x:
+      core_path = "snes9x_libretro.dll";
+      RA_SetConsoleID(SNES);
+      break;
+
+    case System::kPicoDrive:
+      core_path = "picodrive_libretro.dll";
+      RA_SetConsoleID(SNES);
+      break;
+    }
+
+    if (!_core.init(&_components))
+    {
+      return;
+    }
+
+    if (!_core.loadCore(core_path))
+    {
+      _core.destroy();
+      return;
+    }
+  }
+
   void loadGame()
   {
-    {
-      const char* core_path;
-
-      switch (_system)
-      {
-      case System::kNone:
-        return;
-
-      case System::kStella:
-        core_path = "stella_libretro.dll";
-        RA_SetConsoleID(VCS);
-        break;
-
-      case System::kSnes9x:
-        core_path = "snes9x_libretro.dll";
-        RA_SetConsoleID(SNES);
-        break;
-      }
-
-      if (!_core.init(&_components))
-      {
-        return;
-      }
-
-      if (!_core.loadCore(core_path))
-      {
-        _core.destroy();
-        return;
-      }
-    }
+    initCore();
 
     char filter[128];
 
@@ -407,38 +415,11 @@ protected:
     }
   }
 
-  void loadGame(const char* game_path, bool load_core)
+  void loadGame(const char* game_path, bool init_core)
   {
-    if (load_core)
+    if (init_core)
     {
-      const char* core_path;
-
-      switch (_system)
-      {
-      case System::kNone:
-        return;
-
-      case System::kStella:
-        core_path = "stella_libretro.dll";
-        RA_SetConsoleID(VCS);
-        break;
-
-      case System::kSnes9x:
-        core_path = "snes9x_libretro.dll";
-        RA_SetConsoleID(SNES);
-        break;
-      }
-
-      if (!_core.init(&_components))
-      {
-        return;
-      }
-
-      if (!_core.loadCore(core_path))
-      {
-        _core.destroy();
-        return;
-      }
+      initCore();
     }
 
     size_t size;
@@ -512,6 +493,12 @@ protected:
       _memoryData2 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
       _memorySize2 = _core.getMemorySize(RETRO_MEMORY_SAVE_RAM);
       RA_InstallMemoryBank(1, (void*)::memoryRead2, (void*)::memoryWrite2, _memorySize2);
+      break;
+    
+    case System::kPicoDrive:
+      _memoryData1 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
+      _memorySize1 = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
+      RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
       break;
     }
 
@@ -698,6 +685,18 @@ protected:
         
         _state = State::kCoreLoaded;
         _system = System::kSnes9x;
+        updateMenu(_state, _system);
+        break;
+
+      case IDM_SYSTEM_PICODRIVE:
+        if (_state == State::kGameRunning || _state == State::kGamePaused)
+        {
+          RA_ClearMemoryBanks();
+          _core.destroy();
+        }
+        
+        _state = State::kCoreLoaded;
+        _system = System::kPicoDrive;
         updateMenu(_state, _system);
         break;
 

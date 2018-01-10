@@ -34,3 +34,4 @@
 #define IDM_PAUSE_GAME                          40028
 #define IDM_RESUME_GAME                         40029
 #define IDM_SYSTEM_SNES9X                       40030
+#define IDM_SYSTEM_PICODRIVE                    40031
