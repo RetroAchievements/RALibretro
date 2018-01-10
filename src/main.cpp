@@ -313,6 +313,8 @@ protected:
       break;
     }
 
+    _config.reset();
+
     if (!_core.init(&_components))
     {
       return;

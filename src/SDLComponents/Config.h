@@ -9,6 +9,7 @@ class Config: public libretro::ConfigComponent
 public:
   bool init(libretro::LoggerComponent* logger);
   void destroy() {}
+  void reset();
 
   virtual const char* getCoreAssetsDirectory() override;
   virtual const char* getSaveDirectory() override;
@@ -20,6 +21,16 @@ public:
 
   void showDialog();
 
+  bool preserveAspect()
+  {
+    return _preserveAspect;
+  }
+
+  bool bilinearFilter()
+  {
+    return _bilinearFilter;
+  }
+  
 protected:
   struct Variable
   {

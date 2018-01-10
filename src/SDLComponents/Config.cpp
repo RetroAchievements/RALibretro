@@ -82,13 +82,17 @@ protected:
 bool Config::init(libretro::LoggerComponent* logger)
 {
   (void)logger;
+  reset();
+  return true;
+}
 
+void Config::reset()
+{
   _preserveAspect = true;
   _bilinearFilter = false;
 
+  _variables.clear();
   _updated = false;
-
-  return true;
 }
 
 const char* Config::getCoreAssetsDirectory()
