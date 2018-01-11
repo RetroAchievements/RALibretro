@@ -1,6 +1,6 @@
 #include "RA_Interface.h"
 
-#include <WinHttp.h>
+#include <winhttp.h>
 
 
 
