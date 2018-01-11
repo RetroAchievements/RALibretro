@@ -273,7 +273,7 @@ void Config::showDialog()
     db.write<WORD>(WIDTH / 3 + 5);
     db.write<WORD>(y);
     db.write<WORD>(WIDTH - WIDTH / 3 - 10);
-    db.write<WORD>(36);
+    db.write<WORD>(LINE * 5);
     db.write<DWORD>(50000 + id);
     db.write<DWORD>(0x0085ffff);
     db.writeWide(L"");
@@ -354,12 +354,11 @@ void Config::initControls(HWND hwnd)
 {
   DWORD id = 0;
 
-  for (auto it = _variables.begin(); it != _variables.end(); ++it, id++)
+  for (const auto& var: _variables)
   {
-    Variable& var = *it;
     HWND combo = GetDlgItem(hwnd, 50000 + id);
 
-    for (auto option: var._options)
+    for (const auto& option: var._options)
     {
       WCHAR wide[256];
 
@@ -370,6 +369,7 @@ void Config::initControls(HWND hwnd)
     }
 
     SendMessageW(combo, CB_SETCURSEL, var._selected, 0);
+    id++;
   }
 
   CheckDlgButton(hwnd, 51001, _preserveAspect ? BST_CHECKED : BST_UNCHECKED);
@@ -380,14 +380,15 @@ void Config::updateVariables(HWND hwnd)
 {
   DWORD id = 0;
 
-  for (auto it = _variables.begin(); it != _variables.end(); ++it, id++)
+  for (auto& var: _variables)
   {
-    Variable& var = *it;
     HWND combo = GetDlgItem(hwnd, 50000 + id);
 
     int selected = SendMessage(combo, CB_GETCURSEL, 0, 0);
     _updated = _updated || selected != var._selected;
     var._selected = selected;
+
+    id++;
   }
 
   _preserveAspect = IsDlgButtonChecked(hwnd, 51001) == BST_CHECKED;
