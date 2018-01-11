@@ -935,7 +935,7 @@ public:
 
     inited = kAudioDeviceInited;
 
-    if (!_fifo.init(_audioSpec.size * 2))
+    if (!_fifo.init(_audioSpec.size * 4))
     {
       _logger.printf(RETRO_LOG_ERROR, "Error initializing the audio FIFO");
       goto error;
