@@ -379,6 +379,42 @@ void libretro::Core::step()
   _audio->mix(_samples, _samplesCount / 2);
 }
 
+unsigned libretro::Core::getApiVersion()
+{
+  InstanceSetter instance_setter(this);
+  return _core.apiVersion();
+}
+
+unsigned libretro::Core::getRegion()
+{
+  InstanceSetter instance_setter(this);
+  return _core.getRegion();
+}
+
+void* libretro::Core::getMemoryData(unsigned id)
+{
+  InstanceSetter instance_setter(this);
+  return _core.getMemoryData(id);
+}
+
+size_t libretro::Core::getMemorySize(unsigned id)
+{
+  InstanceSetter instance_setter(this);
+  return _core.getMemorySize(id);
+}
+
+void libretro::Core::resetGame()
+{
+  InstanceSetter instance_setter(this);
+  _core.reset();
+}
+
+size_t libretro::Core::serializeSize()
+{
+  InstanceSetter instance_setter(this);
+  return _core.serializeSize();
+}
+
 bool libretro::Core::serialize(void* data, size_t size)
 {
   InstanceSetter instance_setter(this);

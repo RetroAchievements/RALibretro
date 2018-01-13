@@ -45,15 +45,14 @@ namespace libretro
     
     void step();
 
-    bool serialize(void* data, size_t size);
-    bool unserialize(const void* data, size_t size);
-
-    inline unsigned getApiVersion()            const { return _core.apiVersion(); }
-    inline unsigned getRegion()                const { return _core.getRegion(); }
-    inline void*    getMemoryData(unsigned id) const { return _core.getMemoryData(id); }
-    inline size_t   getMemorySize(unsigned id) const { return _core.getMemorySize(id); }
-    inline void     resetGame()                const { _core.reset(); }
-    inline size_t   serializeSize()            const { return _core.serializeSize(); }
+    unsigned getApiVersion();
+    unsigned getRegion();
+    void*    getMemoryData(unsigned id);
+    size_t   getMemorySize(unsigned id);
+    void     resetGame();
+    size_t   serializeSize();
+    bool     serialize(void* data, size_t size);
+    bool     unserialize(const void* data, size_t size);
     
     inline unsigned                getPerformanceLevel()    const { return _performanceLevel; }
     inline enum retro_pixel_format getPixelFormat()         const { return _pixelFormat; }
