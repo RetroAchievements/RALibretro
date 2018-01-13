@@ -64,6 +64,7 @@ main MENU
     {
         MENUITEM "&Emulation", IDM_CORE
         MENUITEM "&Input", IDM_INPUT
+        MENUITEM "&Turbo", IDM_TURBO
     }
     MENUITEM "&About", IDM_ABOUT
 }

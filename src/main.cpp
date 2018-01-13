@@ -37,7 +37,8 @@ protected:
     kInitialized,
     kCoreLoaded,
     kGameRunning,
-    kGamePaused
+    kGamePaused,
+    kGameTurbo
   };
 
   enum class System
@@ -81,16 +82,24 @@ protected:
   static void s_audioCallback(void* udata, Uint8* stream, int len)
   {
     Application* app = (Application*)udata;
-    size_t avail = app->_fifo.occupied();
 
-    if (avail < (size_t)len)
+    if (app->_state != State::kGameTurbo)
     {
-      app->_fifo.read((void*)stream, avail);
-      memset((void*)(stream + avail), 0, len - avail);
+      size_t avail = app->_fifo.occupied();
+
+      if (avail < (size_t)len)
+      {
+        app->_fifo.read((void*)stream, avail);
+        memset((void*)(stream + avail), 0, len - avail);
+      }
+      else
+      {
+        app->_fifo.read((void*)stream, len);
+      }
     }
     else
     {
-      app->_fifo.read((void*)stream, len);
+      memset((void*)stream, 0, len);
     }
   }
 
@@ -127,7 +136,7 @@ protected:
 
   void draw()
   {
-    if (_state == State::kGameRunning || _state == State::kGamePaused)
+    if (isGameActive())
     {
       _video.draw();
     }
@@ -212,7 +221,7 @@ protected:
       IDM_LOAD_STATE_5, IDM_LOAD_STATE_6, IDM_LOAD_STATE_7, IDM_LOAD_STATE_8, IDM_LOAD_STATE_9,
       IDM_EXIT,
 
-      IDM_CORE, IDM_INPUT,
+      IDM_CORE, IDM_INPUT, IDM_TURBO,
 
       IDM_ABOUT
     };
@@ -262,7 +271,7 @@ protected:
       IDM_SAVE_STATE_5, IDM_SAVE_STATE_6, IDM_SAVE_STATE_7, IDM_SAVE_STATE_8, IDM_SAVE_STATE_9,
       IDM_EXIT,
 
-      IDM_CORE, IDM_INPUT,
+      IDM_CORE, IDM_INPUT, IDM_TURBO,
 
       IDM_ABOUT
     };
@@ -275,7 +284,7 @@ protected:
       IDM_SAVE_STATE_5, IDM_SAVE_STATE_6, IDM_SAVE_STATE_7, IDM_SAVE_STATE_8, IDM_SAVE_STATE_9,
       IDM_EXIT,
 
-      IDM_CORE, IDM_INPUT,
+      IDM_CORE, IDM_INPUT, IDM_TURBO,
 
       IDM_ABOUT
     };
@@ -307,6 +316,7 @@ protected:
       break;
     
     case State::kGameRunning:
+    case State::kGameTurbo:
       items = running_items;
       count = sizeof(running_items) / sizeof(running_items[0]);
       break;
@@ -322,7 +332,7 @@ protected:
 
     updateMenu(items, count);
 
-    if (state == State::kGameRunning || state == State::kGamePaused)
+    if (isGameActive())
     {
       for (unsigned ndx = 0; ndx < 10; ndx++)
       {
@@ -695,7 +705,7 @@ protected:
       switch (cmd)
       {
       case IDM_SYSTEM_STELLA:
-        if (_state == State::kGameRunning || _state == State::kGamePaused)
+        if (isGameActive())
         {
           RA_ClearMemoryBanks();
           unloadGame();
@@ -708,7 +718,7 @@ protected:
         break;
       
       case IDM_SYSTEM_SNES9X:
-        if (_state == State::kGameRunning || _state == State::kGamePaused)
+        if (isGameActive())
         {
           RA_ClearMemoryBanks();
           unloadGame();
@@ -721,7 +731,7 @@ protected:
         break;
 
       case IDM_SYSTEM_PICODRIVE:
-        if (_state == State::kGameRunning || _state == State::kGamePaused)
+        if (isGameActive())
         {
           RA_ClearMemoryBanks();
           unloadGame();
@@ -847,6 +857,18 @@ protected:
 
       case IDM_INPUT:
         configureInput();
+        break;
+      
+      case IDM_TURBO:
+        if (_state == State::kGameRunning || _state == State::kGamePaused)
+        {
+          _state = State::kGameTurbo;
+        }
+        else if (_state == State::kGameTurbo)
+        {
+          _state = State::kGameRunning;
+        }
+
         break;
 
       case IDM_EXIT:
@@ -1061,7 +1083,7 @@ public:
 
   void destroy()
   {
-    if (_state == State::kGameRunning || _state == State::kGamePaused)
+    if (isGameActive())
     {
       unloadGame();
       _core.destroy();
@@ -1118,6 +1140,30 @@ public:
       if (_state == State::kGameRunning)
       {
         _core.step();
+      }
+      else if (_state == State::kGameTurbo)
+      {
+        for (int i = 0; i < 5; i++)
+        {
+          _core.step();
+
+          for (;;)
+          {
+            char dummy[512];
+            size_t avail = _fifo.occupied();
+
+            if (avail == 0)
+            {
+              break;
+            }
+            else if (avail > sizeof(dummy))
+            {
+              avail = sizeof(dummy);
+            }
+
+            _fifo.read((void*)dummy, avail);
+          }
+        }
       }
 
       SDL_RenderClear(_renderer);
@@ -1187,7 +1233,7 @@ public:
 
   bool isGameActive() const
   {
-    return _state == State::kGameRunning || _state == State::kGamePaused;
+    return _state == State::kGameRunning || _state == State::kGamePaused || _state == State::kGameTurbo;
   }
 
   void pause()
