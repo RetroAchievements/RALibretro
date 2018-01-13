@@ -379,8 +379,22 @@ void libretro::Core::step()
   _audio->mix(_samples, _samplesCount / 2);
 }
 
+bool libretro::Core::serialize(void* data, size_t size)
+{
+  InstanceSetter instance_setter(this);
+  return _core.serialize(data, size);
+}
+
+bool libretro::Core::unserialize(const void* data, size_t size)
+{
+  InstanceSetter instance_setter(this);
+  return _core.unserialize(data, size);
+}
+
 bool libretro::Core::initCore()
 {
+  InstanceSetter instance_setter(this);
+
   struct retro_system_info system_info;
   _core.getSystemInfo(&system_info);
 
@@ -410,6 +424,8 @@ bool libretro::Core::initCore()
 
 bool libretro::Core::initAV()
 {
+  InstanceSetter instance_setter(this);
+
   if (_needsHardwareRender)
   {
     _hardwareRenderCallback.context_reset();

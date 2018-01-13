@@ -45,6 +45,9 @@ namespace libretro
     
     void step();
 
+    bool serialize(void* data, size_t size);
+    bool unserialize(const void* data, size_t size);
+
     inline unsigned getApiVersion()            const { return _core.apiVersion(); }
     inline unsigned getRegion()                const { return _core.getRegion(); }
     inline void*    getMemoryData(unsigned id) const { return _core.getMemoryData(id); }
@@ -59,16 +62,6 @@ namespace libretro
     inline unsigned                getRotation()            const { return _rotation; }
     inline bool                    getSupportAchievements() const { return _supportAchievements; }
     
-    inline bool serialize(void* data, size_t size) const
-    {
-      return _core.serialize(data, size);
-    }
-
-    inline bool unserialize(const void* data, size_t size) const
-    {
-      return _core.unserialize(data, size);
-    }
-
     inline const struct retro_input_descriptor* getInputDescriptors(unsigned* count) const
     {
       *count = _inputDescriptorsCount;
