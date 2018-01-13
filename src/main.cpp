@@ -46,7 +46,8 @@ protected:
     kNone,
     kStella,
     kSnes9x,
-    kPicoDrive
+    kPicoDrive,
+    kGenesisPlusGx
   };
 
   State  _state;
@@ -241,12 +242,12 @@ protected:
   {
     static const UINT all_system_items[] =
     {
-      IDM_SYSTEM_STELLA, IDM_SYSTEM_SNES9X, IDM_SYSTEM_PICODRIVE
+      IDM_SYSTEM_STELLA, IDM_SYSTEM_SNES9X, IDM_SYSTEM_PICODRIVE, IDM_SYSTEM_GENESISPLUSGX
     };
 
     static const System all_systems[] =
     {
-      System::kStella, System::kSnes9x, System::kPicoDrive
+      System::kStella, System::kSnes9x, System::kPicoDrive, System::kGenesisPlusGx
     };
 
     static const UINT error_items[] =
@@ -379,6 +380,10 @@ protected:
 
     case System::kPicoDrive:
       core_path = "picodrive_libretro.dll";
+      break;
+    
+    case System::kGenesisPlusGx:
+      core_path = "genesis_plus_gx_libretro.dll";
       break;
     }
 
@@ -521,6 +526,7 @@ protected:
       break;
 
     case System::kPicoDrive:
+    case System::kGenesisPlusGx:
       if (_core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM) == 0x2000)
       {
         RA_SetConsoleID(MasterSystem);
@@ -577,6 +583,7 @@ protected:
       break;
     
     case System::kPicoDrive:
+    case System::kGenesisPlusGx:
       _memoryData1 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
       _memorySize1 = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
       RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
@@ -763,6 +770,19 @@ protected:
         
         _state = State::kCoreLoaded;
         _system = System::kPicoDrive;
+        updateMenu(_state, _system);
+        break;
+
+      case IDM_SYSTEM_GENESISPLUSGX:
+        if (isGameActive())
+        {
+          RA_ClearMemoryBanks();
+          unloadGame();
+          _core.destroy();
+        }
+        
+        _state = State::kCoreLoaded;
+        _system = System::kGenesisPlusGx;
         updateMenu(_state, _system);
         break;
 

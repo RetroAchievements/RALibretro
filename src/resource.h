@@ -36,3 +36,4 @@
 #define IDM_SYSTEM_SNES9X                       40030
 #define IDM_SYSTEM_PICODRIVE                    40031
 #define IDM_TURBO                               40032
+#define IDM_SYSTEM_GENESISPLUSGX                40033
