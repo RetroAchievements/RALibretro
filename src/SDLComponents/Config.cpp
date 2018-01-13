@@ -1,83 +1,8 @@
 #include "Config.h"
 
+#include "Dialog.h"
+
 #include <string.h>
-
-extern HWND g_mainWindow;
-
-class DialogBuilder
-{
-public:
-  DialogBuilder()
-  {
-    _template = NULL;
-    _size = 0;
-    _reserved = 0;
-  }
-
-  ~DialogBuilder()
-  {
-    free(_template);
-  }
-
-  void align(size_t alignment)
-  {
-    alignment--;
-    _size = (_size + alignment) & ~alignment;
-  }
-
-  void write(void* data, size_t size)
-  {
-    if (_size + size > _reserved)
-    {
-      size_t r = _reserved + 4096;
-      void* t = realloc(_template, r);
-
-      if (t == NULL)
-      {
-        return;
-      }
-
-      _template = t;
-      _reserved = r;
-    }
-
-    memcpy((uint8_t*)_template + _size, data, size);
-    _size += size;
-  }
-
-  template<typename T> void write(T t)
-  {
-    write(&t, sizeof(t));
-  }
-
-  void writeStr(const char* str)
-  {
-    int needed = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
-
-    if (needed != 0)
-    {
-      needed *= sizeof(WCHAR);
-      WCHAR* wide = (WCHAR*)alloca(needed);
-      MultiByteToWideChar(CP_UTF8, 0, str, -1, wide, needed);
-      write((void*)wide, needed);
-    }
-  }
-
-  void writeWide(const WCHAR* str)
-  {
-    write((void*)str, (lstrlenW(str) + 1) * sizeof(WCHAR));
-  }
-
-  LPCDLGTEMPLATE get()
-  {
-    return (LPCDLGTEMPLATE)_template;
-  }
-
-protected:
-  void*  _template;
-  size_t _size;
-  size_t _reserved;
-};
 
 bool Config::init(libretro::LoggerComponent* logger)
 {
@@ -88,7 +13,7 @@ bool Config::init(libretro::LoggerComponent* logger)
 
 void Config::reset()
 {
-  _preserveAspect = true;
+  _preserveAspect = false;
   _linearFilter = false;
 
   _variables.clear();
@@ -168,224 +93,72 @@ const char* Config::getVariable(const char* variable)
   return NULL;
 }
 
-void Config::showDialog()
+void Config::setFromJson(const rapidjson::Value& json)
 {
-  NONCLIENTMETRICSW ncm;
-  ncm.cbSize = sizeof(ncm);
-
-  if (SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0) == 0)
+  for (auto& var: _variables)
   {
-    return;
-  }
+    const rapidjson::Value& value = json[var._key.c_str()];
+    int selected = 0;
 
-  if (ncm.lfMessageFont.lfHeight < 0)
-  {
-    HDC hdc = GetDC(NULL);
-
-    if (!hdc)
+    for (const auto& option: var._options)
     {
-      return;
+      if (value.GetString() == option)
+      {
+        break;
+      }
+
+      selected++;
     }
 
-    ncm.lfMessageFont.lfHeight = -MulDiv(ncm.lfMessageFont.lfHeight, 72, GetDeviceCaps(hdc, LOGPIXELSY));
-    ReleaseDC(NULL, hdc);
-  }
+    if ((size_t)selected >= var._options.size())
+    {
+      selected = 0;
+    }
 
-  // https://blogs.msdn.microsoft.com/oldnewthing/20050429-00
-  DialogBuilder db;
+    _updated = _updated || selected != var._selected;
+    var._selected = selected;
+  }
+}
+
+void Config::showDialog()
+{
   const WORD WIDTH = 280;
   const WORD LINE = 15;
-  WORD y = 5;
 
-  db.write<WORD>(1);
-  db.write<WORD>(0xffff);
-  db.write<DWORD>(0);
-  db.write<DWORD>(WS_EX_WINDOWEDGE);
-  db.write<DWORD>(DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP);
-  db.write<WORD>(4 + _variables.size() * 2);
-  db.write<WORD>(0);
-  db.write<WORD>(0);
-  db.write<WORD>(WIDTH);
-  db.write<WORD>((2 + _variables.size()) * LINE + 10);
-  db.writeWide(L"");
-  db.writeWide(L"");
-  db.writeWide(L"Settings");
+  Dialog db;
+  db.init("Settings");
 
-  db.write<WORD>((WORD)ncm.lfMessageFont.lfHeight);
-  db.write<WORD>((WORD)ncm.lfMessageFont.lfWeight);
-  db.write<BYTE>(ncm.lfMessageFont.lfItalic);
-  db.write<BYTE>(ncm.lfMessageFont.lfCharSet);
-  db.writeWide(ncm.lfMessageFont.lfFaceName);
+  WORD y = 0;
 
-  db.align(sizeof(DWORD));
-  db.write<DWORD>(0);
-  db.write<DWORD>(0);
-  db.write<DWORD>(BS_AUTOCHECKBOX | WS_TABSTOP | WS_CHILD | WS_VISIBLE);
-  db.write<WORD>(5);
-  db.write<WORD>(y);
-  db.write<WORD>(WIDTH / 2 - 10);
-  db.write<WORD>(8);
-  db.write<DWORD>(51001);
-  db.write<DWORD>(0x0080ffff);
-  db.writeWide(L"Preserve aspect ratio");
-  db.write<WORD>(0);
-
-  db.align(sizeof(DWORD));
-  db.write<DWORD>(0);
-  db.write<DWORD>(0);
-  db.write<DWORD>(BS_AUTOCHECKBOX | WS_TABSTOP | WS_CHILD | WS_VISIBLE);
-  db.write<WORD>(WIDTH / 2 + 5);
-  db.write<WORD>(y);
-  db.write<WORD>(WIDTH / 2 - 10);
-  db.write<WORD>(8);
-  db.write<DWORD>(51002);
-  db.write<DWORD>(0x0080ffff);
-  db.writeWide(L"Linear filtering");
-  db.write<WORD>(0);
+  db.addCheckbox("Preserve aspect ratio", 51001, 0, y, WIDTH / 2 - 5, 8, &_preserveAspect);
+  db.addCheckbox("Linear filtering", 51002, WIDTH / 2 + 5, y, WIDTH / 2 - 5, 8, &_linearFilter);
   y += LINE;
 
   DWORD id = 0;
 
-  for (auto var: _variables)
+  for (auto& var: _variables)
   {
-    db.align(sizeof(DWORD));
-    db.write<DWORD>(0);
-    db.write<DWORD>(0);
-    db.write<DWORD>(WS_CHILD | WS_VISIBLE);
-    db.write<WORD>(5);
-    db.write<WORD>(y);
-    db.write<WORD>(WIDTH / 3 - 5);
-    db.write<WORD>(8);
-    db.write<DWORD>(-1);
-    db.write<DWORD>(0x0082FFFF);
-    db.writeStr(var._name.c_str());
-    db.write<WORD>(0);
-
-    db.align(sizeof(DWORD));
-    db.write<DWORD>(0);
-    db.write<DWORD>(0);
-    db.write<DWORD>(CBS_DROPDOWNLIST | WS_TABSTOP | WS_CHILD | WS_VISIBLE);
-    db.write<WORD>(WIDTH / 3 + 5);
-    db.write<WORD>(y);
-    db.write<WORD>(WIDTH - WIDTH / 3 - 10);
-    db.write<WORD>(LINE * 5);
-    db.write<DWORD>(50000 + id);
-    db.write<DWORD>(0x0085ffff);
-    db.writeWide(L"");
-    db.write<WORD>(0);
+    db.addLabel(var._name.c_str(), 0, y, WIDTH / 3 - 5, 8);
+    db.addCombobox(50000 + id, WIDTH / 3 + 5, y, WIDTH - WIDTH / 3 - 5, LINE, 5, getOption, (void*)&var._options, &var._selected);
 
     y += LINE;
     id++;
   }
 
-  db.align(sizeof(DWORD));
-  db.write<DWORD>(0);
-  db.write<DWORD>(0);
-  db.write<DWORD>(WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON);
-  db.write<WORD>(WIDTH - 55 - 55);
-  db.write<WORD>(y);
-  db.write<WORD>(50);
-  db.write<WORD>(14);
-  db.write<DWORD>(IDOK);
-  db.write<DWORD>(0x0080ffff);
-  db.writeWide(L"OK");
-  db.write<WORD>(0);
+  db.addButton("OK", IDOK, WIDTH - 55 - 50, y, 50, 14, true);
+  db.addButton("Cancel", IDCANCEL, WIDTH - 50, y, 50, 14, false);
 
-  db.align(sizeof(DWORD));
-  db.write<DWORD>(0);
-  db.write<DWORD>(0);
-  db.write<DWORD>(WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON);
-  db.write<WORD>(WIDTH - 55);
-  db.write<WORD>(y);
-  db.write<WORD>(50);
-  db.write<WORD>(14);
-  db.write<DWORD>(IDCANCEL);
-  db.write<DWORD>(0x0080ffff);
-  db.writeWide(L"Cancel");
-  db.write<WORD>(0);
-
-  DialogBoxIndirectParam(NULL, db.get(), g_mainWindow, s_dialogProc, (LPARAM)this);
+  _updated = db.show();
 }
 
-INT_PTR CALLBACK Config::s_dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+const char* Config::getOption(int index, void* udata)
 {
-  Config* self;
+  auto options = (std::vector<std::string>*)udata;
 
-  switch (msg)
+  if ((size_t)index < options->size())
   {
-  case WM_INITDIALOG:
-    self = (Config*)lparam;
-    self->initControls(hwnd);
-    SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)lparam);
-    return TRUE;
-  
-  case WM_SETFONT:
-    return TRUE;
-
-  case WM_COMMAND:
-    if (LOWORD(wparam) == IDOK || LOWORD(wparam) == IDCANCEL)
-    {
-      if (LOWORD(wparam) == IDOK)
-      {
-        self = (Config*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-        self->updateVariables(hwnd);
-      }
-
-      EndDialog(hwnd, LOWORD(wparam));
-      return TRUE;
-    }
-
-    break;
-
-  case WM_CLOSE:
-    DestroyWindow(hwnd);
-    return TRUE;
+    return options->at(index).c_str();
   }
 
-  return FALSE;
-}
-
-void Config::initControls(HWND hwnd)
-{
-  DWORD id = 0;
-
-  for (const auto& var: _variables)
-  {
-    HWND combo = GetDlgItem(hwnd, 50000 + id);
-
-    for (const auto& option: var._options)
-    {
-      WCHAR wide[256];
-
-      if (MultiByteToWideChar(CP_UTF8, 0, option.c_str(), -1, wide, sizeof(wide) / sizeof(wide[0])) != 0)
-      {
-        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)wide);
-      }
-    }
-
-    SendMessageW(combo, CB_SETCURSEL, var._selected, 0);
-    id++;
-  }
-
-  CheckDlgButton(hwnd, 51001, _preserveAspect ? BST_CHECKED : BST_UNCHECKED);
-  CheckDlgButton(hwnd, 51002, _linearFilter ? BST_CHECKED : BST_UNCHECKED);
-}
-
-void Config::updateVariables(HWND hwnd)
-{
-  DWORD id = 0;
-
-  for (auto& var: _variables)
-  {
-    HWND combo = GetDlgItem(hwnd, 50000 + id);
-
-    int selected = SendMessage(combo, CB_GETCURSEL, 0, 0);
-    _updated = _updated || selected != var._selected;
-    var._selected = selected;
-
-    id++;
-  }
-
-  _preserveAspect = IsDlgButtonChecked(hwnd, 51001) == BST_CHECKED;
-  _linearFilter = IsDlgButtonChecked(hwnd, 51002) == BST_CHECKED;
+  return NULL;
 }
