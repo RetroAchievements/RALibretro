@@ -133,6 +133,68 @@ protected:
     }
   }
 
+  void* loadFile(const char* path, size_t* size)
+  {
+    void* data;
+    struct stat statbuf;
+
+    if (stat(path, &statbuf) != 0)
+    {
+      _logger.printf(RETRO_LOG_ERROR, "Error getting info from \"%s\": %s", path, strerror(errno));
+      return NULL;
+    }
+
+    *size = statbuf.st_size;
+    data = malloc(*size);
+
+    if (data == NULL)
+    {
+      _logger.printf(RETRO_LOG_ERROR, "Out of memory allocating %lu bytes to load \"%s\"", *size, path);
+      return NULL;
+    }
+
+    FILE* file = fopen(path, "rb");
+
+    if (file == NULL)
+    {
+      _logger.printf(RETRO_LOG_ERROR, "Error opening \"%s\": %s", path, strerror(errno));
+      free(data);
+      return NULL;
+    }
+
+    size_t numread = fread(data, 1, *size, file);
+
+    if (numread < 0 || numread != *size)
+    {
+      _logger.printf(RETRO_LOG_ERROR, "Error reading \"%s\": %s", path, strerror(errno));
+      fclose(file);
+      free(data);
+      return NULL;
+    }
+
+    fclose(file);
+    return data;
+  }
+
+  void saveFile(const char* path, void* data, size_t size)
+  {
+    FILE* file = fopen(path, "wb");
+
+    if (file == NULL)
+    {
+      _logger.printf(RETRO_LOG_ERROR, "Error opening file \"%s\": %s", path, strerror(errno));
+      return;
+    }
+
+    if (fwrite(data, 1, size, file) != size)
+    {
+      _logger.printf(RETRO_LOG_ERROR, "Error writing file \"%s\": %s", path, strerror(errno));
+      return;
+    }
+
+    fclose(file);
+  }
+
   std::string getLogContents() const
   {
     return _logger.contents();
@@ -425,48 +487,13 @@ protected:
     }
 
     size_t size;
-    void* data;
-    
+    void* data = loadFile(game_path, &size);
+
+    if (data == NULL)
     {
-      struct stat statbuf;
-
-      if (stat(game_path, &statbuf) != 0)
-      {
-        _logger.printf(RETRO_LOG_ERROR, "Error getting content info: %s", strerror(errno));
-        return;
-      }
-
-      size = statbuf.st_size;
-      data = malloc(size);
-
-      if (data == NULL)
-      {
-        _logger.printf(RETRO_LOG_ERROR, "Out of memory allocating %u bytes", size);
-        return;
-      }
-
-      FILE* file = fopen(game_path, "rb");
-
-      if (file == NULL)
-      {
-        _logger.printf(RETRO_LOG_ERROR, "Error opening content: %s", strerror(errno));
-        free(data);
-        return;
-      }
-
-      size_t numread = fread(data, 1, size, file);
-
-      if (numread < 0 || numread != size)
-      {
-        _logger.printf(RETRO_LOG_ERROR, "Error reading content: %s", strerror(errno));
-        fclose(file);
-        free(data);
-        return;
-      }
-
-      fclose(file);
+      return;
     }
-
+    
     if (!_core.loadGame(game_path, data, size))
     {
       free(data);
@@ -476,6 +503,25 @@ protected:
     RA_ClearMemoryBanks();
     RA_OnLoadNewRom((BYTE*)data, size);
     free(data);
+    _gamePath = game_path;
+
+    std::string sram = getSRAMPath();
+    data = loadFile(sram.c_str(), &size);
+
+    if (data != NULL)
+    {
+      if (size == _core.getMemorySize(RETRO_MEMORY_SAVE_RAM))
+      {
+        void* memory = _core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
+        memcpy(memory, data, size);
+      }
+      else
+      {
+        _logger.printf(RETRO_LOG_ERROR, "Save RAM size mismatch, wanted %lu, got %lu from disk", _core.getMemorySize(RETRO_MEMORY_SAVE_RAM), size);
+      }
+
+      free(data);
+    }
 
     switch (_system)
     {
@@ -504,7 +550,6 @@ protected:
       break;
     }
 
-    _gamePath = game_path;
     _states = 0;
 
     for (unsigned ndx = 0; ndx < 10; ndx++)
@@ -521,6 +566,41 @@ protected:
     _state = State::kGameRunning;
     _input.setDefaultController();
     updateMenu(_state, _system);
+  }
+
+  void unloadGame()
+  {
+    size_t size = _core.getMemorySize(RETRO_MEMORY_SAVE_RAM);
+    void* data = _core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
+
+    std::string sram = getSRAMPath();
+    saveFile(sram.c_str(), data, size);
+  }
+
+  std::string getSRAMPath()
+  {
+    std::string path = ".\\Saves\\";
+    mkdir(path.c_str());
+
+    size_t last_slash = _gamePath.find_last_of("/");
+    size_t last_bslash = _gamePath.find_last_of("\\");
+
+    if (last_bslash > last_slash || last_slash == std::string::npos)
+    {
+      last_slash = last_bslash;
+    }
+
+    if (last_slash == std::string::npos)
+    {
+      path += _gamePath;
+    }
+    else
+    {
+      path += _gamePath.substr(last_slash);
+    }
+    
+    path += ".sram";
+    return path;
   }
 
   std::string getStatePath(unsigned ndx)
@@ -572,76 +652,24 @@ protected:
     }
 
     std::string path = getStatePath(ndx);
-    FILE* file = fopen(path.c_str(), "wb");
-
-    if (file == NULL)
-    {
-      _logger.printf(RETRO_LOG_ERROR, "Error opening game state: %s", strerror(errno));
-      free(data);
-      return;
-    }
-
-    if (fwrite(data, 1, size, file) != size)
-    {
-      _logger.printf(RETRO_LOG_ERROR, "Error writing game state: %s", strerror(errno));
-      free(data);
-      return;
-    }
-
-    fclose(file);
+    saveFile(path.c_str(), data, size);
     free(data);
+
     _states |= 1 << ndx;
     updateMenu(_state, _system);
   }
 
   void loadState(unsigned ndx)
   {
+    std::string path = getStatePath(ndx);
     size_t size;
-    void* data;
+    void* data = loadFile(path.c_str(), &size);
     
+    if (data != NULL)
     {
-      std::string path = getStatePath(ndx);
-      struct stat statbuf;
-
-      if (stat(path.c_str(), &statbuf) != 0)
-      {
-        _logger.printf(RETRO_LOG_ERROR, "Error getting game state info: %s", strerror(errno));
-        return;
-      }
-
-      size = statbuf.st_size;
-      data = malloc(size);
-
-      if (data == NULL)
-      {
-        _logger.printf(RETRO_LOG_ERROR, "Out of memory allocating %u bytes for the game state", size);
-        return;
-      }
-
-      FILE* file = fopen(path.c_str(), "rb");
-
-      if (file == NULL)
-      {
-        _logger.printf(RETRO_LOG_ERROR, "Error opening game state: %s", strerror(errno));
-        free(data);
-        return;
-      }
-
-      size_t numread = fread(data, 1, size, file);
-
-      if (numread < 0 || numread != size)
-      {
-        _logger.printf(RETRO_LOG_ERROR, "Error reading game state: %s", strerror(errno));
-        fclose(file);
-        free(data);
-        return;
-      }
-
-      fclose(file);
+      _core.unserialize(data, size);
+      free(data);
     }
-
-    _core.unserialize(data, size);
-    free(data);
   }
 
   void configureCore()
@@ -670,6 +698,7 @@ protected:
         if (_state == State::kGameRunning || _state == State::kGamePaused)
         {
           RA_ClearMemoryBanks();
+          unloadGame();
           _core.destroy();
         }
 
@@ -682,6 +711,7 @@ protected:
         if (_state == State::kGameRunning || _state == State::kGamePaused)
         {
           RA_ClearMemoryBanks();
+          unloadGame();
           _core.destroy();
         }
         
@@ -694,6 +724,7 @@ protected:
         if (_state == State::kGameRunning || _state == State::kGamePaused)
         {
           RA_ClearMemoryBanks();
+          unloadGame();
           _core.destroy();
         }
         
@@ -725,6 +756,7 @@ protected:
       case IDM_CLOSE_GAME:
         _state = State::kCoreLoaded;
         RA_ClearMemoryBanks();
+        unloadGame();
         _core.destroy();
         updateMenu(_state, _system);
         break;
@@ -1031,6 +1063,7 @@ public:
   {
     if (_state == State::kGameRunning || _state == State::kGamePaused)
     {
+      unloadGame();
       _core.destroy();
     }
 
