@@ -121,11 +121,6 @@ void Config::setVariables(const struct retro_variable* variables, unsigned count
     var._name = std::string(variables->value, aux - variables->value);
     while (isspace(*++aux)) /* nothing */;
 
-    while (isspace(*aux))
-    {
-      aux++;
-    }
-
     var._selected = 0;
 
     for (unsigned j = 0; aux != NULL; j++)
