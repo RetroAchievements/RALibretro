@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Windows.h>
-#include <WindowsX.h>
-#include <ShlObj.h>
+#include <windows.h>
+#include <windowsx.h>
+#include <shlobj.h>
 #include <tchar.h>
 #include <assert.h>
 #include <string>
