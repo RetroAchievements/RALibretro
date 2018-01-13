@@ -371,17 +371,14 @@ protected:
 
     case System::kStella:
       core_path = "stella_libretro.dll";
-      RA_SetConsoleID(VCS);
       break;
 
     case System::kSnes9x:
       core_path = "snes9x_libretro.dll";
-      RA_SetConsoleID(SNES);
       break;
 
     case System::kPicoDrive:
       core_path = "picodrive_libretro.dll";
-      RA_SetConsoleID(SNES);
       break;
     }
 
@@ -508,6 +505,32 @@ protected:
     {
       free(data);
       return;
+    }
+
+    switch (_system)
+    {
+    case System::kNone:
+      return;
+
+    case System::kStella:
+      RA_SetConsoleID(VCS);
+      break;
+
+    case System::kSnes9x:
+      RA_SetConsoleID(SNES);
+      break;
+
+    case System::kPicoDrive:
+      if (_core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM) == 0x2000)
+      {
+        RA_SetConsoleID(MasterSystem);
+      }
+      else
+      {
+        RA_SetConsoleID(MegaDrive);
+      }
+
+      break;
     }
 
     RA_ClearMemoryBanks();
