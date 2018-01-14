@@ -364,30 +364,6 @@ protected:
 
   void initCore()
   {
-    const char* core_path;
-
-    switch (_system)
-    {
-    case System::kNone:
-      return;
-
-    case System::kStella:
-      core_path = "stella_libretro.dll";
-      break;
-
-    case System::kSnes9x:
-      core_path = "snes9x_libretro.dll";
-      break;
-
-    case System::kPicoDrive:
-      core_path = "picodrive_libretro.dll";
-      break;
-    
-    case System::kGenesisPlusGx:
-      core_path = "genesis_plus_gx_libretro.dll";
-      break;
-    }
-
     _config.reset();
 
     if (!_core.init(&_components))
@@ -395,7 +371,10 @@ protected:
       return;
     }
 
-    if (!_core.loadCore(core_path))
+    std::string path = getCoreFileName();
+    path.append(".dll");
+
+    if (!_core.loadCore(path.c_str()))
     {
       _core.destroy();
       return;
@@ -545,22 +524,25 @@ protected:
     free(data);
     _gamePath = game_path;
 
-    std::string sram = getSRAMPath();
-    data = loadFile(sram.c_str(), &size);
-
-    if (data != NULL)
+    if (_core.getMemorySize(RETRO_MEMORY_SAVE_RAM) != 0)
     {
-      if (size == _core.getMemorySize(RETRO_MEMORY_SAVE_RAM))
-      {
-        void* memory = _core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
-        memcpy(memory, data, size);
-      }
-      else
-      {
-        _logger.printf(RETRO_LOG_ERROR, "Save RAM size mismatch, wanted %lu, got %lu from disk", _core.getMemorySize(RETRO_MEMORY_SAVE_RAM), size);
-      }
+      std::string sram = getSRAMPath();
+      data = loadFile(sram.c_str(), &size);
 
-      free(data);
+      if (data != NULL)
+      {
+        if (size == _core.getMemorySize(RETRO_MEMORY_SAVE_RAM))
+        {
+          void* memory = _core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
+          memcpy(memory, data, size);
+        }
+        else
+        {
+          _logger.printf(RETRO_LOG_ERROR, "Save RAM size mismatch, wanted %lu, got %lu from disk", _core.getMemorySize(RETRO_MEMORY_SAVE_RAM), size);
+        }
+
+        free(data);
+      }
     }
 
     switch (_system)
@@ -620,10 +602,27 @@ protected:
   void unloadGame()
   {
     size_t size = _core.getMemorySize(RETRO_MEMORY_SAVE_RAM);
-    void* data = _core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
 
-    std::string sram = getSRAMPath();
-    saveFile(sram.c_str(), data, size);
+    if (size != 0)
+    {
+      void* data = _core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
+      std::string sram = getSRAMPath();
+      saveFile(sram.c_str(), data, size);
+    }
+  }
+
+  void unloadCore()
+  {
+    if (isGameActive())
+    {
+      RA_ClearMemoryBanks();
+      unloadGame();
+
+      std::string config = _config.serialize();
+      saveFile(getCoreConfigPath().c_str(), config.c_str(), config.length());
+
+      _core.destroy();
+    }
   }
 
   std::string getSRAMPath()
@@ -683,32 +682,33 @@ protected:
     return path;
   }
 
+  const char* getCoreFileName()
+  {
+    switch (_system)
+    {
+    case System::kNone:          break;
+    case System::kStella:        return "stella_libretro";
+    case System::kSnes9x:        return "snes9x_libretro";
+    case System::kPicoDrive:     return "picodrive_libretro";
+    case System::kGenesisPlusGx: return "genesis_plus_gx_libretro";
+    }
+
+    return NULL;
+  }
+
+  std::string getInputConfigPath()
+  {
+    std::string path = _config.getSystemPath();
+    path.append(getCoreFileName());
+    path.append("-input.json");
+    return path;
+  }
+
   std::string getCoreConfigPath()
   {
     std::string path = _config.getSystemPath();
-
-    switch (_system)
-    {
-    case System::kNone:
-      break;
-
-    case System::kStella:
-      path.append("stella_libretro.json");
-      break;
-
-    case System::kSnes9x:
-      path.append("snes9x_libretro.json");
-      break;
-    
-    case System::kPicoDrive:
-      path.append("picodrive_libretro.json");
-      break;
-
-    case System::kGenesisPlusGx:
-      path.append("genesis_plus_gx_libretro.json");
-      break;
-    }
-
+    path.append(getCoreFileName());
+    path.append("-core.json");
     return path;
   }
 
@@ -773,52 +773,28 @@ protected:
       switch (cmd)
       {
       case IDM_SYSTEM_STELLA:
-        if (isGameActive())
-        {
-          RA_ClearMemoryBanks();
-          unloadGame();
-          _core.destroy();
-        }
-
+        unloadCore();
         _state = State::kCoreLoaded;
         _system = System::kStella;
         updateMenu(_state, _system);
         break;
       
       case IDM_SYSTEM_SNES9X:
-        if (isGameActive())
-        {
-          RA_ClearMemoryBanks();
-          unloadGame();
-          _core.destroy();
-        }
-        
+        unloadCore();
         _state = State::kCoreLoaded;
         _system = System::kSnes9x;
         updateMenu(_state, _system);
         break;
 
       case IDM_SYSTEM_PICODRIVE:
-        if (isGameActive())
-        {
-          RA_ClearMemoryBanks();
-          unloadGame();
-          _core.destroy();
-        }
-        
+        unloadCore();
         _state = State::kCoreLoaded;
         _system = System::kPicoDrive;
         updateMenu(_state, _system);
         break;
 
       case IDM_SYSTEM_GENESISPLUSGX:
-        if (isGameActive())
-        {
-          RA_ClearMemoryBanks();
-          unloadGame();
-          _core.destroy();
-        }
-        
+        unloadCore();
         _state = State::kCoreLoaded;
         _system = System::kGenesisPlusGx;
         updateMenu(_state, _system);
@@ -845,10 +821,8 @@ protected:
         break;
       
       case IDM_CLOSE_GAME:
+        unloadCore();
         _state = State::kCoreLoaded;
-        RA_ClearMemoryBanks();
-        unloadGame();
-        _core.destroy();
         updateMenu(_state, _system);
         break;
 
@@ -1164,14 +1138,7 @@ public:
 
   void destroy()
   {
-    std::string config = _config.serialize();
-    saveFile(getCoreConfigPath().c_str(), config.c_str(), config.length());
-
-    if (isGameActive())
-    {
-      unloadGame();
-      _core.destroy();
-    }
+    unloadCore();
 
     if (_state == State::kInitialized)
     {
