@@ -3,7 +3,6 @@
 #include "libretro/Components.h"
 
 #include <windows.h>
-#include <rapidjson/document.h>
 
 class Config: public libretro::ConfigComponent
 {
@@ -20,7 +19,8 @@ public:
   virtual bool varUpdated() override;
   virtual const char* getVariable(const char* variable) override;
 
-  void setFromJson(const rapidjson::Value& json);
+  std::string serialize();
+  void unserialize(const char* json);
   void showDialog();
 
   bool preserveAspect()
@@ -34,7 +34,12 @@ public:
   }
 
 protected:
-  static const char* getOption(int index, void* udata);
+  static const char* s_getOption(int index, void* udata);
+
+  static int s_key(void* userdata, const char* name, size_t length);
+  static int s_string(void* userdata, const char* string, size_t length);
+  static int s_boolean(void* userdata, int istrue);
+
   
   struct Variable
   {
@@ -51,4 +56,6 @@ protected:
   bool _linearFilter;
 
   bool _updated;
+
+  std::string _key;
 };

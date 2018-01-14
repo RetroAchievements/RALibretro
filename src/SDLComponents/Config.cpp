@@ -1,6 +1,7 @@
 #include "Config.h"
 
 #include "Dialog.h"
+#include "jsonsax/jsonsax.h"
 
 #include <string.h>
 
@@ -93,31 +94,41 @@ const char* Config::getVariable(const char* variable)
   return NULL;
 }
 
-void Config::setFromJson(const rapidjson::Value& json)
+std::string Config::serialize()
 {
+  std::string json("{");
+
   for (auto& var: _variables)
   {
-    const rapidjson::Value& value = json[var._key.c_str()];
-    int selected = 0;
-
-    for (const auto& option: var._options)
-    {
-      if (value.GetString() == option)
-      {
-        break;
-      }
-
-      selected++;
-    }
-
-    if ((size_t)selected >= var._options.size())
-    {
-      selected = 0;
-    }
-
-    _updated = _updated || selected != var._selected;
-    var._selected = selected;
+    json.append("\"");
+    json.append(var._key);
+    json.append("\":\"");
+    json.append(var._options[var._selected]);
+    json.append("\",");
   }
+
+  json.append("\"_preserveAspect\":");
+  json.append(_preserveAspect ? "true" : "false");
+  json.append(",");
+
+  json.append("\"_linearFilter\":");
+  json.append(_linearFilter ? "true" : "false");
+
+  json.append("}");
+  return json;
+}
+
+void Config::unserialize(const char* json)
+{
+  jsonsax_handlers_t handlers;
+  memset(&handlers, 0, sizeof(handlers));
+  handlers.key = s_key;
+  handlers.string = s_string;
+  handlers.boolean = s_boolean;
+
+  jsonsax_parse(json, &handlers, this);
+
+  _key.clear();
 }
 
 void Config::showDialog()
@@ -139,7 +150,7 @@ void Config::showDialog()
   for (auto& var: _variables)
   {
     db.addLabel(var._name.c_str(), 0, y, WIDTH / 3 - 5, 8);
-    db.addCombobox(50000 + id, WIDTH / 3 + 5, y, WIDTH - WIDTH / 3 - 5, LINE, 5, getOption, (void*)&var._options, &var._selected);
+    db.addCombobox(50000 + id, WIDTH / 3 + 5, y, WIDTH - WIDTH / 3 - 5, LINE, 5, s_getOption, (void*)&var._options, &var._selected);
 
     y += LINE;
     id++;
@@ -151,7 +162,7 @@ void Config::showDialog()
   _updated = db.show();
 }
 
-const char* Config::getOption(int index, void* udata)
+const char* Config::s_getOption(int index, void* udata)
 {
   auto options = (std::vector<std::string>*)udata;
 
@@ -161,4 +172,66 @@ const char* Config::getOption(int index, void* udata)
   }
 
   return NULL;
+}
+
+int Config::s_key(void* userdata, const char* name, size_t length)
+{
+  auto self = (Config*)userdata;
+  self->_key = std::string(name, length);
+  return 0;
+}
+
+int Config::s_string(void* userdata, const char* string, size_t length)
+{
+  auto self = (Config*)userdata;
+  std::string opt(string, length);
+
+  for (auto& var: self->_variables)
+  {
+    if (var._key == self->_key)
+    {
+      int selected = 0;
+
+      for (const auto& option: var._options)
+      {
+        if (option == opt)
+        {
+          break;
+        }
+
+        selected++;
+      }
+
+      if ((size_t)selected >= var._options.size())
+      {
+        selected = 0;
+      }
+
+      self->_updated = self->_updated || selected != var._selected;
+      var._selected = selected;
+      break;
+    }
+  }
+
+  return 0;
+}
+
+int Config::s_boolean(void* userdata, int istrue)
+{
+  auto self = (Config*)userdata;
+
+  if (self->_key == "_preserveAspect")
+  {
+    bool value = istrue != 0;
+    self->_updated = self->_updated || self->_preserveAspect != value;
+    self->_preserveAspect = value;
+  }
+  else if (self->_key == "_linearFilter")
+  {
+    bool value = istrue != 0;
+    self->_updated = self->_updated || self->_linearFilter != value;
+    self->_linearFilter = value;
+  }
+
+  return 0;
 }

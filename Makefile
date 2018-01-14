@@ -13,6 +13,7 @@ LDFLAGS=-m32
 LIBS=`sdl2-config --libs` -lopengl32 -lwinhttp
 OBJS=\
 	src/dynlib/dynlib.o \
+	src/jsonsax/jsonsax.o \
 	src/libretro/BareCore.o \
 	src/libretro/Core.o \
 	src/RA_Integration/RA_Implementation.o \

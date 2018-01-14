@@ -155,7 +155,7 @@ protected:
     }
 
     *size = statbuf.st_size;
-    data = malloc(*size);
+    data = malloc(*size + 1);
 
     if (data == NULL)
     {
@@ -183,10 +183,11 @@ protected:
     }
 
     fclose(file);
+    *((uint8_t*)data + *size) = 0;
     return data;
   }
 
-  void saveFile(const char* path, void* data, size_t size)
+  void saveFile(const char* path, const void* data, size_t size)
   {
     FILE* file = fopen(path, "wb");
 
@@ -603,6 +604,14 @@ protected:
       }
     }
 
+    data = loadFile(getCoreConfigPath().c_str(), &size);
+
+    if (data != NULL)
+    {
+      _config.unserialize((char*)data);
+      free(data);
+    }
+
     _state = State::kGameRunning;
     _input.setDefaultController();
     updateMenu(_state, _system);
@@ -670,6 +679,35 @@ protected:
 
     path += index;
     path += ".state";
+
+    return path;
+  }
+
+  std::string getCoreConfigPath()
+  {
+    std::string path = _config.getSystemPath();
+
+    switch (_system)
+    {
+    case System::kNone:
+      break;
+
+    case System::kStella:
+      path.append("stella_libretro.json");
+      break;
+
+    case System::kSnes9x:
+      path.append("snes9x_libretro.json");
+      break;
+    
+    case System::kPicoDrive:
+      path.append("picodrive_libretro.json");
+      break;
+
+    case System::kGenesisPlusGx:
+      path.append("genesis_plus_gx_libretro.json");
+      break;
+    }
 
     return path;
   }
@@ -1126,6 +1164,9 @@ public:
 
   void destroy()
   {
+    std::string config = _config.serialize();
+    saveFile(getCoreConfigPath().c_str(), config.c_str(), config.length());
+
     if (isGameActive())
     {
       unloadGame();
