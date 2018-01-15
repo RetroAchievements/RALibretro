@@ -12,17 +12,8 @@ static const char* s_gameControllerDB[] =
 bool Input::init(libretro::LoggerComponent* logger)
 {
   _logger = logger;
-  _ports = 0;
-  _updated = false;
 
-  ControllerType ctrl;
-  ctrl._description = "None";
-  ctrl._id = RETRO_DEVICE_NONE;
-
-  for (unsigned i = 0; i < sizeof(_ids) / sizeof(_ids[0]); i++)
-  {
-    _ids[i].push_back(ctrl);
-  }
+  reset();
 
   // Add controller mappings
   for (size_t i = 0; i < sizeof(s_gameControllerDB) / sizeof(s_gameControllerDB[0]); i++ )
@@ -44,18 +35,23 @@ bool Input::init(libretro::LoggerComponent* logger)
 void Input::reset()
 {
   _descriptors.clear();
-  _controllers.clear();
 
   _ports = 0;
+  _updated = false;
 
-  ControllerType ctrl;
-  ctrl._description = "None";
-  ctrl._id = RETRO_DEVICE_NONE;
+  ControllerInfo none;
+  none._description = "None";
+  none._id = RETRO_DEVICE_NONE;
 
-  for (unsigned i = 0; i < sizeof(_ids) / sizeof(_ids[0]); i++)
+  ControllerInfo retropad;
+  retropad._description = "RetroPad";
+  retropad._id = RETRO_DEVICE_JOYPAD;
+
+  for (unsigned i = 0; i < sizeof(_info) / sizeof(_info[0]); i++)
   {
-    _ids[i].clear();
-    _ids[i].push_back(ctrl);
+    _info[i].clear();
+    _info[i].push_back(none);
+    _info[i].push_back(retropad);
   }
 
   for (auto it = _pads.begin(); it != _pads.end(); ++it)
@@ -123,30 +119,22 @@ void Input::setDefaultController()
   Pad* pad = &_pads[0];
   uint64_t bit = 1;
 
-  for (unsigned i = 0; i < 64; i++, bit <<= 1)
+  for (unsigned port = 0; port < sizeof(_info) / sizeof(_info[0]); port++, bit <<= 1)
   {
     if ((_ports & bit) != 0)
     {
-      pad->_port = i + 1;
+      pad->_port = port + 1;
+      pad->_devId = RETRO_DEVICE_JOYPAD;
 
-      if (_controllers.size() != 0)
+      for (unsigned i = 2 /* Skip None and RetroPad */; i < _info[port].size(); i++)
       {
-        Controller* ctrl = &_controllers[i];
+        const ControllerInfo* info = &_info[port][i];
 
-        for (auto it = ctrl->_types.begin(); it != ctrl->_types.end(); ++it)
+        if ((info->_id & RETRO_DEVICE_MASK) == RETRO_DEVICE_JOYPAD)
         {
-          ControllerType* type = &*it;
-
-          if ((type->_id & RETRO_DEVICE_MASK) == RETRO_DEVICE_JOYPAD)
-          {
-            pad->_devId = type->_id;
-            break;
-          }
+          pad->_devId = info->_id;
+          break;
         }
-      }
-      else
-      {
-        pad->_devId = RETRO_DEVICE_JOYPAD;
       }
 
       _updated = true;
@@ -186,69 +174,45 @@ void Input::setInputDescriptors(const struct retro_input_descriptor* descs, unsi
     desc._port = descs->port;
     desc._device = descs->device;
     desc._index = descs->index;
-    desc._id = descs->id;
+    desc._button = descs->id;
     desc._description = descs->description;
 
     _descriptors.push_back(desc);
 
-    unsigned port = desc._port;
-
-    if (port < sizeof(_ids) / sizeof(_ids[0]) && (_ports & (1ULL << port)) == 0)
+    if (desc._port < sizeof(_info) / sizeof(_info[0]))
     {
-      ControllerType ctrl;
-      ctrl._description = "RetroPad";
-      ctrl._id = RETRO_DEVICE_JOYPAD;
-
-      _ids[port].push_back(ctrl);
-      _ports |= 1ULL << port;
+      _ports |= 1ULL << desc._port;
+    }
+    else
+    {
+      _logger->printf(RETRO_LOG_WARN, "Port %u above %lu limit", desc._port + 1, sizeof(_info) / sizeof(_info[0]));
     }
   }
 }
 
-void Input::setControllerInfo(const struct retro_controller_info* info, unsigned count)
+void Input::setControllerInfo(const struct retro_controller_info* rinfo, unsigned count)
 {
-  for (unsigned i = 0; i < count; info++, i++)
+  for (unsigned port = 0; port < count; rinfo++, port++)
   {
-    Controller ctrl;
-
-    for (unsigned j = 0; j < info->num_types; j++)
+    for (unsigned i = 0; i < rinfo->num_types; i++)
     {
-      ControllerType type;
-      type._description = info->types[j].desc;
-      type._id = info->types[j].id;
+      ControllerInfo info;
+      info._description = rinfo->types[i].desc;
+      info._id = rinfo->types[i].id;
 
-      ctrl._types.push_back(type);
-
-      if ((type._id & RETRO_DEVICE_MASK) == RETRO_DEVICE_JOYPAD)
+      if ((info._id & RETRO_DEVICE_MASK) == RETRO_DEVICE_JOYPAD)
       {
-        unsigned port = i;
-
-        if (port < sizeof(_ids) / sizeof(_ids[0]))
+        if (port < sizeof(_info) / sizeof(_info[0]))
         {
-          bool found = false;
-
-          for (auto it = _ids[port].begin(); it != _ids[port].end(); ++it)
-          {
-            if (it->_id == type._id)
-            {
-              // Overwrite the generic RetroPad description with the one from the controller info
-              it->_description = type._description;
-              found = true;
-              break;
-            }
-          }
-
-          if (!found)
-          {
-            _ids[port].push_back(type);
-          }
-
+          _info[port].push_back(info);
           _ports |= 1ULL << port;
+        }
+        else
+        {
+          _logger->printf(RETRO_LOG_WARN, "Port %u above %lu limit", port + 1, sizeof(_info) / sizeof(_info[0]));
         }
       }
     }
-
-    _controllers.push_back(ctrl);
   }
 }
 
@@ -447,4 +411,45 @@ void Input::controllerAxis(const SDL_Event* event)
 
     *last_dir = button;
   }
+}
+
+std::string Input::serialize()
+{
+  return "";
+}
+
+void Input::unserialize(const char* json)
+{
+
+}
+
+void Input::showDialog()
+{
+  /*const WORD WIDTH = 280;
+  const WORD LINE = 15;
+
+  Dialog db;
+  db.init("Settings");
+
+  WORD y = 0;
+
+  db.addCheckbox("Preserve aspect ratio", 51001, 0, y, WIDTH / 2 - 5, 8, &_preserveAspect);
+  db.addCheckbox("Linear filtering", 51002, WIDTH / 2 + 5, y, WIDTH / 2 - 5, 8, &_linearFilter);
+  y += LINE;
+
+  DWORD id = 0;
+
+  for (auto& var: _variables)
+  {
+    db.addLabel(var._name.c_str(), 0, y, WIDTH / 3 - 5, 8);
+    db.addCombobox(50000 + id, WIDTH / 3 + 5, y, WIDTH - WIDTH / 3 - 5, LINE, 5, s_getOption, (void*)&var._options, &var._selected);
+
+    y += LINE;
+    id++;
+  }
+
+  db.addButton("OK", IDOK, WIDTH - 55 - 50, y, 50, 14, true);
+  db.addButton("Cancel", IDCANCEL, WIDTH - 50, y, 50, 14, false);
+
+  _updated = db.show();*/
 }

@@ -27,6 +27,10 @@ public:
   virtual void    poll() override;
   virtual int16_t read(unsigned port, unsigned device, unsigned index, unsigned id) override;
 
+  std::string serialize();
+  void unserialize(const char* json);
+  void showDialog();
+
 protected:
   struct Pad
   {
@@ -48,20 +52,15 @@ protected:
     unsigned _port;
     unsigned _device;
     unsigned _index;
-    unsigned _id;
+    unsigned _button;
 
     std::string _description;
   };
 
-  struct ControllerType
+  struct ControllerInfo
   {
     std::string _description;
     unsigned    _id;
-  };
-
-  struct Controller
-  {
-    std::vector<ControllerType> _types;
   };
 
   void addController(const SDL_Event* event);
@@ -75,8 +74,7 @@ protected:
 
   std::map<SDL_JoystickID, Pad> _pads;
   std::vector<Descriptor>       _descriptors;
-  std::vector<Controller>       _controllers;
 
   uint64_t                    _ports;
-  std::vector<ControllerType> _ids[64];
+  std::vector<ControllerInfo> _info[64];
 };
