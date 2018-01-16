@@ -365,6 +365,7 @@ protected:
   void initCore()
   {
     _config.reset();
+    _input.reset();
 
     if (!_core.init(&_components))
     {
@@ -590,12 +591,13 @@ protected:
 
     if (data != NULL)
     {
-      _config.unserialize((char*)data);
+      _config.deserialize((char*)data);
       free(data);
     }
 
+    _input.autoAssign();
+
     _state = State::kGameRunning;
-    _input.setDefaultController();
     updateMenu(_state, _system);
   }
 
@@ -618,8 +620,14 @@ protected:
       RA_ClearMemoryBanks();
       unloadGame();
 
-      std::string config = _config.serialize();
-      saveFile(getCoreConfigPath().c_str(), config.c_str(), config.length());
+      std::string json;
+      //json.append("{\"config\":");
+      json.append(_config.serialize());
+      //json.append(",\"input\":");
+      //json.append(_input.serialize());
+      //json.append("}");
+
+      saveFile(getCoreConfigPath().c_str(), json.c_str(), json.length());
 
       _core.destroy();
     }
@@ -757,7 +765,7 @@ protected:
 
   void configureInput()
   {
-
+    _input.showDialog();
   }
 
   void handle(const SDL_Event* event, bool* done)

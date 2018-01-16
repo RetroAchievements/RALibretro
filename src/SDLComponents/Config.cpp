@@ -118,17 +118,24 @@ std::string Config::serialize()
   return json;
 }
 
-void Config::unserialize(const char* json)
+struct Deserialize
 {
+  Config* _self;
+  std::string _key;
+};
+
+void Config::deserialize(const char* json)
+{
+  Deserialize ud;
+  ud._self = this;
+
   jsonsax_handlers_t handlers;
   memset(&handlers, 0, sizeof(handlers));
   handlers.key = s_key;
   handlers.string = s_string;
   handlers.boolean = s_boolean;
 
-  jsonsax_parse(json, &handlers, this);
-
-  _key.clear();
+  jsonsax_parse(json, &handlers, &ud);
 }
 
 void Config::showDialog()
@@ -176,19 +183,19 @@ const char* Config::s_getOption(int index, void* udata)
 
 int Config::s_key(void* userdata, const char* name, size_t length)
 {
-  auto self = (Config*)userdata;
-  self->_key = std::string(name, length);
+  auto ud = (Deserialize*)userdata;
+  ud->_key = std::string(name, length);
   return 0;
 }
 
 int Config::s_string(void* userdata, const char* string, size_t length)
 {
-  auto self = (Config*)userdata;
+  auto ud = (Deserialize*)userdata;
   std::string opt(string, length);
 
-  for (auto& var: self->_variables)
+  for (auto& var: ud->_self->_variables)
   {
-    if (var._key == self->_key)
+    if (var._key == ud->_key)
     {
       int selected = 0;
 
@@ -207,7 +214,7 @@ int Config::s_string(void* userdata, const char* string, size_t length)
         selected = 0;
       }
 
-      self->_updated = self->_updated || selected != var._selected;
+      ud->_self->_updated = ud->_self->_updated || selected != var._selected;
       var._selected = selected;
       break;
     }
@@ -218,19 +225,19 @@ int Config::s_string(void* userdata, const char* string, size_t length)
 
 int Config::s_boolean(void* userdata, int istrue)
 {
-  auto self = (Config*)userdata;
+  auto ud = (Deserialize*)userdata;
 
-  if (self->_key == "_preserveAspect")
+  if (ud->_key == "_preserveAspect")
   {
     bool value = istrue != 0;
-    self->_updated = self->_updated || self->_preserveAspect != value;
-    self->_preserveAspect = value;
+    ud->_self->_updated = ud->_self->_updated || ud->_self->_preserveAspect != value;
+    ud->_self->_preserveAspect = value;
   }
-  else if (self->_key == "_linearFilter")
+  else if (ud->_key == "_linearFilter")
   {
     bool value = istrue != 0;
-    self->_updated = self->_updated || self->_linearFilter != value;
-    self->_linearFilter = value;
+    ud->_self->_updated = ud->_self->_updated || ud->_self->_linearFilter != value;
+    ud->_self->_linearFilter = value;
   }
 
   return 0;

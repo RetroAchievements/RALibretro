@@ -1,5 +1,8 @@
 #include "Input.h"
 
+#include "Dialog.h"
+#include "jsonsax/jsonsax.h"
+
 static const char* s_gameControllerDB[] =
 {
   // Updated on 2017-06-15
@@ -47,19 +50,19 @@ void Input::reset()
   retropad._description = "RetroPad";
   retropad._id = RETRO_DEVICE_JOYPAD;
 
-  for (unsigned i = 0; i < sizeof(_info) / sizeof(_info[0]); i++)
+  for (unsigned i = 0; i < kMaxPorts; i++)
   {
     _info[i].clear();
     _info[i].push_back(none);
     _info[i].push_back(retropad);
+
+    _devices[i] = 0;
   }
 
-  for (auto it = _pads.begin(); it != _pads.end(); ++it)
+  for (auto& pair: _pads)
   {
-    Pad* pad = &it->second;
-
-    pad->_port = 0;
-    pad->_devId = RETRO_DEVICE_NONE;
+    Pad* pad = &pair.second;
+    pad->_ports = 0;
   }
 }
 
@@ -88,57 +91,55 @@ void Input::addController(int which)
 
     pad._id = SDL_JoystickInstanceID(pad._joystick);
 
-    if (_pads.find(pad._id) == _pads.end())
-    {
-      pad._controllerName = SDL_GameControllerName(pad._controller);
-      pad._joystickName = SDL_JoystickName(pad._joystick);
-      pad._lastDir[0] = pad._lastDir[1] = pad._lastDir[2] =
-      pad._lastDir[3] = pad._lastDir[4] = pad._lastDir[5] = -1;
-      pad._sensitivity = 0.5f;
-      pad._port = 0;
-      pad._devId = RETRO_DEVICE_NONE;
-      memset(pad._state, 0, sizeof(pad._state));
-
-      _pads.insert(std::make_pair(pad._id, pad));
-      _logger->printf(RETRO_LOG_INFO, "Controller %s (%s) added", pad._controllerName, pad._joystickName);
-    }
-    else
+    if (_pads.find(pad._id) != _pads.end())
     {
       SDL_GameControllerClose(pad._controller);
+      return;
     }
+
+    pad._controllerName = SDL_GameControllerName(pad._controller);
+    pad._joystickName = SDL_JoystickName(pad._joystick);
+    pad._ports = 0;
+    pad._lastDir[0] = pad._lastDir[1] = pad._lastDir[2] =
+    pad._lastDir[3] = pad._lastDir[4] = pad._lastDir[5] = -1;
+    pad._sensitivity = 0.5f;
+    memset(pad._state, 0, sizeof(pad._state));
+
+    _pads.insert(std::make_pair(pad._id, pad));
+    _logger->printf(RETRO_LOG_INFO, "Controller %s (%s) added", pad._controllerName, pad._joystickName);
   }
 }
 
-void Input::setDefaultController()
+void Input::autoAssign()
 {
-  if (_pads.size() == 0)
+  for (auto& pair: _pads)
   {
-    return;
-  }
+    Pad* pad = &pair.second;
+    uint64_t bit = 1;
 
-  Pad* pad = &_pads[0];
-  uint64_t bit = 1;
-
-  for (unsigned port = 0; port < sizeof(_info) / sizeof(_info[0]); port++, bit <<= 1)
-  {
-    if ((_ports & bit) != 0)
+    for (unsigned port = 0; port < kMaxPorts; port++, bit <<= 1)
     {
-      pad->_port = port + 1;
-      pad->_devId = RETRO_DEVICE_JOYPAD;
-
-      for (unsigned i = 2 /* Skip None and RetroPad */; i < _info[port].size(); i++)
+      if ((_ports & bit) != 0)
       {
-        const ControllerInfo* info = &_info[port][i];
+        pad->_ports |= bit;
 
-        if ((info->_id & RETRO_DEVICE_MASK) == RETRO_DEVICE_JOYPAD)
+        if (_devices[port] == 0)
         {
-          pad->_devId = info->_id;
-          break;
-        }
-      }
+          for (unsigned i = 1 /* Skip None */; i < _info[port].size(); i++)
+          {
+            const ControllerInfo* info = &_info[port][i];
 
-      _updated = true;
-      return;
+            if ((info->_id & RETRO_DEVICE_MASK) == RETRO_DEVICE_JOYPAD)
+            {
+              _devices[port] = i;
+              break;
+            }
+          }
+        }
+
+        _updated = true;
+        return;
+      }
     }
   }
 }
@@ -179,13 +180,13 @@ void Input::setInputDescriptors(const struct retro_input_descriptor* descs, unsi
 
     _descriptors.push_back(desc);
 
-    if (desc._port < sizeof(_info) / sizeof(_info[0]))
+    if (desc._port < kMaxPorts)
     {
       _ports |= 1ULL << desc._port;
     }
     else
     {
-      _logger->printf(RETRO_LOG_WARN, "Port %u above %lu limit", desc._port + 1, sizeof(_info) / sizeof(_info[0]));
+      _logger->printf(RETRO_LOG_WARN, "Port %u above %d limit", desc._port + 1, kMaxPorts);
     }
   }
 }
@@ -202,14 +203,14 @@ void Input::setControllerInfo(const struct retro_controller_info* rinfo, unsigne
 
       if ((info._id & RETRO_DEVICE_MASK) == RETRO_DEVICE_JOYPAD)
       {
-        if (port < sizeof(_info) / sizeof(_info[0]))
+        if (port < kMaxPorts)
         {
           _info[port].push_back(info);
           _ports |= 1ULL << port;
         }
         else
         {
-          _logger->printf(RETRO_LOG_WARN, "Port %u above %lu limit", port + 1, sizeof(_info) / sizeof(_info[0]));
+          _logger->printf(RETRO_LOG_WARN, "Port %u above %d limit", port + 1, kMaxPorts);
         }
       }
     }
@@ -225,19 +226,18 @@ bool Input::ctrlUpdated()
 
 unsigned Input::getController(unsigned port)
 {
-  port++;
+  uint64_t bit = 1ULL << port;
 
-  for (auto it = _pads.begin(); it != _pads.end(); ++it)
+  for (const auto& pair: _pads)
   {
-    Pad* pad = &it->second;
+    const Pad* pad = &pair.second;
 
-    if (pad->_port == (int)port)
+    if ((pad->_ports & bit) != 0)
     {
-      return pad->_devId;
+      return _info[port][_devices[port]]._id;
     }
   }
 
-  // The controller was removed
   return RETRO_DEVICE_NONE;
 }
 
@@ -251,13 +251,13 @@ int16_t Input::read(unsigned port, unsigned device, unsigned index, unsigned id)
 {
   (void)index;
 
-  port++;
+  uint64_t bit = 1ULL << port;
 
-  for (auto it = _pads.begin(); it != _pads.end(); ++it)
+  for (const auto& pair: _pads)
   {
-    Pad* pad = &it->second;
+    const Pad* pad = &pair.second;
 
-    if (pad->_port == (int)port && pad->_devId == device)
+    if ((pad->_ports & bit) != 0 && _devices[port] != 0)
     {
       return pad->_state[id] ? 32767 : 0;
     }
@@ -278,9 +278,11 @@ void Input::removeController(const SDL_Event* event)
   if (it != _pads.end())
   {
     Pad* pad = &it->second;
-    _logger->printf(RETRO_LOG_INFO, "Controller %s (%s) removed", pad->_controllerName, pad->_joystickName);
+
     SDL_GameControllerClose(pad->_controller);
     _pads.erase(it);
+
+    _logger->printf(RETRO_LOG_INFO, "Controller %s (%s) removed", pad->_controllerName, pad->_joystickName);
 
     // Flag a pending update so the core will receive an event for this removal
     _updated = true;
@@ -289,11 +291,11 @@ void Input::removeController(const SDL_Event* event)
 
 void Input::controllerButton(const SDL_Event* event)
 {
-  auto it = _pads.find(event->cbutton.which);
+  auto found = _pads.find(event->cbutton.which);
 
-  if (it != _pads.end())
+  if (found != _pads.end())
   {
-    Pad* pad = &it->second;
+    Pad* pad = &found->second;
     unsigned button;
 
     switch (event->cbutton.button)
@@ -322,11 +324,11 @@ void Input::controllerButton(const SDL_Event* event)
 
 void Input::controllerAxis(const SDL_Event* event)
 {
-  auto it = _pads.find(event->caxis.which);
+  auto found = _pads.find(event->caxis.which);
 
-  if (it != _pads.end())
+  if (found != _pads.end())
   {
-    Pad* pad = &it->second;
+    Pad* pad = &found->second;
     int threshold = 32767 * pad->_sensitivity;
     int positive, negative;
     int button;
@@ -415,34 +417,109 @@ void Input::controllerAxis(const SDL_Event* event)
 
 std::string Input::serialize()
 {
-  return "";
+  std::string json("[");
+  const char* comma = "";
+
+  for (unsigned port = 0; port < kMaxPorts; port++)
+  {
+    char temp[128];
+    snprintf(temp, sizeof(temp), "%s{\"port\":%u,\"device\":%d}", comma, port, _devices[port]);
+    json.append(temp);
+    comma = ",";
+  }
+
+  json.append("]");
+  return json;
 }
 
-void Input::unserialize(const char* json)
+struct Deserialize
 {
+  Input*   _self;
+  bool     _isPort;
+  unsigned _port;
+};
 
+void Input::deserialize(const char* json)
+{
+  Deserialize ud;
+  ud._self = this;
+  
+  jsonsax_handlers_t handlers;
+  memset(&handlers, 0, sizeof(handlers));
+  handlers.key = s_key;
+  handlers.number = s_number;
+
+  jsonsax_parse(json, &handlers, &ud);
+}
+
+int Input::s_key(void* userdata, const char* name, size_t length)
+{
+  auto* ud = (Deserialize*)userdata;
+  ud->_isPort = length == 4 && !strncmp(name, "port", length);
+  return 0;
+}
+
+int Input::s_number(void* userdata, const char* number, size_t length)
+{
+  auto* ud = (Deserialize*)userdata;
+  unsigned long n = strtoul(number, NULL, 10);
+
+  if (ud->_isPort)
+  {
+    ud->_port = n;
+  }
+  else
+  {
+    ud->_self->_devices[ud->_port] = n;
+  }
+
+  return 0;
 }
 
 void Input::showDialog()
 {
-  /*const WORD WIDTH = 280;
+  int selectedDevice[kMaxPorts];
+  int selectedPad[kMaxPorts];
+
+  for (unsigned port = 0; port < kMaxPorts; port++)
+  {
+    selectedDevice[port] = _devices[port];
+
+    uint64_t bit = 1ULL << port;
+    int selected = 0;
+    selectedPad[port] = 0;
+
+    for (const auto& pair: _pads)
+    {
+      selected++;
+      const Pad* pad = &pair.second;
+
+      if ((pad->_ports & bit) != 0)
+      {
+        selectedPad[port] = selected;
+        break;
+      }
+    }
+  }
+
+  const WORD WIDTH = 280;
   const WORD LINE = 15;
 
   Dialog db;
   db.init("Settings");
 
   WORD y = 0;
-
-  db.addCheckbox("Preserve aspect ratio", 51001, 0, y, WIDTH / 2 - 5, 8, &_preserveAspect);
-  db.addCheckbox("Linear filtering", 51002, WIDTH / 2 + 5, y, WIDTH / 2 - 5, 8, &_linearFilter);
-  y += LINE;
-
   DWORD id = 0;
 
-  for (auto& var: _variables)
+  for (unsigned port = 0; port < kMaxPorts; port++)
   {
-    db.addLabel(var._name.c_str(), 0, y, WIDTH / 3 - 5, 8);
-    db.addCombobox(50000 + id, WIDTH / 3 + 5, y, WIDTH - WIDTH / 3 - 5, LINE, 5, s_getOption, (void*)&var._options, &var._selected);
+    char label[32];
+    snprintf(label, sizeof(label), "Port %u", port + 1);
+    db.addLabel(label, 0, y, WIDTH / 3 - 5, 8);
+
+    db.addCombobox(40000 + id, WIDTH / 3 + 5, y, WIDTH / 3 - 10, LINE, 5, s_getType, (void*)&_info[port], &selectedDevice[port]);
+
+    db.addCombobox(50000 + id, WIDTH * 2 / 3 + 5, y, WIDTH / 3 - 5, LINE, 5, s_getPad, (void*)&_pads, &selectedPad[port]);
 
     y += LINE;
     id++;
@@ -451,5 +528,65 @@ void Input::showDialog()
   db.addButton("OK", IDOK, WIDTH - 55 - 50, y, 50, 14, true);
   db.addButton("Cancel", IDCANCEL, WIDTH - 50, y, 50, 14, false);
 
-  _updated = db.show();*/
+  _updated = db.show();
+
+  if (_updated)
+  {
+    for (auto& pair: _pads)
+    {
+      Pad* pad = &pair.second;
+      pad->_ports = 0;
+    }
+
+    for (unsigned port = 0; port < kMaxPorts; port++)
+    {
+      _devices[port] = selectedDevice[port];
+
+      uint64_t bit = 1ULL << port;
+      int selected = selectedPad[port];
+
+      for (auto& pair: _pads)
+      {
+        Pad* pad = &pair.second;
+
+        if (--selected == 0)
+        {
+          pad->_ports |= bit;
+          break;
+        }
+      }
+    }
+  }
+}
+
+const char* Input::s_getType(int index, void* udata)
+{
+  auto info = (std::vector<ControllerInfo>*)udata;
+
+  if ((size_t)index < info->size())
+  {
+    return info->at(index)._description.c_str();
+  }
+
+  return NULL;
+}
+
+const char* Input::s_getPad(int index, void* udata)
+{
+  if (index == 0)
+  {
+    return "Unassigned";
+  }
+
+  auto pads = (std::map<SDL_JoystickID, Pad>*)udata;
+
+  for (const auto& pad: *pads)
+  {
+    if (--index == 0)
+    {
+      return pad.second._controllerName;
+    }
+  }
+
+  return NULL;
 }

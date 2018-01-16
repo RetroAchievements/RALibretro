@@ -2,8 +2,6 @@
 
 #include "libretro/Components.h"
 
-#include <windows.h>
-
 class Config: public libretro::ConfigComponent
 {
 public:
@@ -20,7 +18,7 @@ public:
   virtual const char* getVariable(const char* variable) override;
 
   std::string serialize();
-  void unserialize(const char* json);
+  void deserialize(const char* json);
   void showDialog();
 
   bool preserveAspect()

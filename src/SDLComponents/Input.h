@@ -15,7 +15,7 @@ public:
   void reset();
 
   void addController(int which);
-  void setDefaultController();
+  void autoAssign();
   void processEvent(const SDL_Event* event);
 
   virtual void setInputDescriptors(const struct retro_input_descriptor* descs, unsigned count) override;
@@ -28,7 +28,7 @@ public:
   virtual int16_t read(unsigned port, unsigned device, unsigned index, unsigned id) override;
 
   std::string serialize();
-  void unserialize(const char* json);
+  void deserialize(const char* json);
   void showDialog();
 
 protected:
@@ -39,12 +39,10 @@ protected:
     const char*         _controllerName;
     SDL_Joystick*       _joystick;
     const char*         _joystickName;
+    uint64_t            _ports;
     int                 _lastDir[6];
     bool                _state[16];
     float               _sensitivity;
-
-    int      _port;
-    unsigned _devId;
   };
 
   struct Descriptor
@@ -63,10 +61,21 @@ protected:
     unsigned    _id;
   };
 
+  enum
+  {
+    kMaxPorts = 8
+  };
+
+  static int s_key(void* userdata, const char* name, size_t length);
+  static int s_number(void* userdata, const char* number, size_t length);
+
   void addController(const SDL_Event* event);
   void removeController(const SDL_Event* event);
   void controllerButton(const SDL_Event* event);
   void controllerAxis(const SDL_Event* event);
+
+  static const char* s_getType(int index, void* udata);
+  static const char* s_getPad(int index, void* udata);
 
   libretro::LoggerComponent* _logger;
 
@@ -76,5 +85,7 @@ protected:
   std::vector<Descriptor>       _descriptors;
 
   uint64_t                    _ports;
-  std::vector<ControllerInfo> _info[64];
+  std::vector<ControllerInfo> _info[kMaxPorts];
+
+  int _devices[kMaxPorts];
 };
