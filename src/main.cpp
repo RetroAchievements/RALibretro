@@ -47,7 +47,8 @@ protected:
     kStella,
     kSnes9x,
     kPicoDrive,
-    kGenesisPlusGx
+    kGenesisPlusGx,
+    kFceumm
   };
 
   State  _state;
@@ -243,12 +244,12 @@ protected:
   {
     static const UINT all_system_items[] =
     {
-      IDM_SYSTEM_STELLA, IDM_SYSTEM_SNES9X, IDM_SYSTEM_PICODRIVE, IDM_SYSTEM_GENESISPLUSGX
+      IDM_SYSTEM_STELLA, IDM_SYSTEM_SNES9X, IDM_SYSTEM_PICODRIVE, IDM_SYSTEM_GENESISPLUSGX, IDM_SYSTEM_FCEUMM
     };
 
     static const System all_systems[] =
     {
-      System::kStella, System::kSnes9x, System::kPicoDrive, System::kGenesisPlusGx
+      System::kStella, System::kSnes9x, System::kPicoDrive, System::kGenesisPlusGx, System::kFceumm
     };
 
     static const UINT error_items[] =
@@ -518,6 +519,10 @@ protected:
       }
 
       break;
+    
+    case System::kFceumm:
+      RA_SetConsoleID(NES);
+      break;
     }
 
     RA_ClearMemoryBanks();
@@ -558,6 +563,7 @@ protected:
       break;
 
     case System::kSnes9x:
+    case System::kFceumm:
       _memoryData1 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
       _memorySize1 = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
       RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
@@ -699,6 +705,7 @@ protected:
     case System::kSnes9x:        return "snes9x_libretro";
     case System::kPicoDrive:     return "picodrive_libretro";
     case System::kGenesisPlusGx: return "genesis_plus_gx_libretro";
+    case System::kFceumm:        return "fceumm_libretro";
     }
 
     return NULL;
@@ -805,6 +812,13 @@ protected:
         unloadCore();
         _state = State::kCoreLoaded;
         _system = System::kGenesisPlusGx;
+        updateMenu(_state, _system);
+        break;
+
+      case IDM_SYSTEM_FCEUMM:
+        unloadCore();
+        _state = State::kCoreLoaded;
+        _system = System::kFceumm;
         updateMenu(_state, _system);
         break;
 

@@ -21,9 +21,10 @@ main MENU
         POPUP "&System"
         {
             MENUITEM "&1. Atari 2600 (Stella)", IDM_SYSTEM_STELLA
-            MENUITEM "&2. Super Nintendo (Snes9x)", IDM_SYSTEM_SNES9X
-            MENUITEM "&3. Master System/Mega Drive (PicoDrive)", IDM_SYSTEM_PICODRIVE
-            MENUITEM "&4. Master System/Mega Drive (Genesis Plus GX)", IDM_SYSTEM_GENESISPLUSGX
+            MENUITEM "&2. Master System/Mega Drive (Genesis Plus GX)", IDM_SYSTEM_PICODRIVE
+            MENUITEM "&3. Master System/Mega Drive (PicoDrive)", IDM_SYSTEM_GENESISPLUSGX
+            MENUITEM "&4. Nintendo (FCEUmm)", IDM_SYSTEM_FCEUMM
+            MENUITEM "&5. Super Nintendo (Snes9x)", IDM_SYSTEM_SNES9X
         }
         MENUITEM SEPARATOR
         MENUITEM "&Load Game", IDM_LOAD_GAME

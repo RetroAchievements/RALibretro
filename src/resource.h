@@ -37,3 +37,4 @@
 #define IDM_SYSTEM_PICODRIVE                    40031
 #define IDM_TURBO                               40032
 #define IDM_SYSTEM_GENESISPLUSGX                40033
+#define IDM_SYSTEM_FCEUMM                       40034
