@@ -40,3 +40,5 @@
 #define IDM_SYSTEM_FCEUMM                       40034
 #define IDM_SYSTEM_HANDY                        40035
 #define IDM_SYSTEM_BEETLESGX                    40036
+#define IDM_SYSTEM_GAMBATTE                     40037
+#define IDM_SYSTEM_MGBA                         40038

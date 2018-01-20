@@ -22,6 +22,8 @@ main MENU
         {
             MENUITEM "Atari 2600 (Stella)", IDM_SYSTEM_STELLA
             MENUITEM "Atari Lynx (Handy)", IDM_SYSTEM_HANDY
+            MENUITEM "Game Boy/Game Boy Color (Gambatte)", IDM_SYSTEM_GAMBATTE
+            MENUITEM "Game Boy/Game Boy Color/Game Boy Advance (mGBA)", IDM_SYSTEM_MGBA
             MENUITEM "Master System/Mega Drive (Genesis Plus GX)", IDM_SYSTEM_PICODRIVE
             MENUITEM "Master System/Mega Drive (PicoDrive)", IDM_SYSTEM_GENESISPLUSGX
             MENUITEM "Nintendo (FCEUmm)", IDM_SYSTEM_FCEUMM

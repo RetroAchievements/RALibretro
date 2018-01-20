@@ -41,7 +41,7 @@ protected:
     kGameTurbo
   };
 
-  enum class System
+  enum class Emulator
   {
     kNone,
     kStella,
@@ -50,11 +50,28 @@ protected:
     kGenesisPlusGx,
     kFceumm,
     kHandy,
-    kBeetleSgx
+    kBeetleSgx,
+    kGambatte,
+    kMGBA
   };
 
-  State  _state;
-  System _system;
+  enum class System
+  {
+    kAtari2600      = VCS,
+    kAtariLynx      = Lynx,
+    kMasterSystem   = MasterSystem,
+    kMegaDrive      = MegaDrive,
+    kNintendo       = NES,
+    kPCEngine       = PCEngine,
+    kSuperNintendo  = SNES,
+    kGameBoy        = GB,
+    kGameBoyColor   = GBC,
+    kGameBoyAdvance = GBA
+  };
+
+  State    _state;
+  Emulator _emulator;
+  System   _system;
 
   SDL_Window*       _window;
   SDL_Renderer*     _renderer;
@@ -241,29 +258,32 @@ protected:
 
   void signalRomLoaded(void* rom, size_t size)
   {
-    switch (_system)
+    switch (_emulator) // This should be based on the system
     {
-    case System::kNone:
+    case Emulator::kNone:
       break;
 
-    case System::kStella:
-    case System::kPicoDrive:
-    case System::kGenesisPlusGx:
-    case System::kBeetleSgx:
+    case Emulator::kStella:
+    case Emulator::kPicoDrive:
+    case Emulator::kGenesisPlusGx:
+    case Emulator::kBeetleSgx:
+    case Emulator::kGambatte:
+    case Emulator::kMGBA:
       RA_OnLoadNewRom((BYTE*)rom, size);
       break;
 
-    case System::kSnes9x:
+    case Emulator::kSnes9x:
       signalRomLoadedWithPadding(rom, size, 8 * 1024 * 1024, 0);
       break;
 
-    case System::kFceumm:
+    case Emulator::kFceumm:
       signalRomLoadedNes(rom, size);
       break;
     
-    case System::kHandy:
+    case Emulator::kHandy:
       RA_OnLoadNewRom((BYTE*)rom + 0x0040, 0x0200);
       break;
+    
     }
   }
 
@@ -363,18 +383,18 @@ protected:
     }
   }
 
-  void updateMenu(State state, System system)
+  void updateMenu(State state, Emulator system)
   {
     static const UINT all_system_items[] =
     {
       IDM_SYSTEM_STELLA, IDM_SYSTEM_SNES9X, IDM_SYSTEM_PICODRIVE, IDM_SYSTEM_GENESISPLUSGX, IDM_SYSTEM_FCEUMM,
-      IDM_SYSTEM_HANDY, IDM_SYSTEM_BEETLESGX
+      IDM_SYSTEM_HANDY, IDM_SYSTEM_BEETLESGX, IDM_SYSTEM_GAMBATTE, IDM_SYSTEM_MGBA
     };
 
-    static const System all_systems[] =
+    static const Emulator all_systems[] =
     {
-      System::kStella, System::kSnes9x, System::kPicoDrive, System::kGenesisPlusGx, System::kFceumm,
-      System::kHandy, System::kBeetleSgx
+      Emulator::kStella, Emulator::kSnes9x, Emulator::kPicoDrive, Emulator::kGenesisPlusGx, Emulator::kFceumm,
+      Emulator::kHandy, Emulator::kBeetleSgx, Emulator::kGambatte, Emulator::kMGBA
     };
 
     static const UINT error_items[] =
@@ -484,7 +504,7 @@ protected:
 
     for (size_t i = 0; i < sizeof(all_systems) / sizeof(all_systems[0]); i++)
     {
-      EnableMenuItem(_menu, all_system_items[i], _system != all_systems[i] ? MF_ENABLED : MF_DISABLED);
+      EnableMenuItem(_menu, all_system_items[i], _emulator != all_systems[i] ? MF_ENABLED : MF_DISABLED);
     }
   }
 
@@ -619,45 +639,66 @@ protected:
       return;
     }
 
-    switch (_system)
+    int game_path_len = strlen(game_path);
+
+    switch (_emulator)
     {
-    case System::kNone:
+    case Emulator::kNone:
       return;
 
-    case System::kStella:
-      RA_SetConsoleID(VCS);
+    case Emulator::kStella:
+      _system = System::kAtari2600;
       break;
 
-    case System::kSnes9x:
-      RA_SetConsoleID(SNES);
+    case Emulator::kSnes9x:
+      _system = System::kSuperNintendo;
       break;
 
-    case System::kPicoDrive:
-    case System::kGenesisPlusGx:
+    case Emulator::kPicoDrive:
+    case Emulator::kGenesisPlusGx:
       if (_core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM) == 0x2000)
       {
-        RA_SetConsoleID(MasterSystem);
+        _system = System::kMasterSystem;
       }
       else
       {
-        RA_SetConsoleID(MegaDrive);
+        _system = System::kMegaDrive;
       }
 
       break;
     
-    case System::kFceumm:
-      RA_SetConsoleID(NES);
+    case Emulator::kFceumm:
+      _system = System::kNintendo;
       break;
     
-    case System::kHandy:
-      RA_SetConsoleID(Lynx);
+    case Emulator::kHandy:
+      _system = System::kAtariLynx;
       break;
     
-    case System::kBeetleSgx:
-      RA_SetConsoleID(PCEngine);
+    case Emulator::kBeetleSgx:
+      _system = System::kPCEngine;
+      break;
+    
+    case Emulator::kGambatte:
+    case Emulator::kMGBA:
+      if (!strcasecmp(game_path + game_path_len - 4, ".gbc"))
+      {
+        _system = System::kGameBoyColor;
+      }
+      else if (!strcasecmp(game_path + game_path_len - 4, ".gba"))
+      {
+        // Gambatte doesn't support GBA, but it won't be a problem to test it here
+        _system = System::kGameBoyAdvance;
+      }
+      else
+      {
+        _system = System::kGameBoy;
+      }
+
       break;
     }
 
+    RA_SetConsoleID((unsigned)_system);
     RA_ClearMemoryBanks();
     signalRomLoaded(data, size);
     free(data);
@@ -684,29 +725,62 @@ protected:
       }
     }
 
-    switch (_system)
+    switch (_emulator)
     {
-    case System::kNone:
+    case Emulator::kNone:
       break;
 
-    case System::kStella:
-    case System::kPicoDrive:
-    case System::kGenesisPlusGx:
-    case System::kHandy:
-    case System::kBeetleSgx:
+    case Emulator::kStella:
+    case Emulator::kPicoDrive:
+    case Emulator::kGenesisPlusGx:
+    case Emulator::kHandy:
+    case Emulator::kBeetleSgx:
+    case Emulator::kGambatte:
       _memoryData1 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
       _memorySize1 = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
       RA_InstallMemoryBank(0,	(void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
       break;
 
-    case System::kSnes9x:
-    case System::kFceumm:
+    case Emulator::kSnes9x:
+    case Emulator::kFceumm:
       _memoryData1 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
       _memorySize1 = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
       RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
+
       _memoryData2 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
       _memorySize2 = _core.getMemorySize(RETRO_MEMORY_SAVE_RAM);
       RA_InstallMemoryBank(1, (void*)::memoryRead2, (void*)::memoryWrite2, _memorySize2);
+
+      break;
+    
+    case Emulator::kMGBA:
+      if (_system == System::kGameBoyAdvance)
+      {
+        const struct retro_memory_map* mmap = _core.getMemoryMap();
+
+        for (unsigned i = 0; i < mmap->num_descriptors; i++)
+        {
+          if (mmap->descriptors[i].start == 0x03000000U)
+          {
+            _memoryData1 = (uint8_t*)mmap->descriptors[i].ptr;
+            _memorySize1 = mmap->descriptors[i].len;
+            RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
+          }
+          else if (mmap->descriptors[i].start == 0x02000000U)
+          {
+            _memoryData2 = (uint8_t*)mmap->descriptors[i].ptr;
+            _memorySize2 = mmap->descriptors[i].len;
+            RA_InstallMemoryBank(1, (void*)::memoryRead2, (void*)::memoryWrite2, _memorySize2);
+          }
+        }
+      }
+      else
+      {
+        _memoryData1 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
+        _memorySize1 = 32768;
+        RA_InstallMemoryBank(0,	(void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
+      }
+
       break;
     }
 
@@ -734,7 +808,7 @@ protected:
     _input.autoAssign();
 
     _state = State::kGameRunning;
-    updateMenu(_state, _system);
+    updateMenu(_state, _emulator);
   }
 
   void unloadGame()
@@ -828,16 +902,18 @@ protected:
 
   const char* getCoreFileName()
   {
-    switch (_system)
+    switch (_emulator)
     {
-    case System::kNone:          break;
-    case System::kStella:        return "stella_libretro";
-    case System::kSnes9x:        return "snes9x_libretro";
-    case System::kPicoDrive:     return "picodrive_libretro";
-    case System::kGenesisPlusGx: return "genesis_plus_gx_libretro";
-    case System::kFceumm:        return "fceumm_libretro";
-    case System::kHandy:         return "handy_libretro";
-    case System::kBeetleSgx:     return "mednafen_supergrafx_libretro";
+    case Emulator::kNone:          break;
+    case Emulator::kStella:        return "stella_libretro";
+    case Emulator::kSnes9x:        return "snes9x_libretro";
+    case Emulator::kPicoDrive:     return "picodrive_libretro";
+    case Emulator::kGenesisPlusGx: return "genesis_plus_gx_libretro";
+    case Emulator::kFceumm:        return "fceumm_libretro";
+    case Emulator::kHandy:         return "handy_libretro";
+    case Emulator::kBeetleSgx:     return "mednafen_supergrafx_libretro";
+    case Emulator::kGambatte:      return "gambatte_libretro";
+    case Emulator::kMGBA:          return "mgba_libretro";
     }
 
     return NULL;
@@ -881,7 +957,7 @@ protected:
     free(data);
 
     _states |= 1 << ndx;
-    updateMenu(_state, _system);
+    updateMenu(_state, _emulator);
   }
 
   void loadState(unsigned ndx)
@@ -922,50 +998,64 @@ protected:
       case IDM_SYSTEM_STELLA:
         unloadCore();
         _state = State::kCoreLoaded;
-        _system = System::kStella;
-        updateMenu(_state, _system);
+        _emulator = Emulator::kStella;
+        updateMenu(_state, _emulator);
         break;
       
       case IDM_SYSTEM_SNES9X:
         unloadCore();
         _state = State::kCoreLoaded;
-        _system = System::kSnes9x;
-        updateMenu(_state, _system);
+        _emulator = Emulator::kSnes9x;
+        updateMenu(_state, _emulator);
         break;
 
       case IDM_SYSTEM_PICODRIVE:
         unloadCore();
         _state = State::kCoreLoaded;
-        _system = System::kPicoDrive;
-        updateMenu(_state, _system);
+        _emulator = Emulator::kPicoDrive;
+        updateMenu(_state, _emulator);
         break;
 
       case IDM_SYSTEM_GENESISPLUSGX:
         unloadCore();
         _state = State::kCoreLoaded;
-        _system = System::kGenesisPlusGx;
-        updateMenu(_state, _system);
+        _emulator = Emulator::kGenesisPlusGx;
+        updateMenu(_state, _emulator);
         break;
 
       case IDM_SYSTEM_FCEUMM:
         unloadCore();
         _state = State::kCoreLoaded;
-        _system = System::kFceumm;
-        updateMenu(_state, _system);
+        _emulator = Emulator::kFceumm;
+        updateMenu(_state, _emulator);
         break;
 
       case IDM_SYSTEM_HANDY:
         unloadCore();
         _state = State::kCoreLoaded;
-        _system = System::kHandy;
-        updateMenu(_state, _system);
+        _emulator = Emulator::kHandy;
+        updateMenu(_state, _emulator);
         break;
 
       case IDM_SYSTEM_BEETLESGX:
         unloadCore();
         _state = State::kCoreLoaded;
-        _system = System::kBeetleSgx;
-        updateMenu(_state, _system);
+        _emulator = Emulator::kBeetleSgx;
+        updateMenu(_state, _emulator);
+        break;
+
+      case IDM_SYSTEM_GAMBATTE:
+        unloadCore();
+        _state = State::kCoreLoaded;
+        _emulator = Emulator::kGambatte;
+        updateMenu(_state, _emulator);
+        break;
+
+      case IDM_SYSTEM_MGBA:
+        unloadCore();
+        _state = State::kCoreLoaded;
+        _emulator = Emulator::kMGBA;
+        updateMenu(_state, _emulator);
         break;
 
       case IDM_LOAD_GAME:
@@ -975,13 +1065,13 @@ protected:
       case IDM_PAUSE_GAME:
         _state = State::kGamePaused;
         RA_SetPaused(true);
-        updateMenu(_state, _system);
+        updateMenu(_state, _emulator);
         break;
 
       case IDM_RESUME_GAME:
         _state = State::kGameRunning;
         RA_SetPaused(false);
-        updateMenu(_state, _system);
+        updateMenu(_state, _emulator);
         break;
       
       case IDM_RESET_GAME:
@@ -991,7 +1081,7 @@ protected:
       case IDM_CLOSE_GAME:
         unloadCore();
         _state = State::kCoreLoaded;
-        updateMenu(_state, _system);
+        updateMenu(_state, _emulator);
         break;
 
       case IDM_SAVE_STATE_0:
@@ -1181,7 +1271,7 @@ public:
     inited = kNothingInited;
 
     _state = State::kError;
-    _system = System::kNone;
+    _emulator = Emulator::kNone;
 
     if (!_logger.init())
     {
@@ -1314,8 +1404,8 @@ public:
 
     SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
     _state = State::kInitialized;
-    _system = System::kNone;
-    updateMenu(_state, _system);
+    _emulator = Emulator::kNone;
+    updateMenu(_state, _emulator);
     return true;
 
   error:
@@ -1336,8 +1426,8 @@ public:
     }
 
     _state = State::kError;
-    _system = System::kNone;
-    updateMenu(_state, _system);
+    _emulator = Emulator::kNone;
+    updateMenu(_state, _emulator);
     return false;
   }
 
@@ -1500,14 +1590,14 @@ public:
   {
     _state = State::kGamePaused;
     RA_SetPaused(true);
-    updateMenu(_state, _system);
+    updateMenu(_state, _emulator);
   }
 
   void resume()
   {
     _state = State::kGameRunning;
     RA_SetPaused(false);
-    updateMenu(_state, _system);
+    updateMenu(_state, _emulator);
   }
 
   void reset()
