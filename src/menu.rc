@@ -16,18 +16,20 @@
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 main MENU
 {
-    POPUP "&File"
+    POPUP "File"
     {
-        POPUP "&System"
+        POPUP "System"
         {
-            MENUITEM "&1. Atari 2600 (Stella)", IDM_SYSTEM_STELLA
-            MENUITEM "&2. Master System/Mega Drive (Genesis Plus GX)", IDM_SYSTEM_PICODRIVE
-            MENUITEM "&3. Master System/Mega Drive (PicoDrive)", IDM_SYSTEM_GENESISPLUSGX
-            MENUITEM "&4. Nintendo (FCEUmm)", IDM_SYSTEM_FCEUMM
-            MENUITEM "&5. Super Nintendo (Snes9x)", IDM_SYSTEM_SNES9X
+            MENUITEM "Atari 2600 (Stella)", IDM_SYSTEM_STELLA
+            MENUITEM "Atari Lynx (Handy)", IDM_SYSTEM_HANDY
+            MENUITEM "Master System/Mega Drive (Genesis Plus GX)", IDM_SYSTEM_PICODRIVE
+            MENUITEM "Master System/Mega Drive (PicoDrive)", IDM_SYSTEM_GENESISPLUSGX
+            MENUITEM "Nintendo (FCEUmm)", IDM_SYSTEM_FCEUMM
+            MENUITEM "PC Engine (Beetle SGX)", IDM_SYSTEM_BEETLESGX
+            MENUITEM "Super Nintendo (Snes9x)", IDM_SYSTEM_SNES9X
         }
         MENUITEM SEPARATOR
-        MENUITEM "&Load Game", IDM_LOAD_GAME
+        MENUITEM "Load Game", IDM_LOAD_GAME
         MENUITEM "Pause Game", IDM_PAUSE_GAME
         MENUITEM "Resume Game", IDM_RESUME_GAME
         MENUITEM "Reset Game", IDM_RESET_GAME
@@ -35,40 +37,40 @@ main MENU
         MENUITEM SEPARATOR
         POPUP "Save Game State"
         {
-            MENUITEM "Slot #&0", IDM_SAVE_STATE_0
-            MENUITEM "Slot #&1", IDM_SAVE_STATE_1
-            MENUITEM "Slot #&2", IDM_SAVE_STATE_2
-            MENUITEM "Slot #&3", IDM_SAVE_STATE_3
-            MENUITEM "Slot #&4", IDM_SAVE_STATE_4
-            MENUITEM "Slot #&5", IDM_SAVE_STATE_5
-            MENUITEM "Slot #&6", IDM_SAVE_STATE_6
-            MENUITEM "Slot #&7", IDM_SAVE_STATE_7
-            MENUITEM "Slot #&8", IDM_SAVE_STATE_8
-            MENUITEM "Slot #&9", IDM_SAVE_STATE_9
+            MENUITEM "Slot #0\aShift-0", IDM_SAVE_STATE_0
+            MENUITEM "Slot #1\aShift-1", IDM_SAVE_STATE_1
+            MENUITEM "Slot #2\aShift-2", IDM_SAVE_STATE_2
+            MENUITEM "Slot #3\aShift-3", IDM_SAVE_STATE_3
+            MENUITEM "Slot #4\aShift-4", IDM_SAVE_STATE_4
+            MENUITEM "Slot #5\aShift-5", IDM_SAVE_STATE_5
+            MENUITEM "Slot #6\aShift-6", IDM_SAVE_STATE_6
+            MENUITEM "Slot #7\aShift-7", IDM_SAVE_STATE_7
+            MENUITEM "Slot #8\aShift-8", IDM_SAVE_STATE_8
+            MENUITEM "Slot #9\aShift-9", IDM_SAVE_STATE_9
         }
         POPUP "Load Game State"
         {
-            MENUITEM "Slot #&0\a0", IDM_LOAD_STATE_0
-            MENUITEM "Slot #&1\a1", IDM_LOAD_STATE_1
-            MENUITEM "Slot #&2\a2", IDM_LOAD_STATE_2
-            MENUITEM "Slot #&3\a3", IDM_LOAD_STATE_3
-            MENUITEM "Slot #&4\a4", IDM_LOAD_STATE_4
-            MENUITEM "Slot #&5\a5", IDM_LOAD_STATE_5
-            MENUITEM "Slot #&6\a6", IDM_LOAD_STATE_6
-            MENUITEM "Slot #&7\a7", IDM_LOAD_STATE_7
-            MENUITEM "Slot #&8\a8", IDM_LOAD_STATE_8
-            MENUITEM "Slot #&9\a9", IDM_LOAD_STATE_9
+            MENUITEM "Slot #0\aAlt-0", IDM_LOAD_STATE_0
+            MENUITEM "Slot #&1\aAlt-1", IDM_LOAD_STATE_1
+            MENUITEM "Slot #&2\aAlt-2", IDM_LOAD_STATE_2
+            MENUITEM "Slot #&3\aAlt-3", IDM_LOAD_STATE_3
+            MENUITEM "Slot #&4\aAlt-4", IDM_LOAD_STATE_4
+            MENUITEM "Slot #&5\aAlt-5", IDM_LOAD_STATE_5
+            MENUITEM "Slot #&6\aAlt-6", IDM_LOAD_STATE_6
+            MENUITEM "Slot #&7\aAlt-7", IDM_LOAD_STATE_7
+            MENUITEM "Slot #&8\aAlt-8", IDM_LOAD_STATE_8
+            MENUITEM "Slot #&9\aAlt-9", IDM_LOAD_STATE_9
         }
         MENUITEM SEPARATOR
-        MENUITEM "E&xit", IDM_EXIT
+        MENUITEM "Exit", IDM_EXIT
     }
-    POPUP "&Settings"
+    POPUP "Settings"
     {
-        MENUITEM "&Emulation", IDM_CORE
-        MENUITEM "&Input", IDM_INPUT
-        MENUITEM "&Turbo", IDM_TURBO
+        MENUITEM "Emulation", IDM_CORE
+        MENUITEM "Input", IDM_INPUT
+        MENUITEM "Turbo", IDM_TURBO
     }
-    MENUITEM "&About", IDM_ABOUT
+    MENUITEM "About", IDM_ABOUT
 }
 
 

@@ -48,7 +48,9 @@ protected:
     kSnes9x,
     kPicoDrive,
     kGenesisPlusGx,
-    kFceumm
+    kFceumm,
+    kHandy,
+    kBeetleSgx
   };
 
   State  _state;
@@ -141,6 +143,127 @@ protected:
     if (isGameActive())
     {
       _video.draw();
+    }
+  }
+
+  size_t nextPow2(size_t v)
+  {
+    v--;
+    v |= v >> 1;
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+    return v + 1;
+  }
+
+  void signalRomLoadedWithPadding(void* rom, size_t size, size_t max_size, int fill)
+  {
+    uint8_t* data = (uint8_t*)malloc(max_size);
+
+    if (data != NULL)
+    {
+      if (size < max_size)
+      {
+        memcpy(data, rom, size);
+        memset(data + size, fill, max_size - size);
+      }
+      else
+      {
+        memcpy(data, rom, max_size);
+      }
+
+      RA_OnLoadNewRom(data, max_size);
+      free(data);
+    }
+  }
+
+  void signalRomLoadedNes(void* rom, size_t size)
+  {
+    /* Note about the references to the FCEU emulator below. There is no
+     * core-specific code in this function, it's rather Retro Achievements
+     * specific code that must be followed to the letter so we compute
+     * the correct ROM hash. Retro Achievements does indeed use some
+     * FCEU related method to compute the hash, since its NES emulator
+     * is based on it. */
+
+    struct NesHeader
+    {
+      uint8_t id[4]; /* NES^Z */
+      uint8_t rom_size;
+      uint8_t vrom_size;
+      uint8_t rom_type;
+      uint8_t rom_type2;
+      uint8_t reserve[8];
+    };
+
+    if (size < sizeof(NesHeader))
+    {
+      return;
+    }
+
+    NesHeader header;
+    memcpy(&header, rom, sizeof(header));
+
+    if (header.id[0] != 'N' || header.id[1] != 'E' || header.id[2] != 'S' || header.id[3] != 0x1a)
+    {
+      return;
+    }
+
+    size_t rom_size;
+
+    if (header.rom_size != 0)
+    {
+      rom_size = nextPow2(header.rom_size);
+    }
+    else
+    {
+      rom_size = 256;
+    }
+
+    /* from FCEU core - compute size using the cart mapper */
+    int mapper = (header.rom_type >> 4) | (header.rom_type2 & 0xf0);
+
+    /* for games not to the power of 2, so we just read enough
+     * PRG rom from it, but we have to keep ROM_size to the power of 2
+     * since PRGCartMapping wants ROM_size to be to the power of 2
+     * so instead if not to power of 2, we just use head.ROM_size when
+     * we use FCEU_read. */
+    bool round = mapper != 53 && mapper != 198 && mapper != 228;
+    size_t bytes = round ? rom_size : header.rom_size;
+
+    /* from FCEU core - check if Trainer included in ROM data */
+    size_t offset = sizeof(header) + (header.rom_type & 4 ? sizeof(header) : 0);
+    size_t count = 0x4000 * bytes;
+
+    signalRomLoadedWithPadding((uint8_t*)rom + offset, size, count, 0xff);
+  }
+
+  void signalRomLoaded(void* rom, size_t size)
+  {
+    switch (_system)
+    {
+    case System::kNone:
+      break;
+
+    case System::kStella:
+    case System::kPicoDrive:
+    case System::kGenesisPlusGx:
+    case System::kBeetleSgx:
+      RA_OnLoadNewRom((BYTE*)rom, size);
+      break;
+
+    case System::kSnes9x:
+      signalRomLoadedWithPadding(rom, size, 8 * 1024 * 1024, 0);
+      break;
+
+    case System::kFceumm:
+      signalRomLoadedNes(rom, size);
+      break;
+    
+    case System::kHandy:
+      RA_OnLoadNewRom((BYTE*)rom + 0x0040, 0x0200);
+      break;
     }
   }
 
@@ -244,12 +367,14 @@ protected:
   {
     static const UINT all_system_items[] =
     {
-      IDM_SYSTEM_STELLA, IDM_SYSTEM_SNES9X, IDM_SYSTEM_PICODRIVE, IDM_SYSTEM_GENESISPLUSGX, IDM_SYSTEM_FCEUMM
+      IDM_SYSTEM_STELLA, IDM_SYSTEM_SNES9X, IDM_SYSTEM_PICODRIVE, IDM_SYSTEM_GENESISPLUSGX, IDM_SYSTEM_FCEUMM,
+      IDM_SYSTEM_HANDY, IDM_SYSTEM_BEETLESGX
     };
 
     static const System all_systems[] =
     {
-      System::kStella, System::kSnes9x, System::kPicoDrive, System::kGenesisPlusGx, System::kFceumm
+      System::kStella, System::kSnes9x, System::kPicoDrive, System::kGenesisPlusGx, System::kFceumm,
+      System::kHandy, System::kBeetleSgx
     };
 
     static const UINT error_items[] =
@@ -523,10 +648,18 @@ protected:
     case System::kFceumm:
       RA_SetConsoleID(NES);
       break;
+    
+    case System::kHandy:
+      RA_SetConsoleID(Lynx);
+      break;
+    
+    case System::kBeetleSgx:
+      RA_SetConsoleID(PCEngine);
+      break;
     }
 
     RA_ClearMemoryBanks();
-    RA_OnLoadNewRom((BYTE*)data, size);
+    signalRomLoaded(data, size);
     free(data);
     _gamePath = game_path;
 
@@ -557,6 +690,10 @@ protected:
       break;
 
     case System::kStella:
+    case System::kPicoDrive:
+    case System::kGenesisPlusGx:
+    case System::kHandy:
+    case System::kBeetleSgx:
       _memoryData1 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
       _memorySize1 = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
       RA_InstallMemoryBank(0,	(void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
@@ -570,13 +707,6 @@ protected:
       _memoryData2 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
       _memorySize2 = _core.getMemorySize(RETRO_MEMORY_SAVE_RAM);
       RA_InstallMemoryBank(1, (void*)::memoryRead2, (void*)::memoryWrite2, _memorySize2);
-      break;
-    
-    case System::kPicoDrive:
-    case System::kGenesisPlusGx:
-      _memoryData1 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
-      _memorySize1 = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
-      RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
       break;
     }
 
@@ -706,6 +836,8 @@ protected:
     case System::kPicoDrive:     return "picodrive_libretro";
     case System::kGenesisPlusGx: return "genesis_plus_gx_libretro";
     case System::kFceumm:        return "fceumm_libretro";
+    case System::kHandy:         return "handy_libretro";
+    case System::kBeetleSgx:     return "mednafen_supergrafx_libretro";
     }
 
     return NULL;
@@ -819,6 +951,20 @@ protected:
         unloadCore();
         _state = State::kCoreLoaded;
         _system = System::kFceumm;
+        updateMenu(_state, _system);
+        break;
+
+      case IDM_SYSTEM_HANDY:
+        unloadCore();
+        _state = State::kCoreLoaded;
+        _system = System::kHandy;
+        updateMenu(_state, _system);
+        break;
+
+      case IDM_SYSTEM_BEETLESGX:
+        unloadCore();
+        _state = State::kCoreLoaded;
+        _system = System::kBeetleSgx;
         updateMenu(_state, _system);
         break;
 
@@ -963,6 +1109,43 @@ protected:
         }
 
         break;
+      }
+    }
+  }
+
+  void shortcut(const SDL_Event* event, bool* done)
+  {
+    static const SDL_Keycode state[] =
+    {
+      SDLK_0, SDLK_1, SDLK_2, SDLK_3, SDLK_4, SDLK_5, SDLK_6, SDLK_7, SDLK_8, SDLK_9
+    };
+
+    if (event->key.state == SDL_PRESSED && !event->key.repeat)
+    {
+      if (isGameActive())
+      {
+        if ((event->key.keysym.mod & (KMOD_LSHIFT | KMOD_RSHIFT)) != 0)
+        {
+          for (unsigned ndx = 0; ndx < sizeof(state) / sizeof(state[0]); ndx++)
+          {
+            if (event->key.keysym.sym == state[ndx] && ((_states & (1 << ndx)) != 0))
+            {
+              saveState(ndx);
+              break;
+            }
+          }
+        }
+        else if ((event->key.keysym.mod & (KMOD_LALT | KMOD_RALT)) != 0)
+        {
+          for (unsigned ndx = 0; ndx < sizeof(state) / sizeof(state[0]); ndx++)
+          {
+            if (event->key.keysym.sym == state[ndx] && ((_states & (1 << ndx)) != 0))
+            {
+              loadState(ndx);
+              break;
+            }
+          }
+        }
       }
     }
   }
@@ -1206,6 +1389,10 @@ public:
         
         case SDL_SYSWMEVENT:
           handle(&event, &done);
+          break;
+        
+        case SDL_KEYDOWN:
+          shortcut(&event, &done);
           break;
         }
       }

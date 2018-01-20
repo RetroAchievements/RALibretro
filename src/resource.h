@@ -38,3 +38,5 @@
 #define IDM_TURBO                               40032
 #define IDM_SYSTEM_GENESISPLUSGX                40033
 #define IDM_SYSTEM_FCEUMM                       40034
+#define IDM_SYSTEM_HANDY                        40035
+#define IDM_SYSTEM_BEETLESGX                    40036
