@@ -895,6 +895,9 @@ protected:
     {
       path += _gamePath.substr(last_slash);
     }
+
+    path += "-";
+    path += getCoreFileName();
     
     char index[64];
     sprintf(index, ".%03u", ndx);
@@ -967,14 +970,17 @@ protected:
 
   void loadState(unsigned ndx)
   {
-    std::string path = getStatePath(ndx);
-    size_t size;
-    void* data = loadFile(path.c_str(), &size);
-    
-    if (data != NULL)
+    if ((_states & (1 << ndx)) != 0)
     {
-      _core.unserialize(data, size);
-      free(data);
+      std::string path = getStatePath(ndx);
+      size_t size;
+      void* data = loadFile(path.c_str(), &size);
+      
+      if (data != NULL)
+      {
+        _core.unserialize(data, size);
+        free(data);
+      }
     }
   }
 
