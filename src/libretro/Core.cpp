@@ -350,7 +350,7 @@ void libretro::Core::destroy()
   reset();
 }
 
-void libretro::Core::step()
+void libretro::Core::step(bool generate_audio)
 {
   InstanceSetter instance_setter(this);
 
@@ -376,7 +376,10 @@ void libretro::Core::step()
   }
   while (_samplesCount == 0);
   
-  _audio->mix(_samples, _samplesCount / 2);
+  if (generate_audio)
+  {
+    _audio->mix(_samples, _samplesCount / 2);
+  }
 }
 
 unsigned libretro::Core::getApiVersion()

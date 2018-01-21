@@ -74,6 +74,7 @@ protected:
   State    _state;
   Emulator _emulator;
   System   _system;
+  bool     _step;
 
   SDL_Window*       _window;
   SDL_Renderer*     _renderer;
@@ -1242,6 +1243,7 @@ protected:
     case KeyBinds::Action::kSetStateSlot: _slot = extra; break;
     case KeyBinds::Action::kSaveState:    saveState(_slot); break;
     case KeyBinds::Action::kLoadState:    loadState(_slot); break;
+    case KeyBinds::Action::kStep:         _state = State::kGamePaused; _step = true; break;
     // Emulation speed
     case KeyBinds::Action::kPauseToggle:
       if (_state == State::kGameRunning)
@@ -1313,6 +1315,7 @@ public:
 
     _state = State::kError;
     _emulator = Emulator::kNone;
+    _step = false;
 
     if (!_logger.init())
     {
@@ -1539,33 +1542,29 @@ public:
         }
       }
 
+      int limit = 0;
+      bool audio = false;
+
       if (_state == State::kGameRunning)
       {
-        _core.step();
+        limit = 1;
+        audio = true;
+      }
+      else if (_state == State::kGamePaused && _step)
+      {
+        limit = 1;
+        audio = false;
+        _step = false;
       }
       else if (_state == State::kGameTurbo)
       {
-        for (int i = 0; i < 5; i++)
-        {
-          _core.step();
+        limit = 5;
+        audio = false;
+      }
 
-          for (;;)
-          {
-            char dummy[512];
-            size_t avail = _fifo.occupied();
-
-            if (avail == 0)
-            {
-              break;
-            }
-            else if (avail > sizeof(dummy))
-            {
-              avail = sizeof(dummy);
-            }
-
-            _fifo.read((void*)dummy, avail);
-          }
-        }
+      for (int i = 0; i < limit; i++)
+      {
+        _core.step(audio);
       }
 
       SDL_RenderClear(_renderer);

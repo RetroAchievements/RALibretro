@@ -34,6 +34,7 @@ public:
     // Emulation speed
     kPauseToggle,
     kFastForward,
+    kStep,
   };
 
   bool init(libretro::LoggerComponent* logger);

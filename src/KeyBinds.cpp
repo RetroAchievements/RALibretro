@@ -35,6 +35,7 @@
 #define PAUSE         SDLK_p
 #define FF_TOGGLE     SDLK_MINUS
 #define FF_HOLD       SDLK_EQUALS
+#define STEP          SDLK_SEMICOLON
 
 bool KeyBinds::init(libretro::LoggerComponent* logger)
 {
@@ -69,6 +70,7 @@ KeyBinds::Action KeyBinds::translate(const SDL_Event* event, unsigned* extra)
       case PAUSE:      return Action::kPauseToggle;
       case FF_TOGGLE:  _ff = !_ff; *extra = (unsigned)_ff; return Action::kFastForward;
       case FF_HOLD:    *extra = (unsigned)!_ff; return Action::kFastForward;
+      case STEP:       return Action::kStep;
       }
 
       *extra = 1;

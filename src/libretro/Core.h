@@ -43,7 +43,7 @@ namespace libretro
 
     void destroy();
     
-    void step();
+    void step(bool generate_audio);
 
     unsigned getApiVersion();
     unsigned getRegion();
