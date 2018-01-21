@@ -10,12 +10,33 @@
 class Input: public libretro::InputComponent
 {
 public:
+  enum class Button
+  {
+    kUp,
+    kDown,
+    kLeft,
+    kRight,
+    kX,
+    kY,
+    kA,
+    kB,
+    kL,
+    kR,
+    kL2,
+    kR2,
+    kL3,
+    kR3,
+    kSelect,
+    kStart
+  };
+
   bool init(libretro::LoggerComponent* logger);
   void destroy() {}
   void reset();
 
   void addController(int which);
   void autoAssign();
+  void buttonEvent(Button button, bool pressed);
   void processEvent(const SDL_Event* event);
 
   virtual void setInputDescriptors(const struct retro_input_descriptor* descs, unsigned count) override;

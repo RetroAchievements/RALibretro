@@ -3,6 +3,8 @@
 #include "Dialog.h"
 #include "jsonsax/jsonsax.h"
 
+#define KEYBOARD_ID -1
+
 static const char* s_gameControllerDB[] =
 {
   // Updated on 2017-06-15
@@ -23,6 +25,23 @@ bool Input::init(libretro::LoggerComponent* logger)
   {
     SDL_GameControllerAddMapping(s_gameControllerDB[i]);
   }
+
+  // Add the keyboard controller
+  Pad keyb;
+
+  keyb._id = KEYBOARD_ID;
+  keyb._controller = NULL;
+  keyb._controllerName = "Keyboard";
+  keyb._joystick = NULL;
+  keyb._joystickName = "Keyboard";
+  keyb._ports = 0;
+  keyb._lastDir[0] = keyb._lastDir[1] = keyb._lastDir[2] =
+  keyb._lastDir[3] = keyb._lastDir[4] = keyb._lastDir[5] = -1;
+  keyb._sensitivity = 0.5f;
+  memset(keyb._state, 0, sizeof(keyb._state));
+
+  _pads.insert(std::make_pair(keyb._id, keyb));
+  _logger->printf(RETRO_LOG_INFO, "Controller %s (%s) added", keyb._controllerName, keyb._joystickName);
 
   // Add controllers already connected
   int max = SDL_NumJoysticks();
@@ -112,35 +131,89 @@ void Input::addController(int which)
 
 void Input::autoAssign()
 {
+  Pad* pad = NULL;
+
   for (auto& pair: _pads)
   {
-    Pad* pad = &pair.second;
-    uint64_t bit = 1;
-
-    for (unsigned port = 0; port < kMaxPorts; port++, bit <<= 1)
+    if (pair.second._id != KEYBOARD_ID)
     {
-      if ((_ports & bit) != 0)
+      pad = &pair.second;
+      break;
+    }
+  }
+  
+  if (pad == NULL)
+  {
+    auto found = _pads.find(KEYBOARD_ID);
+
+    if (found != _pads.end())
+    {
+      pad = &found->second;
+    }
+  }
+
+  if (pad == NULL)
+  {
+    return;
+  }
+
+  uint64_t bit = 1;
+
+  for (unsigned port = 0; port < kMaxPorts; port++, bit <<= 1)
+  {
+    if ((_ports & bit) != 0)
+    {
+      pad->_ports |= bit;
+
+      if (_devices[port] == 0)
       {
-        pad->_ports |= bit;
-
-        if (_devices[port] == 0)
+        for (unsigned i = 1 /* Skip None */; i < _info[port].size(); i++)
         {
-          for (unsigned i = 1 /* Skip None */; i < _info[port].size(); i++)
-          {
-            const ControllerInfo* info = &_info[port][i];
+          const ControllerInfo* info = &_info[port][i];
 
-            if ((info->_id & RETRO_DEVICE_MASK) == RETRO_DEVICE_JOYPAD)
-            {
-              _devices[port] = i;
-              break;
-            }
+          if ((info->_id & RETRO_DEVICE_MASK) == RETRO_DEVICE_JOYPAD)
+          {
+            _devices[port] = i;
+            break;
           }
         }
-
-        _updated = true;
-        return;
       }
+
+      _updated = true;
     }
+  }
+}
+
+void Input::buttonEvent(Button button, bool pressed)
+{
+  auto found = _pads.find(KEYBOARD_ID);
+
+  if (found != _pads.end())
+  {
+    Pad* pad = &found->second;
+    unsigned rbutton;
+
+    switch (button)
+    {
+    case Button::kUp:     rbutton = RETRO_DEVICE_ID_JOYPAD_UP; break;
+    case Button::kDown:   rbutton = RETRO_DEVICE_ID_JOYPAD_DOWN; break;
+    case Button::kLeft:   rbutton = RETRO_DEVICE_ID_JOYPAD_LEFT; break;
+    case Button::kRight:  rbutton = RETRO_DEVICE_ID_JOYPAD_RIGHT; break;
+    case Button::kX:      rbutton = RETRO_DEVICE_ID_JOYPAD_X; break;
+    case Button::kY:      rbutton = RETRO_DEVICE_ID_JOYPAD_Y; break;
+    case Button::kA:      rbutton = RETRO_DEVICE_ID_JOYPAD_A; break;
+    case Button::kB:      rbutton = RETRO_DEVICE_ID_JOYPAD_B; break;
+    case Button::kL:      rbutton = RETRO_DEVICE_ID_JOYPAD_L; break;
+    case Button::kR:      rbutton = RETRO_DEVICE_ID_JOYPAD_R; break;
+    case Button::kL2:     rbutton = RETRO_DEVICE_ID_JOYPAD_L2; break;
+    case Button::kR2:     rbutton = RETRO_DEVICE_ID_JOYPAD_R2; break;
+    case Button::kL3:     rbutton = RETRO_DEVICE_ID_JOYPAD_L3; break;
+    case Button::kR3:     rbutton = RETRO_DEVICE_ID_JOYPAD_R3; break;
+    case Button::kSelect: rbutton = RETRO_DEVICE_ID_JOYPAD_SELECT; break;
+    case Button::kStart:  rbutton = RETRO_DEVICE_ID_JOYPAD_START; break;
+    }
+
+    pad->_state[rbutton] = pressed;
   }
 }
 
@@ -300,20 +373,20 @@ void Input::controllerButton(const SDL_Event* event)
 
     switch (event->cbutton.button)
     {
-    case SDL_CONTROLLER_BUTTON_A:             button = RETRO_DEVICE_ID_JOYPAD_B; break;
-    case SDL_CONTROLLER_BUTTON_B:             button = RETRO_DEVICE_ID_JOYPAD_A; break;
-    case SDL_CONTROLLER_BUTTON_X:             button = RETRO_DEVICE_ID_JOYPAD_Y; break;
-    case SDL_CONTROLLER_BUTTON_Y:             button = RETRO_DEVICE_ID_JOYPAD_X; break;
-    case SDL_CONTROLLER_BUTTON_BACK:          button = RETRO_DEVICE_ID_JOYPAD_SELECT; break;
-    case SDL_CONTROLLER_BUTTON_START:         button = RETRO_DEVICE_ID_JOYPAD_START; break;
-    case SDL_CONTROLLER_BUTTON_LEFTSTICK:     button = RETRO_DEVICE_ID_JOYPAD_L3; break;
-    case SDL_CONTROLLER_BUTTON_RIGHTSTICK:    button = RETRO_DEVICE_ID_JOYPAD_R3; break;
-    case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:  button = RETRO_DEVICE_ID_JOYPAD_L; break;
-    case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER: button = RETRO_DEVICE_ID_JOYPAD_R; break;
     case SDL_CONTROLLER_BUTTON_DPAD_UP:       button = RETRO_DEVICE_ID_JOYPAD_UP; break;
     case SDL_CONTROLLER_BUTTON_DPAD_DOWN:     button = RETRO_DEVICE_ID_JOYPAD_DOWN; break;
     case SDL_CONTROLLER_BUTTON_DPAD_LEFT:     button = RETRO_DEVICE_ID_JOYPAD_LEFT; break;
     case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:    button = RETRO_DEVICE_ID_JOYPAD_RIGHT; break;
+    case SDL_CONTROLLER_BUTTON_Y:             button = RETRO_DEVICE_ID_JOYPAD_X; break;
+    case SDL_CONTROLLER_BUTTON_X:             button = RETRO_DEVICE_ID_JOYPAD_Y; break;
+    case SDL_CONTROLLER_BUTTON_B:             button = RETRO_DEVICE_ID_JOYPAD_A; break;
+    case SDL_CONTROLLER_BUTTON_A:             button = RETRO_DEVICE_ID_JOYPAD_B; break;
+    case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:  button = RETRO_DEVICE_ID_JOYPAD_L; break;
+    case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER: button = RETRO_DEVICE_ID_JOYPAD_R; break;
+    case SDL_CONTROLLER_BUTTON_LEFTSTICK:     button = RETRO_DEVICE_ID_JOYPAD_L3; break;
+    case SDL_CONTROLLER_BUTTON_RIGHTSTICK:    button = RETRO_DEVICE_ID_JOYPAD_R3; break;
+    case SDL_CONTROLLER_BUTTON_BACK:          button = RETRO_DEVICE_ID_JOYPAD_SELECT; break;
+    case SDL_CONTROLLER_BUTTON_START:         button = RETRO_DEVICE_ID_JOYPAD_START; break;
     case SDL_CONTROLLER_BUTTON_GUIDE:         // fallthrough
     default:                                  return;
     }

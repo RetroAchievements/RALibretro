@@ -14,6 +14,8 @@
 #include "RA_Integration/RA_Interface.h"
 #include "RA_Integration/RA_Resource.h"
 
+#include "KeyBinds.h"
+
 #include "resource.h"
 
 #include <sys/stat.h>
@@ -85,6 +87,8 @@ protected:
   Audio  _audio;
   Input  _input;
 
+  KeyBinds _keybinds;
+
   Allocator<256 * 1024> _allocator;
 
   libretro::Components _components;
@@ -92,6 +96,7 @@ protected:
 
   std::string _gamePath;
   unsigned    _states;
+  unsigned    _slot;
 
   uint8_t* _memoryData1;
   uint8_t* _memoryData2;
@@ -1205,38 +1210,67 @@ protected:
 
   void shortcut(const SDL_Event* event, bool* done)
   {
-    static const SDL_Keycode state[] =
-    {
-      SDLK_0, SDLK_1, SDLK_2, SDLK_3, SDLK_4, SDLK_5, SDLK_6, SDLK_7, SDLK_8, SDLK_9
-    };
+    unsigned extra;
 
-    if (event->key.state == SDL_PRESSED && !event->key.repeat)
+    switch (_keybinds.translate(event, &extra))
     {
-      if (isGameActive())
+    case KeyBinds::Action::kNothing:      break;
+    // Joypad buttons
+    case KeyBinds::Action::kButtonUp:     _input.buttonEvent(Input::Button::kUp, extra != 0); break;
+    case KeyBinds::Action::kButtonDown:   _input.buttonEvent(Input::Button::kDown, extra != 0); break;
+    case KeyBinds::Action::kButtonLeft:   _input.buttonEvent(Input::Button::kLeft, extra != 0); break;
+    case KeyBinds::Action::kButtonRight:  _input.buttonEvent(Input::Button::kRight, extra != 0); break;
+    case KeyBinds::Action::kButtonX:      _input.buttonEvent(Input::Button::kX, extra != 0); break;
+    case KeyBinds::Action::kButtonY:      _input.buttonEvent(Input::Button::kY, extra != 0); break;
+    case KeyBinds::Action::kButtonA:      _input.buttonEvent(Input::Button::kA, extra != 0); break;
+    case KeyBinds::Action::kButtonB:      _input.buttonEvent(Input::Button::kB, extra != 0); break;
+    case KeyBinds::Action::kButtonL:      _input.buttonEvent(Input::Button::kL, extra != 0); break;
+    case KeyBinds::Action::kButtonR:      _input.buttonEvent(Input::Button::kR, extra != 0); break;
+    case KeyBinds::Action::kButtonL2:     _input.buttonEvent(Input::Button::kL2, extra != 0); break;
+    case KeyBinds::Action::kButtonR2:     _input.buttonEvent(Input::Button::kR2, extra != 0); break;
+    case KeyBinds::Action::kButtonL3:     _input.buttonEvent(Input::Button::kL3, extra != 0); break;
+    case KeyBinds::Action::kButtonR3:     _input.buttonEvent(Input::Button::kR3, extra != 0); break;
+    case KeyBinds::Action::kButtonSelect: _input.buttonEvent(Input::Button::kSelect, extra != 0); break;
+    case KeyBinds::Action::kButtonStart:  _input.buttonEvent(Input::Button::kStart, extra != 0); break;
+    // State state management
+    case KeyBinds::Action::kSetStateSlot: _slot = extra; break;
+    case KeyBinds::Action::kSaveState:    saveState(_slot); break;
+    case KeyBinds::Action::kLoadState:    loadState(_slot); break;
+    // Emulation speed
+    case KeyBinds::Action::kPauseToggle:
+      if (_state == State::kGameRunning)
       {
-        if ((event->key.keysym.mod & (KMOD_LSHIFT | KMOD_RSHIFT)) != 0)
-        {
-          for (unsigned ndx = 0; ndx < sizeof(state) / sizeof(state[0]); ndx++)
-          {
-            if (event->key.keysym.sym == state[ndx] && ((_states & (1 << ndx)) != 0))
-            {
-              saveState(ndx);
-              break;
-            }
-          }
-        }
-        else if ((event->key.keysym.mod & (KMOD_LALT | KMOD_RALT)) != 0)
-        {
-          for (unsigned ndx = 0; ndx < sizeof(state) / sizeof(state[0]); ndx++)
-          {
-            if (event->key.keysym.sym == state[ndx] && ((_states & (1 << ndx)) != 0))
-            {
-              loadState(ndx);
-              break;
-            }
-          }
-        }
+        _state = State::kGamePaused;
+        RA_SetPaused(true);
+        updateMenu(_state, _emulator);
       }
+      else if (_state == State::kGamePaused)
+      {
+        _state = State::kGameRunning;
+        RA_SetPaused(false);
+        updateMenu(_state, _emulator);
+      }
+
+      break;
+
+    case KeyBinds::Action::kFastForward:
+      if (extra != 0 && _state == State::kGameRunning)
+      {
+        if (_state == State::kGamePaused)
+        {
+          RA_SetPaused(false);
+        }
+
+        _state = State::kGameTurbo;
+        updateMenu(_state, _emulator);
+      }
+      else if (extra == 0 && _state == State::kGameTurbo)
+      {
+        _state = State::kGameRunning;
+        updateMenu(_state, _emulator);
+      }
+
+      break;
     }
   }
 
@@ -1266,6 +1300,7 @@ public:
       kAudioInited,
       kConfigInited,
       kInputInited,
+      kKeyBindsInited,
       kVideoInited
     }
     inited = kNothingInited;
@@ -1371,6 +1406,13 @@ public:
 
     inited = kInputInited;
 
+    if (!_keybinds.init(&_logger))
+    {
+      goto error;
+    }
+
+    inited = kKeyBindsInited;
+
     if (!_video.init(&_logger, &_config, _renderer))
     {
       goto error;
@@ -1405,6 +1447,7 @@ public:
     SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
     _state = State::kInitialized;
     _emulator = Emulator::kNone;
+    _slot = 0;
     updateMenu(_state, _emulator);
     return true;
 
@@ -1412,6 +1455,7 @@ public:
     switch (inited)
     {
     case kVideoInited:       _video.destroy();
+    case kKeyBindsInited:    _keybinds.destroy();
     case kInputInited:       _input.destroy();
     case kConfigInited:      _config.destroy();
     case kAudioInited:       _audio.destroy();
@@ -1438,6 +1482,7 @@ public:
     if (_state == State::kInitialized)
     {
       _video.destroy();
+      _keybinds.destroy();
       _input.destroy();
       _config.destroy();
       _audio.destroy();
@@ -1481,6 +1526,7 @@ public:
           handle(&event, &done);
           break;
         
+        case SDL_KEYUP:
         case SDL_KEYDOWN:
           shortcut(&event, &done);
           break;

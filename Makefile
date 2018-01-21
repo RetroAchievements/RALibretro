@@ -25,6 +25,7 @@ OBJS=\
 	src/SDLComponents/Logger.o \
 	src/SDLComponents/Video.o \
 	src/speex/resample.o \
+	src/KeyBinds.o \
 	src/main.o \
 	src/menu.res
 
