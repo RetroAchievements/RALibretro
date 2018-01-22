@@ -2,6 +2,7 @@
 #include <SDL_syswm.h>
 
 #include "libretro/Core.h"
+#include "jsonsax/jsonsax.h"
 
 #include "SDLComponents/Allocator.h"
 #include "SDLComponents/Audio.h"
@@ -9,6 +10,8 @@
 #include "SDLComponents/Input.h"
 #include "SDLComponents/Logger.h"
 #include "SDLComponents/Video.h"
+
+#include "SDLComponents/Dialog.h"
 
 #include "RA_Integration/RA_Implementation.h"
 #include "RA_Integration/RA_Interface.h"
@@ -21,6 +24,8 @@
 #include <sys/stat.h>
 #include <windows.h>
 #include <commdlg.h>
+
+#define VERSION "1.0"
 
 HWND g_mainWindow;
 
@@ -128,37 +133,6 @@ protected:
     {
       memset((void*)stream, 0, len);
     }
-  }
-
-  static INT_PTR CALLBACK s_dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
-  {
-    Application* self;
-
-    switch (msg)
-    {
-    case WM_INITDIALOG:
-      self = (Application*)lparam;
-      SetDlgItemText(hwnd, IDC_LOG, self->getLogContents().c_str());
-      return TRUE;
-    
-    case WM_SETFONT:
-      return TRUE;
-
-    case WM_COMMAND:
-      if (LOWORD(wparam) == IDOK || LOWORD(wparam) == IDCANCEL)
-      {
-        EndDialog(hwnd, 0);
-        return TRUE;
-      }
-
-      break;
-
-    case WM_CLOSE:
-      DestroyWindow(hwnd);
-      return TRUE;
-    }
-
-    return FALSE;
   }
 
   void draw()
@@ -807,7 +781,38 @@ protected:
 
     if (data != NULL)
     {
-      _config.deserialize((char*)data);
+      struct Deserialize
+      {
+        Application* self;
+        std::string key;
+      };
+
+      Deserialize ud;
+      ud.self = this;
+
+      jsonsax_parse( (char*)data, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+      {
+        auto ud = (Deserialize*)udata;
+
+        if (event == JSONSAX_KEY)
+        {
+          ud->key = std::string(str, num);
+        }
+        else if (event == JSONSAX_OBJECT)
+        {
+          if (ud->key == "core")
+          {
+            ud->self->_config.deserialize(str);
+          }
+          else if (ud->key == "input")
+          {
+            ud->self->_input.deserialize(str);
+          }
+        }
+
+        return 0;
+      });
+
       free(data);
     }
 
@@ -837,11 +842,11 @@ protected:
       unloadGame();
 
       std::string json;
-      //json.append("{\"config\":");
+      json.append("{\"core\":");
       json.append(_config.serialize());
-      //json.append(",\"input\":");
-      //json.append(_input.serialize());
-      //json.append("}");
+      json.append(",\"input\":");
+      json.append(_input.serialize());
+      json.append("}");
 
       saveFile(getCoreConfigPath().c_str(), json.c_str(), json.length());
 
@@ -993,6 +998,26 @@ protected:
   void configureInput()
   {
     _input.showDialog();
+  }
+
+  void showAbout()
+  {
+    const WORD WIDTH = 280;
+    const WORD LINE = 15;
+
+    Dialog db;
+    db.init("About");
+
+    WORD y = 0;
+
+    db.addLabel("RALibretro " VERSION " \u00A9 2017-2018 Andre Leiradella @leiradel", 0, y, WIDTH, 8);
+    y += LINE;
+
+    db.addEditbox(40000, 0, y, WIDTH, LINE, 12, (char*)getLogContents().c_str(), 0, true);
+    y += LINE * 12;
+
+    db.addButton("OK", IDOK, WIDTH - 50, y, 50, 14, true);
+    db.show();
   }
 
   void handle(const SDL_Event* event, bool* done)
@@ -1201,7 +1226,7 @@ protected:
         break;
         
       case IDM_ABOUT:
-        DialogBoxParam(NULL, "ABOUT", g_mainWindow, s_dialogProc, (LPARAM)this);
+        showAbout();
         break;
       
       default:

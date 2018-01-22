@@ -39,29 +39,29 @@ main MENU
         MENUITEM SEPARATOR
         POPUP "Save Game State"
         {
-            MENUITEM "Slot #0\aShift-0", IDM_SAVE_STATE_0
-            MENUITEM "Slot #1\aShift-1", IDM_SAVE_STATE_1
-            MENUITEM "Slot #2\aShift-2", IDM_SAVE_STATE_2
-            MENUITEM "Slot #3\aShift-3", IDM_SAVE_STATE_3
-            MENUITEM "Slot #4\aShift-4", IDM_SAVE_STATE_4
-            MENUITEM "Slot #5\aShift-5", IDM_SAVE_STATE_5
-            MENUITEM "Slot #6\aShift-6", IDM_SAVE_STATE_6
-            MENUITEM "Slot #7\aShift-7", IDM_SAVE_STATE_7
-            MENUITEM "Slot #8\aShift-8", IDM_SAVE_STATE_8
-            MENUITEM "Slot #9\aShift-9", IDM_SAVE_STATE_9
+            MENUITEM "Slot #0", IDM_SAVE_STATE_0
+            MENUITEM "Slot #1", IDM_SAVE_STATE_1
+            MENUITEM "Slot #2", IDM_SAVE_STATE_2
+            MENUITEM "Slot #3", IDM_SAVE_STATE_3
+            MENUITEM "Slot #4", IDM_SAVE_STATE_4
+            MENUITEM "Slot #5", IDM_SAVE_STATE_5
+            MENUITEM "Slot #6", IDM_SAVE_STATE_6
+            MENUITEM "Slot #7", IDM_SAVE_STATE_7
+            MENUITEM "Slot #8", IDM_SAVE_STATE_8
+            MENUITEM "Slot #9", IDM_SAVE_STATE_9
         }
         POPUP "Load Game State"
         {
-            MENUITEM "Slot #0\aAlt-0", IDM_LOAD_STATE_0
-            MENUITEM "Slot #&1\aAlt-1", IDM_LOAD_STATE_1
-            MENUITEM "Slot #&2\aAlt-2", IDM_LOAD_STATE_2
-            MENUITEM "Slot #&3\aAlt-3", IDM_LOAD_STATE_3
-            MENUITEM "Slot #&4\aAlt-4", IDM_LOAD_STATE_4
-            MENUITEM "Slot #&5\aAlt-5", IDM_LOAD_STATE_5
-            MENUITEM "Slot #&6\aAlt-6", IDM_LOAD_STATE_6
-            MENUITEM "Slot #&7\aAlt-7", IDM_LOAD_STATE_7
-            MENUITEM "Slot #&8\aAlt-8", IDM_LOAD_STATE_8
-            MENUITEM "Slot #&9\aAlt-9", IDM_LOAD_STATE_9
+            MENUITEM "Slot #0", IDM_LOAD_STATE_0
+            MENUITEM "Slot #1", IDM_LOAD_STATE_1
+            MENUITEM "Slot #2", IDM_LOAD_STATE_2
+            MENUITEM "Slot #3", IDM_LOAD_STATE_3
+            MENUITEM "Slot #4", IDM_LOAD_STATE_4
+            MENUITEM "Slot #5", IDM_LOAD_STATE_5
+            MENUITEM "Slot #6", IDM_LOAD_STATE_6
+            MENUITEM "Slot #7", IDM_LOAD_STATE_7
+            MENUITEM "Slot #8", IDM_LOAD_STATE_8
+            MENUITEM "Slot #9", IDM_LOAD_STATE_9
         }
         MENUITEM SEPARATOR
         MENUITEM "Exit", IDM_EXIT
@@ -73,23 +73,6 @@ main MENU
         MENUITEM "Turbo", IDM_TURBO
     }
     MENUITEM "About", IDM_ABOUT
-}
-
-
-
-//
-// Dialog resources
-//
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-about DIALOG 0, 0, 281, 176
-STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP
-EXSTYLE WS_EX_WINDOWEDGE
-CAPTION "About RALibretro"
-FONT 8, "Ms Shell Dlg"
-{
-    LTEXT           "RALibretro \xA9 2017 Andre Leiradella @leiradel", 0, 5, 160, 144, 9, SS_LEFT, WS_EX_LEFT
-    EDITTEXT        IDC_LOG, 5, 5, 270, 143, WS_VSCROLL | NOT WS_TABSTOP | ES_AUTOHSCROLL | ES_MULTILINE | ES_READONLY, WS_EX_LEFT
-    DEFPUSHBUTTON   "OK", IDOK, 225, 155, 50, 15, 0, WS_EX_LEFT
 }
 
 

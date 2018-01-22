@@ -87,9 +87,6 @@ protected:
     kMaxPorts = 8
   };
 
-  static int s_key(void* userdata, const char* name, size_t length);
-  static int s_number(void* userdata, const char* number, size_t length);
-
   void addController(const SDL_Event* event);
   void removeController(const SDL_Event* event);
   void controllerButton(const SDL_Event* event);

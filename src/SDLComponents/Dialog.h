@@ -16,6 +16,7 @@ public:
   void addLabel(const char* caption, WORD x, WORD y, WORD w, WORD h);
   void addButton(const char* caption, DWORD id, WORD x, WORD y, WORD w, WORD h, bool isDefault);
   void addCombobox(DWORD id, WORD x, WORD y, WORD w, WORD h, WORD lines, GetOption get_option, void* udata, int* selected);
+  void addEditbox(DWORD id, WORD x, WORD y, WORD w, WORD h, WORD lines, char* contents, size_t maxSize, bool readOnly);
 
   bool show();
 
@@ -23,7 +24,8 @@ protected:
   enum Type
   {
     kCheckbox,
-    kCombobox
+    kCombobox,
+    kEditbox
   };
 
   struct ControlData
@@ -40,6 +42,12 @@ protected:
         GetOption _getOption;
         void* _udata;
         int* _selected;
+      };
+
+      struct
+      {
+        char* _contents;
+        size_t _maxSize;
       };
     };
   };

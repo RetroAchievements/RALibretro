@@ -118,24 +118,73 @@ std::string Config::serialize()
   return json;
 }
 
-struct Deserialize
-{
-  Config* _self;
-  std::string _key;
-};
-
 void Config::deserialize(const char* json)
 {
+  struct Deserialize
+  {
+    Config* self;
+    std::string key;
+  };
+
   Deserialize ud;
-  ud._self = this;
+  ud.self = this;
 
-  jsonsax_handlers_t handlers;
-  memset(&handlers, 0, sizeof(handlers));
-  handlers.key = s_key;
-  handlers.string = s_string;
-  handlers.boolean = s_boolean;
+  jsonsax_parse(json, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num) {
+    auto ud = (Deserialize*)udata;
 
-  jsonsax_parse(json, &handlers, &ud);
+    if (event == JSONSAX_KEY)
+    {
+      ud->key = std::string(str, num);
+    }
+    else if (event == JSONSAX_STRING)
+    {
+      std::string opt = std::string(str, num);
+
+      for (auto& var: ud->self->_variables)
+      {
+        if (var._key == ud->key)
+        {
+          int selected = 0;
+
+          for (const auto& option: var._options)
+          {
+            if (option == opt)
+            {
+              break;
+            }
+
+            selected++;
+          }
+
+          if ((size_t)selected >= var._options.size())
+          {
+            selected = 0;
+          }
+
+          ud->self->_updated = ud->self->_updated || selected != var._selected;
+          var._selected = selected;
+          break;
+        }
+      }
+    }
+    else if (event == JSONSAX_BOOLEAN)
+    {
+      if (ud->key == "_preserveAspect")
+      {
+        bool val = num != 0;
+        ud->self->_updated = ud->self->_updated || ud->self->_preserveAspect != val;
+        ud->self->_preserveAspect = val;
+      }
+      if (ud->key == "_linearFilter")
+      {
+        bool val = num != 0;
+        ud->self->_updated = ud->self->_updated || ud->self->_linearFilter != val;
+        ud->self->_linearFilter = val;
+      }
+    }
+
+    return 0;
+  });
 }
 
 void Config::showDialog()
@@ -179,66 +228,4 @@ const char* Config::s_getOption(int index, void* udata)
   }
 
   return NULL;
-}
-
-int Config::s_key(void* userdata, const char* name, size_t length)
-{
-  auto ud = (Deserialize*)userdata;
-  ud->_key = std::string(name, length);
-  return 0;
-}
-
-int Config::s_string(void* userdata, const char* string, size_t length)
-{
-  auto ud = (Deserialize*)userdata;
-  std::string opt(string, length);
-
-  for (auto& var: ud->_self->_variables)
-  {
-    if (var._key == ud->_key)
-    {
-      int selected = 0;
-
-      for (const auto& option: var._options)
-      {
-        if (option == opt)
-        {
-          break;
-        }
-
-        selected++;
-      }
-
-      if ((size_t)selected >= var._options.size())
-      {
-        selected = 0;
-      }
-
-      ud->_self->_updated = ud->_self->_updated || selected != var._selected;
-      var._selected = selected;
-      break;
-    }
-  }
-
-  return 0;
-}
-
-int Config::s_boolean(void* userdata, int istrue)
-{
-  auto ud = (Deserialize*)userdata;
-
-  if (ud->_key == "_preserveAspect")
-  {
-    bool value = istrue != 0;
-    ud->_self->_updated = ud->_self->_updated || ud->_self->_preserveAspect != value;
-    ud->_self->_preserveAspect = value;
-  }
-  else if (ud->_key == "_linearFilter")
-  {
-    bool value = istrue != 0;
-    ud->_self->_updated = ud->_self->_updated || ud->_self->_linearFilter != value;
-    ud->_self->_linearFilter = value;
-  }
-
-  return 0;
 }

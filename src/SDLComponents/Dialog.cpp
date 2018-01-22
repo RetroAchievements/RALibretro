@@ -153,6 +153,34 @@ void Dialog::addCombobox(DWORD id, WORD x, WORD y, WORD w, WORD h, WORD lines, G
   update(x, y, w, h);
 }
 
+void Dialog::addEditbox(DWORD id, WORD x, WORD y, WORD w, WORD h, WORD lines, char* contents, size_t maxSize, bool readOnly)
+{
+  DWORD multiline = lines > 1 ? ES_MULTILINE : 0;
+  DWORD ro = readOnly ? ES_READONLY : 0;
+
+  align(sizeof(DWORD));
+  write<DWORD>(0);
+  write<DWORD>(0);
+  write<DWORD>(WS_VSCROLL | WS_TABSTOP | WS_BORDER | ES_AUTOHSCROLL | WS_EX_CLIENTEDGE | multiline | ro | WS_TABSTOP | WS_CHILD | WS_VISIBLE);
+  write<WORD>(x + 5);
+  write<WORD>(y + 5);
+  write<WORD>(w);
+  write<WORD>(h * lines);
+  write<DWORD>(id);
+  write<DWORD>(0x0081ffff);
+  writeWide(L"");
+  write<WORD>(0);
+
+  ControlData cd;
+  cd._type = kEditbox;
+  cd._id = id;
+  cd._contents = contents;
+  cd._maxSize = maxSize;
+  _controlData.push_back(cd);
+
+  update(x, y, w, h * lines);
+}
+
 bool Dialog::show()
 {
   _updated = false;
@@ -256,6 +284,10 @@ void Dialog::initControls(HWND hwnd)
 
       SendMessageW(control, CB_SETCURSEL, *cd._selected, 0);
       break;
+    
+    case kEditbox:
+      SetDlgItemText(hwnd, cd._id, cd._contents);
+      break;
     }
   }
 }
@@ -281,6 +313,14 @@ void Dialog::retrieveData(HWND hwnd)
       i = SendMessage(control, CB_GETCURSEL, 0, 0);
       _updated = _updated || i != *cd._selected;
       *cd._selected = i;
+      break;
+    
+    case kEditbox:
+      if (cd._maxSize > 0)
+      {
+        GetDlgItemText(hwnd, cd._id, cd._contents, cd._maxSize);
+      }
+
       break;
     }
   }

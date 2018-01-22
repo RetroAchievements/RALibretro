@@ -3,7 +3,6 @@
 #endif
 
 #define IDM_SYSTEM_STELLA                       40000
-#define IDC_LOG                                 40001
 #define IDM_LOAD_GAME                           40001
 #define IDM_SAVE_STATE_0                        40002
 #define IDM_SAVE_STATE_1                        40003

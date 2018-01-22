@@ -496,7 +496,7 @@ std::string Input::serialize()
   for (unsigned port = 0; port < kMaxPorts; port++)
   {
     char temp[128];
-    snprintf(temp, sizeof(temp), "%s{\"port\":%u,\"device\":%d}", comma, port, _devices[port]);
+    snprintf(temp, sizeof(temp), "%s{\"port\":%u,\"device\":%d}", comma, port + 1, _devices[port]);
     json.append(temp);
     comma = ",";
   }
@@ -505,48 +505,39 @@ std::string Input::serialize()
   return json;
 }
 
-struct Deserialize
-{
-  Input*   _self;
-  bool     _isPort;
-  unsigned _port;
-};
-
 void Input::deserialize(const char* json)
 {
+  struct Deserialize
+  {
+    Input* self;
+    std::string key;
+    unsigned port;
+  };
+
   Deserialize ud;
-  ud._self = this;
-  
-  jsonsax_handlers_t handlers;
-  memset(&handlers, 0, sizeof(handlers));
-  handlers.key = s_key;
-  handlers.number = s_number;
+  ud.self = this;
 
-  jsonsax_parse(json, &handlers, &ud);
-}
+  jsonsax_parse(json, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num) {
+    auto ud = (Deserialize*)udata;
 
-int Input::s_key(void* userdata, const char* name, size_t length)
-{
-  auto* ud = (Deserialize*)userdata;
-  ud->_isPort = length == 4 && !strncmp(name, "port", length);
-  return 0;
-}
-
-int Input::s_number(void* userdata, const char* number, size_t length)
-{
-  auto* ud = (Deserialize*)userdata;
-  unsigned long n = strtoul(number, NULL, 10);
-
-  if (ud->_isPort)
-  {
-    ud->_port = n;
-  }
-  else
-  {
-    ud->_self->_devices[ud->_port] = n;
-  }
-
-  return 0;
+    if (event == JSONSAX_KEY)
+    {
+      ud->key = std::string(str, num);
+    }
+    else if (event == JSONSAX_NUMBER)
+    {
+      if (ud->key == "port")
+      {
+        ud->port = strtoul(str, NULL, 10) - 1;
+      }
+      else if (ud->key == "device")
+      {
+        ud->self->_devices[ud->port] = strtol(str, NULL, 10);
+      }
+    }
+    
+    return 0;
+  });
 }
 
 void Input::showDialog()

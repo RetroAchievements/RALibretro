@@ -34,11 +34,6 @@ public:
 protected:
   static const char* s_getOption(int index, void* udata);
 
-  static int s_key(void* userdata, const char* name, size_t length);
-  static int s_string(void* userdata, const char* string, size_t length);
-  static int s_boolean(void* userdata, int istrue);
-
-  
   struct Variable
   {
     std::string _key;
