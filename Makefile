@@ -5,9 +5,17 @@ RC=windres
 INCLUDES=-Isrc -I../RA_Integration/rapidjson/include
 DEFINES=-DOUTSIDE_SPEEX -DRANDOM_PREFIX=speex -DEXPORT= -D_USE_SSE2 -DFIXED_POINT
 #CCFLAGS=-Wall -O3 $(INCLUDES) $(DEFINES) `sdl2-config --cflags`
-CCFLAGS=-Wall -O0 -g -m32 $(INCLUDES) $(DEFINES) `sdl2-config --cflags`
+CCFLAGS=-Wall -m32 $(INCLUDES) $(DEFINES) `sdl2-config --cflags`
 CXXFLAGS=$(CCFLAGS) -std=c++11
 LDFLAGS=-m32
+
+ifneq ($(DEBUG),)
+  CFLAGS   += -O0 -g
+  CXXFLAGS += -O0 -g
+else
+  CFLAGS   += -O3 -DNDEBUG
+  CXXFLAGS += -O3 -DNDEBUG
+endif
 
 # main
 LIBS=`sdl2-config --libs` -lopengl32 -lwinhttp
