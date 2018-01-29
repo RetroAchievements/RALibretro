@@ -41,3 +41,5 @@
 #define IDM_SYSTEM_BEETLESGX                    40036
 #define IDM_SYSTEM_GAMBATTE                     40037
 #define IDM_SYSTEM_MGBA                         40038
+#define IDM_SYSTEM_MEDNAFENPSX                  40039
+#define IDM_SYSTEM_MEDNAFENNGP                  40040

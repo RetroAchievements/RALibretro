@@ -59,7 +59,9 @@ protected:
     kHandy,
     kBeetleSgx,
     kGambatte,
-    kMGBA
+    kMGBA,
+    kMednafenPsx,
+    kMednafenNgp
   };
 
   enum class System
@@ -73,7 +75,9 @@ protected:
     kSuperNintendo  = SNES,
     kGameBoy        = GB,
     kGameBoyColor   = GBC,
-    kGameBoyAdvance = GBA
+    kGameBoyAdvance = GBA,
+    kPlayStation1   = PlayStation,
+    kNeoGeoPocket   = NeoGeo
   };
 
   State    _state;
@@ -236,7 +240,12 @@ protected:
     signalRomLoadedWithPadding((uint8_t*)rom + offset, size, count, 0xff);
   }
 
-  void signalRomLoaded(void* rom, size_t size)
+  void signalRomLoadPsx(const char* path)
+  {
+    (void)path;
+  }
+
+  void signalRomLoaded(const char* path, void* rom, size_t size)
   {
     switch (_emulator) // This should be based on the system
     {
@@ -249,6 +258,7 @@ protected:
     case Emulator::kBeetleSgx:
     case Emulator::kGambatte:
     case Emulator::kMGBA:
+    case Emulator::kMednafenNgp:
       RA_OnLoadNewRom((BYTE*)rom, size);
       break;
 
@@ -264,6 +274,9 @@ protected:
       RA_OnLoadNewRom((BYTE*)rom + 0x0040, 0x0200);
       break;
     
+    case Emulator::kMednafenPsx:
+      signalRomLoadPsx(path);
+      break;
     }
   }
 
@@ -368,13 +381,15 @@ protected:
     static const UINT all_system_items[] =
     {
       IDM_SYSTEM_STELLA, IDM_SYSTEM_SNES9X, IDM_SYSTEM_PICODRIVE, IDM_SYSTEM_GENESISPLUSGX, IDM_SYSTEM_FCEUMM,
-      IDM_SYSTEM_HANDY, IDM_SYSTEM_BEETLESGX, IDM_SYSTEM_GAMBATTE, IDM_SYSTEM_MGBA
+      IDM_SYSTEM_HANDY, IDM_SYSTEM_BEETLESGX, IDM_SYSTEM_GAMBATTE, IDM_SYSTEM_MGBA, IDM_SYSTEM_MEDNAFENPSX,
+      IDM_SYSTEM_MEDNAFENNGP
     };
 
     static const Emulator all_systems[] =
     {
       Emulator::kStella, Emulator::kSnes9x, Emulator::kPicoDrive, Emulator::kGenesisPlusGx, Emulator::kFceumm,
-      Emulator::kHandy, Emulator::kBeetleSgx, Emulator::kGambatte, Emulator::kMGBA
+      Emulator::kHandy, Emulator::kBeetleSgx, Emulator::kGambatte, Emulator::kMGBA, Emulator::kMednafenPsx,
+      Emulator::kMednafenNgp
     };
 
     static const UINT error_items[] =
@@ -605,14 +620,25 @@ protected:
       initCore();
     }
 
+    const struct retro_system_info* info = _core.getSystemInfo();
     size_t size;
-    void* data = loadFile(game_path, &size);
+    void* data;
 
-    if (data == NULL)
+    if (info->need_fullpath)
     {
-      return;
+      size = 0;
+      data = NULL;
     }
-    
+    else
+    {
+      data = loadFile(game_path, &size);
+
+      if (data == NULL)
+      {
+        return;
+      }
+    }
+      
     if (!_core.loadGame(game_path, data, size))
     {
       free(data);
@@ -676,11 +702,19 @@ protected:
       }
 
       break;
+    
+    case Emulator::kMednafenPsx:
+      _system = System::kPlayStation1;
+      break;
+    
+    case Emulator::kMednafenNgp:
+      _system = System::kNeoGeoPocket;
+      break;
     }
 
     RA_SetConsoleID((unsigned)_system);
     RA_ClearMemoryBanks();
-    signalRomLoaded(data, size);
+    signalRomLoaded(game_path, data, size);
     free(data);
     _gamePath = game_path;
 
@@ -716,6 +750,8 @@ protected:
     case Emulator::kHandy:
     case Emulator::kBeetleSgx:
     case Emulator::kGambatte:
+    case Emulator::kMednafenPsx:
+    case Emulator::kMednafenNgp:
       _memoryData1 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
       _memorySize1 = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
       RA_InstallMemoryBank(0,	(void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
@@ -928,6 +964,8 @@ protected:
     case Emulator::kBeetleSgx:     return "mednafen_supergrafx_libretro";
     case Emulator::kGambatte:      return "gambatte_libretro";
     case Emulator::kMGBA:          return "mgba_libretro";
+    case Emulator::kMednafenPsx:   return "mednafen_psx_libretro";
+    case Emulator::kMednafenNgp:   return "mednafen_ngp_libretro";
     }
 
     return NULL;
@@ -1092,6 +1130,20 @@ protected:
         unloadCore();
         _state = State::kCoreLoaded;
         _emulator = Emulator::kMGBA;
+        updateMenu(_state, _emulator);
+        break;
+      
+      case IDM_SYSTEM_MEDNAFENPSX:
+        unloadCore();
+        _state = State::kCoreLoaded;
+        _emulator = Emulator::kMednafenPsx;
+        updateMenu(_state, _emulator);
+        break;
+      
+      case IDM_SYSTEM_MEDNAFENNGP:
+        unloadCore();
+        _state = State::kCoreLoaded;
+        _emulator = Emulator::kMednafenNgp;
         updateMenu(_state, _emulator);
         break;
 
