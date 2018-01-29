@@ -143,11 +143,32 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
     rect.w = width;
     rect.h = height;
 
-    if (SDL_UpdateTexture(_texture, &rect, data, pitch) != 0)
+    uint8_t* target_pixels;
+    int target_pitch;
+
+    if (SDL_LockTexture(_texture, &rect, (void**)&target_pixels, &target_pitch) != 0)
     {
-      _logger->printf(RETRO_LOG_ERROR, "SDL_UpdateTexture: %s", SDL_GetError());
+      _logger->printf(RETRO_LOG_ERROR, "SDL_LockTexture: %s", SDL_GetError());
       return;
     }
+
+    auto source_pixels = (uint8_t*)data;
+    size_t bpp = _pixelFormat == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 2;
+    size_t bytes = width * bpp;
+
+    if (bytes > (unsigned)target_pitch)
+    {
+      bytes = target_pitch;
+    }
+
+    for (unsigned y = 0; y < height; y++)
+    {
+      memcpy(target_pixels, source_pixels, bytes);
+      source_pixels += pitch;
+      target_pixels += target_pitch;
+    }
+
+    SDL_UnlockTexture(_texture);
 
     _width = width;
     _height = height;
