@@ -1,6 +1,7 @@
 #include "Video.h"
 
 #include <SDL_hints.h>
+#include <math.h>
 
 bool Video::init(libretro::LoggerComponent* logger, Config* config, SDL_Renderer* renderer)
 {

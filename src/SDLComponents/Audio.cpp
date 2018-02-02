@@ -1,6 +1,7 @@
 #include "Audio.h"
 
 #include <SDL_timer.h>
+#include <string.h>
 
 bool Fifo::init(size_t size)
 {

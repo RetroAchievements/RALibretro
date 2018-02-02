@@ -247,34 +247,38 @@ protected:
 
   void signalRomLoaded(const char* path, void* rom, size_t size)
   {
-    switch (_emulator) // This should be based on the system
+    if (_system != System::kPlayStation1 && rom == NULL)
     {
-    case Emulator::kNone:
-      break;
+      rom = loadFile(path, &size);
+    }
 
-    case Emulator::kStella:
-    case Emulator::kPicoDrive:
-    case Emulator::kGenesisPlusGx:
-    case Emulator::kBeetleSgx:
-    case Emulator::kGambatte:
-    case Emulator::kMGBA:
-    case Emulator::kMednafenNgp:
+    switch (_system)
+    {
+    case System::kAtari2600:
+    case System::kPCEngine:
+    case System::kGameBoy:
+    case System::kGameBoyColor:
+    case System::kGameBoyAdvance:
+    case System::kNeoGeoPocket:
+    case System::kMasterSystem:
+    case System::kMegaDrive:
+    default:
       RA_OnLoadNewRom((BYTE*)rom, size);
       break;
 
-    case Emulator::kSnes9x:
+    case System::kSuperNintendo:
       signalRomLoadedWithPadding(rom, size, 8 * 1024 * 1024, 0);
       break;
 
-    case Emulator::kFceumm:
+    case System::kNintendo:
       signalRomLoadedNes(rom, size);
       break;
     
-    case Emulator::kHandy:
-      RA_OnLoadNewRom((BYTE*)rom + 0x0040, 0x0200);
+    case System::kAtariLynx:
+      RA_OnLoadNewRom((BYTE*)rom + 0x0040, size > 0x0240 ? 0x0200 : size - 0x0040);
       break;
     
-    case Emulator::kMednafenPsx:
+    case System::kPlayStation1:
       signalRomLoadPsx(path);
       break;
     }
@@ -513,8 +517,9 @@ protected:
       return;
     }
 
-    std::string path = getCoreFileName();
-    path.append(".dll");
+    std::string path = "./Cores/";
+    path += getCoreFileName();
+    path += ".dll";
 
     if (!_core.loadCore(path.c_str()))
     {
@@ -918,7 +923,7 @@ protected:
 
   std::string getStatePath(unsigned ndx)
   {
-    std::string path = ".\\Saves\\";
+    std::string path = _config.getSaveDirectory();
     mkdir(path.c_str());
 
     size_t last_slash = _gamePath.find_last_of("/");
@@ -971,19 +976,11 @@ protected:
     return NULL;
   }
 
-  std::string getInputConfigPath()
-  {
-    std::string path = _config.getSystemPath();
-    path.append(getCoreFileName());
-    path.append("-input.json");
-    return path;
-  }
-
   std::string getCoreConfigPath()
   {
-    std::string path = _config.getSystemPath();
-    path.append(getCoreFileName());
-    path.append("-core.json");
+    std::string path = "./Cores/";
+    path += getCoreFileName();
+    path += ".json";
     return path;
   }
 
@@ -1786,7 +1783,7 @@ void loadROM(const char* path)
   app.loadROM(path);
 }
 
-int main(int, char**)
+int main(int argc, char* argv[])
 {
   bool ok = app.init("RALibretro", 640, 480);
 

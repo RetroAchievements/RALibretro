@@ -33,7 +33,7 @@ const char* Config::getSaveDirectory()
 
 const char* Config::getSystemPath()
 {
-  return "./";
+  return "./System/";
 }
 
 void Config::setVariables(const struct retro_variable* variables, unsigned count)
