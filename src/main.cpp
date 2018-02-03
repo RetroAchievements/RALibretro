@@ -546,44 +546,51 @@ protected:
       aux += sprintf(aux, "*.*") + 1;
       aux += sprintf(aux, "Supported Files") + 1;
 
-      for (;;)
+      if (_emulator != Emulator::kGenesisPlusGx)
       {
-        if (aux < end)
+        for (;;)
         {
-          *aux++ = '*';
+          if (aux < end)
+          {
+            *aux++ = '*';
+          }
+
+          if (aux < end)
+          {
+            *aux++ = '.';
+          }
+
+          while (aux < end && *ext != '|' && *ext != 0)
+          {
+            *aux++ = toupper(*ext++);
+          }
+
+          if (*ext == 0)
+          {
+            break;
+          }
+
+          ext++;
+
+          if (aux < end)
+          {
+            *aux++ = ';';
+          }
         }
 
         if (aux < end)
         {
-          *aux++ = '.';
+          *aux++ = 0;
         }
-
-        while (aux < end && *ext != '|' && *ext != 0)
-        {
-          *aux++ = toupper(*ext++);
-        }
-
-        if (*ext == 0)
-        {
-          break;
-        }
-
-        ext++;
 
         if (aux < end)
         {
-          *aux++ = ';';
+          *aux++ = 0;
         }
       }
-
-      if (aux < end)
+      else
       {
-        *aux++ = 0;
-      }
-
-      if (aux < end)
-      {
-        *aux++ = 0;
+        strcpy(aux, "*.gba");
       }
     }
 
