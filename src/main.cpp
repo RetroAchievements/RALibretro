@@ -517,7 +517,8 @@ protected:
       return;
     }
 
-    std::string path = "./Cores/";
+    std::string path = _config.getRootFolder();
+    path += "Cores\\";
     path += getCoreFileName();
     path += ".dll";
 
@@ -897,9 +898,7 @@ protected:
 
   std::string getSRAMPath()
   {
-    std::string path = ".\\Saves\\";
-    mkdir(path.c_str());
-
+    std::string path = _config.getSaveDirectory();
     size_t last_slash = _gamePath.find_last_of("/");
     size_t last_bslash = _gamePath.find_last_of("\\");
 
@@ -978,7 +977,8 @@ protected:
 
   std::string getCoreConfigPath()
   {
-    std::string path = "./Cores/";
+    std::string path = _config.getRootFolder();
+    path += "Cores\\";
     path += getCoreFileName();
     path += ".json";
     return path;
@@ -1271,6 +1271,7 @@ protected:
         break;
 
       case IDM_EXIT:
+        unloadCore();
         *done = true;
         break;
         

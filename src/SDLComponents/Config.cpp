@@ -3,11 +3,41 @@
 #include "Dialog.h"
 #include "jsonsax/jsonsax.h"
 
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
 #include <string.h>
 
 bool Config::init(libretro::LoggerComponent* logger)
 {
-  (void)logger;
+  HMODULE hModule = GetModuleHandleW(NULL);
+  char path[MAX_PATH + 1];
+  DWORD len = GetModuleFileNameA(hModule, path, sizeof(path) / sizeof(path[0]) - 1);
+  path[len] = 0;
+
+  char* bslash = strrchr(path, '\\');
+
+  if (bslash != NULL) {
+    bslash[1] = 0;
+    _rootFolder = path;
+  }
+  else
+  {
+    _rootFolder = ".\\";
+  }
+
+  _assetsFolder = _rootFolder + "Assets\\";
+  _saveFolder = _rootFolder + "Saves\\";
+  _systemFolder = _rootFolder + "System\\";
+
+  logger->printf(RETRO_LOG_INFO, "Root folder:   %s", _rootFolder.c_str());
+  logger->printf(RETRO_LOG_INFO, "Assets folder: %s", _assetsFolder.c_str());
+  logger->printf(RETRO_LOG_INFO, "Save folder:   %s", _saveFolder.c_str());
+  logger->printf(RETRO_LOG_INFO, "System folder: %s", _systemFolder.c_str());
+
+  // TODO This should be done in main.cpp as soon as possible
+  SetCurrentDirectory(_rootFolder.c_str());
+
   reset();
   return true;
 }
@@ -23,17 +53,17 @@ void Config::reset()
 
 const char* Config::getCoreAssetsDirectory()
 {
-  return "./";
+  return _assetsFolder.c_str();
 }
 
 const char* Config::getSaveDirectory()
 {
-  return "./Saves/";
+  return _saveFolder.c_str();
 }
 
 const char* Config::getSystemPath()
 {
-  return "./System/";
+  return _systemFolder.c_str();
 }
 
 void Config::setVariables(const struct retro_variable* variables, unsigned count)

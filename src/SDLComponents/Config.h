@@ -17,6 +17,10 @@ public:
   virtual bool varUpdated() override;
   virtual const char* getVariable(const char* variable) override;
 
+  const char* getRootFolder() {
+    return _rootFolder.c_str();
+  }
+
   std::string serialize();
   void deserialize(const char* json);
   void showDialog();
@@ -42,6 +46,11 @@ protected:
 
     std::vector<std::string> _options;
   };
+
+  std::string _rootFolder;
+  std::string _assetsFolder;
+  std::string _saveFolder;
+  std::string _systemFolder;
 
   std::vector<Variable> _variables;
 
