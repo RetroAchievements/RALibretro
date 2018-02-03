@@ -1,0 +1,56 @@
+# Hackish makefile to build on Linux
+CC=i686-w64-mingw32-gcc
+CXX=i686-w64-mingw32-g++
+RC=i686-w64-mingw32-windres
+INCLUDES=-Isrc -I../RA_Integration/rapidjson/include
+DEFINES=-DOUTSIDE_SPEEX -DRANDOM_PREFIX=speex -DEXPORT= -D_USE_SSE2 -DFIXED_POINT
+CCFLAGS=-Wall -m32 $(INCLUDES) $(DEFINES) -I/home/leiradel/opt/x86/include/SDL2 -D_REENTRANT -DCROSS_BUILD
+CXXFLAGS=$(CCFLAGS) -std=c++11
+LDFLAGS=-m32 -mwindows
+
+ifneq ($(DEBUG),)
+  CFLAGS   += -O0 -g
+  CXXFLAGS += -O0 -g
+else
+  CFLAGS   += -O3 -DNDEBUG
+  CXXFLAGS += -O3 -DNDEBUG
+endif
+
+# main
+LIBS=-L/home/leiradel/opt/x86/lib -lmingw32 -lSDL2main -lSDL2 -lgdi32 -lcomdlg32 -lopengl32 -lwinhttp
+OBJS=\
+	src/dynlib/dynlib.o \
+	src/jsonsax/jsonsax.o \
+	src/libretro/BareCore.o \
+	src/libretro/Core.o \
+	src/RA_Integration/RA_Implementation.o \
+	src/RA_Integration/RA_Interface.o \
+	src/SDLComponents/Audio.o \
+	src/SDLComponents/Config.o \
+	src/SDLComponents/Dialog.o \
+	src/SDLComponents/Input.o \
+	src/SDLComponents/Logger.o \
+	src/SDLComponents/Video.o \
+	src/speex/resample.o \
+	src/KeyBinds.o \
+	src/main.o \
+	src/menu.res
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+%.o: %.c
+	$(CC) $(CCFLAGS) -c $< -o $@
+
+%.res: %.rc
+	$(RC) $< -O coff -o $@
+
+all: bin/RALibretro.exe
+
+bin/RALibretro.exe: $(OBJS)
+	$(CXX) $(LDFLAGS) -o $@ $+ $(LIBS)
+
+clean:
+	rm -f bin/RALibretro.exe $(OBJS)
+
+.PHONY: clean

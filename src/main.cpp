@@ -993,6 +993,12 @@ protected:
 
   void saveState(unsigned ndx)
   {
+    if (RA_HardcoreModeIsActive())
+    {
+      _logger.printf(RETRO_LOG_INFO, "Hardcore mode is active, can't save state");
+      return;
+    }
+
     size_t size = _core.serializeSize();
     void* data = malloc(size);
 
@@ -1018,6 +1024,12 @@ protected:
 
   void loadState(unsigned ndx)
   {
+    if (RA_HardcoreModeIsActive())
+    {
+      _logger.printf(RETRO_LOG_INFO, "Hardcore mode is active, can't load state");
+      return;
+    }
+
     if ((_states & (1 << ndx)) != 0)
     {
       std::string path = getStatePath(ndx);
@@ -1156,15 +1168,11 @@ protected:
         break;
       
       case IDM_PAUSE_GAME:
-        _state = State::kGamePaused;
-        RA_SetPaused(true);
-        updateMenu(_state, _emulator);
+        pauseGame(true);
         break;
 
       case IDM_RESUME_GAME:
-        _state = State::kGameRunning;
-        RA_SetPaused(false);
-        updateMenu(_state, _emulator);
+        pauseGame(false);
         break;
       
       case IDM_RESET_GAME:
@@ -1321,26 +1329,26 @@ protected:
     case KeyBinds::Action::kButtonR3:     _input.buttonEvent(Input::Button::kR3, extra != 0); break;
     case KeyBinds::Action::kButtonSelect: _input.buttonEvent(Input::Button::kSelect, extra != 0); break;
     case KeyBinds::Action::kButtonStart:  _input.buttonEvent(Input::Button::kStart, extra != 0); break;
-    // State state management
+    // State management
     case KeyBinds::Action::kSetStateSlot: _slot = extra; break;
     case KeyBinds::Action::kSaveState:    saveState(_slot); break;
     case KeyBinds::Action::kLoadState:    loadState(_slot); break;
-    case KeyBinds::Action::kStep:         _state = State::kGamePaused; _step = true; break;
     // Emulation speed
-    case KeyBinds::Action::kPauseToggle:
-      if (_state == State::kGameRunning)
+    case KeyBinds::Action::kStep:
+      if (RA_HardcoreModeIsActive())
+      {
+        _logger.printf(RETRO_LOG_INFO, "Hardcore mode is active, can't run step-by-step");
+      }
+      else
       {
         _state = State::kGamePaused;
-        RA_SetPaused(true);
-        updateMenu(_state, _emulator);
-      }
-      else if (_state == State::kGamePaused)
-      {
-        _state = State::kGameRunning;
-        RA_SetPaused(false);
-        updateMenu(_state, _emulator);
+        _step = true;
       }
 
+      break;
+
+    case KeyBinds::Action::kPauseToggle:
+      pauseGame(_state != State::kGamePaused);
       break;
 
     case KeyBinds::Action::kFastForward:
@@ -1424,7 +1432,12 @@ public:
     inited = kSdlInited;
 
     // Setup window
+#ifdef CROSS_BUILD
+    // SDL_WINDOW_OPENGL crashes when run with wine
+    _window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_RESIZABLE);
+#else
     _window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+#endif
 
     if (_window == NULL)
     {
@@ -1719,20 +1732,6 @@ public:
     return _state == State::kGameRunning || _state == State::kGamePaused || _state == State::kGameTurbo;
   }
 
-  void pause()
-  {
-    _state = State::kGamePaused;
-    RA_SetPaused(true);
-    updateMenu(_state, _emulator);
-  }
-
-  void resume()
-  {
-    _state = State::kGameRunning;
-    RA_SetPaused(false);
-    updateMenu(_state, _emulator);
-  }
-
   void reset()
   {
     _core.resetGame();
@@ -1741,6 +1740,34 @@ public:
   void loadROM(const char* path)
   {
     loadGame(path, true);
+  }
+
+  void pauseGame(bool pause)
+  {
+    if (RA_HardcoreModeIsActive())
+    {
+      _logger.printf(RETRO_LOG_INFO, "Hardcore mode is active, can't pause game");
+      return;
+    }
+
+    if (pause)
+    {
+      if (_state == State::kGameRunning || _state == State::kGameTurbo)
+      {
+        _state = State::kGamePaused;
+        RA_SetPaused(true);
+        updateMenu(_state, _emulator);
+      }
+    }
+    else
+    {
+      if (_state == State::kGamePaused)
+      {
+        _state = State::kGameRunning;
+        RA_SetPaused(false);
+        updateMenu(_state, _emulator);
+      }
+    }
   }
 };
 
@@ -1773,12 +1800,12 @@ bool isGameActive()
 
 void pause()
 {
-  app.pause();
+  app.pauseGame(true);
 }
 
 void resume()
 {
-  app.resume();
+  app.pauseGame(false);
 }
 
 void reset()
