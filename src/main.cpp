@@ -32,9 +32,6 @@ HWND g_mainWindow;
 static unsigned char memoryRead(unsigned int);
 static void memoryWrite(unsigned int, unsigned int);
 
-static unsigned char memoryRead2(unsigned int);
-static void memoryWrite2(unsigned int, unsigned int);
-
 class Application
 {
 protected:
@@ -80,6 +77,12 @@ protected:
     kNeoGeoPocket   = NeoGeo
   };
 
+  struct MemoryRegion
+  {
+    uint8_t* data;
+    size_t size;
+  };
+
   State    _state;
   Emulator _emulator;
   System   _system;
@@ -108,10 +111,8 @@ protected:
   unsigned    _states;
   unsigned    _slot;
 
-  uint8_t* _memoryData1;
-  uint8_t* _memoryData2;
-  size_t   _memorySize1;
-  size_t   _memorySize2;
+  MemoryRegion _memoryRegions[64];
+  unsigned     _memoryRegionCount;
 
   HMENU _menu;
 
@@ -507,6 +508,13 @@ protected:
     }
   }
 
+  void registerMemoryRegion(void* data, size_t size)
+  {
+    _memoryRegions[_memoryRegionCount].data = (uint8_t*)data;
+    _memoryRegions[_memoryRegionCount].size = size;
+    _memoryRegionCount++;
+  }
+
   void initCore()
   {
     _config.reset();
@@ -752,6 +760,8 @@ protected:
       }
     }
 
+    _memoryRegionCount = 0;
+
     switch (_emulator)
     {
     case Emulator::kNone:
@@ -765,23 +775,36 @@ protected:
     case Emulator::kGambatte:
     case Emulator::kMednafenPsx:
     case Emulator::kMednafenNgp:
-      _memoryData1 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
-      _memorySize1 = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
-      RA_InstallMemoryBank(0,	(void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
+      data = _core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
+      size = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
+      registerMemoryRegion(data, size);
+      RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, size);
       break;
 
     case Emulator::kSnes9x:
-    case Emulator::kFceumm:
-      _memoryData1 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
-      _memorySize1 = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
-      RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
-      RA_InstallMemoryBank(1, (void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
-      RA_InstallMemoryBank(2, (void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
-      RA_InstallMemoryBank(3, (void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
+      data = _core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
+      size = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
+      registerMemoryRegion(data, size);
+      RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, size);
 
-      _memoryData2 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
-      _memorySize2 = _core.getMemorySize(RETRO_MEMORY_SAVE_RAM);
-      RA_InstallMemoryBank(1, (void*)::memoryRead2, (void*)::memoryWrite2, _memorySize2);
+      data = _core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
+      size = _core.getMemorySize(RETRO_MEMORY_SAVE_RAM);
+      registerMemoryRegion(data, size);
+      RA_InstallMemoryBank(1, (void*)::memoryRead, (void*)::memoryWrite, size);
+
+      break;
+    
+    case Emulator::kFceumm:
+      {
+        const struct retro_memory_map* mmap = _core.getMemoryMap();
+
+        for (unsigned i = 0; i < mmap->num_descriptors; i++)
+        {
+          registerMemoryRegion(mmap->descriptors[i].ptr, mmap->descriptors[i].len);
+        }
+
+        RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, 65536);
+      }
 
       break;
     
@@ -794,23 +817,26 @@ protected:
         {
           if (mmap->descriptors[i].start == 0x03000000U)
           {
-            _memoryData1 = (uint8_t*)mmap->descriptors[i].ptr;
-            _memorySize1 = mmap->descriptors[i].len;
-            RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
+            data = mmap->descriptors[i].ptr;
+            size = mmap->descriptors[i].len;
+            registerMemoryRegion(data, size);
+            RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, size);
           }
           else if (mmap->descriptors[i].start == 0x02000000U)
           {
-            _memoryData2 = (uint8_t*)mmap->descriptors[i].ptr;
-            _memorySize2 = mmap->descriptors[i].len;
-            RA_InstallMemoryBank(1, (void*)::memoryRead2, (void*)::memoryWrite2, _memorySize2);
+            data = mmap->descriptors[i].ptr;
+            size = mmap->descriptors[i].len;
+            registerMemoryRegion(data, size);
+            RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, size);
           }
         }
       }
       else
       {
-        _memoryData1 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
-        _memorySize1 = 32768;
-        RA_InstallMemoryBank(0,	(void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
+        data = _core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
+        size = 32768;
+        registerMemoryRegion(data, size);
+        RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, size);
       }
 
       break;
@@ -874,23 +900,33 @@ protected:
     updateMenu(_state, _emulator);
   }
 
-  void unloadGame()
+  bool unloadGame(bool quitting)
   {
-    size_t size = _core.getMemorySize(RETRO_MEMORY_SAVE_RAM);
-
-    if (size != 0)
+    if (RA_ConfirmLoadNewRom(quitting))
     {
-      void* data = _core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
-      std::string sram = getSRAMPath();
-      saveFile(sram.c_str(), data, size);
+      size_t size = _core.getMemorySize(RETRO_MEMORY_SAVE_RAM);
+
+      if (size != 0)
+      {
+        void* data = _core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
+        std::string sram = getSRAMPath();
+        saveFile(sram.c_str(), data, size);
+      }
+
+      return true;
     }
+
+    return false;
   }
 
-  void unloadCore()
+  bool unloadCore(bool quitting)
   {
     if (isGameActive())
     {
-      unloadGame();
+      if (!unloadGame(quitting))
+      {
+        return false;
+      }
 
       std::string json;
       json.append("{\"core\":");
@@ -903,6 +939,8 @@ protected:
 
       _core.destroy();
     }
+
+    return true;
   }
 
   std::string getSRAMPath()
@@ -1089,80 +1127,113 @@ protected:
       switch (cmd)
       {
       case IDM_SYSTEM_STELLA:
-        unloadCore();
-        _state = State::kCoreLoaded;
-        _emulator = Emulator::kStella;
-        updateMenu(_state, _emulator);
+        if (unloadCore(false))
+        {
+          _state = State::kCoreLoaded;
+          _emulator = Emulator::kStella;
+          updateMenu(_state, _emulator);
+        }
+
         break;
       
       case IDM_SYSTEM_SNES9X:
-        unloadCore();
-        _state = State::kCoreLoaded;
-        _emulator = Emulator::kSnes9x;
-        updateMenu(_state, _emulator);
+        if (unloadCore(false))
+        {
+          _state = State::kCoreLoaded;
+          _emulator = Emulator::kSnes9x;
+          updateMenu(_state, _emulator);
+        }
+
         break;
 
       case IDM_SYSTEM_PICODRIVE:
-        unloadCore();
-        _state = State::kCoreLoaded;
-        _emulator = Emulator::kPicoDrive;
-        updateMenu(_state, _emulator);
+        if (unloadCore(false))
+        {
+          _state = State::kCoreLoaded;
+          _emulator = Emulator::kPicoDrive;
+          updateMenu(_state, _emulator);
+        }
+
         break;
 
       case IDM_SYSTEM_GENESISPLUSGX:
-        unloadCore();
-        _state = State::kCoreLoaded;
-        _emulator = Emulator::kGenesisPlusGx;
-        updateMenu(_state, _emulator);
+        if (unloadCore(false))
+        {
+          _state = State::kCoreLoaded;
+          _emulator = Emulator::kGenesisPlusGx;
+          updateMenu(_state, _emulator);
+        }
+
         break;
 
       case IDM_SYSTEM_FCEUMM:
-        unloadCore();
-        _state = State::kCoreLoaded;
-        _emulator = Emulator::kFceumm;
-        updateMenu(_state, _emulator);
+        if (unloadCore(false))
+        {
+          _state = State::kCoreLoaded;
+          _emulator = Emulator::kFceumm;
+          updateMenu(_state, _emulator);
+        }
+
         break;
 
       case IDM_SYSTEM_HANDY:
-        unloadCore();
-        _state = State::kCoreLoaded;
-        _emulator = Emulator::kHandy;
-        updateMenu(_state, _emulator);
+        if (unloadCore(false))
+        {
+          _state = State::kCoreLoaded;
+          _emulator = Emulator::kHandy;
+          updateMenu(_state, _emulator);
+        }
+
         break;
 
       case IDM_SYSTEM_BEETLESGX:
-        unloadCore();
-        _state = State::kCoreLoaded;
-        _emulator = Emulator::kBeetleSgx;
-        updateMenu(_state, _emulator);
+        if (unloadCore(false))
+        {
+          _state = State::kCoreLoaded;
+          _emulator = Emulator::kBeetleSgx;
+          updateMenu(_state, _emulator);
+        }
+
         break;
 
       case IDM_SYSTEM_GAMBATTE:
-        unloadCore();
-        _state = State::kCoreLoaded;
-        _emulator = Emulator::kGambatte;
-        updateMenu(_state, _emulator);
+        if (unloadCore(false))
+        {
+          _state = State::kCoreLoaded;
+          _emulator = Emulator::kGambatte;
+          updateMenu(_state, _emulator);
+        }
+
         break;
 
       case IDM_SYSTEM_MGBA:
-        unloadCore();
-        _state = State::kCoreLoaded;
-        _emulator = Emulator::kMGBA;
-        updateMenu(_state, _emulator);
+        if (unloadCore(false))
+        {
+          _state = State::kCoreLoaded;
+          _emulator = Emulator::kMGBA;
+          updateMenu(_state, _emulator);
+        }
+
         break;
       
       case IDM_SYSTEM_MEDNAFENPSX:
-        unloadCore();
-        _state = State::kCoreLoaded;
-        _emulator = Emulator::kMednafenPsx;
-        updateMenu(_state, _emulator);
+        if (unloadCore(false))
+        {
+          _state = State::kCoreLoaded;
+          _emulator = Emulator::kMednafenPsx;
+          updateMenu(_state, _emulator);
+        }
+
         break;
       
       case IDM_SYSTEM_MEDNAFENNGP:
-        unloadCore();
-        _state = State::kCoreLoaded;
-        _emulator = Emulator::kMednafenNgp;
-        updateMenu(_state, _emulator);
+        if (unloadCore(false))
+        {
+          _state = State::kCoreLoaded;
+          _emulator = Emulator::kMednafenNgp;
+          updateMenu(_state, _emulator);
+        }
+
         break;
 
       case IDM_LOAD_GAME:
@@ -1182,9 +1253,12 @@ protected:
         break;
       
       case IDM_CLOSE_GAME:
-        unloadCore();
-        _state = State::kCoreLoaded;
-        updateMenu(_state, _emulator);
+        if (unloadCore(false))
+        {
+          _state = State::kCoreLoaded;
+          updateMenu(_state, _emulator);
+        }
+
         break;
 
       case IDM_SAVE_STATE_0:
@@ -1288,8 +1362,7 @@ protected:
         break;
 
       case IDM_EXIT:
-        unloadCore();
-        *done = true;
+        *done = unloadCore(true);
         break;
         
       case IDM_ABOUT:
@@ -1583,7 +1656,7 @@ public:
 
   void destroy()
   {
-    unloadCore();
+    unloadCore(true);
 
     if (_state == State::kInitialized)
     {
@@ -1711,22 +1784,40 @@ public:
 
   unsigned char memoryRead(unsigned int addr)
   {
-    return _memoryData1[addr];
+    MemoryRegion* region = _memoryRegions;
+    unsigned count = 0;
+
+    while (count < _memoryRegionCount && addr > region->size)
+    {
+      addr -= region->size;
+      region++;
+      count++;
+    }
+
+    if (count < _memoryRegionCount && region->data != NULL)
+    {
+      return region->data[addr];
+    }
+
+    return 0;
   }
 
   void memoryWrite(unsigned int addr, unsigned int value)
   {
-    _memoryData1[addr] = value;
-  }
+    MemoryRegion* region = _memoryRegions;
+    unsigned count = 0;
 
-  unsigned char memoryRead2(unsigned int addr)
-  {
-    return _memoryData2[addr];
-  }
+    while (count < _memoryRegionCount && addr > region->size)
+    {
+      addr -= region->size;
+      region++;
+      count++;
+    }
 
-  void memoryWrite2(unsigned int addr, unsigned int value)
-  {
-    _memoryData2[addr] = value;
+    if (count < _memoryRegionCount && region->data != NULL)
+    {
+      region->data[addr] = value;
+    }
   }
 
   bool isGameActive() const
@@ -1783,16 +1874,6 @@ static unsigned char memoryRead(unsigned int addr)
 static void memoryWrite(unsigned int addr, unsigned int value)
 {
 	app.memoryWrite(addr, value);
-}
-
-static unsigned char memoryRead2(unsigned int addr)
-{
-	return app.memoryRead2(addr);
-}
-
-static void memoryWrite2(unsigned int addr, unsigned int value)
-{
-	app.memoryWrite2(addr, value);
 }
 
 bool isGameActive()
