@@ -775,6 +775,9 @@ protected:
       _memoryData1 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
       _memorySize1 = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
       RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
+      RA_InstallMemoryBank(1, (void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
+      RA_InstallMemoryBank(2, (void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
+      RA_InstallMemoryBank(3, (void*)::memoryRead, (void*)::memoryWrite, _memorySize1);
 
       _memoryData2 = (uint8_t*)_core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
       _memorySize2 = _core.getMemorySize(RETRO_MEMORY_SAVE_RAM);
@@ -887,7 +890,6 @@ protected:
   {
     if (isGameActive())
     {
-      RA_ClearMemoryBanks();
       unloadGame();
 
       std::string json;
@@ -1539,7 +1541,7 @@ public:
       _menu = LoadMenu(NULL, "MAIN");
       SetMenu(g_mainWindow, _menu);
 
-      RA_Init(g_mainWindow, RA_Libretro, "1.0");
+      RA_Init(g_mainWindow, RA_Libretro, VERSION);
       RA_InitShared();
       RA_InitDirectX();
       RA_UpdateAppTitle( "" );
