@@ -120,11 +120,11 @@ namespace libretro
 
   struct Components
   {
-    LoggerComponent*    _logger;
-    ConfigComponent*    _config;
-    VideoComponent*     _video;
-    AudioComponent*     _audio;
-    InputComponent*     _input;
-    AllocatorComponent* _allocator;
+    LoggerComponent*    logger;
+    ConfigComponent*    config;
+    VideoComponent*     video;
+    AudioComponent*     audio;
+    InputComponent*     input;
+    AllocatorComponent* allocator;
   };
 }

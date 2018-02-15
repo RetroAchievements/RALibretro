@@ -18,7 +18,7 @@ main MENU
 {
     POPUP "File"
     {
-        POPUP "System"
+        POPUP "Load System"
         {
             MENUITEM "Atari 2600 (Stella)", IDM_SYSTEM_STELLA
             MENUITEM "Atari Lynx (Handy)", IDM_SYSTEM_HANDY
@@ -31,6 +31,7 @@ main MENU
             MENUITEM "PC Engine (Beetle SGX)", IDM_SYSTEM_BEETLESGX
             MENUITEM "Super Nintendo (Snes9x)", IDM_SYSTEM_SNES9X
         }
+        MENUITEM "Unload System", IDM_CLOSE_CORE
         MENUITEM SEPARATOR
         MENUITEM "Load Game", IDM_LOAD_GAME
         MENUITEM "Pause Game", IDM_PAUSE_GAME

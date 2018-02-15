@@ -240,12 +240,12 @@ bool libretro::Core::init(const Components* components)
 
   if (components != NULL)
   {
-    if (components->_logger != NULL)    _logger    = components->_logger;
-    if (components->_config != NULL)    _config    = components->_config;
-    if (components->_video != NULL)     _video     = components->_video;
-    if (components->_audio != NULL)     _audio     = components->_audio;
-    if (components->_input != NULL)     _input     = components->_input;
-    if (components->_allocator != NULL) _allocator = components->_allocator;
+    if (components->logger != NULL)    _logger    = components->logger;
+    if (components->config != NULL)    _config    = components->config;
+    if (components->video != NULL)     _video     = components->video;
+    if (components->audio != NULL)     _audio     = components->audio;
+    if (components->input != NULL)     _input     = components->input;
+    if (components->allocator != NULL) _allocator = components->allocator;
   }
 
   reset();

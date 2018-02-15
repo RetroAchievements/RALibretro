@@ -43,3 +43,4 @@
 #define IDM_SYSTEM_MGBA                         40038
 #define IDM_SYSTEM_MEDNAFENPSX                  40039
 #define IDM_SYSTEM_MEDNAFENNGP                  40040
+#define IDM_CLOSE_CORE                          40041
