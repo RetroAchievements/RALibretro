@@ -94,6 +94,12 @@ bool Fsm::quit() {
                   quit();
       return __ok;
     }
+    case State::GamePaused: {
+      bool __ok = unloadGame() &&
+                  unloadCore() &&
+                  quit();
+      return __ok;
+    }
     case State::GameRunning: {
       bool __ok = unloadGame() &&
                   unloadCore() &&
@@ -124,6 +130,11 @@ bool Fsm::quit() {
 
 bool Fsm::resetGame() {
   switch (__state) {
+    case State::GamePaused: {
+      bool __ok = resumeGame() &&
+                  resetGame();
+      return __ok;
+    }
     case State::GameRunning: {
       __state = State::GameRunning;
       ctx.resetGame();
@@ -168,8 +179,34 @@ bool Fsm::resumeGame() {
   return false;
 }
 
+bool Fsm::step() {
+  switch (__state) {
+    case State::GamePaused: {
+      __state = State::FrameStep;
+#ifdef DEBUG_FSM
+      ctx.printf("FSM Switched to FrameStep");
+#endif
+      return true;
+    }
+    default: break;
+  }
+
+  return false;
+}
+
 bool Fsm::turbo() {
   switch (__state) {
+    case State::GamePaused: {
+      if (!ctx.hardcore()) {
+        __state = State::GameTurbo;
+        ctx.updateMenu();
+#ifdef DEBUG_FSM
+        ctx.printf("FSM Switched to GameTurbo");
+#endif
+        return true;
+      }
+      break;
+    }
     case State::GameRunning: {
       if (!ctx.hardcore()) {
         __state = State::GameTurbo;
@@ -209,6 +246,15 @@ bool Fsm::unloadCore() {
 
 bool Fsm::unloadGame() {
   switch (__state) {
+    case State::GamePaused: {
+      __state = State::CoreLoaded;
+      ctx.canUnloadGame();
+      ctx.updateMenu();
+#ifdef DEBUG_FSM
+      ctx.printf("FSM Switched to CoreLoaded");
+#endif
+      return true;
+    }
     case State::GameRunning: {
       __state = State::CoreLoaded;
       ctx.unloadGame();

@@ -29,6 +29,7 @@ public:
   bool quit();
   bool resetGame();
   bool resumeGame();
+  bool step();
   bool turbo();
   bool unloadCore();
   bool unloadGame();

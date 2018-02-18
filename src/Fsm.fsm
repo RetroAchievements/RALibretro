@@ -58,7 +58,7 @@ fsm Fsm {
     resumeGame() => GameRunning {
       ctx.pauseGame(false);
       ctx.updateMenu();
-    };
+    }
 
     resetGame() => resumeGame() => resetGame();
 
