@@ -4,7 +4,6 @@ CXX=g++
 RC=windres
 INCLUDES=-Isrc -I../RA_Integration/rapidjson/include
 DEFINES=-DOUTSIDE_SPEEX -DRANDOM_PREFIX=speex -DEXPORT= -D_USE_SSE2 -DFIXED_POINT
-#CCFLAGS=-Wall -O3 $(INCLUDES) $(DEFINES) `sdl2-config --cflags`
 CCFLAGS=-Wall -m32 $(INCLUDES) $(DEFINES) `sdl2-config --cflags`
 CXXFLAGS=$(CCFLAGS) -std=c++11
 LDFLAGS=-m32
@@ -33,10 +32,12 @@ OBJS=\
 	src/SDLComponents/Logger.o \
 	src/SDLComponents/Video.o \
 	src/speex/resample.o \
+	src/Application.o \
 	src/Fsm.o \
 	src/KeyBinds.o \
 	src/main.o \
-	src/menu.res
+	src/menu.res \
+	src/Util.o
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
