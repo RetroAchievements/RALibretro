@@ -1,0 +1,102 @@
+header {
+  #include "Emulator.h"
+  #include <string>
+
+  typedef const std::string const_string;
+}
+
+fsm Fsm {
+  class Application as ctx;
+
+  Start {
+    loadCore(Emulator core) => CoreLoaded if (ctx.loadCore(core)) {
+      ctx.updateMenu();
+    }
+
+    quit() => Quit if (ctx.canQuit());
+  }
+
+  Quit {}
+
+  CoreLoaded {
+    loadGame(const_string path) => GameRunning if (ctx.loadGame(path)) {
+      ctx.updateMenu();
+    }
+
+    unloadCore() => Start if (ctx.canUnloadCore()) {
+      ctx.unloadCore();
+      ctx.updateMenu();
+    }
+
+    quit() => unloadCore() => quit();
+  }
+
+  GameRunning {
+    resetGame() => GameRunning {
+      ctx.resetGame();
+      ctx.updateMenu();
+    }
+
+    turbo() => GameTurbo if (!ctx.hardcore()) {
+      ctx.updateMenu();
+    }
+
+    unloadGame() => CoreLoaded {
+      ctx.unloadGame();
+      ctx.updateMenu();
+    }
+
+    pauseGame() => GamePaused if (!ctx.hardcore()) {
+      ctx.pauseGame(true);
+      ctx.updateMenu();
+    }
+
+    quit() => unloadGame() => unloadCore() => quit();
+  }
+
+  GamePaused {
+    resumeGame() => GameRunning {
+      ctx.pauseGame(false);
+      ctx.updateMenu();
+    };
+
+    resetGame() => resumeGame() => resetGame();
+
+    step() => FrameStep;
+    
+    turbo() => GameTurbo if (!ctx.hardcore()) {
+      ctx.updateMenu();
+    }
+
+    unloadGame() => CoreLoaded {
+      ctx.canUnloadGame();
+      ctx.updateMenu();
+    }
+
+    quit() => unloadGame() => unloadCore() => quit();
+  }
+
+  FrameStep {
+    resumeGame() => GamePaused;
+  }
+
+  GameTurbo {
+    resetGame() => normal() => resetGame();
+
+    normal() => GameRunning {
+      ctx.updateMenu();
+    }
+
+    unloadGame() => CoreLoaded {
+      ctx.unloadGame();
+      ctx.updateMenu();
+    }
+
+    pauseGame() => GamePaused if (!ctx.hardcore()) {
+      ctx.pauseGame(true);
+      ctx.updateMenu();
+    }
+
+    quit() => unloadGame() => unloadCore() => quit();
+  }
+}
