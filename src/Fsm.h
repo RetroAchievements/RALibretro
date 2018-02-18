@@ -10,28 +10,28 @@ class Fsm {
 public:
   enum class State {
     CoreLoaded,
-    Start,
-    Quit,
-    GamePaused,
-    GameTurbo,
-    GameRunning,
     FrameStep,
+    GamePaused,
+    GameRunning,
+    GameTurbo,
+    Quit,
+    Start,
   };
 
   Fsm(Application& slave): ctx(slave), __state(State::Start) {}
 
   State currentState() const { return __state; }
 
-  bool loadGame(const_string path);
-  bool unloadCore();
-  bool quit();
   bool loadCore(Emulator core);
-  bool resumeGame();
+  bool loadGame(const_string path);
   bool normal();
   bool pauseGame();
+  bool quit();
   bool resetGame();
-  bool unloadGame();
+  bool resumeGame();
   bool turbo();
+  bool unloadCore();
+  bool unloadGame();
 
 protected:
   Application& ctx;
