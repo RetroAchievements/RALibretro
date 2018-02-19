@@ -742,13 +742,13 @@ bool Application::loadGame(const std::string& path)
   return true;
 }
 
-bool Application::canUnloadCore()
+bool Application::unloadCore()
 {
-  return RA_ConfirmLoadNewRom(false);
-}
+  if (!RA_ConfirmLoadNewRom(false))
+  {
+    return false;
+  }
 
-void Application::unloadCore()
-{
   std::string json;
   json.append("{\"core\":");
   json.append(_config.serialize());
@@ -759,6 +759,7 @@ void Application::unloadCore()
   saveFile(&_logger, getCoreConfigPath(_emulator), json.c_str(), json.length());
 
   _core.destroy();
+  return true;
 }
 
 void Application::resetGame()
@@ -771,13 +772,13 @@ bool Application::hardcore()
   return RA_HardcoreModeIsActive();
 }
 
-bool Application::canUnloadGame()
+bool Application::unloadGame()
 {
-  return RA_ConfirmLoadNewRom(true);
-}
+  if (!RA_ConfirmLoadNewRom(true))
+  {
+    return false;
+  }
 
-void Application::unloadGame()
-{
   size_t size = _core.getMemorySize(RETRO_MEMORY_SAVE_RAM);
 
   if (size != 0)
@@ -786,6 +787,8 @@ void Application::unloadGame()
     std::string sram = getSRamPath();
     saveFile(&_logger, sram.c_str(), data, size);
   }
+
+  return true;
 }
 
 void Application::pauseGame(bool pause)

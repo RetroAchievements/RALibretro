@@ -30,13 +30,11 @@ public:
   void updateMenu();
   bool canQuit();
   bool loadGame(const std::string& path);
-  bool canUnloadCore();
-  void unloadCore();
+  bool unloadCore();
   void resetGame();
   bool hardcore();
   void setTurbo(bool turbo);
-  bool canUnloadGame();
-  void unloadGame();
+  bool unloadGame();
   void pauseGame(bool pause);
 
   void printf(const char* fmt, ...);
