@@ -62,21 +62,23 @@ void* loadFile(Logger* logger, const std::string& path, size_t* size)
   return data;
 }
 
-void saveFile(Logger* logger, const std::string& path, const void* data, size_t size)
+bool saveFile(Logger* logger, const std::string& path, const void* data, size_t size)
 {
   FILE* file = fopen(path.c_str(), "wb");
 
   if (file == NULL)
   {
     logger->printf(RETRO_LOG_ERROR, "Error opening file \"%s\": %s", path, strerror(errno));
-    return;
+    return false;
   }
 
   if (fwrite(data, 1, size, file) != size)
   {
     logger->printf(RETRO_LOG_ERROR, "Error writing file \"%s\": %s", path, strerror(errno));
-    return;
+    fclose(file);
+    return false;
   }
 
   fclose(file);
+  return true;
 }
