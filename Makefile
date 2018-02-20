@@ -9,8 +9,8 @@ CXXFLAGS=$(CCFLAGS) -std=c++11
 LDFLAGS=-m32
 
 ifneq ($(DEBUG),)
-  CFLAGS   += -O0 -g
-  CXXFLAGS += -O0 -g
+  CFLAGS   += -O0 -g -DDEBUG_FSM
+  CXXFLAGS += -O0 -g -DDEBUG_FSM
 else
   CFLAGS   += -O3 -DNDEBUG
   CXXFLAGS += -O3 -DNDEBUG

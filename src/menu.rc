@@ -36,6 +36,7 @@ main MENU
         MENUITEM "Load Game", IDM_LOAD_GAME
         MENUITEM "Pause Game", IDM_PAUSE_GAME
         MENUITEM "Resume Game", IDM_RESUME_GAME
+        MENUITEM "Turbo", IDM_TURBO_GAME
         MENUITEM "Reset Game", IDM_RESET_GAME
         MENUITEM "Close Game", IDM_CLOSE_GAME
         MENUITEM SEPARATOR
@@ -72,7 +73,6 @@ main MENU
     {
         MENUITEM "Emulation", IDM_CORE
         MENUITEM "Input", IDM_INPUT
-        MENUITEM "Turbo", IDM_TURBO
     }
     MENUITEM "About", IDM_ABOUT
 }

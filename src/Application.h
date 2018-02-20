@@ -87,7 +87,9 @@ protected:
   std::string getCoreFileName(Emulator emulator);
   void        saveState(unsigned ndx);
   void        loadState(unsigned ndx);
-  void        handle(const SDL_Event* event);
+  void        aboutDialog();
+  void        handle(const SDL_SysWMEvent* syswm);
+  void        handle(const SDL_KeyboardEvent* key);
 
   Fsm _fsm;
 

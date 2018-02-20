@@ -40,7 +40,7 @@ public:
   bool init(libretro::LoggerComponent* logger);
   void destroy() {}
 
-  Action translate(const SDL_Event* event, unsigned* extra);
+  Action translate(const SDL_KeyboardEvent* event, unsigned* extra);
 
   // TODO: showDialog() to configure the key bindings
 

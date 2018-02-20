@@ -214,6 +214,7 @@ bool Application::init(const char* title, int width, int height)
   _emulator = Emulator::kNone;
   _validSlots = 0;
   _currentSlot = 0;
+  updateMenu();
   return true;
 
 error:
@@ -261,12 +262,12 @@ void Application::run()
         break;
       
       case SDL_SYSWMEVENT:
-        handle(&event);
+        handle(&event.syswm);
         break;
       
       case SDL_KEYUP:
       case SDL_KEYDOWN:
-        //shortcut(&event, &done);
+        handle(&event.key);
         break;
       }
     }
@@ -409,7 +410,7 @@ void Application::updateMenu()
     IDM_LOAD_STATE_5, IDM_LOAD_STATE_6, IDM_LOAD_STATE_7, IDM_LOAD_STATE_8, IDM_LOAD_STATE_9,
     IDM_EXIT,
 
-    IDM_CORE, IDM_INPUT, IDM_TURBO, IDM_ABOUT
+    IDM_CORE, IDM_INPUT, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   static const UINT start_items[] =
@@ -431,7 +432,7 @@ void Application::updateMenu()
     IDM_PAUSE_GAME, IDM_RESET_GAME, IDM_CLOSE_GAME,
     IDM_EXIT,
 
-    IDM_CORE, IDM_INPUT, IDM_TURBO, IDM_ABOUT
+    IDM_CORE, IDM_INPUT, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   static const UINT game_paused_items[] =
@@ -439,7 +440,7 @@ void Application::updateMenu()
     IDM_RESUME_GAME, IDM_RESET_GAME, IDM_CLOSE_GAME,
     IDM_EXIT,
 
-    IDM_CORE, IDM_INPUT, IDM_TURBO, IDM_ABOUT
+    IDM_CORE, IDM_INPUT, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   static const UINT game_turbo_items[] =
@@ -447,7 +448,7 @@ void Application::updateMenu()
     IDM_PAUSE_GAME, IDM_RESET_GAME, IDM_CLOSE_GAME,
     IDM_EXIT,
 
-    IDM_CORE, IDM_INPUT, IDM_TURBO, IDM_ABOUT
+    IDM_CORE, IDM_INPUT, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   enableItems(all_items, sizeof(all_items) / sizeof(all_items[0]), MF_DISABLED);
@@ -455,23 +456,23 @@ void Application::updateMenu()
   switch (_fsm.currentState())
   {
   case Fsm::State::Start:
-    enableItems(all_items, sizeof(start_items) / sizeof(start_items[0]), MF_ENABLED);
+    enableItems(start_items, sizeof(start_items) / sizeof(start_items[0]), MF_ENABLED);
     enableSlots();
     break;
   case Fsm::State::CoreLoaded:
-    enableItems(all_items, sizeof(core_loaded_items) / sizeof(core_loaded_items[0]), MF_ENABLED);
+    enableItems(core_loaded_items, sizeof(core_loaded_items) / sizeof(core_loaded_items[0]), MF_ENABLED);
     enableSlots();
     break;
   case Fsm::State::GameRunning:
-    enableItems(all_items, sizeof(game_running_items) / sizeof(game_running_items[0]), MF_ENABLED);
+    enableItems(game_running_items, sizeof(game_running_items) / sizeof(game_running_items[0]), MF_ENABLED);
     enableSlots();
     break;
   case Fsm::State::GamePaused:
-    enableItems(all_items, sizeof(game_paused_items) / sizeof(game_paused_items[0]), MF_ENABLED);
+    enableItems(game_paused_items, sizeof(game_paused_items) / sizeof(game_paused_items[0]), MF_ENABLED);
     enableSlots();
     break;
   case Fsm::State::GameTurbo:
-    enableItems(all_items, sizeof(game_turbo_items) / sizeof(game_turbo_items[0]), MF_ENABLED);
+    enableItems(game_turbo_items, sizeof(game_turbo_items) / sizeof(game_turbo_items[0]), MF_ENABLED);
     enableSlots();
     break;
   default:
@@ -514,7 +515,7 @@ bool Application::loadGame(const std::string& path)
   switch (_emulator)
   {
   case Emulator::kNone:
-    return false;
+    break;
 
   case Emulator::kStella:
     _system = System::kAtari2600;
@@ -796,8 +797,7 @@ void Application::printf(const char* fmt, ...)
 {
   va_list args;
   va_start(args, fmt);
-  vprintf(fmt, args);
-  printf("\n");
+  _logger.vprintf(RETRO_LOG_DEBUG, fmt, args);
   va_end(args);
   fflush(stdout);
 }
@@ -1277,60 +1277,60 @@ void Application::loadState(unsigned ndx)
   }
 }
 
-void Application::handle(const SDL_Event* event)
+void Application::aboutDialog()
 {
-  if (event->syswm.msg->msg.win.msg == WM_PAINT)
+  const WORD WIDTH = 280;
+  const WORD LINE = 15;
+
+  Dialog db;
+  db.init("About");
+
+  WORD y = 0;
+
+  db.addLabel("RALibretro " VERSION " \u00A9 2017-2018 Andre Leiradella @leiradel", 0, y, WIDTH, 8);
+  y += LINE;
+
+  db.addEditbox(40000, 0, y, WIDTH, LINE, 12, (char*)_logger.contents().c_str(), 0, true);
+  y += LINE * 12;
+
+  db.addButton("OK", IDOK, WIDTH - 50, y, 50, 14, true);
+  db.show();
+}
+
+void Application::handle(const SDL_SysWMEvent* syswm)
+{
+  if (syswm->msg->msg.win.msg == WM_PAINT)
   {
     RA_OnPaint(g_mainWindow);
   }
-  else if (event->syswm.msg->msg.win.msg == WM_COMMAND)
+  else if (syswm->msg->msg.win.msg == WM_COMMAND)
   {
-    WORD cmd = LOWORD(event->syswm.msg->msg.win.wParam);
+    WORD cmd = LOWORD(syswm->msg->msg.win.wParam);
 
     switch (cmd)
     {
     case IDM_SYSTEM_STELLA:
-      _fsm.loadCore(Emulator::kStella);
-      break;
-    
     case IDM_SYSTEM_SNES9X:
-      _fsm.loadCore(Emulator::kSnes9x);
-      break;
-
     case IDM_SYSTEM_PICODRIVE:
-      _fsm.loadCore(Emulator::kPicoDrive);
-      break;
-
     case IDM_SYSTEM_GENESISPLUSGX:
-      _fsm.loadCore(Emulator::kGenesisPlusGx);
-      break;
-
     case IDM_SYSTEM_FCEUMM:
-      _fsm.loadCore(Emulator::kFceumm);
-      break;
-
     case IDM_SYSTEM_HANDY:
-      _fsm.loadCore(Emulator::kHandy);
-      break;
-
     case IDM_SYSTEM_BEETLESGX:
-      _fsm.loadCore(Emulator::kBeetleSgx);
-      break;
-
     case IDM_SYSTEM_GAMBATTE:
-      _fsm.loadCore(Emulator::kGambatte);
-      break;
-
     case IDM_SYSTEM_MGBA:
-      _fsm.loadCore(Emulator::kMGBA);
-      break;
-    
     case IDM_SYSTEM_MEDNAFENPSX:
-      _fsm.loadCore(Emulator::kMednafenPsx);
-      break;
-    
     case IDM_SYSTEM_MEDNAFENNGP:
-      _fsm.loadCore(Emulator::kMednafenNgp);
+      {
+        static Emulator emulators[] =
+        {
+          Emulator::kStella, Emulator::kSnes9x, Emulator::kPicoDrive, Emulator::kGenesisPlusGx, Emulator::kFceumm,
+          Emulator::kHandy, Emulator::kBeetleSgx, Emulator::kGambatte, Emulator::kMGBA, Emulator::kMednafenPsx,
+          Emulator::kMednafenNgp
+        };
+
+        _fsm.loadCore(emulators[cmd - IDM_SYSTEM_STELLA]);
+      }
+      
       break;
 
     case IDM_LOAD_GAME:
@@ -1345,6 +1345,10 @@ void Application::handle(const SDL_Event* event)
       _fsm.resumeGame();
       break;
     
+    case IDM_TURBO_GAME:
+      _fsm.turbo();
+      break;
+
     case IDM_RESET_GAME:
       _fsm.resetGame();
       break;
@@ -1354,83 +1358,29 @@ void Application::handle(const SDL_Event* event)
       break;
 
     case IDM_SAVE_STATE_0:
-      saveState(0);
-      break;
-
     case IDM_SAVE_STATE_1:
-      saveState(1);
-      break;
-      
     case IDM_SAVE_STATE_2:
-      saveState(2);
-      break;
-      
     case IDM_SAVE_STATE_3:
-      saveState(3);
-      break;
-      
     case IDM_SAVE_STATE_4:
-      saveState(4);
-      break;
-      
     case IDM_SAVE_STATE_5:
-      saveState(5);
-      break;
-      
     case IDM_SAVE_STATE_6:
-      saveState(6);
-      break;
-      
     case IDM_SAVE_STATE_7:
-      saveState(7);
-      break;
-      
     case IDM_SAVE_STATE_8:
-      saveState(8);
-      break;
-      
     case IDM_SAVE_STATE_9:
-      saveState(9);
+      saveState(cmd - IDM_SAVE_STATE_0);
       break;
       
     case IDM_LOAD_STATE_0:
-      loadState(0);
-      break;
-      
     case IDM_LOAD_STATE_1:
-      loadState(1);
-      break;
-      
     case IDM_LOAD_STATE_2:
-      loadState(2);
-      break;
-      
     case IDM_LOAD_STATE_3:
-      loadState(3);
-      break;
-      
     case IDM_LOAD_STATE_4:
-      loadState(4);
-      break;
-      
     case IDM_LOAD_STATE_5:
-      loadState(5);
-      break;
-      
     case IDM_LOAD_STATE_6:
-      loadState(6);
-      break;
-      
     case IDM_LOAD_STATE_7:
-      loadState(7);
-      break;
-      
     case IDM_LOAD_STATE_8:
-      loadState(8);
-      break;
-      
     case IDM_LOAD_STATE_9:
-      loadState(9);
+      loadState(cmd - IDM_LOAD_STATE_0);
       break;
       
     case IDM_CORE:
@@ -1441,16 +1391,12 @@ void Application::handle(const SDL_Event* event)
       _input.showDialog();
       break;
     
-    case IDM_TURBO:
-      _fsm.turbo();
-      break;
-
     case IDM_EXIT:
       _fsm.quit();
       break;
       
     case IDM_ABOUT:
-      //showAbout();
+      aboutDialog();
       break;
     
     default:
@@ -1461,5 +1407,64 @@ void Application::handle(const SDL_Event* event)
 
       break;
     }
+  }
+}
+
+void Application::handle(const SDL_KeyboardEvent* key)
+{
+  unsigned extra;
+
+  switch (_keybinds.translate(key, &extra))
+  {
+  case KeyBinds::Action::kNothing:      break;
+  // Joypad buttons
+  case KeyBinds::Action::kButtonUp:     _input.buttonEvent(Input::Button::kUp, extra != 0); break;
+  case KeyBinds::Action::kButtonDown:   _input.buttonEvent(Input::Button::kDown, extra != 0); break;
+  case KeyBinds::Action::kButtonLeft:   _input.buttonEvent(Input::Button::kLeft, extra != 0); break;
+  case KeyBinds::Action::kButtonRight:  _input.buttonEvent(Input::Button::kRight, extra != 0); break;
+  case KeyBinds::Action::kButtonX:      _input.buttonEvent(Input::Button::kX, extra != 0); break;
+  case KeyBinds::Action::kButtonY:      _input.buttonEvent(Input::Button::kY, extra != 0); break;
+  case KeyBinds::Action::kButtonA:      _input.buttonEvent(Input::Button::kA, extra != 0); break;
+  case KeyBinds::Action::kButtonB:      _input.buttonEvent(Input::Button::kB, extra != 0); break;
+  case KeyBinds::Action::kButtonL:      _input.buttonEvent(Input::Button::kL, extra != 0); break;
+  case KeyBinds::Action::kButtonR:      _input.buttonEvent(Input::Button::kR, extra != 0); break;
+  case KeyBinds::Action::kButtonL2:     _input.buttonEvent(Input::Button::kL2, extra != 0); break;
+  case KeyBinds::Action::kButtonR2:     _input.buttonEvent(Input::Button::kR2, extra != 0); break;
+  case KeyBinds::Action::kButtonL3:     _input.buttonEvent(Input::Button::kL3, extra != 0); break;
+  case KeyBinds::Action::kButtonR3:     _input.buttonEvent(Input::Button::kR3, extra != 0); break;
+  case KeyBinds::Action::kButtonSelect: _input.buttonEvent(Input::Button::kSelect, extra != 0); break;
+  case KeyBinds::Action::kButtonStart:  _input.buttonEvent(Input::Button::kStart, extra != 0); break;
+  // State management
+  case KeyBinds::Action::kSetStateSlot: _currentSlot = extra; break;
+  case KeyBinds::Action::kSaveState:    saveState(_currentSlot); break;
+  case KeyBinds::Action::kLoadState:    loadState(_currentSlot); break;
+  // Emulation speed
+  case KeyBinds::Action::kStep:
+    _fsm.step();
+    break;
+
+  case KeyBinds::Action::kPauseToggle:
+    if (_fsm.currentState() == Fsm::State::GamePaused)
+    {
+      _fsm.resumeGame();
+    }
+    else
+    {
+      _fsm.pauseGame();
+    }
+
+    break;
+
+  case KeyBinds::Action::kFastForward:
+    if (_fsm.currentState() == Fsm::State::GameTurbo)
+    {
+      _fsm.normal();
+    }
+    else
+    {
+      _fsm.turbo();
+    }
+
+    break;
   }
 }

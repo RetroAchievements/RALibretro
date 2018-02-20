@@ -46,13 +46,13 @@ bool KeyBinds::init(libretro::LoggerComponent* logger)
   return true;
 }
 
-KeyBinds::Action KeyBinds::translate(const SDL_Event* event, unsigned* extra)
+KeyBinds::Action KeyBinds::translate(const SDL_KeyboardEvent* key, unsigned* extra)
 {
-  if ((event->key.keysym.mod & (KMOD_SHIFT | KMOD_CTRL | KMOD_ALT)) == 0)
+  if ((key->keysym.mod & (KMOD_SHIFT | KMOD_CTRL | KMOD_ALT)) == 0)
   {
-    if (event->key.state == SDL_PRESSED && !event->key.repeat)
+    if (key->state == SDL_PRESSED && !key->repeat)
     {
-      switch (event->key.keysym.sym)
+      switch (key->keysym.sym)
       {
       case SET_SLOT_0: *extra = 0; return Action::kSetStateSlot;
       case SET_SLOT_1: *extra = 1; return Action::kSetStateSlot;
@@ -75,9 +75,9 @@ KeyBinds::Action KeyBinds::translate(const SDL_Event* event, unsigned* extra)
 
       *extra = 1;
     }
-    else if (event->key.state == SDL_RELEASED)
+    else if (key->state == SDL_RELEASED)
     {
-      switch (event->key.keysym.sym)
+      switch (key->keysym.sym)
       {
       case FF_HOLD: *extra = (unsigned)_ff; return Action::kFastForward;
       }
@@ -89,7 +89,7 @@ KeyBinds::Action KeyBinds::translate(const SDL_Event* event, unsigned* extra)
       return Action::kNothing;
     }
 
-    switch (event->key.keysym.sym)
+    switch (key->keysym.sym)
     {
     case BUTTON_UP:     return Action::kButtonUp;
     case BUTTON_DOWN:   return Action::kButtonDown;
