@@ -28,7 +28,19 @@ void Fsm::after(State state) const {
 bool Fsm::loadCore(Emulator core) {
   switch (__state) {
     case State::Start: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to CoreLoaded", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to CoreLoaded", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -42,7 +54,7 @@ bool Fsm::loadCore(Emulator core) {
       after();
 
 #ifdef DEBUG_FSM
-      ctx.printf("FSM Switched to CoreLoaded");
+      ctx.printf("FSM %s:%u Switched to CoreLoaded", __FUNCTION__, __LINE__);
 #endif
       return true;
     }
@@ -57,7 +69,19 @@ bool Fsm::loadCore(Emulator core) {
 bool Fsm::loadGame(const_string path) {
   switch (__state) {
     case State::CoreLoaded: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to GameRunning", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to GameRunning", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -71,7 +95,7 @@ bool Fsm::loadGame(const_string path) {
       after();
 
 #ifdef DEBUG_FSM
-      ctx.printf("FSM Switched to GameRunning");
+      ctx.printf("FSM %s:%u Switched to GameRunning", __FUNCTION__, __LINE__);
 #endif
       return true;
     }
@@ -86,7 +110,19 @@ bool Fsm::loadGame(const_string path) {
 bool Fsm::normal() {
   switch (__state) {
     case State::GameTurbo: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to GameRunning", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to GameRunning", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -95,7 +131,7 @@ bool Fsm::normal() {
       after();
 
 #ifdef DEBUG_FSM
-      ctx.printf("FSM Switched to GameRunning");
+      ctx.printf("FSM %s:%u Switched to GameRunning", __FUNCTION__, __LINE__);
 #endif
       return true;
     }
@@ -110,7 +146,19 @@ bool Fsm::normal() {
 bool Fsm::pauseGame() {
   switch (__state) {
     case State::GameRunning: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to GamePaused", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to GamePaused", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -126,14 +174,26 @@ bool Fsm::pauseGame() {
       after();
 
 #ifdef DEBUG_FSM
-      ctx.printf("FSM Switched to GamePaused");
+      ctx.printf("FSM %s:%u Switched to GamePaused", __FUNCTION__, __LINE__);
 #endif
       return true;
     }
     break;
 
     case State::GameTurbo: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to GamePaused", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to GamePaused", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -149,7 +209,7 @@ bool Fsm::pauseGame() {
       after();
 
 #ifdef DEBUG_FSM
-      ctx.printf("FSM Switched to GamePaused");
+      ctx.printf("FSM %s:%u Switched to GamePaused", __FUNCTION__, __LINE__);
 #endif
       return true;
     }
@@ -164,7 +224,19 @@ bool Fsm::pauseGame() {
 bool Fsm::quit() {
   switch (__state) {
     case State::CoreLoaded: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to Quit", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to Quit", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -176,7 +248,11 @@ bool Fsm::quit() {
         after();
 
 #ifdef DEBUG_FSM
-        ctx.printf("FSM Switched to Quit");
+        ctx.printf("FSM %s:%u Switched to Quit", __FUNCTION__, __LINE__);
+#endif
+      else {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed to switch to Quit", __FUNCTION__, __LINE__);
 #endif
       }
 
@@ -185,7 +261,19 @@ bool Fsm::quit() {
     break;
 
     case State::GamePaused: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to Quit", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to Quit", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -198,7 +286,11 @@ bool Fsm::quit() {
         after();
 
 #ifdef DEBUG_FSM
-        ctx.printf("FSM Switched to Quit");
+        ctx.printf("FSM %s:%u Switched to Quit", __FUNCTION__, __LINE__);
+#endif
+      else {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed to switch to Quit", __FUNCTION__, __LINE__);
 #endif
       }
 
@@ -207,7 +299,19 @@ bool Fsm::quit() {
     break;
 
     case State::GameRunning: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to Quit", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to Quit", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -220,7 +324,11 @@ bool Fsm::quit() {
         after();
 
 #ifdef DEBUG_FSM
-        ctx.printf("FSM Switched to Quit");
+        ctx.printf("FSM %s:%u Switched to Quit", __FUNCTION__, __LINE__);
+#endif
+      else {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed to switch to Quit", __FUNCTION__, __LINE__);
 #endif
       }
 
@@ -229,7 +337,19 @@ bool Fsm::quit() {
     break;
 
     case State::GameTurbo: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to Quit", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to Quit", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -242,7 +362,11 @@ bool Fsm::quit() {
         after();
 
 #ifdef DEBUG_FSM
-        ctx.printf("FSM Switched to Quit");
+        ctx.printf("FSM %s:%u Switched to Quit", __FUNCTION__, __LINE__);
+#endif
+      else {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed to switch to Quit", __FUNCTION__, __LINE__);
 #endif
       }
 
@@ -251,7 +375,19 @@ bool Fsm::quit() {
     break;
 
     case State::Start: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to Quit", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to Quit", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -265,7 +401,7 @@ bool Fsm::quit() {
       after();
 
 #ifdef DEBUG_FSM
-      ctx.printf("FSM Switched to Quit");
+      ctx.printf("FSM %s:%u Switched to Quit", __FUNCTION__, __LINE__);
 #endif
       return true;
     }
@@ -280,7 +416,19 @@ bool Fsm::quit() {
 bool Fsm::resetGame() {
   switch (__state) {
     case State::GamePaused: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to GameRunning", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to GameRunning", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -292,7 +440,11 @@ bool Fsm::resetGame() {
         after();
 
 #ifdef DEBUG_FSM
-        ctx.printf("FSM Switched to GameRunning");
+        ctx.printf("FSM %s:%u Switched to GameRunning", __FUNCTION__, __LINE__);
+#endif
+      else {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed to switch to GameRunning", __FUNCTION__, __LINE__);
 #endif
       }
 
@@ -301,7 +453,19 @@ bool Fsm::resetGame() {
     break;
 
     case State::GameRunning: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to GameRunning", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to GameRunning", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -313,14 +477,26 @@ bool Fsm::resetGame() {
       after();
 
 #ifdef DEBUG_FSM
-      ctx.printf("FSM Switched to GameRunning");
+      ctx.printf("FSM %s:%u Switched to GameRunning", __FUNCTION__, __LINE__);
 #endif
       return true;
     }
     break;
 
     case State::GameTurbo: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to GameRunning", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to GameRunning", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -332,7 +508,11 @@ bool Fsm::resetGame() {
         after();
 
 #ifdef DEBUG_FSM
-        ctx.printf("FSM Switched to GameRunning");
+        ctx.printf("FSM %s:%u Switched to GameRunning", __FUNCTION__, __LINE__);
+#endif
+      else {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed to switch to GameRunning", __FUNCTION__, __LINE__);
 #endif
       }
 
@@ -349,7 +529,19 @@ bool Fsm::resetGame() {
 bool Fsm::resumeGame() {
   switch (__state) {
     case State::FrameStep: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to GamePaused", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to GamePaused", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -358,14 +550,26 @@ bool Fsm::resumeGame() {
       after();
 
 #ifdef DEBUG_FSM
-      ctx.printf("FSM Switched to GamePaused");
+      ctx.printf("FSM %s:%u Switched to GamePaused", __FUNCTION__, __LINE__);
 #endif
       return true;
     }
     break;
 
     case State::GamePaused: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to GameRunning", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to GameRunning", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -377,7 +581,7 @@ bool Fsm::resumeGame() {
       after();
 
 #ifdef DEBUG_FSM
-      ctx.printf("FSM Switched to GameRunning");
+      ctx.printf("FSM %s:%u Switched to GameRunning", __FUNCTION__, __LINE__);
 #endif
       return true;
     }
@@ -392,7 +596,19 @@ bool Fsm::resumeGame() {
 bool Fsm::step() {
   switch (__state) {
     case State::GamePaused: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to FrameStep", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to FrameStep", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -401,7 +617,7 @@ bool Fsm::step() {
       after();
 
 #ifdef DEBUG_FSM
-      ctx.printf("FSM Switched to FrameStep");
+      ctx.printf("FSM %s:%u Switched to FrameStep", __FUNCTION__, __LINE__);
 #endif
       return true;
     }
@@ -416,7 +632,19 @@ bool Fsm::step() {
 bool Fsm::turbo() {
   switch (__state) {
     case State::GamePaused: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to GameTurbo", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to GameTurbo", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -430,14 +658,26 @@ bool Fsm::turbo() {
       after();
 
 #ifdef DEBUG_FSM
-      ctx.printf("FSM Switched to GameTurbo");
+      ctx.printf("FSM %s:%u Switched to GameTurbo", __FUNCTION__, __LINE__);
 #endif
       return true;
     }
     break;
 
     case State::GameRunning: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to GameTurbo", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to GameTurbo", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -451,7 +691,7 @@ bool Fsm::turbo() {
       after();
 
 #ifdef DEBUG_FSM
-      ctx.printf("FSM Switched to GameTurbo");
+      ctx.printf("FSM %s:%u Switched to GameTurbo", __FUNCTION__, __LINE__);
 #endif
       return true;
     }
@@ -466,7 +706,19 @@ bool Fsm::turbo() {
 bool Fsm::unloadCore() {
   switch (__state) {
     case State::CoreLoaded: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to Start", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to Start", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -480,7 +732,7 @@ bool Fsm::unloadCore() {
       after();
 
 #ifdef DEBUG_FSM
-      ctx.printf("FSM Switched to Start");
+      ctx.printf("FSM %s:%u Switched to Start", __FUNCTION__, __LINE__);
 #endif
       return true;
     }
@@ -495,7 +747,19 @@ bool Fsm::unloadCore() {
 bool Fsm::unloadGame() {
   switch (__state) {
     case State::GamePaused: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to CoreLoaded", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to CoreLoaded", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -509,14 +773,26 @@ bool Fsm::unloadGame() {
       after();
 
 #ifdef DEBUG_FSM
-      ctx.printf("FSM Switched to CoreLoaded");
+      ctx.printf("FSM %s:%u Switched to CoreLoaded", __FUNCTION__, __LINE__);
 #endif
       return true;
     }
     break;
 
     case State::GameRunning: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to CoreLoaded", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to CoreLoaded", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -530,14 +806,26 @@ bool Fsm::unloadGame() {
       after();
 
 #ifdef DEBUG_FSM
-      ctx.printf("FSM Switched to CoreLoaded");
+      ctx.printf("FSM %s:%u Switched to CoreLoaded", __FUNCTION__, __LINE__);
 #endif
       return true;
     }
     break;
 
     case State::GameTurbo: {
-      if (!before() || !before(__state)) {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to CoreLoaded", __FUNCTION__, __LINE__);
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to CoreLoaded", __FUNCTION__, __LINE__);
+#endif
+
         return false;
       }
 
@@ -551,7 +839,7 @@ bool Fsm::unloadGame() {
       after();
 
 #ifdef DEBUG_FSM
-      ctx.printf("FSM Switched to CoreLoaded");
+      ctx.printf("FSM %s:%u Switched to CoreLoaded", __FUNCTION__, __LINE__);
 #endif
       return true;
     }
