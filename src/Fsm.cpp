@@ -1,16 +1,51 @@
 #include "Fsm.h"
 #include "Application.h"
 
+bool Fsm::before() const {
+  return true;
+}
+
+bool Fsm::before(State state) const {
+  switch (state) {
+    default: break;
+  }
+
+  return true;
+}
+
+void Fsm::after() const {
+
+    ctx.updateMenu();
+  
+}
+
+void Fsm::after(State state) const {
+  switch (state) {
+    default: break;
+  }
+}
+
 bool Fsm::loadCore(Emulator core) {
   switch (__state) {
     case State::Start: {
-      if (ctx.loadCore(core)) {
-        __state = State::CoreLoaded;
-        ctx.updateMenu();
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
+
+      if (!ctx.loadCore(core)) {
+        return false;
+      }
+    
+      __state = State::CoreLoaded;
+      after(__state);
+      after();
+
 #ifdef DEBUG_FSM
-        ctx.printf("FSM Switched to CoreLoaded");
+      ctx.printf("FSM Switched to CoreLoaded");
 #endif
-        return true;
+      return true;
+
       }
       break;
     }
@@ -23,13 +58,24 @@ bool Fsm::loadCore(Emulator core) {
 bool Fsm::loadGame(const_string path) {
   switch (__state) {
     case State::CoreLoaded: {
-      if (ctx.loadGame(path)) {
-        __state = State::GameRunning;
-        ctx.updateMenu();
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
+
+      if (!ctx.loadGame(path)) {
+        return false;
+      }
+    
+      __state = State::GameRunning;
+      after(__state);
+      after();
+
 #ifdef DEBUG_FSM
-        ctx.printf("FSM Switched to GameRunning");
+      ctx.printf("FSM Switched to GameRunning");
 #endif
-        return true;
+      return true;
+
       }
       break;
     }
@@ -42,12 +88,19 @@ bool Fsm::loadGame(const_string path) {
 bool Fsm::normal() {
   switch (__state) {
     case State::GameTurbo: {
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
       __state = State::GameRunning;
-      ctx.updateMenu();
+      after(__state);
+      after();
+
 #ifdef DEBUG_FSM
       ctx.printf("FSM Switched to GameRunning");
 #endif
       return true;
+
     }
     default: break;
   }
@@ -58,26 +111,50 @@ bool Fsm::normal() {
 bool Fsm::pauseGame() {
   switch (__state) {
     case State::GameRunning: {
-      if (!ctx.hardcore()) {
-        __state = State::GamePaused;
-        ctx.pauseGame(true);
-        ctx.updateMenu();
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
+
+      if (ctx.hardcore()) {
+        return false;
+      }
+
+      ctx.pauseGame(true);
+    
+      __state = State::GamePaused;
+      after(__state);
+      after();
+
 #ifdef DEBUG_FSM
-        ctx.printf("FSM Switched to GamePaused");
+      ctx.printf("FSM Switched to GamePaused");
 #endif
-        return true;
+      return true;
+
       }
       break;
     }
     case State::GameTurbo: {
-      if (!ctx.hardcore()) {
-        __state = State::GamePaused;
-        ctx.pauseGame(true);
-        ctx.updateMenu();
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
+
+      if (ctx.hardcore()) {
+        return false;
+      }
+
+      ctx.pauseGame(true);
+    
+      __state = State::GamePaused;
+      after(__state);
+      after();
+
 #ifdef DEBUG_FSM
-        ctx.printf("FSM Switched to GamePaused");
+      ctx.printf("FSM Switched to GamePaused");
 #endif
-        return true;
+      return true;
+
       }
       break;
     }
@@ -90,35 +167,103 @@ bool Fsm::pauseGame() {
 bool Fsm::quit() {
   switch (__state) {
     case State::CoreLoaded: {
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
       bool __ok = unloadCore() &&
                   quit();
-      return __ok;
-    }
-    case State::GamePaused: {
-      bool __ok = unloadGame() &&
-                  unloadCore() &&
-                  quit();
-      return __ok;
-    }
-    case State::GameRunning: {
-      bool __ok = unloadGame() &&
-                  unloadCore() &&
-                  quit();
-      return __ok;
-    }
-    case State::GameTurbo: {
-      bool __ok = unloadGame() &&
-                  unloadCore() &&
-                  quit();
-      return __ok;
-    }
-    case State::Start: {
-      if (ctx.canQuit()) {
-        __state = State::Quit;
+
+      if (__ok) {
+        after(__state);
+        after();
+
 #ifdef DEBUG_FSM
         ctx.printf("FSM Switched to Quit");
 #endif
-        return true;
+      }
+
+      return __ok;
+    }
+    case State::GamePaused: {
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
+      bool __ok = unloadGame() &&
+                  unloadCore() &&
+                  quit();
+
+      if (__ok) {
+        after(__state);
+        after();
+
+#ifdef DEBUG_FSM
+        ctx.printf("FSM Switched to Quit");
+#endif
+      }
+
+      return __ok;
+    }
+    case State::GameRunning: {
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
+      bool __ok = unloadGame() &&
+                  unloadCore() &&
+                  quit();
+
+      if (__ok) {
+        after(__state);
+        after();
+
+#ifdef DEBUG_FSM
+        ctx.printf("FSM Switched to Quit");
+#endif
+      }
+
+      return __ok;
+    }
+    case State::GameTurbo: {
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
+      bool __ok = unloadGame() &&
+                  unloadCore() &&
+                  quit();
+
+      if (__ok) {
+        after(__state);
+        after();
+
+#ifdef DEBUG_FSM
+        ctx.printf("FSM Switched to Quit");
+#endif
+      }
+
+      return __ok;
+    }
+    case State::Start: {
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
+
+      if (!ctx.canQuit()) {
+        return false;
+      }
+    
+      __state = State::Quit;
+      after(__state);
+      after();
+
+#ifdef DEBUG_FSM
+      ctx.printf("FSM Switched to Quit");
+#endif
+      return true;
+
       }
       break;
     }
@@ -131,22 +276,61 @@ bool Fsm::quit() {
 bool Fsm::resetGame() {
   switch (__state) {
     case State::GamePaused: {
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
       bool __ok = resumeGame() &&
                   resetGame();
+
+      if (__ok) {
+        after(__state);
+        after();
+
+#ifdef DEBUG_FSM
+        ctx.printf("FSM Switched to GameRunning");
+#endif
+      }
+
       return __ok;
     }
     case State::GameRunning: {
-      __state = State::GameRunning;
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
+
       ctx.resetGame();
-      ctx.updateMenu();
+    
+      __state = State::GameRunning;
+      after(__state);
+      after();
+
 #ifdef DEBUG_FSM
       ctx.printf("FSM Switched to GameRunning");
 #endif
       return true;
+
+      }
+      break;
     }
     case State::GameTurbo: {
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
       bool __ok = normal() &&
                   resetGame();
+
+      if (__ok) {
+        after(__state);
+        after();
+
+#ifdef DEBUG_FSM
+        ctx.printf("FSM Switched to GameRunning");
+#endif
+      }
+
       return __ok;
     }
     default: break;
@@ -158,20 +342,39 @@ bool Fsm::resetGame() {
 bool Fsm::resumeGame() {
   switch (__state) {
     case State::FrameStep: {
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
       __state = State::GamePaused;
+      after(__state);
+      after();
+
 #ifdef DEBUG_FSM
       ctx.printf("FSM Switched to GamePaused");
 #endif
       return true;
+
     }
     case State::GamePaused: {
-      __state = State::GameRunning;
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
+
       ctx.pauseGame(false);
-      ctx.updateMenu();
+    
+      __state = State::GameRunning;
+      after(__state);
+      after();
+
 #ifdef DEBUG_FSM
       ctx.printf("FSM Switched to GameRunning");
 #endif
       return true;
+
+      }
+      break;
     }
     default: break;
   }
@@ -182,11 +385,19 @@ bool Fsm::resumeGame() {
 bool Fsm::step() {
   switch (__state) {
     case State::GamePaused: {
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
       __state = State::FrameStep;
+      after(__state);
+      after();
+
 #ifdef DEBUG_FSM
       ctx.printf("FSM Switched to FrameStep");
 #endif
       return true;
+
     }
     default: break;
   }
@@ -197,24 +408,46 @@ bool Fsm::step() {
 bool Fsm::turbo() {
   switch (__state) {
     case State::GamePaused: {
-      if (!ctx.hardcore()) {
-        __state = State::GameTurbo;
-        ctx.updateMenu();
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
+
+      if (ctx.hardcore()) {
+        return false;
+      }
+    
+      __state = State::GameTurbo;
+      after(__state);
+      after();
+
 #ifdef DEBUG_FSM
-        ctx.printf("FSM Switched to GameTurbo");
+      ctx.printf("FSM Switched to GameTurbo");
 #endif
-        return true;
+      return true;
+
       }
       break;
     }
     case State::GameRunning: {
-      if (!ctx.hardcore()) {
-        __state = State::GameTurbo;
-        ctx.updateMenu();
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
+
+      if (ctx.hardcore()) {
+        return false;
+      }
+    
+      __state = State::GameTurbo;
+      after(__state);
+      after();
+
 #ifdef DEBUG_FSM
-        ctx.printf("FSM Switched to GameTurbo");
+      ctx.printf("FSM Switched to GameTurbo");
 #endif
-        return true;
+      return true;
+
       }
       break;
     }
@@ -227,14 +460,24 @@ bool Fsm::turbo() {
 bool Fsm::unloadCore() {
   switch (__state) {
     case State::CoreLoaded: {
-      if (ctx.canUnloadCore()) {
-        __state = State::Start;
-        ctx.unloadCore();
-        ctx.updateMenu();
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
+
+      if (!ctx.unloadCore()) {
+        return false;
+      }
+    
+      __state = State::Start;
+      after(__state);
+      after();
+
 #ifdef DEBUG_FSM
-        ctx.printf("FSM Switched to Start");
+      ctx.printf("FSM Switched to Start");
 #endif
-        return true;
+      return true;
+
       }
       break;
     }
@@ -247,31 +490,70 @@ bool Fsm::unloadCore() {
 bool Fsm::unloadGame() {
   switch (__state) {
     case State::GamePaused: {
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
+
+      if (!ctx.unloadGame()) {
+        return false;
+      }
+    
       __state = State::CoreLoaded;
-      ctx.canUnloadGame();
-      ctx.updateMenu();
+      after(__state);
+      after();
+
 #ifdef DEBUG_FSM
       ctx.printf("FSM Switched to CoreLoaded");
 #endif
       return true;
+
+      }
+      break;
     }
     case State::GameRunning: {
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
+
+      if (!ctx.unloadGame()) {
+        return false;
+      }
+    
       __state = State::CoreLoaded;
-      ctx.unloadGame();
-      ctx.updateMenu();
+      after(__state);
+      after();
+
 #ifdef DEBUG_FSM
       ctx.printf("FSM Switched to CoreLoaded");
 #endif
       return true;
+
+      }
+      break;
     }
     case State::GameTurbo: {
+      if (!before() || !before(__state)) {
+        return false;
+      }
+
+
+      if (!ctx.unloadGame()) {
+        return false;
+      }
+    
       __state = State::CoreLoaded;
-      ctx.unloadGame();
-      ctx.updateMenu();
+      after(__state);
+      after();
+
 #ifdef DEBUG_FSM
       ctx.printf("FSM Switched to CoreLoaded");
 #endif
       return true;
+
+      }
+      break;
     }
     default: break;
   }

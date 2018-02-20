@@ -8,24 +8,37 @@ header {
 fsm Fsm {
   class Application as ctx;
 
+  after {
+    ctx.updateMenu();
+  }
+
   Start {
-    loadCore(Emulator core) => CoreLoaded if (ctx.loadCore(core)) {
-      ctx.updateMenu();
+    loadCore(Emulator core) => CoreLoaded {
+      if (!ctx.loadCore(core)) {
+        forbid;
+      }
     }
 
-    quit() => Quit if (ctx.canQuit());
+    quit() => Quit {
+      if (!ctx.canQuit()) {
+        forbid;
+      }
+    }
   }
 
   Quit {}
 
   CoreLoaded {
-    loadGame(const_string path) => GameRunning if (ctx.loadGame(path)) {
-      ctx.updateMenu();
+    loadGame(const_string path) => GameRunning {
+      if (!ctx.loadGame(path)) {
+        forbid;
+      }
     }
 
-    unloadCore() => Start if (ctx.canUnloadCore()) {
-      ctx.unloadCore();
-      ctx.updateMenu();
+    unloadCore() => Start {
+      if (!ctx.unloadCore()) {
+        forbid;
+      }
     }
 
     quit() => unloadCore() => quit();
@@ -34,21 +47,26 @@ fsm Fsm {
   GameRunning {
     resetGame() => GameRunning {
       ctx.resetGame();
-      ctx.updateMenu();
     }
 
-    turbo() => GameTurbo if (!ctx.hardcore()) {
-      ctx.updateMenu();
+    turbo() => GameTurbo {
+      if (ctx.hardcore()) {
+        forbid;
+      }
     }
 
     unloadGame() => CoreLoaded {
-      ctx.unloadGame();
-      ctx.updateMenu();
+      if (!ctx.unloadGame()) {
+        forbid;
+      }
     }
 
-    pauseGame() => GamePaused if (!ctx.hardcore()) {
+    pauseGame() => GamePaused {
+      if (ctx.hardcore()) {
+        forbid;
+      }
+
       ctx.pauseGame(true);
-      ctx.updateMenu();
     }
 
     quit() => unloadGame() => unloadCore() => quit();
@@ -57,20 +75,22 @@ fsm Fsm {
   GamePaused {
     resumeGame() => GameRunning {
       ctx.pauseGame(false);
-      ctx.updateMenu();
     }
 
     resetGame() => resumeGame() => resetGame();
 
     step() => FrameStep;
     
-    turbo() => GameTurbo if (!ctx.hardcore()) {
-      ctx.updateMenu();
+    turbo() => GameTurbo {
+      if (ctx.hardcore()) {
+        forbid;
+      }
     }
 
     unloadGame() => CoreLoaded {
-      ctx.canUnloadGame();
-      ctx.updateMenu();
+      if (!ctx.unloadGame()) {
+        forbid;
+      }
     }
 
     quit() => unloadGame() => unloadCore() => quit();
@@ -83,18 +103,20 @@ fsm Fsm {
   GameTurbo {
     resetGame() => normal() => resetGame();
 
-    normal() => GameRunning {
-      ctx.updateMenu();
-    }
+    normal() => GameRunning;
 
     unloadGame() => CoreLoaded {
-      ctx.unloadGame();
-      ctx.updateMenu();
+      if (!ctx.unloadGame()) {
+        forbid;
+      }
     }
 
-    pauseGame() => GamePaused if (!ctx.hardcore()) {
+    pauseGame() => GamePaused {
+      if (ctx.hardcore()) {
+        forbid;
+      }
+
       ctx.pauseGame(true);
-      ctx.updateMenu();
     }
 
     quit() => unloadGame() => unloadCore() => quit();

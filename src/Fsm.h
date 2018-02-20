@@ -1,8 +1,10 @@
 #pragma once
 
-#include "Emulator.h"
-#include <string>
-typedef const std::string const_string;
+
+  #include "Emulator.h"
+  #include <string>
+
+  typedef const std::string const_string;
 
 class Application;
 
@@ -35,6 +37,11 @@ public:
   bool unloadGame();
 
 protected:
+  bool before() const;
+  bool before(State state) const;
+  void after() const;
+  void after(State state) const;
+
   Application& ctx;
   State __state;
 };
