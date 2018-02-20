@@ -250,6 +250,7 @@ bool Fsm::quit() {
 #ifdef DEBUG_FSM
         ctx.printf("FSM %s:%u Switched to Quit", __FUNCTION__, __LINE__);
 #endif
+      }
       else {
 #ifdef DEBUG_FSM
         ctx.printf("FSM %s:%u Failed to switch to Quit", __FUNCTION__, __LINE__);
@@ -288,6 +289,7 @@ bool Fsm::quit() {
 #ifdef DEBUG_FSM
         ctx.printf("FSM %s:%u Switched to Quit", __FUNCTION__, __LINE__);
 #endif
+      }
       else {
 #ifdef DEBUG_FSM
         ctx.printf("FSM %s:%u Failed to switch to Quit", __FUNCTION__, __LINE__);
@@ -326,6 +328,7 @@ bool Fsm::quit() {
 #ifdef DEBUG_FSM
         ctx.printf("FSM %s:%u Switched to Quit", __FUNCTION__, __LINE__);
 #endif
+      }
       else {
 #ifdef DEBUG_FSM
         ctx.printf("FSM %s:%u Failed to switch to Quit", __FUNCTION__, __LINE__);
@@ -364,6 +367,7 @@ bool Fsm::quit() {
 #ifdef DEBUG_FSM
         ctx.printf("FSM %s:%u Switched to Quit", __FUNCTION__, __LINE__);
 #endif
+      }
       else {
 #ifdef DEBUG_FSM
         ctx.printf("FSM %s:%u Failed to switch to Quit", __FUNCTION__, __LINE__);
@@ -442,6 +446,7 @@ bool Fsm::resetGame() {
 #ifdef DEBUG_FSM
         ctx.printf("FSM %s:%u Switched to GameRunning", __FUNCTION__, __LINE__);
 #endif
+      }
       else {
 #ifdef DEBUG_FSM
         ctx.printf("FSM %s:%u Failed to switch to GameRunning", __FUNCTION__, __LINE__);
@@ -510,6 +515,7 @@ bool Fsm::resetGame() {
 #ifdef DEBUG_FSM
         ctx.printf("FSM %s:%u Switched to GameRunning", __FUNCTION__, __LINE__);
 #endif
+      }
       else {
 #ifdef DEBUG_FSM
         ctx.printf("FSM %s:%u Failed to switch to GameRunning", __FUNCTION__, __LINE__);
