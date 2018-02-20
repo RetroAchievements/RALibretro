@@ -5,12 +5,11 @@
 #include "libretro/Core.h"
 #include "jsonsax/jsonsax.h"
 
-#include "SDLComponents/Dialog.h"
-
 #include "RA_Integration/RA_Implementation.h"
 #include "RA_Integration/RA_Interface.h"
 #include "RA_Integration/RA_Resource.h"
 
+#include "About.h"
 #include "KeyBinds.h"
 #include "Util.h"
 
@@ -21,8 +20,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <commdlg.h>
-
-#define VERSION "1.0"
 
 HWND g_mainWindow;
 Application app;
@@ -1282,22 +1279,7 @@ void Application::loadState(unsigned ndx)
 
 void Application::aboutDialog()
 {
-  const WORD WIDTH = 280;
-  const WORD LINE = 15;
-
-  Dialog db;
-  db.init("About");
-
-  WORD y = 0;
-
-  db.addLabel("RALibretro " VERSION " \u00A9 2017-2018 Andre Leiradella @leiradel", 0, y, WIDTH, 8);
-  y += LINE;
-
-  db.addEditbox(40000, 0, y, WIDTH, LINE, 12, (char*)_logger.contents().c_str(), 0, true);
-  y += LINE * 12;
-
-  db.addButton("OK", IDOK, WIDTH - 50, y, 50, 14, true);
-  db.show();
+  ::aboutDialog(_logger.contents().c_str());
 }
 
 void Application::handle(const SDL_SysWMEvent* syswm)

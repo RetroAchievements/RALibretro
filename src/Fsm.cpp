@@ -247,9 +247,6 @@ bool Fsm::quit() {
         after(__state);
         after();
 
-#ifdef DEBUG_FSM
-        ctx.printf("FSM %s:%u Switched to Quit", __FUNCTION__, __LINE__);
-#endif
       }
       else {
 #ifdef DEBUG_FSM
@@ -286,9 +283,6 @@ bool Fsm::quit() {
         after(__state);
         after();
 
-#ifdef DEBUG_FSM
-        ctx.printf("FSM %s:%u Switched to Quit", __FUNCTION__, __LINE__);
-#endif
       }
       else {
 #ifdef DEBUG_FSM
@@ -325,9 +319,6 @@ bool Fsm::quit() {
         after(__state);
         after();
 
-#ifdef DEBUG_FSM
-        ctx.printf("FSM %s:%u Switched to Quit", __FUNCTION__, __LINE__);
-#endif
       }
       else {
 #ifdef DEBUG_FSM
@@ -364,9 +355,6 @@ bool Fsm::quit() {
         after(__state);
         after();
 
-#ifdef DEBUG_FSM
-        ctx.printf("FSM %s:%u Switched to Quit", __FUNCTION__, __LINE__);
-#endif
       }
       else {
 #ifdef DEBUG_FSM
@@ -443,9 +431,6 @@ bool Fsm::resetGame() {
         after(__state);
         after();
 
-#ifdef DEBUG_FSM
-        ctx.printf("FSM %s:%u Switched to GameRunning", __FUNCTION__, __LINE__);
-#endif
       }
       else {
 #ifdef DEBUG_FSM
@@ -512,9 +497,6 @@ bool Fsm::resetGame() {
         after(__state);
         after();
 
-#ifdef DEBUG_FSM
-        ctx.printf("FSM %s:%u Switched to GameRunning", __FUNCTION__, __LINE__);
-#endif
       }
       else {
 #ifdef DEBUG_FSM
