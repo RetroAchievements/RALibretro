@@ -307,46 +307,45 @@ void Application::run()
     for (int i = 0; i < limit; i++)
     {
       _core.step(audio);
+      RA_DoAchievementsFrame();
     }
 
     SDL_RenderClear(_renderer);
     _video.draw();
     SDL_RenderPresent(_renderer);
-    RA_DoAchievementsFrame();
+
     RA_HandleHTTPResults();
 
+    static Uint32 t0 = 0;
+
+    if (t0 == 0)
     {
-      static Uint32 t0 = 0;
+      t0 = SDL_GetTicks();
+    }
+    else
+    {
+      Uint32 t1 = SDL_GetTicks();
+      HDC hdc = GetDC(g_mainWindow);
 
-      if (t0 == 0)
+      if (hdc != NULL)
       {
-        t0 = SDL_GetTicks();
+        ControllerInput input;
+        input.m_bUpPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP) != 0;
+        input.m_bDownPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN) != 0;
+        input.m_bLeftPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT) != 0;
+        input.m_bRightPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT) != 0;
+        input.m_bConfirmPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A) != 0;
+        input.m_bCancelPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B) != 0;
+        input.m_bQuitPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START) != 0;
+
+        RECT size;
+        GetClientRect(g_mainWindow, &size);
+
+        RA_UpdateRenderOverlay(hdc, &input, (t1 - t0) / 1000.0f, &size, false, _fsm.currentState() == Fsm::State::GamePaused);
+        ReleaseDC(g_mainWindow, hdc);
       }
-      else
-      {
-        Uint32 t1 = SDL_GetTicks();
-        HDC hdc = GetDC(g_mainWindow);
 
-        if (hdc != NULL)
-        {
-          ControllerInput input;
-          input.m_bUpPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP) != 0;
-          input.m_bDownPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN) != 0;
-          input.m_bLeftPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT) != 0;
-          input.m_bRightPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT) != 0;
-          input.m_bConfirmPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A) != 0;
-          input.m_bCancelPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B) != 0;
-          input.m_bQuitPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START) != 0;
-
-          RECT size;
-          GetClientRect(g_mainWindow, &size);
-
-          RA_UpdateRenderOverlay(hdc, &input, (t1 - t0) / 1000.0f, &size, false, _fsm.currentState() == Fsm::State::GamePaused);
-          ReleaseDC(g_mainWindow, hdc);
-        }
-
-        t0 = t1;
-      }
+      t0 = t1;
     }
 
     SDL_Delay(1);
