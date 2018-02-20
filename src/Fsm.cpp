@@ -45,10 +45,9 @@ bool Fsm::loadCore(Emulator core) {
       ctx.printf("FSM Switched to CoreLoaded");
 #endif
       return true;
-
-      }
-      break;
     }
+    break;
+
     default: break;
   }
 
@@ -75,10 +74,9 @@ bool Fsm::loadGame(const_string path) {
       ctx.printf("FSM Switched to GameRunning");
 #endif
       return true;
-
-      }
-      break;
     }
+    break;
+
     default: break;
   }
 
@@ -100,8 +98,9 @@ bool Fsm::normal() {
       ctx.printf("FSM Switched to GameRunning");
 #endif
       return true;
-
     }
+    break;
+
     default: break;
   }
 
@@ -130,10 +129,9 @@ bool Fsm::pauseGame() {
       ctx.printf("FSM Switched to GamePaused");
 #endif
       return true;
-
-      }
-      break;
     }
+    break;
+
     case State::GameTurbo: {
       if (!before() || !before(__state)) {
         return false;
@@ -154,10 +152,9 @@ bool Fsm::pauseGame() {
       ctx.printf("FSM Switched to GamePaused");
 #endif
       return true;
-
-      }
-      break;
     }
+    break;
+
     default: break;
   }
 
@@ -185,6 +182,8 @@ bool Fsm::quit() {
 
       return __ok;
     }
+    break;
+
     case State::GamePaused: {
       if (!before() || !before(__state)) {
         return false;
@@ -205,6 +204,8 @@ bool Fsm::quit() {
 
       return __ok;
     }
+    break;
+
     case State::GameRunning: {
       if (!before() || !before(__state)) {
         return false;
@@ -225,6 +226,8 @@ bool Fsm::quit() {
 
       return __ok;
     }
+    break;
+
     case State::GameTurbo: {
       if (!before() || !before(__state)) {
         return false;
@@ -245,6 +248,8 @@ bool Fsm::quit() {
 
       return __ok;
     }
+    break;
+
     case State::Start: {
       if (!before() || !before(__state)) {
         return false;
@@ -263,10 +268,9 @@ bool Fsm::quit() {
       ctx.printf("FSM Switched to Quit");
 #endif
       return true;
-
-      }
-      break;
     }
+    break;
+
     default: break;
   }
 
@@ -294,6 +298,8 @@ bool Fsm::resetGame() {
 
       return __ok;
     }
+    break;
+
     case State::GameRunning: {
       if (!before() || !before(__state)) {
         return false;
@@ -310,10 +316,9 @@ bool Fsm::resetGame() {
       ctx.printf("FSM Switched to GameRunning");
 #endif
       return true;
-
-      }
-      break;
     }
+    break;
+
     case State::GameTurbo: {
       if (!before() || !before(__state)) {
         return false;
@@ -333,6 +338,8 @@ bool Fsm::resetGame() {
 
       return __ok;
     }
+    break;
+
     default: break;
   }
 
@@ -354,8 +361,9 @@ bool Fsm::resumeGame() {
       ctx.printf("FSM Switched to GamePaused");
 #endif
       return true;
-
     }
+    break;
+
     case State::GamePaused: {
       if (!before() || !before(__state)) {
         return false;
@@ -372,10 +380,9 @@ bool Fsm::resumeGame() {
       ctx.printf("FSM Switched to GameRunning");
 #endif
       return true;
-
-      }
-      break;
     }
+    break;
+
     default: break;
   }
 
@@ -397,8 +404,9 @@ bool Fsm::step() {
       ctx.printf("FSM Switched to FrameStep");
 #endif
       return true;
-
     }
+    break;
+
     default: break;
   }
 
@@ -425,10 +433,9 @@ bool Fsm::turbo() {
       ctx.printf("FSM Switched to GameTurbo");
 #endif
       return true;
-
-      }
-      break;
     }
+    break;
+
     case State::GameRunning: {
       if (!before() || !before(__state)) {
         return false;
@@ -447,10 +454,9 @@ bool Fsm::turbo() {
       ctx.printf("FSM Switched to GameTurbo");
 #endif
       return true;
-
-      }
-      break;
     }
+    break;
+
     default: break;
   }
 
@@ -477,10 +483,9 @@ bool Fsm::unloadCore() {
       ctx.printf("FSM Switched to Start");
 #endif
       return true;
-
-      }
-      break;
     }
+    break;
+
     default: break;
   }
 
@@ -507,10 +512,9 @@ bool Fsm::unloadGame() {
       ctx.printf("FSM Switched to CoreLoaded");
 #endif
       return true;
-
-      }
-      break;
     }
+    break;
+
     case State::GameRunning: {
       if (!before() || !before(__state)) {
         return false;
@@ -529,10 +533,9 @@ bool Fsm::unloadGame() {
       ctx.printf("FSM Switched to CoreLoaded");
 #endif
       return true;
-
-      }
-      break;
     }
+    break;
+
     case State::GameTurbo: {
       if (!before() || !before(__state)) {
         return false;
@@ -551,10 +554,9 @@ bool Fsm::unloadGame() {
       ctx.printf("FSM Switched to CoreLoaded");
 #endif
       return true;
-
-      }
-      break;
     }
+    break;
+
     default: break;
   }
 
