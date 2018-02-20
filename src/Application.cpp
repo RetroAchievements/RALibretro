@@ -211,6 +211,7 @@ bool Application::init(const char* title, int width, int height)
   _emulator = Emulator::kNone;
   _validSlots = 0;
   _currentSlot = 0;
+  lastHardcore = hardcore();
   updateMenu();
   return true;
 
@@ -267,6 +268,12 @@ void Application::run()
         handle(&event.key);
         break;
       }
+    }
+
+    if (hardcore() != lastHardcore)
+    {
+      lastHardcore = hardcore();
+      updateMenu();
     }
 
     int limit = 0;
@@ -401,10 +408,6 @@ void Application::updateMenu()
     IDM_CLOSE_CORE,
     IDM_LOAD_GAME,
     IDM_PAUSE_GAME, IDM_RESUME_GAME, IDM_RESET_GAME, IDM_CLOSE_GAME,
-    IDM_SAVE_STATE_0, IDM_SAVE_STATE_1, IDM_SAVE_STATE_2, IDM_SAVE_STATE_3, IDM_SAVE_STATE_4,
-    IDM_SAVE_STATE_5, IDM_SAVE_STATE_6, IDM_SAVE_STATE_7, IDM_SAVE_STATE_8, IDM_SAVE_STATE_9,
-    IDM_LOAD_STATE_0, IDM_LOAD_STATE_1, IDM_LOAD_STATE_2, IDM_LOAD_STATE_3, IDM_LOAD_STATE_4,
-    IDM_LOAD_STATE_5, IDM_LOAD_STATE_6, IDM_LOAD_STATE_7, IDM_LOAD_STATE_8, IDM_LOAD_STATE_9,
     IDM_EXIT,
 
     IDM_CORE, IDM_INPUT, IDM_TURBO_GAME, IDM_ABOUT
@@ -1110,21 +1113,22 @@ void Application::enableItems(const UINT* items, size_t count, UINT enable)
 
 void Application::enableSlots()
 {
-  const UINT all_slots[] =
+  UINT enabled = hardcore() ? MF_DISABLED : MF_ENABLED;
+  
+  for (unsigned ndx = 0; ndx < 10; ndx++)
   {
-    IDM_LOAD_STATE_0, IDM_LOAD_STATE_1, IDM_LOAD_STATE_2, IDM_LOAD_STATE_3, IDM_LOAD_STATE_4,
-    IDM_LOAD_STATE_5, IDM_LOAD_STATE_6, IDM_LOAD_STATE_7, IDM_LOAD_STATE_8, IDM_LOAD_STATE_9,
-  };
-
-  for (unsigned ndx = 0; ndx < sizeof(all_slots) / sizeof(all_slots[0]); ndx++)
+    EnableMenuItem(_menu, IDM_SAVE_STATE_0 + ndx, enabled);
+  }
+  
+  for (unsigned ndx = 0; ndx < 10; ndx++)
   {
     if ((_validSlots & (1 << ndx)) != 0)
     {
-      EnableMenuItem(_menu, all_slots[ndx], MF_ENABLED);
+      EnableMenuItem(_menu, IDM_LOAD_STATE_0 + ndx, enabled);
     }
     else
     {
-      EnableMenuItem(_menu, all_slots[ndx], MF_DISABLED);
+      EnableMenuItem(_menu, IDM_LOAD_STATE_0 + ndx, MF_DISABLED);
     }
   }
 }
@@ -1226,7 +1230,7 @@ std::string Application::getCoreFileName(Emulator emulator)
 
 void Application::saveState(unsigned ndx)
 {
-  if (RA_HardcoreModeIsActive())
+  if (hardcore())
   {
     _logger.printf(RETRO_LOG_INFO, "Hardcore mode is active, can't save state");
     return;
@@ -1248,16 +1252,20 @@ void Application::saveState(unsigned ndx)
   }
 
   std::string path = getStatePath(ndx);
-  saveFile(&_logger, path.c_str(), data, size);
-  free(data);
+  _logger.printf(RETRO_LOG_INFO, "Saving state to %s", path.c_str());
+  
+  if (saveFile(&_logger, path.c_str(), data, size))
+  {
+    _validSlots |= 1 << ndx;
+    enableSlots();
+  }
 
-  _validSlots |= 1 << ndx;
-  enableSlots();
+  free(data);
 }
 
 void Application::loadState(unsigned ndx)
 {
-  if (RA_HardcoreModeIsActive())
+  if (hardcore())
   {
     _logger.printf(RETRO_LOG_INFO, "Hardcore mode is active, can't load state");
     return;

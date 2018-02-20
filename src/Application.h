@@ -90,6 +90,7 @@ protected:
   void        handle(const SDL_KeyboardEvent* key);
 
   Fsm _fsm;
+  bool lastHardcore;
 
   Emulator _emulator;
   System   _system;
