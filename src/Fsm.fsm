@@ -19,11 +19,7 @@ fsm Fsm {
       }
     }
 
-    quit() => Quit {
-      if (!ctx.canQuit()) {
-        forbid;
-      }
-    }
+    quit() => Quit;
   }
 
   Quit {}
@@ -36,9 +32,7 @@ fsm Fsm {
     }
 
     unloadCore() => Start {
-      if (!ctx.unloadCore()) {
-        forbid;
-      }
+      ctx.unloadCore();
     }
 
     quit() => unloadCore() => quit();

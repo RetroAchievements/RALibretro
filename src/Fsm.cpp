@@ -383,11 +383,6 @@ bool Fsm::quit() {
         return false;
       }
 
-
-      if (!ctx.canQuit()) {
-        return false;
-      }
-    
       __state = State::Quit;
       after(__state);
       after();
@@ -711,9 +706,7 @@ bool Fsm::unloadCore() {
       }
 
 
-      if (!ctx.unloadCore()) {
-        return false;
-      }
+      ctx.unloadCore();
     
       __state = State::Start;
       after(__state);

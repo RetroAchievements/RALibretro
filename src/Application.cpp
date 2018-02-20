@@ -201,8 +201,6 @@ bool Application::init(const char* title, int width, int height)
     RA_Init(g_mainWindow, RA_Libretro, VERSION);
     RA_InitShared();
     RA_InitDirectX();
-    RA_UpdateAppTitle( "" );
-    RebuildMenu();
     RA_AttemptLogin(true);
     RebuildMenu();
   }
@@ -479,11 +477,6 @@ void Application::updateMenu()
   }
 }
 
-bool Application::canQuit()
-{
-  return RA_ConfirmLoadNewRom(true);
-}
-
 bool Application::loadGame(const std::string& path)
 {
   const struct retro_system_info* info = _core.getSystemInfo();
@@ -622,6 +615,7 @@ bool Application::loadGame(const std::string& path)
     size = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
     registerMemoryRegion(data, size);
     RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, size);
+    _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
     break;
 
   case Emulator::kSnes9x:
@@ -629,24 +623,48 @@ bool Application::loadGame(const std::string& path)
     size = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
     registerMemoryRegion(data, size);
     RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, size);
+    _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
 
     data = _core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
     size = _core.getMemorySize(RETRO_MEMORY_SAVE_RAM);
     registerMemoryRegion(data, size);
     RA_InstallMemoryBank(1, (void*)::memoryRead, (void*)::memoryWrite, size);
+    _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
 
     break;
   
   case Emulator::kFceumm:
     {
+      static const uint8_t _1k[1024] = {0};
       const struct retro_memory_map* mmap = _core.getMemoryMap();
+      void* pointer[64];
+
+      for (unsigned i = 0; i < 64; i++)
+      {
+        pointer[i] = (void*)_1k;
+      }
 
       for (unsigned i = 0; i < mmap->num_descriptors; i++)
       {
-        registerMemoryRegion(mmap->descriptors[i].ptr, mmap->descriptors[i].len);
+        if (mmap->descriptors[i].start < 65536 && mmap->descriptors[i].len == 1024)
+        {
+          pointer[mmap->descriptors[i].start / 1024] = mmap->descriptors[i].ptr;
+        }
+      }
+
+      for (unsigned i = 2; i < 8; i += 2)
+      {
+        pointer[i] = pointer[0];
+        pointer[i + 1] = pointer[1];
+      }
+
+      for (unsigned i = 0; i < 64; i++)
+      {
+        registerMemoryRegion(pointer[i], 1024);
       }
 
       RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, 65536);
+      _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
     }
 
     break;
@@ -664,6 +682,7 @@ bool Application::loadGame(const std::string& path)
           size = mmap->descriptors[i].len;
           registerMemoryRegion(data, size);
           RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, size);
+          _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
         }
         else if (mmap->descriptors[i].start == 0x02000000U)
         {
@@ -671,6 +690,7 @@ bool Application::loadGame(const std::string& path)
           size = mmap->descriptors[i].len;
           registerMemoryRegion(data, size);
           RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, size);
+          _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
         }
       }
     }
@@ -680,6 +700,7 @@ bool Application::loadGame(const std::string& path)
       size = 32768;
       registerMemoryRegion(data, size);
       RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, size);
+      _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
     }
 
     break;
@@ -741,13 +762,8 @@ bool Application::loadGame(const std::string& path)
   return true;
 }
 
-bool Application::unloadCore()
+void Application::unloadCore()
 {
-  if (!RA_ConfirmLoadNewRom(false))
-  {
-    return false;
-  }
-
   std::string json;
   json.append("{\"core\":");
   json.append(_config.serialize());
@@ -758,7 +774,6 @@ bool Application::unloadCore()
   saveFile(&_logger, getCoreConfigPath(_emulator), json.c_str(), json.length());
 
   _core.destroy();
-  return true;
 }
 
 void Application::resetGame()
@@ -1137,6 +1152,7 @@ void Application::registerMemoryRegion(void* data, size_t size)
   _memoryRegions[_memoryRegionCount].data = (uint8_t*)data;
   _memoryRegions[_memoryRegionCount].size = size;
   _memoryRegionCount++;
+  _logger.printf(RETRO_LOG_INFO, "Registered %7zu bytes at 0x%08x", size, data);
 }
 
 std::string Application::getSRamPath()
@@ -1323,6 +1339,10 @@ void Application::handle(const SDL_SysWMEvent* syswm)
         _fsm.loadCore(emulators[cmd - IDM_SYSTEM_STELLA]);
       }
       
+      break;
+    
+    case IDM_CLOSE_CORE:
+      _fsm.unloadCore();
       break;
 
     case IDM_LOAD_GAME:

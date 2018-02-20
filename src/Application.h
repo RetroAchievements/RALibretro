@@ -28,9 +28,8 @@ public:
   // FSM
   bool loadCore(Emulator emulator);
   void updateMenu();
-  bool canQuit();
   bool loadGame(const std::string& path);
-  bool unloadCore();
+  void unloadCore();
   void resetGame();
   bool hardcore();
   void setTurbo(bool turbo);
