@@ -1032,6 +1032,7 @@ void Application::signalRomLoaded(const std::string& path, void* rom, size_t siz
 void Application::loadGame()
 {
   char filter[128];
+  const char* debug = filter;
 
   {
     char* aux = filter;
@@ -1043,6 +1044,7 @@ void Application::loadGame()
     aux += sprintf(aux, "All Files") + 1;
     aux += sprintf(aux, "*.*") + 1;
     aux += sprintf(aux, "Supported Files") + 1;
+    debug = aux;
 
     if (_emulator != Emulator::kGenesisPlusGx)
     {
@@ -1088,9 +1090,12 @@ void Application::loadGame()
     }
     else
     {
-      strcpy(aux, "*.gba");
+      strcpy(aux, "*.GBA");
     }
   }
+
+  filter[sizeof(filter) - 1] = 0;
+  _logger.printf(RETRO_LOG_DEBUG, "Using filter \"%s\"", debug);
 
   char game_path[1024];
   game_path[0] = 0;
