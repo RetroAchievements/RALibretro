@@ -208,3 +208,53 @@ void Video::showMessage(const char* msg, unsigned frames)
 {
   _logger->printf(RETRO_LOG_INFO, "OSD message (%u): %s", frames, msg);
 }
+
+const void* Video::getFramebuffer(unsigned* width, unsigned* height, unsigned* pitch, enum retro_pixel_format* format)
+{
+  unsigned bpp = _pixelFormat == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 2;
+  void* result = malloc(_width * _height * bpp);
+
+  if (result == NULL)
+  {
+    return NULL;
+  }
+
+  uint8_t* target_pixels = (uint8_t*)result;
+  int target_pitch = _width * bpp;
+
+  SDL_Rect rect;
+  rect.x = 0;
+  rect.y = 0;
+  rect.w = _width;
+  rect.h = _height;
+
+  uint8_t* source_pixels;
+  int source_pitch;
+
+  if (SDL_LockTexture(_texture, &rect, (void**)&source_pixels, &source_pitch) != 0)
+  {
+    _logger->printf(RETRO_LOG_ERROR, "SDL_LockTexture: %s", SDL_GetError());
+    return NULL;
+  }
+
+  size_t bytes = target_pitch;
+
+  if (bytes > (unsigned)source_pitch)
+  {
+    bytes = source_pitch;
+  }
+
+  for (unsigned y = 0; y < _height; y++)
+  {
+    memcpy(target_pixels, source_pixels, bytes);
+    source_pixels += source_pitch;
+    target_pixels += target_pitch;
+  }
+
+  SDL_UnlockTexture(_texture);
+
+  *width = _width;
+  *height = _height;
+  *format = _pixelFormat;
+  return result;
+}

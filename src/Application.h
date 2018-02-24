@@ -81,9 +81,11 @@ protected:
   std::string getSRamPath();
   std::string getStatePath(unsigned ndx);
   std::string getCoreConfigPath(Emulator emulator);
+  std::string getScreenshotPath();
   std::string getCoreFileName(Emulator emulator);
   void        saveState(unsigned ndx);
   void        loadState(unsigned ndx);
+  void        screenshot();
   void        aboutDialog();
   void        handle(const SDL_SysWMEvent* syswm);
   void        handle(const SDL_KeyboardEvent* key);

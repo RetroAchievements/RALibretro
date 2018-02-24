@@ -15,14 +15,20 @@
 
 #include "resource.h"
 
+#include <time.h>
 #include <sys/stat.h>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <commdlg.h>
+#include <shlobj.h>
 
 HWND g_mainWindow;
 Application app;
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#define STBIW_ASSERT(x)
+#include "stb_image_write.h"
 
 static unsigned char memoryRead(unsigned int addr)
 {
@@ -1221,6 +1227,31 @@ std::string Application::getCoreConfigPath(Emulator emulator)
   return path;
 }
 
+std::string Application::getScreenshotPath()
+{
+  std::string path;
+  char desktop[MAX_PATH];
+
+  if (SHGetSpecialFolderPath(g_mainWindow, desktop, CSIDL_DESKTOPDIRECTORY, false))
+  {
+    path = desktop;
+  }
+  else
+  {
+    path = _config.getSaveDirectory();
+  }
+
+  path += "\\";
+
+  time_t t = time(NULL);
+  struct tm* tm = gmtime(&t);
+  strftime(desktop, sizeof(desktop), "%Y-%m-%dT%H-%M-%SZ", tm);
+  path += desktop;
+
+  path += ".png";
+  return path;
+}
+
 std::string Application::getCoreFileName(Emulator emulator)
 {
   switch (emulator)
@@ -1297,6 +1328,87 @@ void Application::loadState(unsigned ndx)
       free(data);
     }
   }
+}
+
+void Application::screenshot()
+{
+  unsigned width, height, pitch;
+  enum retro_pixel_format format;
+  const void* data = _video.getFramebuffer(&width, &height, &pitch, &format);
+  const void* pixels = data;
+
+  if (data == NULL)
+  {
+    return;
+  }
+
+  if (format == RETRO_PIXEL_FORMAT_RGB565)
+  {
+    uint16_t* source_rgba5650 = (uint16_t*)data;
+    uint8_t* target_rgba8880 = (uint8_t*)malloc(width * height * 3);
+    pixels = (void*)target_rgba8880;
+
+    if (target_rgba8880 == NULL)
+    {
+      free((void*)data);
+      return;
+    }
+
+    for (unsigned y = 0; y < height; y++)
+    {
+      for (unsigned x = 0; x < width; x++)
+      {
+        uint16_t rgba5650 = *source_rgba5650++;
+
+        *target_rgba8880++ = (rgba5650 >> 11) * 255 / 31;
+        *target_rgba8880++ = ((rgba5650 >> 5) & 0x3f) * 255 / 63;
+        *target_rgba8880++ = (rgba5650 & 0x1f) * 255 / 31;
+      }
+    }
+  }
+  else if (format == RETRO_PIXEL_FORMAT_0RGB1555)
+  {
+    uint16_t* source_argb1555 = (uint16_t*)data;
+    uint8_t* target_rgba8880 = (uint8_t*)malloc(width * height * 3);
+    pixels = (void*)target_rgba8880;
+
+    if (target_rgba8880 == NULL)
+    {
+      free((void*)data);
+      return;
+    }
+
+    for (unsigned y = 0; y < height; y++)
+    {
+      for (unsigned x = 0; x < width; x++)
+      {
+        uint16_t argb1555 = *source_argb1555++;
+
+        if (argb1555 & 0x8000)
+        {
+          *target_rgba8880++ = (argb1555 >> 10) * 255 / 31;
+          *target_rgba8880++ = ((argb1555 >> 5) & 0x1f) * 255 / 31;
+          *target_rgba8880++ = (argb1555 & 0x1f) * 255 / 31;
+        }
+        else
+        {
+          *target_rgba8880++ = 0;
+          *target_rgba8880++ = 0;
+          *target_rgba8880++ = 0;
+        }
+      }
+    }
+  }
+
+  std::string path = getScreenshotPath();
+  stbi_write_png(path.c_str(), width, height, format == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 3, pixels, pitch);
+
+  if (pixels != data)
+  {
+    free((void*)pixels);
+  }
+
+  free((void*)data);
 }
 
 void Application::aboutDialog()
@@ -1475,6 +1587,10 @@ void Application::handle(const SDL_KeyboardEvent* key)
       _fsm.turbo();
     }
 
+    break;
+  
+  case KeyBinds::Action::kScreenshot:
+    screenshot();
     break;
   }
 }

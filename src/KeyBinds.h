@@ -34,6 +34,8 @@ public:
     kPauseToggle,
     kFastForward,
     kStep,
+    // Screenshot
+    kScreenshot
   };
 
   bool init(libretro::LoggerComponent* logger);

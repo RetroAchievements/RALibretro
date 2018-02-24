@@ -22,6 +22,8 @@ public:
 
   virtual void showMessage(const char* msg, unsigned frames) override;
 
+  const void* getFramebuffer(unsigned* width, unsigned* height, unsigned* pitch, enum retro_pixel_format* format);
+
 protected:
   libretro::LoggerComponent* _logger;
   Config* _config;
