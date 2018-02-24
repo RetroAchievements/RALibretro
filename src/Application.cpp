@@ -359,7 +359,7 @@ void Application::run()
 void Application::destroy()
 {
   RA_Shutdown();
-  
+
   _video.destroy();
   _keybinds.destroy();
   _input.destroy();
@@ -1305,6 +1305,8 @@ void Application::saveState(unsigned ndx)
   {
     _validSlots |= 1 << ndx;
     enableSlots();
+
+    RA_OnSaveState(path.c_str());
   }
 
   free(data);
@@ -1328,6 +1330,8 @@ void Application::loadState(unsigned ndx)
     {
       _core.unserialize(data, size);
       free(data);
+
+      RA_OnLoadState(path.c_str());
     }
   }
 }
