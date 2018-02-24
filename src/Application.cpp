@@ -358,6 +358,8 @@ void Application::run()
 
 void Application::destroy()
 {
+  RA_Shutdown();
+  
   _video.destroy();
   _keybinds.destroy();
   _input.destroy();
@@ -1332,6 +1334,11 @@ void Application::loadState(unsigned ndx)
 
 void Application::screenshot()
 {
+  if (!isGameActive())
+  {
+    return;
+  }
+
   unsigned width, height, pitch;
   enum retro_pixel_format format;
   const void* data = _video.getFramebuffer(&width, &height, &pitch, &format);
