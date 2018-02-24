@@ -208,7 +208,6 @@ bool Application::init(const char* title, int width, int height)
   SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
   _emulator = Emulator::kNone;
   _validSlots = 0;
-  _currentSlot = 0;
   lastHardcore = hardcore();
   updateMenu();
   return true;
@@ -708,7 +707,7 @@ bool Application::loadGame(const std::string& path)
 
   _validSlots = 0;
 
-  for (unsigned ndx = 0; ndx < 10; ndx++)
+  for (unsigned ndx = 1; ndx <= 10; ndx++)
   {
     std::string path = getStatePath(ndx);
     struct stat statbuf;
@@ -1129,20 +1128,20 @@ void Application::enableSlots()
 {
   UINT enabled = hardcore() ? MF_DISABLED : MF_ENABLED;
   
-  for (unsigned ndx = 0; ndx < 10; ndx++)
+  for (unsigned ndx = 1; ndx <= 10; ndx++)
   {
-    EnableMenuItem(_menu, IDM_SAVE_STATE_0 + ndx, enabled);
+    EnableMenuItem(_menu, IDM_SAVE_STATE_1 + ndx - 1, enabled);
   }
   
-  for (unsigned ndx = 0; ndx < 10; ndx++)
+  for (unsigned ndx = 1; ndx <= 10; ndx++)
   {
     if ((_validSlots & (1 << ndx)) != 0)
     {
-      EnableMenuItem(_menu, IDM_LOAD_STATE_0 + ndx, enabled);
+      EnableMenuItem(_menu, IDM_LOAD_STATE_1 + ndx - 1, enabled);
     }
     else
     {
-      EnableMenuItem(_menu, IDM_LOAD_STATE_0 + ndx, MF_DISABLED);
+      EnableMenuItem(_menu, IDM_LOAD_STATE_1 + ndx - 1, MF_DISABLED);
     }
   }
 }
@@ -1369,7 +1368,6 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       _fsm.unloadGame();
       break;
 
-    case IDM_SAVE_STATE_0:
     case IDM_SAVE_STATE_1:
     case IDM_SAVE_STATE_2:
     case IDM_SAVE_STATE_3:
@@ -1379,10 +1377,10 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     case IDM_SAVE_STATE_7:
     case IDM_SAVE_STATE_8:
     case IDM_SAVE_STATE_9:
-      saveState(cmd - IDM_SAVE_STATE_0);
+    case IDM_SAVE_STATE_10:
+      saveState(cmd - IDM_SAVE_STATE_1 + 1);
       break;
       
-    case IDM_LOAD_STATE_0:
     case IDM_LOAD_STATE_1:
     case IDM_LOAD_STATE_2:
     case IDM_LOAD_STATE_3:
@@ -1392,7 +1390,8 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     case IDM_LOAD_STATE_7:
     case IDM_LOAD_STATE_8:
     case IDM_LOAD_STATE_9:
-      loadState(cmd - IDM_LOAD_STATE_0);
+    case IDM_LOAD_STATE_10:
+      loadState(cmd - IDM_LOAD_STATE_1 + 1);
       break;
       
     case IDM_CORE:
@@ -1447,9 +1446,8 @@ void Application::handle(const SDL_KeyboardEvent* key)
   case KeyBinds::Action::kButtonSelect: _input.buttonEvent(Input::Button::kSelect, extra != 0); break;
   case KeyBinds::Action::kButtonStart:  _input.buttonEvent(Input::Button::kStart, extra != 0); break;
   // State management
-  case KeyBinds::Action::kSetStateSlot: _currentSlot = extra; break;
-  case KeyBinds::Action::kSaveState:    saveState(_currentSlot); break;
-  case KeyBinds::Action::kLoadState:    loadState(_currentSlot); break;
+  case KeyBinds::Action::kSaveState:    saveState(extra); break;
+  case KeyBinds::Action::kLoadState:    loadState(extra); break;
   // Emulation speed
   case KeyBinds::Action::kStep:
     _fsm.step();

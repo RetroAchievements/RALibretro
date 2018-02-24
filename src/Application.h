@@ -115,7 +115,6 @@ protected:
 
   std::string _gamePath;
   unsigned    _validSlots;
-  unsigned    _currentSlot;
 
   MemoryRegion _memoryRegions[64];
   unsigned     _memoryRegionCount;

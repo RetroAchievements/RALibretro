@@ -16,28 +16,28 @@
 #define IDM_SYSTEM_MEDNAFENNGP                  50010
 
 // Keep those in increasing order
-#define IDM_SAVE_STATE_0                        51000
-#define IDM_SAVE_STATE_1                        51001
-#define IDM_SAVE_STATE_2                        51002
-#define IDM_SAVE_STATE_3                        51003
-#define IDM_SAVE_STATE_4                        51004
-#define IDM_SAVE_STATE_5                        51005
-#define IDM_SAVE_STATE_6                        51006
-#define IDM_SAVE_STATE_7                        51007
-#define IDM_SAVE_STATE_8                        51008
-#define IDM_SAVE_STATE_9                        51009
+#define IDM_SAVE_STATE_1                        51000
+#define IDM_SAVE_STATE_2                        51001
+#define IDM_SAVE_STATE_3                        51002
+#define IDM_SAVE_STATE_4                        51003
+#define IDM_SAVE_STATE_5                        51004
+#define IDM_SAVE_STATE_6                        51005
+#define IDM_SAVE_STATE_7                        51006
+#define IDM_SAVE_STATE_8                        51007
+#define IDM_SAVE_STATE_9                        51008
+#define IDM_SAVE_STATE_10                       51009
 
 // Keep those in increasing order
-#define IDM_LOAD_STATE_0                        52000
-#define IDM_LOAD_STATE_1                        52001
-#define IDM_LOAD_STATE_2                        52002
-#define IDM_LOAD_STATE_3                        52003
-#define IDM_LOAD_STATE_4                        52004
-#define IDM_LOAD_STATE_5                        52005
-#define IDM_LOAD_STATE_6                        52006
-#define IDM_LOAD_STATE_7                        52007
-#define IDM_LOAD_STATE_8                        52008
-#define IDM_LOAD_STATE_9                        52009
+#define IDM_LOAD_STATE_1                        52000
+#define IDM_LOAD_STATE_2                        52001
+#define IDM_LOAD_STATE_3                        52002
+#define IDM_LOAD_STATE_4                        52003
+#define IDM_LOAD_STATE_5                        52004
+#define IDM_LOAD_STATE_6                        52005
+#define IDM_LOAD_STATE_7                        52006
+#define IDM_LOAD_STATE_8                        52007
+#define IDM_LOAD_STATE_9                        52008
+#define IDM_LOAD_STATE_10                       52009
 
 #define IDM_LOAD_GAME                           40001
 #define IDM_RESET_GAME                          40002

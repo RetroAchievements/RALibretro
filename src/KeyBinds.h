@@ -28,7 +28,6 @@ public:
     kButtonSelect,
     kButtonStart,
     // State state management
-    kSetStateSlot,
     kSaveState,
     kLoadState,
     // Emulation speed
@@ -47,5 +46,6 @@ public:
 protected:
   libretro::LoggerComponent* _logger;
 
+  unsigned _slot;
   bool _ff;
 };
