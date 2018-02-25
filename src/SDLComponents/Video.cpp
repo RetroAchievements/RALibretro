@@ -255,6 +255,7 @@ const void* Video::getFramebuffer(unsigned* width, unsigned* height, unsigned* p
 
   *width = _width;
   *height = _height;
+  *pitch = target_pitch;
   *format = _pixelFormat;
   return result;
 }
