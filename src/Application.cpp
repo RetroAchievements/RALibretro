@@ -216,6 +216,7 @@ bool Application::init(const char* title, int width, int height)
   _validSlots = 0;
   lastHardcore = hardcore();
   updateMenu();
+  loadRecentList();
   return true;
 
 error:
@@ -358,6 +359,12 @@ void Application::run()
 
 void Application::destroy()
 {
+  std::string json = "{\"recent\":";
+  json += serializeRecentList();
+  json += "}";
+
+  saveFile(&_logger, getConfigPath(), json.c_str(), json.length());
+
   RA_Shutdown();
 
   _video.destroy();
@@ -581,6 +588,19 @@ bool Application::loadGame(const std::string& path)
   signalRomLoaded(path, data, size);
   free(data);
   _gamePath = path;
+
+  RecentItem item;
+  item.path = path;
+  item.emulator = _emulator;
+  item.system = _system;
+
+  if (_recentList.size() == 10)
+  {
+    _recentList.pop_back();
+  }
+
+  _recentList.insert(_recentList.begin(), item);
+  updateRecentList();
 
   if (_core.getMemorySize(RETRO_MEMORY_SAVE_RAM) != 0)
   {
@@ -1046,7 +1066,7 @@ void Application::loadGame()
     aux += sprintf(aux, "Supported Files") + 1;
     debug = aux;
 
-    if (_emulator != Emulator::kGenesisPlusGx)
+    if (_emulator != Emulator::kMGBA)
     {
       for (;;)
       {
@@ -1225,6 +1245,13 @@ std::string Application::getStatePath(unsigned ndx)
   return path;
 }
 
+std::string Application::getConfigPath()
+{
+  std::string path = _config.getRootFolder();
+  path += "RALibretro.json";
+  return path;
+}
+
 std::string Application::getCoreConfigPath(Emulator emulator)
 {
   std::string path = _config.getRootFolder();
@@ -1236,26 +1263,15 @@ std::string Application::getCoreConfigPath(Emulator emulator)
 
 std::string Application::getScreenshotPath()
 {
-  std::string path;
-  char desktop[MAX_PATH];
+  std::string path = _config.getRootFolder();
+  path += "Screenshots\\";
 
-  if (SHGetSpecialFolderPath(g_mainWindow, desktop, CSIDL_DESKTOPDIRECTORY, false))
-  {
-    path = desktop;
-  }
-  else
-  {
-    path = _config.getSaveDirectory();
-  }
-
-  path += "\\";
-
+  char fname[128];
   time_t t = time(NULL);
   struct tm* tm = gmtime(&t);
-  strftime(desktop, sizeof(desktop), "%Y-%m-%dT%H-%M-%SZ", tm);
-  path += desktop;
+  strftime(fname, sizeof(fname), "%Y-%m-%dT%H-%M-%SZ.png", tm);
+  path += fname;
 
-  path += ".png";
   return path;
 }
 
@@ -1275,6 +1291,48 @@ std::string Application::getCoreFileName(Emulator emulator)
   case Emulator::kMGBA:          return "mgba_libretro";
   case Emulator::kMednafenPsx:   return "mednafen_psx_libretro";
   case Emulator::kMednafenNgp:   return "mednafen_ngp_libretro";
+  }
+
+  return "";
+}
+
+std::string Application::getEmulatorName(Emulator emulator)
+{
+  switch (emulator)
+  {
+  case Emulator::kNone:          break;
+  case Emulator::kStella:        return "Stella";
+  case Emulator::kSnes9x:        return "Snes9x";
+  case Emulator::kPicoDrive:     return "PicoDrive";
+  case Emulator::kGenesisPlusGx: return "Genesis Plus GX";
+  case Emulator::kFceumm:        return "FCEUmm";
+  case Emulator::kHandy:         return "Handy";
+  case Emulator::kBeetleSgx:     return "Beetle SGX";
+  case Emulator::kGambatte:      return "Gambatte";
+  case Emulator::kMGBA:          return "mGBA";
+  case Emulator::kMednafenPsx:   return "Mednafen PSX";
+  case Emulator::kMednafenNgp:   return "Mednafen NGP";
+  }
+
+  return "";
+}
+
+std::string Application::getSystemName(System system)
+{
+  switch (system)
+  {
+  case System::kAtari2600:      return "Atari 2600";
+  case System::kAtariLynx:      return "Atari Lynx";
+  case System::kMasterSystem:   return "Master System";
+  case System::kMegaDrive:      return "Sega Genesis";
+  case System::kNintendo:       return "Nintendo Entertainment System";
+  case System::kPCEngine:       return "TurboGrafx-16";
+  case System::kSuperNintendo:  return "Super Nintendo Entertainment System";
+  case System::kGameBoy:        return "Game Boy";
+  case System::kGameBoyColor:   return "Game Boy Color";
+  case System::kGameBoyAdvance: return "Game Boy Advance";
+  case System::kPlayStation1:   return "PlayStation";
+  case System::kNeoGeoPocket:   return "Neo Geo Pocket";
   }
 
   return "";
@@ -1345,21 +1403,25 @@ void Application::screenshot()
 {
   if (!isGameActive())
   {
+    _logger.printf(RETRO_LOG_WARN, "No active game, screenshot not taken");
     return;
   }
 
   unsigned width, height, pitch;
   enum retro_pixel_format format;
   const void* data = _video.getFramebuffer(&width, &height, &pitch, &format);
-  const void* pixels = data;
+  const void* pixels;
 
   if (data == NULL)
   {
+    _logger.printf(RETRO_LOG_ERROR, "Error getting framebuffer from the video component");
     return;
   }
 
   if (format == RETRO_PIXEL_FORMAT_RGB565)
   {
+    _logger.printf(RETRO_LOG_INFO, "Pixel format is RGB565, converting to 24-bits RGB");
+
     uint16_t* source_rgba5650 = (uint16_t*)data;
     uint8_t* target_rgba8880 = (uint8_t*)malloc(width * height * 3);
     pixels = (void*)target_rgba8880;
@@ -1384,6 +1446,8 @@ void Application::screenshot()
   }
   else if (format == RETRO_PIXEL_FORMAT_0RGB1555)
   {
+    _logger.printf(RETRO_LOG_INFO, "Pixel format is 0RGB1565, converting to 24-bits RGB");
+
     uint16_t* source_argb1555 = (uint16_t*)data;
     uint8_t* target_rgba8880 = (uint8_t*)malloc(width * height * 3);
     pixels = (void*)target_rgba8880;
@@ -1400,36 +1464,181 @@ void Application::screenshot()
       {
         uint16_t argb1555 = *source_argb1555++;
 
-        if (argb1555 & 0x8000)
-        {
-          *target_rgba8880++ = (argb1555 >> 10) * 255 / 31;
-          *target_rgba8880++ = ((argb1555 >> 5) & 0x1f) * 255 / 31;
-          *target_rgba8880++ = (argb1555 & 0x1f) * 255 / 31;
-        }
-        else
-        {
-          *target_rgba8880++ = 0;
-          *target_rgba8880++ = 0;
-          *target_rgba8880++ = 0;
-        }
+        *target_rgba8880++ = (argb1555 >> 10) * 255 / 31;
+        *target_rgba8880++ = ((argb1555 >> 5) & 0x1f) * 255 / 31;
+        *target_rgba8880++ = (argb1555 & 0x1f) * 255 / 31;
       }
     }
   }
-
-  std::string path = getScreenshotPath();
-  stbi_write_png(path.c_str(), width, height, format == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 3, pixels, pitch);
-
-  if (pixels != data)
+  else if (format == RETRO_PIXEL_FORMAT_XRGB8888)
   {
-    free((void*)pixels);
+    _logger.printf(RETRO_LOG_INFO, "Pixel format is XRGB8888, converting to 24-bits RGB");
+
+    uint32_t* source_argb8888 = (uint32_t*)data;
+    uint8_t* target_rgba8880 = (uint8_t*)malloc(width * height * 3);
+    pixels = (void*)target_rgba8880;
+
+    if (target_rgba8880 == NULL)
+    {
+      free((void*)data);
+      return;
+    }
+
+    for (unsigned y = 0; y < height; y++)
+    {
+      for (unsigned x = 0; x < width; x++)
+      {
+        uint32_t argb8888 = *source_argb8888++;
+
+        *target_rgba8880++ = argb8888 >> 16;
+        *target_rgba8880++ = argb8888 >> 8;
+        *target_rgba8880++ = argb8888;
+      }
+    }
+  }
+  else
+  {
+    _logger.printf(RETRO_LOG_ERROR, "Unknown pixel format");
+    free((void*)data);
+    return;
   }
 
+  std::string path = getScreenshotPath();
+  stbi_write_png(path.c_str(), width, height, 3, pixels, 0);
+
+  _logger.printf(RETRO_LOG_INFO, "Wrote screenshot to \"%s\"", path.c_str());
+
+  free((void*)pixels);
   free((void*)data);
 }
 
 void Application::aboutDialog()
 {
   ::aboutDialog(_logger.contents().c_str());
+}
+
+void Application::loadRecentList()
+{
+  _recentList.clear();
+
+  size_t size;
+  void* data = loadFile(&_logger, getConfigPath(), &size);
+
+  if (data != NULL)
+  {
+    struct Deserialize
+    {
+      Application* self;
+      std::string key;
+      RecentItem item;
+    };
+
+    Deserialize ud;
+    ud.self = this;
+
+    jsonsax_parse((char*)data, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+    {
+      auto ud = (Deserialize*)udata;
+
+      if (event == JSONSAX_KEY)
+      {
+        ud->key = std::string(str, num);
+      }
+      else if (event == JSONSAX_OBJECT)
+      {
+        if (ud->key == "recent")
+        {
+          jsonsax_parse((char*)str, ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+          {
+            auto ud = (Deserialize*)udata;
+
+            if (event == JSONSAX_KEY)
+            {
+              ud->key = std::string(str, num);
+            }
+            else if (event == JSONSAX_STRING && ud->key == "path")
+            {
+              ud->item.path = std::string(str, num);
+            }
+            else if (event == JSONSAX_NUMBER && ud->key == "emulator")
+            {
+              ud->item.emulator = (Emulator)strtoul(str, NULL, 10);
+            }
+            else if (event == JSONSAX_NUMBER && ud->key == "system")
+            {
+              ud->item.system = (System)strtoul(str, NULL, 10);
+            }
+            else if (event == JSONSAX_OBJECT && num == 0)
+            {
+              ud->self->_recentList.push_back(ud->item);
+            }
+
+            return 0;
+          });
+        }
+      }
+
+      return 0;
+    });
+
+    free(data);
+  }
+
+  updateRecentList();
+}
+
+void Application::updateRecentList()
+{
+  HMENU file = GetSubMenu(_menu, 0);
+  HMENU recent = GetSubMenu(file, 4); // This API sucks
+
+  for (unsigned i = 0; i < 10; i++)
+  {
+    DeleteMenu(recent, IDM_LOAD_RECENT_1 + i, MF_BYCOMMAND);
+  }
+
+  for (size_t i = 0; i < _recentList.size(); i++)
+  {
+    std::string caption = _recentList[i].path;
+    caption += " - ";
+    caption += getEmulatorName(_recentList[i].emulator);
+    caption += " - ";
+    caption += getSystemName(_recentList[i].system);
+
+    InsertMenu(recent, i, MF_BYPOSITION | MF_STRING, IDM_LOAD_RECENT_1 + i, caption.c_str());
+  }
+}
+
+std::string Application::serializeRecentList()
+{
+  std::string json = "[";
+
+  for (unsigned i = 0; i < _recentList.size(); i++)
+  {
+    char buffer[64];
+
+    if (i != 0)
+    {
+      json += ",";
+    }
+
+    json += "{";
+    json += "\"path\":\"";
+    json += _recentList[i].path;
+
+    json += "\",\"emulator\":";
+    snprintf(buffer, sizeof(buffer), "%u", (unsigned)_recentList[i].emulator);
+    json += buffer;
+
+    json += ",\"system\":";
+    snprintf(buffer, sizeof(buffer), "%u", (unsigned)_recentList[i].system);
+    json += buffer;
+
+    json += "}";
+  }
+
+  json += "]";
+  return json;
 }
 
 void Application::handle(const SDL_SysWMEvent* syswm)

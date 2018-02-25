@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include <SDL.h>
 #include "Fsm.h"
 
@@ -66,6 +69,13 @@ protected:
     size_t size;
   };
 
+  struct RecentItem
+  {
+    std::string path;
+    Emulator emulator;
+    System system;
+  };
+
   // Called by SDL from the audio thread
   static void s_audioCallback(void* udata, Uint8* stream, int len);
 
@@ -80,13 +90,19 @@ protected:
   void        registerMemoryRegion(void* data, size_t size);
   std::string getSRamPath();
   std::string getStatePath(unsigned ndx);
+  std::string getConfigPath();
   std::string getCoreConfigPath(Emulator emulator);
   std::string getScreenshotPath();
   std::string getCoreFileName(Emulator emulator);
+  std::string getEmulatorName(Emulator emulator);
+  std::string getSystemName(System system);
   void        saveState(unsigned ndx);
   void        loadState(unsigned ndx);
   void        screenshot();
   void        aboutDialog();
+  void        loadRecentList();
+  void        updateRecentList();
+  std::string serializeRecentList();
   void        handle(const SDL_SysWMEvent* syswm);
   void        handle(const SDL_KeyboardEvent* key);
 
@@ -109,6 +125,7 @@ protected:
   Input  _input;
 
   KeyBinds _keybinds;
+  std::vector<RecentItem> _recentList;
 
   Allocator<256 * 1024> _allocator;
 

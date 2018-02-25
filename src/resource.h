@@ -39,6 +39,18 @@
 #define IDM_LOAD_STATE_9                        52008
 #define IDM_LOAD_STATE_10                       52009
 
+// Keep those in increasing order
+#define IDM_LOAD_RECENT_1                       53000
+#define IDM_LOAD_RECENT_2                       53001
+#define IDM_LOAD_RECENT_3                       53002
+#define IDM_LOAD_RECENT_4                       53003
+#define IDM_LOAD_RECENT_5                       53004
+#define IDM_LOAD_RECENT_6                       53005
+#define IDM_LOAD_RECENT_7                       53006
+#define IDM_LOAD_RECENT_8                       53007
+#define IDM_LOAD_RECENT_9                       53008
+#define IDM_LOAD_RECENT_10                      53009
+
 #define IDM_LOAD_GAME                           40001
 #define IDM_RESET_GAME                          40002
 #define IDM_EXIT                                40003
