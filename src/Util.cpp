@@ -84,3 +84,57 @@ bool saveFile(Logger* logger, const std::string& path, const void* data, size_t 
   logger->printf(RETRO_LOG_INFO, "Wrote %zu bytes to \"%s\"", size, path.c_str());
   return true;
 }
+
+std::string jsonEscape(const std::string& str)
+{
+  std::string res;
+  res.reserve(str.length());
+
+  for (size_t i = 0; i < str.length(); i++)
+  {
+    switch (str[i])
+    {
+    case '"':  res += "\\\""; break;
+    case '\\': res += "\\\\"; break;
+    case '/':  res += "\\/"; break;
+    case '\b': res += "\\b"; break;
+    case '\f': res += "\\f"; break;
+    case '\n': res += "\\n"; break;
+    case '\r': res += "\\r"; break;
+    case '\t': res += "\\t"; break;
+    default:   res += str[i];
+    }
+  }
+
+  return res;
+}
+
+std::string jsonUnescape(const std::string& str)
+{
+  std::string res;
+  res.reserve(str.length());
+
+  for (size_t i = 0; i < str.length(); i++)
+  {
+    if (str[i] == '\\' && (i + 1) < str.length())
+    {
+      switch (str[i + 1])
+      {
+      case '"':  res += "\""; break;
+      case '\\': res += "\\"; break;
+      case '/':  res += "/"; break;
+      case 'b': res += "\b"; break;
+      case 'f': res += "\f"; break;
+      case 'n': res += "\n"; break;
+      case 'r': res += "\r"; break;
+      case 't': res += "\t"; break;
+      }
+    }
+    else
+    {
+      res += str[i];
+    }
+  }
+
+  return res;
+}
