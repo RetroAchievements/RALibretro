@@ -25,7 +25,7 @@ void* loadFile(Logger* logger, const std::string& path, size_t* size)
 
   if (stat(path.c_str(), &statbuf) != 0)
   {
-    logger->printf(RETRO_LOG_ERROR, "Error getting info from \"%s\": %s", path, strerror(errno));
+    logger->printf(RETRO_LOG_ERROR, "Error getting info from \"%s\": %s", path.c_str(), strerror(errno));
     return NULL;
   }
 
