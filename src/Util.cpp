@@ -34,7 +34,7 @@ void* loadFile(Logger* logger, const std::string& path, size_t* size)
 
   if (data == NULL)
   {
-    logger->printf(RETRO_LOG_ERROR, "Out of memory allocating %lu bytes to load \"%s\"", *size, path);
+    logger->printf(RETRO_LOG_ERROR, "Out of memory allocating %lu bytes to load \"%s\"", *size, path.c_str());
     return NULL;
   }
 
@@ -42,7 +42,7 @@ void* loadFile(Logger* logger, const std::string& path, size_t* size)
 
   if (file == NULL)
   {
-    logger->printf(RETRO_LOG_ERROR, "Error opening \"%s\": %s", path, strerror(errno));
+    logger->printf(RETRO_LOG_ERROR, "Error opening \"%s\": %s", path.c_str(), strerror(errno));
     free(data);
     return NULL;
   }
@@ -51,7 +51,7 @@ void* loadFile(Logger* logger, const std::string& path, size_t* size)
 
   if (numread < 0 || numread != *size)
   {
-    logger->printf(RETRO_LOG_ERROR, "Error reading \"%s\": %s", path, strerror(errno));
+    logger->printf(RETRO_LOG_ERROR, "Error reading \"%s\": %s", path.c_str(), strerror(errno));
     fclose(file);
     free(data);
     return NULL;
@@ -59,6 +59,7 @@ void* loadFile(Logger* logger, const std::string& path, size_t* size)
 
   fclose(file);
   *((uint8_t*)data + *size) = 0;
+  logger->printf(RETRO_LOG_INFO, "Read %zu bytes from \"%s\"", *size, path.c_str());
   return data;
 }
 
@@ -68,17 +69,18 @@ bool saveFile(Logger* logger, const std::string& path, const void* data, size_t 
 
   if (file == NULL)
   {
-    logger->printf(RETRO_LOG_ERROR, "Error opening file \"%s\": %s", path, strerror(errno));
+    logger->printf(RETRO_LOG_ERROR, "Error opening file \"%s\": %s", path.c_str(), strerror(errno));
     return false;
   }
 
   if (fwrite(data, 1, size, file) != size)
   {
-    logger->printf(RETRO_LOG_ERROR, "Error writing file \"%s\": %s", path, strerror(errno));
+    logger->printf(RETRO_LOG_ERROR, "Error writing file \"%s\": %s", path.c_str(), strerror(errno));
     fclose(file);
     return false;
   }
 
   fclose(file);
+  logger->printf(RETRO_LOG_INFO, "Wrote %zu bytes to \"%s\"", size, path.c_str());
   return true;
 }
