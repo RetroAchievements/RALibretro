@@ -1,5 +1,7 @@
 #pragma once
 
+// Generated with FSM compiler, https://github.com/leiradel/ddlt
+
 
   #include "Emulator.h"
   #include <string>
@@ -24,8 +26,13 @@ public:
 
   State currentState() const { return __state; }
 
+#ifdef DEBUG_FSM
+  const char* getStateName(State state) const;
+#endif
+
   bool loadCore(Emulator core);
   bool loadGame(const_string path);
+  bool loadRecent(Emulator core, const_string path);
   bool normal();
   bool pauseGame();
   bool quit();

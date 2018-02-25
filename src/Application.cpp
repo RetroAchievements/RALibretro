@@ -215,8 +215,8 @@ bool Application::init(const char* title, int width, int height)
   _emulator = Emulator::kNone;
   _validSlots = 0;
   lastHardcore = hardcore();
-  updateMenu();
   loadRecentList();
+  updateMenu();
   return true;
 
 error:
@@ -468,27 +468,25 @@ void Application::updateMenu()
   {
   case Fsm::State::Start:
     enableItems(start_items, sizeof(start_items) / sizeof(start_items[0]), MF_ENABLED);
-    enableSlots();
     break;
   case Fsm::State::CoreLoaded:
     enableItems(core_loaded_items, sizeof(core_loaded_items) / sizeof(core_loaded_items[0]), MF_ENABLED);
-    enableSlots();
     break;
   case Fsm::State::GameRunning:
     enableItems(game_running_items, sizeof(game_running_items) / sizeof(game_running_items[0]), MF_ENABLED);
-    enableSlots();
     break;
   case Fsm::State::GamePaused:
     enableItems(game_paused_items, sizeof(game_paused_items) / sizeof(game_paused_items[0]), MF_ENABLED);
-    enableSlots();
     break;
   case Fsm::State::GameTurbo:
     enableItems(game_turbo_items, sizeof(game_turbo_items) / sizeof(game_turbo_items[0]), MF_ENABLED);
-    enableSlots();
     break;
   default:
     break;
   }
+
+  enableSlots();
+  enableRecent();
 }
 
 bool Application::loadGame(const std::string& path)
@@ -589,19 +587,36 @@ bool Application::loadGame(const std::string& path)
   free(data);
   _gamePath = path;
 
-  RecentItem item;
-  item.path = path;
-  item.emulator = _emulator;
-  item.system = _system;
+  for (size_t i = 0; i < _recentList.size(); i++)
+  {
+    const RecentItem item = _recentList[i];
+
+    if (item.path == path && item.emulator == _emulator && item.system == _system)
+    {
+      _recentList.erase(_recentList.begin() + i);
+      _recentList.insert(_recentList.begin(), item);
+      _logger.printf(RETRO_LOG_DEBUG, "Moved recent file %zu to front \"%s\" - %u - %u", i, item.path.c_str(), (unsigned)item.emulator, (unsigned)item.system);
+      goto moved_recent_item;
+    }
+  }
 
   if (_recentList.size() == 10)
   {
     _recentList.pop_back();
+    _logger.printf(RETRO_LOG_DEBUG, "Removed last entry in the recent list");
   }
 
-  _recentList.insert(_recentList.begin(), item);
-  updateRecentList();
+  {
+    RecentItem item;
+    item.path = path;
+    item.emulator = _emulator;
+    item.system = _system;
 
+    _recentList.insert(_recentList.begin(), item);
+    _logger.printf(RETRO_LOG_DEBUG, "Added recent file \"%s\" - %u - %u", item.path.c_str(), (unsigned)item.emulator, (unsigned)item.system);
+  }
+
+moved_recent_item:
   if (_core.getMemorySize(RETRO_MEMORY_SAVE_RAM) != 0)
   {
     std::string sram = getSRamPath();
@@ -1179,6 +1194,48 @@ void Application::enableSlots()
   }
 }
 
+void Application::enableRecent()
+{
+  UINT enabled = _fsm.currentState() == Fsm::State::Start ? MF_ENABLED : MF_DISABLED;
+  size_t i = 0;
+
+  for (; i < _recentList.size(); i++)
+  {
+    UINT id = IDM_LOAD_RECENT_1 + i;
+    EnableMenuItem(_menu, id, enabled);
+    
+    MENUITEMINFO info;
+    memset(&info, 0, sizeof(info));
+    info.cbSize = sizeof(info);
+    info.fMask = MIIM_TYPE | MIIM_DATA;
+    GetMenuItemInfo(_menu, id, false, &info);
+
+    std::string caption = _recentList[i].path;
+    caption += " - ";
+    caption += getEmulatorName(_recentList[i].emulator);
+    caption += " - ";
+    caption += getSystemName(_recentList[i].system);
+
+    info.dwTypeData = (char*)caption.c_str();
+    SetMenuItemInfo(_menu, id, false, &info);
+  }
+
+  for (; i < 10; i++)
+  {
+    UINT id = IDM_LOAD_RECENT_1 + i;
+    EnableMenuItem(_menu, id, MF_DISABLED);
+    
+    MENUITEMINFO info;
+    memset(&info, 0, sizeof(info));
+    info.cbSize = sizeof(info);
+    info.fMask = MIIM_TYPE | MIIM_DATA;
+    GetMenuItemInfo(_menu, id, false, &info);
+
+    info.dwTypeData = (char*)"Empty";
+    SetMenuItemInfo(_menu, id, false, &info);
+  }
+}
+
 void Application::registerMemoryRegion(void* data, size_t size)
 {
   _memoryRegions[_memoryRegionCount].data = (uint8_t*)data;
@@ -1520,6 +1577,7 @@ void Application::aboutDialog()
 void Application::loadRecentList()
 {
   _recentList.clear();
+  _logger.printf(RETRO_LOG_DEBUG, "Recent file list cleared");
 
   size_t size;
   void* data = loadFile(&_logger, getConfigPath(), &size);
@@ -1544,68 +1602,42 @@ void Application::loadRecentList()
       {
         ud->key = std::string(str, num);
       }
-      else if (event == JSONSAX_OBJECT)
+      else if (ud->key == "recent" && event == JSONSAX_ARRAY && num == 1)
       {
-        if (ud->key == "recent")
+        jsonsax_parse((char*)str, ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
         {
-          jsonsax_parse((char*)str, ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+          auto ud = (Deserialize*)udata;
+
+          if (event == JSONSAX_KEY)
           {
-            auto ud = (Deserialize*)udata;
+            ud->key = std::string(str, num);
+          }
+          else if (event == JSONSAX_STRING && ud->key == "path")
+          {
+            ud->item.path = jsonUnescape(std::string(str, num));
+          }
+          else if (event == JSONSAX_NUMBER && ud->key == "emulator")
+          {
+            ud->item.emulator = (Emulator)strtoul(str, NULL, 10);
+          }
+          else if (event == JSONSAX_NUMBER && ud->key == "system")
+          {
+            ud->item.system = (System)strtoul(str, NULL, 10);
+          }
+          else if (event == JSONSAX_OBJECT && num == 0)
+          {
+            ud->self->_recentList.push_back(ud->item);
+            ud->self->_logger.printf(RETRO_LOG_DEBUG, "Added recent file \"%s\" - %u - %u", ud->item.path.c_str(), (unsigned)ud->item.emulator, (unsigned)ud->item.system);
+          }
 
-            if (event == JSONSAX_KEY)
-            {
-              ud->key = std::string(str, num);
-            }
-            else if (event == JSONSAX_STRING && ud->key == "path")
-            {
-              ud->item.path = std::string(str, num);
-            }
-            else if (event == JSONSAX_NUMBER && ud->key == "emulator")
-            {
-              ud->item.emulator = (Emulator)strtoul(str, NULL, 10);
-            }
-            else if (event == JSONSAX_NUMBER && ud->key == "system")
-            {
-              ud->item.system = (System)strtoul(str, NULL, 10);
-            }
-            else if (event == JSONSAX_OBJECT && num == 0)
-            {
-              ud->self->_recentList.push_back(ud->item);
-            }
-
-            return 0;
-          });
-        }
+          return 0;
+        });
       }
 
       return 0;
     });
 
     free(data);
-  }
-
-  updateRecentList();
-}
-
-void Application::updateRecentList()
-{
-  HMENU file = GetSubMenu(_menu, 0);
-  HMENU recent = GetSubMenu(file, 4); // This API sucks
-
-  for (unsigned i = 0; i < 10; i++)
-  {
-    DeleteMenu(recent, IDM_LOAD_RECENT_1 + i, MF_BYCOMMAND);
-  }
-
-  for (size_t i = 0; i < _recentList.size(); i++)
-  {
-    std::string caption = _recentList[i].path;
-    caption += " - ";
-    caption += getEmulatorName(_recentList[i].emulator);
-    caption += " - ";
-    caption += getSystemName(_recentList[i].system);
-
-    InsertMenu(recent, i, MF_BYPOSITION | MF_STRING, IDM_LOAD_RECENT_1 + i, caption.c_str());
   }
 }
 
@@ -1624,7 +1656,7 @@ std::string Application::serializeRecentList()
 
     json += "{";
     json += "\"path\":\"";
-    json += _recentList[i].path;
+    json += jsonEscape(_recentList[i].path);
 
     json += "\",\"emulator\":";
     snprintf(buffer, sizeof(buffer), "%u", (unsigned)_recentList[i].emulator);
@@ -1683,6 +1715,19 @@ void Application::handle(const SDL_SysWMEvent* syswm)
 
     case IDM_LOAD_GAME:
       loadGame();
+      break;
+    
+    case IDM_LOAD_RECENT_1:
+    case IDM_LOAD_RECENT_2:
+    case IDM_LOAD_RECENT_3:
+    case IDM_LOAD_RECENT_4:
+    case IDM_LOAD_RECENT_5:
+    case IDM_LOAD_RECENT_6:
+    case IDM_LOAD_RECENT_7:
+    case IDM_LOAD_RECENT_8:
+    case IDM_LOAD_RECENT_9:
+    case IDM_LOAD_RECENT_10:
+      _fsm.loadRecent(_recentList[cmd - IDM_LOAD_RECENT_1].emulator, _recentList[cmd - IDM_LOAD_RECENT_1].path);
       break;
     
     case IDM_PAUSE_GAME:

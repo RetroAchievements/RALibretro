@@ -19,6 +19,8 @@ fsm Fsm {
       }
     }
 
+    loadRecent(Emulator core, const_string path) => loadCore(core) => loadGame(path);
+
     quit() => Quit;
   }
 

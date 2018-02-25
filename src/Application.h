@@ -87,6 +87,7 @@ protected:
   void        loadGame();
   void        enableItems(const UINT* items, size_t count, UINT enable);
   void        enableSlots();
+  void        enableRecent();
   void        registerMemoryRegion(void* data, size_t size);
   std::string getSRamPath();
   std::string getStatePath(unsigned ndx);
@@ -101,7 +102,6 @@ protected:
   void        screenshot();
   void        aboutDialog();
   void        loadRecentList();
-  void        updateRecentList();
   std::string serializeRecentList();
   void        handle(const SDL_SysWMEvent* syswm);
   void        handle(const SDL_KeyboardEvent* key);

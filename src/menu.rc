@@ -34,8 +34,20 @@ main MENU
         MENUITEM "Unload System", IDM_CLOSE_CORE
         MENUITEM SEPARATOR
         MENUITEM "Load Game", IDM_LOAD_GAME
-        //POPUP "Load Recent" {}
-        //MENUITEM SEPARATOR
+        POPUP "Load Recent"
+        {
+            MENUITEM "Empty", IDM_LOAD_RECENT_1
+            MENUITEM "Empty", IDM_LOAD_RECENT_2
+            MENUITEM "Empty", IDM_LOAD_RECENT_3
+            MENUITEM "Empty", IDM_LOAD_RECENT_4
+            MENUITEM "Empty", IDM_LOAD_RECENT_5
+            MENUITEM "Empty", IDM_LOAD_RECENT_6
+            MENUITEM "Empty", IDM_LOAD_RECENT_7
+            MENUITEM "Empty", IDM_LOAD_RECENT_8
+            MENUITEM "Empty", IDM_LOAD_RECENT_9
+            MENUITEM "Empty", IDM_LOAD_RECENT_10
+        }
+        MENUITEM SEPARATOR
         MENUITEM "Pause Game", IDM_PAUSE_GAME
         MENUITEM "Resume Game", IDM_RESUME_GAME
         MENUITEM "Turbo", IDM_TURBO_GAME
