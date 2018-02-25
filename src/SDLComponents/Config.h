@@ -17,7 +17,8 @@ public:
   virtual bool varUpdated() override;
   virtual const char* getVariable(const char* variable) override;
 
-  const char* getRootFolder() {
+  const char* getRootFolder()
+  {
     return _rootFolder.c_str();
   }
 
