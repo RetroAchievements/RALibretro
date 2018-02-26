@@ -19,8 +19,6 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Util.h"
 
-#include "SDLComponents/Logger.h"
-
 #include <stdint.h>
 #include <sys/stat.h>
 #include <errno.h>

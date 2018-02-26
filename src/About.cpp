@@ -19,7 +19,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "About.h"
 
-#include "SDLComponents/Dialog.h"
+#include "components/Dialog.h"
 
 void aboutDialog(const char* log)
 {

@@ -19,7 +19,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "SDLComponents/Logger.h"
+#include "components/Logger.h"
 
 #include <stddef.h>
 #include <string>

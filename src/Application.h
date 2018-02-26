@@ -27,12 +27,12 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "RA_Integration/RA_Interface.h"
 
-#include "SDLComponents/Allocator.h"
-#include "SDLComponents/Audio.h"
-#include "SDLComponents/Config.h"
-#include "SDLComponents/Input.h"
-#include "SDLComponents/Logger.h"
-#include "SDLComponents/Video.h"
+#include "components/Allocator.h"
+#include "components/Audio.h"
+#include "components/Config.h"
+#include "components/Input.h"
+#include "components/Logger.h"
+#include "components/Video.h"
 
 #include "Emulator.h"
 #include "KeyBinds.h"

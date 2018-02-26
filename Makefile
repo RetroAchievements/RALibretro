@@ -25,12 +25,12 @@ OBJS=\
 	src/libretro/Core.o \
 	src/RA_Integration/RA_Implementation.o \
 	src/RA_Integration/RA_Interface.o \
-	src/SDLComponents/Audio.o \
-	src/SDLComponents/Config.o \
-	src/SDLComponents/Dialog.o \
-	src/SDLComponents/Input.o \
-	src/SDLComponents/Logger.o \
-	src/SDLComponents/Video.o \
+	src/components/Audio.o \
+	src/components/Config.o \
+	src/components/Dialog.o \
+	src/components/Input.o \
+	src/components/Logger.o \
+	src/components/Video.o \
 	src/speex/resample.o \
 	src/About.o \
 	src/Application.o \
