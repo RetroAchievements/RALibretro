@@ -18,6 +18,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "Application.h"
+#include "Git.h"
 
 #include <SDL_syswm.h>
 
@@ -97,6 +98,7 @@ bool Application::init(const char* title, int width, int height)
   }
 
   inited = kLoggerInited;
+  _logger.printf(RETRO_LOG_INFO, "RALibretro version %s starting", git::getFullHash());
 
   if (!_allocator.init(&_logger))
   {
@@ -223,7 +225,7 @@ bool Application::init(const char* title, int width, int height)
     _menu = LoadMenu(NULL, "MAIN");
     SetMenu(g_mainWindow, _menu);
 
-    RA_Init(g_mainWindow, RA_Libretro, VERSION);
+    RA_Init(g_mainWindow, RA_Libretro, git::getMiniHash());
     RA_InitShared();
     RA_InitDirectX();
     RA_AttemptLogin(true);

@@ -4,7 +4,7 @@ CXX=g++
 RC=windres
 INCLUDES=-Isrc -I../RA_Integration/rapidjson/include
 DEFINES=-DOUTSIDE_SPEEX -DRANDOM_PREFIX=speex -DEXPORT= -D_USE_SSE2 -DFIXED_POINT
-CCFLAGS=-Wall -m32 $(INCLUDES) $(DEFINES) `sdl2-config --cflags` -DVERSION=\"1.0\"
+CCFLAGS=-Wall -m32 $(INCLUDES) $(DEFINES) `sdl2-config --cflags`
 CXXFLAGS=$(CCFLAGS) -std=c++11
 LDFLAGS=-m32
 
@@ -35,6 +35,7 @@ OBJS=\
 	src/About.o \
 	src/Application.o \
 	src/Fsm.o \
+	src/Git.o \
 	src/KeyBinds.o \
 	src/main.o \
 	src/menu.res \
@@ -54,7 +55,10 @@ all: bin/RALibretro
 bin/RALibretro: $(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LIBS)
 
+src/Git.cpp: etc/Git.cpp.template FORCE
+	cat $< | sed s/GITFULLHASH/`git rev-parse HEAD | tr -d "\n"`/g | sed s/GITMINIHASH/`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`/g > $@
+
 clean:
 	rm -f bin/RALibretro $(OBJS)
 
-.PHONY: clean
+.PHONY: clean FORCE
