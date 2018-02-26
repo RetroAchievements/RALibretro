@@ -839,7 +839,10 @@ void Application::unloadCore()
 
 void Application::resetGame()
 {
-  _core.resetGame();
+  if (isGameActive())
+  {
+    _core.resetGame();
+  }
 }
 
 bool Application::hardcore()
