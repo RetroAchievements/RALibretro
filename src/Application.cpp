@@ -506,6 +506,23 @@ void Application::updateMenu()
 
   enableSlots();
   enableRecent();
+
+  if (_fsm.currentState() == Fsm::State::CoreLoaded)
+  {
+    char msg[256];
+    snprintf(msg, sizeof(msg), "%s %s", _core.getSystemInfo()->library_name, _core.getSystemInfo()->library_version);
+    RA_UpdateAppTitle(msg);
+  }
+  else if (isGameActive())
+  {
+    char msg[256];
+    snprintf(msg, sizeof(msg), "%s %s - %s", _core.getSystemInfo()->library_name, _core.getSystemInfo()->library_version, getSystemName(_system).c_str());
+    RA_UpdateAppTitle(msg);
+  }
+  else
+  {
+    RA_UpdateAppTitle("");
+  }
 }
 
 bool Application::loadGame(const std::string& path)
