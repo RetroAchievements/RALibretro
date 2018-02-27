@@ -1,1 +1,10 @@
+Makefile.cross
+bin/*
+src/dynlib/*.o
+src/libretro/*.o
+src/RA_Integration/*.o
+src/components/*.o
+src/speex/*.o
+src/*.o
 src/Git.cpp
+src/menu.res
