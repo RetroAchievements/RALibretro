@@ -1096,9 +1096,12 @@ void Application::signalRomLoadPsx(const std::string& path)
 
 void Application::signalRomLoaded(const std::string& path, void* rom, size_t size)
 {
+  bool must_free = false;
+
   if (_system != System::kPlayStation1 && rom == NULL)
   {
     rom = loadFile(&_logger, path, &size);
+    must_free = true;
   }
 
   switch (_system)
@@ -1130,6 +1133,11 @@ void Application::signalRomLoaded(const std::string& path, void* rom, size_t siz
   case System::kPlayStation1:
     signalRomLoadPsx(path);
     break;
+  }
+
+  if (must_free)
+  {
+    free(rom);
   }
 }
 
