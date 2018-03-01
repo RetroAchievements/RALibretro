@@ -118,12 +118,7 @@ bool Application::init(const char* title, int width, int height)
   inited = kSdlInited;
 
   // Setup window
-#ifdef CROSS_BUILD
-  // SDL_WINDOW_OPENGL crashes when run with wine
   _window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_RESIZABLE);
-#else
-  _window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-#endif
 
   if (_window == NULL)
   {
@@ -132,6 +127,39 @@ bool Application::init(const char* title, int width, int height)
   }
 
   inited = kWindowInited;
+
+  {
+    int numdrivers = SDL_GetNumRenderDrivers();
+    _logger.printf(RETRO_LOG_INFO, "Render driver count: %d", numdrivers);
+    
+    for (int i = 0; i < numdrivers; i++)
+    {
+      SDL_RendererInfo drinfo;
+      SDL_GetRenderDriverInfo(i, &drinfo);
+      
+      _logger.printf(RETRO_LOG_INFO, "Driver %d name: %s", i, drinfo.name);
+      
+      if (drinfo.flags & SDL_RENDERER_SOFTWARE)
+      {
+        _logger.printf(RETRO_LOG_INFO, "  the renderer is a software fallback");
+      }
+      
+      if (drinfo.flags & SDL_RENDERER_ACCELERATED)
+      {
+        _logger.printf(RETRO_LOG_INFO, "  the renderer uses hardware acceleration");
+      }
+      
+      if (drinfo.flags & SDL_RENDERER_PRESENTVSYNC)
+      {
+        _logger.printf(RETRO_LOG_INFO, "  present is synchronized with the refresh rate");
+      }
+      
+      if (drinfo.flags & SDL_RENDERER_TARGETTEXTURE)
+      {
+        _logger.printf(RETRO_LOG_INFO, "  the renderer supports rendering to texture");
+      }
+    }
+  }
 
   _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
@@ -1361,8 +1389,7 @@ std::string Application::getCoreConfigPath(Emulator emulator)
 
 std::string Application::getScreenshotPath()
 {
-  std::string path = _config.getRootFolder();
-  path += "Screenshots\\";
+  std::string path = _config.getScreenshotsFolder();
 
   char fname[128];
   time_t t = time(NULL);

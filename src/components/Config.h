@@ -40,6 +40,11 @@ public:
   {
     return _rootFolder.c_str();
   }
+  
+  const char* getScreenshotsFolder()
+  {
+    return _screenshotsFolder.c_str();
+  }
 
   std::string serialize();
   void deserialize(const char* json);
@@ -71,6 +76,7 @@ protected:
   std::string _assetsFolder;
   std::string _saveFolder;
   std::string _systemFolder;
+  std::string _screenshotsFolder;
 
   std::vector<Variable> _variables;
 

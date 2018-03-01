@@ -48,11 +48,13 @@ bool Config::init(libretro::LoggerComponent* logger)
   _assetsFolder = _rootFolder + "Assets\\";
   _saveFolder = _rootFolder + "Saves\\";
   _systemFolder = _rootFolder + "System\\";
+  _screenshotsFolder = _rootFolder + "Screenshots\\";
 
-  logger->printf(RETRO_LOG_INFO, "Root folder:   %s", _rootFolder.c_str());
-  logger->printf(RETRO_LOG_INFO, "Assets folder: %s", _assetsFolder.c_str());
-  logger->printf(RETRO_LOG_INFO, "Save folder:   %s", _saveFolder.c_str());
-  logger->printf(RETRO_LOG_INFO, "System folder: %s", _systemFolder.c_str());
+  logger->printf(RETRO_LOG_INFO, "Root folder:        %s", _rootFolder.c_str());
+  logger->printf(RETRO_LOG_INFO, "Assets folder:      %s", _assetsFolder.c_str());
+  logger->printf(RETRO_LOG_INFO, "Save folder:        %s", _saveFolder.c_str());
+  logger->printf(RETRO_LOG_INFO, "System folder:      %s", _systemFolder.c_str());
+  logger->printf(RETRO_LOG_INFO, "Screenshots folder: %s", _screenshotsFolder.c_str());
 
   // TODO This should be done in main.cpp as soon as possible
   SetCurrentDirectory(_rootFolder.c_str());
