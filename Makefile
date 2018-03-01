@@ -17,7 +17,7 @@ else
 endif
 
 # main
-LIBS=`sdl2-config --libs` -lopengl32 -lwinhttp
+LIBS=`sdl2-config --static-libs` -lopengl32 -lwinhttp
 OBJS=\
 	src/dynlib/dynlib.o \
 	src/jsonsax/jsonsax.o \
@@ -54,6 +54,8 @@ all: bin/RALibretro
 
 bin/RALibretro: $(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LIBS)
+	rm bin/RALibretro-`date +%Y-%m-%d | tr -d "\n"`-`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`.zip
+	zip -9 bin/RALibretro-`date +%Y-%m-%d | tr -d "\n"`-`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`.zip bin/RALibretro.exe
 
 src/Git.cpp: etc/Git.cpp.template FORCE
 	cat $< | sed s/GITFULLHASH/`git rev-parse HEAD | tr -d "\n"`/g | sed s/GITMINIHASH/`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`/g > $@
