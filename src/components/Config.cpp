@@ -26,6 +26,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <windows.h>
 
 #include <string.h>
+#include <sys/stat.h>
 
 bool Config::init(libretro::LoggerComponent* logger)
 {
@@ -49,6 +50,11 @@ bool Config::init(libretro::LoggerComponent* logger)
   _saveFolder = _rootFolder + "Saves\\";
   _systemFolder = _rootFolder + "System\\";
   _screenshotsFolder = _rootFolder + "Screenshots\\";
+
+  mkdir(_assetsFolder.c_str());
+  mkdir(_saveFolder.c_str());
+  mkdir(_systemFolder.c_str());
+  mkdir(_screenshotsFolder.c_str());
 
   logger->printf(RETRO_LOG_INFO, "Root folder:        %s", _rootFolder.c_str());
   logger->printf(RETRO_LOG_INFO, "Assets folder:      %s", _assetsFolder.c_str());
