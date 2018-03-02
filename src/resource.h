@@ -70,14 +70,12 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #define IDM_LOAD_RECENT_9                       53008
 #define IDM_LOAD_RECENT_10                      53009
 
-#define IDM_LOAD_GAME                           40001
-#define IDM_RESET_GAME                          40002
-#define IDM_EXIT                                40003
-#define IDM_CORE                                40004
-#define IDM_INPUT                               40005
-#define IDM_ABOUT                               40006
-#define IDM_CLOSE_GAME                          40007
-#define IDM_PAUSE_GAME                          40008
-#define IDM_RESUME_GAME                         40009
-#define IDM_TURBO_GAME                          40010
-#define IDM_CLOSE_CORE                          40011
+#define IDM_LOAD_GAME                           40000
+#define IDM_RESET_GAME                          40001
+#define IDM_EXIT                                40002
+#define IDM_CORE                                40003
+#define IDM_INPUT                               40004
+#define IDM_ABOUT                               40005
+#define IDM_PAUSE_GAME                          40006
+#define IDM_RESUME_GAME                         40007
+#define IDM_TURBO_GAME                          40008

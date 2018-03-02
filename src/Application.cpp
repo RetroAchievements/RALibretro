@@ -118,7 +118,7 @@ bool Application::init(const char* title, int width, int height)
   inited = kSdlInited;
 
   // Setup window
-  _window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_RESIZABLE);
+  _window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
   if (_window == NULL)
   {
@@ -397,6 +397,10 @@ void Application::run()
         RA_UpdateRenderOverlay(hdc, &input, (t1 - t0) / 1000.0f, &size, false, _fsm.currentState() == Fsm::State::GamePaused);
         ReleaseDC(g_mainWindow, hdc);
       }
+      else
+      {
+        _logger.printf(RETRO_LOG_ERROR, "GetDC(g_mainWindow) returned NULL");
+      }
 
       t0 = t1;
     }
@@ -465,9 +469,8 @@ void Application::updateMenu()
     IDM_SYSTEM_HANDY, IDM_SYSTEM_BEETLESGX, IDM_SYSTEM_GAMBATTE, IDM_SYSTEM_MGBA, IDM_SYSTEM_MEDNAFENPSX,
     IDM_SYSTEM_MEDNAFENNGP,
 
-    IDM_CLOSE_CORE,
     IDM_LOAD_GAME,
-    IDM_PAUSE_GAME, IDM_RESUME_GAME, IDM_RESET_GAME, IDM_CLOSE_GAME,
+    IDM_PAUSE_GAME, IDM_RESUME_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
     IDM_CORE, IDM_INPUT, IDM_TURBO_GAME, IDM_ABOUT
@@ -484,12 +487,20 @@ void Application::updateMenu()
 
   static const UINT core_loaded_items[] =
   {
-    IDM_CLOSE_CORE, IDM_LOAD_GAME, IDM_EXIT, IDM_CORE, IDM_INPUT, IDM_ABOUT
+    IDM_SYSTEM_STELLA, IDM_SYSTEM_SNES9X, IDM_SYSTEM_PICODRIVE, IDM_SYSTEM_GENESISPLUSGX, IDM_SYSTEM_FCEUMM,
+    IDM_SYSTEM_HANDY, IDM_SYSTEM_BEETLESGX, IDM_SYSTEM_GAMBATTE, IDM_SYSTEM_MGBA, IDM_SYSTEM_MEDNAFENPSX,
+    IDM_SYSTEM_MEDNAFENNGP,
+
+    IDM_LOAD_GAME, IDM_EXIT, IDM_CORE, IDM_INPUT, IDM_ABOUT
   };
 
   static const UINT game_running_items[] =
   {
-    IDM_PAUSE_GAME, IDM_RESET_GAME, IDM_CLOSE_GAME,
+    IDM_SYSTEM_STELLA, IDM_SYSTEM_SNES9X, IDM_SYSTEM_PICODRIVE, IDM_SYSTEM_GENESISPLUSGX, IDM_SYSTEM_FCEUMM,
+    IDM_SYSTEM_HANDY, IDM_SYSTEM_BEETLESGX, IDM_SYSTEM_GAMBATTE, IDM_SYSTEM_MGBA, IDM_SYSTEM_MEDNAFENPSX,
+    IDM_SYSTEM_MEDNAFENNGP,
+
+    IDM_LOAD_GAME, IDM_PAUSE_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
     IDM_CORE, IDM_INPUT, IDM_TURBO_GAME, IDM_ABOUT
@@ -497,7 +508,11 @@ void Application::updateMenu()
 
   static const UINT game_paused_items[] =
   {
-    IDM_RESUME_GAME, IDM_RESET_GAME, IDM_CLOSE_GAME,
+    IDM_SYSTEM_STELLA, IDM_SYSTEM_SNES9X, IDM_SYSTEM_PICODRIVE, IDM_SYSTEM_GENESISPLUSGX, IDM_SYSTEM_FCEUMM,
+    IDM_SYSTEM_HANDY, IDM_SYSTEM_BEETLESGX, IDM_SYSTEM_GAMBATTE, IDM_SYSTEM_MGBA, IDM_SYSTEM_MEDNAFENPSX,
+    IDM_SYSTEM_MEDNAFENNGP,
+
+    IDM_LOAD_GAME, IDM_RESUME_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
     IDM_CORE, IDM_INPUT, IDM_TURBO_GAME, IDM_ABOUT
@@ -505,7 +520,11 @@ void Application::updateMenu()
 
   static const UINT game_turbo_items[] =
   {
-    IDM_PAUSE_GAME, IDM_RESET_GAME, IDM_CLOSE_GAME,
+    IDM_SYSTEM_STELLA, IDM_SYSTEM_SNES9X, IDM_SYSTEM_PICODRIVE, IDM_SYSTEM_GENESISPLUSGX, IDM_SYSTEM_FCEUMM,
+    IDM_SYSTEM_HANDY, IDM_SYSTEM_BEETLESGX, IDM_SYSTEM_GAMBATTE, IDM_SYSTEM_MGBA, IDM_SYSTEM_MEDNAFENPSX,
+    IDM_SYSTEM_MEDNAFENNGP,
+
+    IDM_LOAD_GAME, IDM_PAUSE_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
     IDM_CORE, IDM_INPUT, IDM_TURBO_GAME, IDM_ABOUT
@@ -1273,13 +1292,12 @@ void Application::enableSlots()
 
 void Application::enableRecent()
 {
-  UINT enabled = _fsm.currentState() == Fsm::State::Start ? MF_ENABLED : MF_DISABLED;
   size_t i = 0;
 
   for (; i < _recentList.size(); i++)
   {
     UINT id = IDM_LOAD_RECENT_1 + i;
-    EnableMenuItem(_menu, id, enabled);
+    EnableMenuItem(_menu, id, MF_ENABLED);
     
     MENUITEMINFO info;
     memset(&info, 0, sizeof(info));
@@ -1785,10 +1803,6 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       
       break;
     
-    case IDM_CLOSE_CORE:
-      _fsm.unloadCore();
-      break;
-
     case IDM_LOAD_GAME:
       loadGame();
       break;
@@ -1822,10 +1836,6 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       _fsm.resetGame();
       break;
     
-    case IDM_CLOSE_GAME:
-      _fsm.unloadGame();
-      break;
-
     case IDM_SAVE_STATE_1:
     case IDM_SAVE_STATE_2:
     case IDM_SAVE_STATE_3:

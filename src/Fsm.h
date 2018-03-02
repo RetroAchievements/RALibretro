@@ -27,7 +27,7 @@ public:
   State currentState() const { return __state; }
 
 #ifdef DEBUG_FSM
-  const char* getStateName(State state) const;
+  const char* stateName(State state) const;
 #endif
 
   bool loadCore(Emulator core);
