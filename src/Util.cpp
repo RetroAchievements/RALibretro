@@ -135,16 +135,16 @@ std::string jsonUnescape(const std::string& str)
   {
     if (str[i] == '\\' && (i + 1) < str.length())
     {
-      switch (str[i + 1])
+      switch (str[++i])
       {
       case '"':  res += "\""; break;
       case '\\': res += "\\"; break;
       case '/':  res += "/"; break;
-      case 'b': res += "\b"; break;
-      case 'f': res += "\f"; break;
-      case 'n': res += "\n"; break;
-      case 'r': res += "\r"; break;
-      case 't': res += "\t"; break;
+      case 'b':  res += "\b"; break;
+      case 'f':  res += "\f"; break;
+      case 'n':  res += "\n"; break;
+      case 'r':  res += "\r"; break;
+      case 't':  res += "\t"; break;
       }
     }
     else
