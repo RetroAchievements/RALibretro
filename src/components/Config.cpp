@@ -30,6 +30,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 bool Config::init(libretro::LoggerComponent* logger)
 {
+  _logger = logger;
+
   HMODULE hModule = GetModuleHandleW(NULL);
   char path[MAX_PATH + 1];
   DWORD len = GetModuleFileNameA(hModule, path, sizeof(path) / sizeof(path[0]) - 1);
@@ -56,11 +58,11 @@ bool Config::init(libretro::LoggerComponent* logger)
   mkdir(_systemFolder.c_str());
   mkdir(_screenshotsFolder.c_str());
 
-  logger->printf(RETRO_LOG_INFO, "Root folder:        %s", _rootFolder.c_str());
-  logger->printf(RETRO_LOG_INFO, "Assets folder:      %s", _assetsFolder.c_str());
-  logger->printf(RETRO_LOG_INFO, "Save folder:        %s", _saveFolder.c_str());
-  logger->printf(RETRO_LOG_INFO, "System folder:      %s", _systemFolder.c_str());
-  logger->printf(RETRO_LOG_INFO, "Screenshots folder: %s", _screenshotsFolder.c_str());
+  _logger->printf(RETRO_LOG_INFO, "Root folder:        %s", _rootFolder.c_str());
+  _logger->printf(RETRO_LOG_INFO, "Assets folder:      %s", _assetsFolder.c_str());
+  _logger->printf(RETRO_LOG_INFO, "Save folder:        %s", _saveFolder.c_str());
+  _logger->printf(RETRO_LOG_INFO, "System folder:      %s", _systemFolder.c_str());
+  _logger->printf(RETRO_LOG_INFO, "Screenshots folder: %s", _screenshotsFolder.c_str());
 
   // TODO This should be done in main.cpp as soon as possible
   SetCurrentDirectory(_rootFolder.c_str());
@@ -144,10 +146,13 @@ const char* Config::getVariable(const char* variable)
 
     if (var._key == variable)
     {
-      return var._options[var._selected].c_str();
+      const char* value = var._options[var._selected].c_str();
+      _logger->printf(RETRO_LOG_INFO, "Variable %s is \"%s\"", variable, value);
+      return value;
     }
   }
 
+  _logger->printf(RETRO_LOG_INFO, "Variable %s is not set", variable);
   return NULL;
 }
 

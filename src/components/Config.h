@@ -72,6 +72,8 @@ protected:
     std::vector<std::string> _options;
   };
 
+  libretro::LoggerComponent* _logger;
+
   std::string _rootFolder;
   std::string _assetsFolder;
   std::string _saveFolder;
