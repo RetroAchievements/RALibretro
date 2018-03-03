@@ -33,6 +33,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #define IDM_SYSTEM_MGBA                         50008
 #define IDM_SYSTEM_MEDNAFENPSX                  50009
 #define IDM_SYSTEM_MEDNAFENNGP                  50010
+#define IDM_SYSTEM_MEDNAFENVB                   50011
 
 // Keep those in increasing order
 #define IDM_SAVE_STATE_1                        51000

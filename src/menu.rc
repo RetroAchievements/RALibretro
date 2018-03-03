@@ -49,6 +49,7 @@ main MENU
             MENUITEM "Nintendo (FCEUmm)", IDM_SYSTEM_FCEUMM
             MENUITEM "PC Engine (Beetle SGX)", IDM_SYSTEM_BEETLESGX
             MENUITEM "Super Nintendo (Snes9x)", IDM_SYSTEM_SNES9X
+            MENUITEM "Virtual Boy (Mednafen VB)", IDM_SYSTEM_MEDNAFENVB
         }
         MENUITEM SEPARATOR
         MENUITEM "Load Game", IDM_LOAD_GAME

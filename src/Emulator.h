@@ -38,7 +38,8 @@ enum class Emulator
   kGambatte,
   kMGBA,
   kMednafenPsx,
-  kMednafenNgp
+  kMednafenNgp,
+  kMednafenVb
 };
 
 enum class System
@@ -54,7 +55,8 @@ enum class System
   kGameBoyColor   = GBC,
   kGameBoyAdvance = GBA,
   kPlayStation1   = PlayStation,
-  kNeoGeoPocket   = NeoGeo
+  kNeoGeoPocket   = NeoGeo,
+  kVirtualBoy     = VirtualBoy
 };
 
 std::string getEmulatorName(Emulator emulator);

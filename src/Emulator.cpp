@@ -35,6 +35,7 @@ std::string getEmulatorName(Emulator emulator)
   case Emulator::kMGBA:          return "mGBA";
   case Emulator::kMednafenPsx:   return "Mednafen PSX";
   case Emulator::kMednafenNgp:   return "Mednafen NGP";
+  case Emulator::kMednafenVb:    return "Mednafen VB";
   }
 
   return "";
@@ -56,6 +57,7 @@ std::string getEmulatorFileName(Emulator emulator)
   case Emulator::kMGBA:          return "mgba_libretro";
   case Emulator::kMednafenPsx:   return "mednafen_psx_libretro";
   case Emulator::kMednafenNgp:   return "mednafen_ngp_libretro";
+  case Emulator::kMednafenVb:    return "mednafen_vb_libretro";
   }
 
   return "";
@@ -77,6 +79,7 @@ std::string getSystemName(System system)
   case System::kGameBoyAdvance: return "Game Boy Advance";
   case System::kPlayStation1:   return "PlayStation";
   case System::kNeoGeoPocket:   return "Neo Geo Pocket";
+  case System::kVirtualBoy:     return "Virtual Boy";
   }
 
   return "";
