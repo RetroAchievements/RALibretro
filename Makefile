@@ -34,6 +34,7 @@ OBJS=\
 	src/speex/resample.o \
 	src/About.o \
 	src/Application.o \
+	src/Emulator.o \
 	src/Fsm.o \
 	src/Git.o \
 	src/KeyBinds.o \
@@ -54,8 +55,7 @@ all: bin/RALibretro
 
 bin/RALibretro: $(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LIBS)
-	rm -f bin/RALibretro-`date +%Y-%m-%d | tr -d "\n"`-`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`.zip
-	zip -9 bin/RALibretro-`date +%Y-%m-%d | tr -d "\n"`-`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`.zip bin/RALibretro.exe
+	zip -9 bin/RALibretro-`date +%Y-%m-%d-%H-%M-%S | tr -d "\n"`-`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`.zip bin/RALibretro.exe
 
 src/Git.cpp: etc/Git.cpp.template FORCE
 	cat $< | sed s/GITFULLHASH/`git rev-parse HEAD | tr -d "\n"`/g | sed s/GITMINIHASH/`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`/g > $@
