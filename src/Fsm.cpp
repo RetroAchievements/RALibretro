@@ -63,19 +63,21 @@ bool Fsm::loadCore(Emulator core) {
         return false;
       }
 
+      bool __ok = unloadCore() &&
+                  loadCore(core);
 
-      if (!ctx.loadCore(core)) {
-        return false;
+      if (__ok) {
+        after(__state);
+        after();
+
       }
-    
-      __state = State::CoreLoaded;
-      after(__state);
-      after();
-
+      else {
 #ifdef DEBUG_FSM
-      ctx.printf("FSM %s:%u Switched to %s", __FUNCTION__, __LINE__, stateName(State::CoreLoaded));
+        ctx.printf("FSM %s:%u Failed to switch to %s", __FUNCTION__, __LINE__, stateName(State::CoreLoaded));
 #endif
-      return true;
+      }
+
+      return __ok;
     }
     break;
 

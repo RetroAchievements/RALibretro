@@ -46,11 +46,7 @@ fsm Fsm {
   Quit {}
 
   CoreLoaded {
-    loadCore(Emulator core) => CoreLoaded {
-      if (!ctx.loadCore(core)) {
-        forbid;
-      }
-    }
+    loadCore(Emulator core) => unloadCore() => loadCore(core);
 
     unloadCore() => Start {
       ctx.unloadCore();
