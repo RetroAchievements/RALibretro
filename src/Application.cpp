@@ -1133,12 +1133,9 @@ void Application::signalRomLoaded(const std::string& path, void* rom, size_t siz
   case System::kNeoGeoPocket:
   case System::kMasterSystem:
   case System::kMegaDrive:
+  case System::kSuperNintendo:
   default:
     RA_OnLoadNewRom((BYTE*)rom, size);
-    break;
-
-  case System::kSuperNintendo:
-    signalRomLoadedWithPadding(rom, size, 8 * 1024 * 1024, 0);
     break;
 
   case System::kNintendo:
