@@ -66,22 +66,6 @@ public:
   bool isGameActive();
 
 protected:
-  enum class System
-  {
-    kAtari2600      = VCS,
-    kAtariLynx      = Lynx,
-    kMasterSystem   = MasterSystem,
-    kMegaDrive      = MegaDrive,
-    kNintendo       = NES,
-    kPCEngine       = PCEngine,
-    kSuperNintendo  = SNES,
-    kGameBoy        = GB,
-    kGameBoyColor   = GBC,
-    kGameBoyAdvance = GBA,
-    kPlayStation1   = PlayStation,
-    kNeoGeoPocket   = NeoGeo
-  };
-
   struct MemoryRegion
   {
     uint8_t* data;
@@ -99,10 +83,6 @@ protected:
   static void s_audioCallback(void* udata, Uint8* stream, int len);
 
   // Helpers
-  void        signalRomLoadedWithPadding(void* rom, size_t size, size_t max_size, int fill);
-  void        signalRomLoadedNes(void* rom, size_t size);
-  void        signalRomLoadPsx(const std::string& path);
-  void        signalRomLoaded(const std::string& path, void* rom, size_t size);
   void        loadGame();
   void        enableItems(const UINT* items, size_t count, UINT enable);
   void        enableSlots();
@@ -113,9 +93,6 @@ protected:
   std::string getConfigPath();
   std::string getCoreConfigPath(Emulator emulator);
   std::string getScreenshotPath();
-  std::string getCoreFileName(Emulator emulator);
-  std::string getEmulatorName(Emulator emulator);
-  std::string getSystemName(System system);
   void        saveState(unsigned ndx);
   void        loadState(unsigned ndx);
   void        screenshot();

@@ -19,6 +19,12 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <string>
+
+#include "RA_Integration/RA_Interface.h"
+
+#include "Util.h"
+
 enum class Emulator
 {
   kNone,
@@ -34,3 +40,25 @@ enum class Emulator
   kMednafenPsx,
   kMednafenNgp
 };
+
+enum class System
+{
+  kAtari2600      = VCS,
+  kAtariLynx      = Lynx,
+  kMasterSystem   = MasterSystem,
+  kMegaDrive      = MegaDrive,
+  kNintendo       = NES,
+  kPCEngine       = PCEngine,
+  kSuperNintendo  = SNES,
+  kGameBoy        = GB,
+  kGameBoyColor   = GBC,
+  kGameBoyAdvance = GBA,
+  kPlayStation1   = PlayStation,
+  kNeoGeoPocket   = NeoGeo
+};
+
+std::string getEmulatorName(Emulator emulator);
+std::string getEmulatorFileName(Emulator emulator);
+std::string getSystemName(System system);
+
+void romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size);
