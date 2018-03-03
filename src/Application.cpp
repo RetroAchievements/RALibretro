@@ -457,6 +457,46 @@ bool Application::loadCore(Emulator emulator)
     return false;
   }
 
+  size_t size;
+  void* data = loadFile(&_logger, getCoreConfigPath(emulator), &size);
+
+  if (data != NULL)
+  {
+    struct Deserialize
+    {
+      Application* self;
+      std::string key;
+    };
+
+    Deserialize ud;
+    ud.self = this;
+
+    jsonsax_parse( (char*)data, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+    {
+      auto ud = (Deserialize*)udata;
+
+      if (event == JSONSAX_KEY)
+      {
+        ud->key = std::string(str, num);
+      }
+      else if (event == JSONSAX_OBJECT)
+      {
+        if (ud->key == "core")
+        {
+          ud->self->_config.deserialize(str);
+        }
+        else if (ud->key == "input")
+        {
+          ud->self->_input.deserialize(str);
+        }
+      }
+
+      return 0;
+    });
+
+    free(data);
+  }
+
   _emulator = emulator;
   return true;
 }
@@ -849,45 +889,6 @@ moved_recent_item:
     {
       _validSlots |= 1 << ndx;
     }
-  }
-
-  data = loadFile(&_logger, getCoreConfigPath(_emulator), &size);
-
-  if (data != NULL)
-  {
-    struct Deserialize
-    {
-      Application* self;
-      std::string key;
-    };
-
-    Deserialize ud;
-    ud.self = this;
-
-    jsonsax_parse( (char*)data, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
-    {
-      auto ud = (Deserialize*)udata;
-
-      if (event == JSONSAX_KEY)
-      {
-        ud->key = std::string(str, num);
-      }
-      else if (event == JSONSAX_OBJECT)
-      {
-        if (ud->key == "core")
-        {
-          ud->self->_config.deserialize(str);
-        }
-        else if (ud->key == "input")
-        {
-          ud->self->_input.deserialize(str);
-        }
-      }
-
-      return 0;
-    });
-
-    free(data);
   }
 
   _input.autoAssign();
