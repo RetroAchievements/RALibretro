@@ -55,6 +55,7 @@ all: bin/RALibretro
 
 bin/RALibretro: $(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LIBS)
+	rm -f bin/RALibretro-*.zip
 	zip -9 bin/RALibretro-`date +%Y-%m-%d-%H-%M-%S | tr -d "\n"`-`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`.zip bin/RALibretro.exe
 
 src/Git.cpp: etc/Git.cpp.template FORCE
