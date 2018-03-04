@@ -605,7 +605,7 @@ void Application::updateMenu()
   else if (isGameActive())
   {
     char msg[256];
-    snprintf(msg, sizeof(msg), "%s %s - %s", _core.getSystemInfo()->library_name, _core.getSystemInfo()->library_version, getSystemName(_system).c_str());
+    snprintf(msg, sizeof(msg), "%s %s - %s", _core.getSystemInfo()->library_name, _core.getSystemInfo()->library_version, getSystemName(_system));
     RA_UpdateAppTitle(msg);
   }
   else
@@ -967,72 +967,6 @@ void Application::s_audioCallback(void* udata, Uint8* stream, int len)
 
 void Application::loadGame()
 {
-  char filter[128];
-  const char* debug = filter;
-
-  {
-    char* aux = filter;
-    const char* end = filter + sizeof(filter);
-
-    const struct retro_system_info* info = _core.getSystemInfo();
-    const char* ext = info->valid_extensions;
-
-    aux += sprintf(aux, "All Files") + 1;
-    aux += sprintf(aux, "*.*") + 1;
-    aux += sprintf(aux, "Supported Files") + 1;
-    debug = aux;
-
-    if (_emulator != Emulator::kMGBA)
-    {
-      for (;;)
-      {
-        if (aux < end)
-        {
-          *aux++ = '*';
-        }
-
-        if (aux < end)
-        {
-          *aux++ = '.';
-        }
-
-        while (aux < end && *ext != '|' && *ext != 0)
-        {
-          *aux++ = toupper(*ext++);
-        }
-
-        if (*ext == 0)
-        {
-          break;
-        }
-
-        ext++;
-
-        if (aux < end)
-        {
-          *aux++ = ';';
-        }
-      }
-
-      if (aux < end)
-      {
-        *aux++ = 0;
-      }
-
-      if (aux < end)
-      {
-        *aux++ = 0;
-      }
-    }
-    else
-    {
-      strcpy(aux, "*.GBA");
-    }
-  }
-
-  filter[sizeof(filter) - 1] = 0;
-  _logger.printf(RETRO_LOG_DEBUG, "Using filter \"%s\"", debug);
-
   char game_path[1024];
   game_path[0] = 0;
 
@@ -1041,7 +975,7 @@ void Application::loadGame()
   cfg.lStructSize = sizeof(cfg);
   cfg.hwndOwner = g_mainWindow;
   cfg.hInstance = NULL;
-  cfg.lpstrFilter = filter;
+  cfg.lpstrFilter = getEmulatorExtensions(_emulator);
   cfg.lpstrCustomFilter = NULL;
   cfg.nMaxCustFilter = 0;
   cfg.nFilterIndex = 2;

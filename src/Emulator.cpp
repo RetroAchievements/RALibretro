@@ -19,7 +19,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Emulator.h"
 
-std::string getEmulatorName(Emulator emulator)
+const char* getEmulatorName(Emulator emulator)
 {
   switch (emulator)
   {
@@ -42,7 +42,7 @@ std::string getEmulatorName(Emulator emulator)
   return "?";
 }
 
-std::string getEmulatorFileName(Emulator emulator)
+const char* getEmulatorFileName(Emulator emulator)
 {
   switch (emulator)
   {
@@ -65,7 +65,34 @@ std::string getEmulatorFileName(Emulator emulator)
   return "?";
 }
 
-std::string getSystemName(System system)
+const char* getEmulatorExtensions(Emulator emulator)
+{
+#define EXTPREFIX "All Files\0*.*\0Supported Files\0"
+
+  switch (emulator)
+  {
+  case Emulator::kNone:          break;
+  case Emulator::kStella:        return EXTPREFIX "*.A26;*.BIN\0";                            // a26|bin
+  case Emulator::kSnes9x:        return EXTPREFIX "*.SMC;*.SFC;*.SWC;*.FIG\0";                // smc|sfc|swc|fig
+  case Emulator::kPicoDrive:     return EXTPREFIX "*.BIN;*.GEN;*.SMD;*.MD;*.SMS\0";           // bin|gen|smd|md|32x|cue|iso|sms
+  case Emulator::kGenesisPlusGx: return EXTPREFIX "*.BIN;*.GEN;*.SMD;*.MD;*.SMS;*.GG;*.SG\0"; // mdx|md|smd|gen|bin|cue|iso|chd|sms|gg|sg
+  case Emulator::kFceumm:        return EXTPREFIX "*.FDS;*.NES;*.UNF;*.UNIF\0";               // fds|nes|unf|unif
+  case Emulator::kHandy:         return EXTPREFIX "*.LNX\0";                                  // lnx
+  case Emulator::kBeetleSgx:     return EXTPREFIX "*.PCE;*.SGX;*.CUE;*.CCD;*.CHD\0";          // pce|sgx|cue|ccd|chd
+  case Emulator::kGambatte:      return EXTPREFIX "*.GB;*.GBC;*.DMG\0";                       // gb|gbc|dmg
+  case Emulator::kMGBA:          return EXTPREFIX "*.GBA\0";                                  // gba|gb|gbc
+  case Emulator::kMednafenPsx:   return EXTPREFIX "*.*\0";
+  case Emulator::kMednafenNgp:   return EXTPREFIX "*.NGP;*.NGC;*.NGPC\0";                     // ngp|ngc|ngpc
+  case Emulator::kMednafenVb:    return EXTPREFIX "*.VB;*.VBOY;*.BIN\0";                      // vb|vboy|bin
+  default:                       break;
+  }
+  
+  return "?";
+
+#undef EXTPREFIX
+}
+
+const char* getSystemName(System system)
 {
   switch (system)
   {
@@ -143,30 +170,6 @@ System getSystem(Emulator emulator, const std::string game_path, libretro::Core*
 
 
   return System::kNone;
-}
-
-std::string getValidExtensions(Emulator emulator)
-{
-  // TODO: add extensions for 32x and Sega CD? Add zip, 7z, etc. to the list?
-  switch (emulator)
-  {
-  case Emulator::kNone:          break;
-  case Emulator::kStella:        return "a26;bin;rom";
-  case Emulator::kSnes9x:        return "bin;smc;sfc;fig;swc;mgd";
-  case Emulator::kPicoDrive:
-  case Emulator::kGenesisPlusGx: return "smd;bin;gen;md;sg;sms;gg";
-  case Emulator::kFceumm:        return "nes;fds";
-  case Emulator::kHandy:         return "lnx";
-  case Emulator::kBeetleSgx:     return "pce;ccd;cue";
-  case Emulator::kGambatte:      return "gb;gbc";
-  case Emulator::kMGBA:          return "gba";
-  case Emulator::kMednafenPsx:   return "cue;cbn;img;iso;m3u;mdf;pbp;toc;z;znx";
-  case Emulator::kMednafenNgp:   return "ngp;ngc";
-  case Emulator::kMednafenVb:    return "vb";
-  default:                       break;
-  }
-  
-  return "?";
 }
 
 static void romLoadedWithPadding(void* rom, size_t size, size_t max_size, int fill)

@@ -63,10 +63,10 @@ enum class System
   kGameGear       = 15 // TODO use a value from the enumeration when it's changed
 };
 
-std::string getEmulatorName(Emulator emulator);
-std::string getEmulatorFileName(Emulator emulator);
-std::string getSystemName(System system);
-std::string getValidExtensions(System system);
+const char* getEmulatorName(Emulator emulator);
+const char* getEmulatorFileName(Emulator emulator);
+const char* getEmulatorExtensions(Emulator emulator);
+const char* getSystemName(System system);
 
 System getSystem(Emulator emulator, const std::string game_path, libretro::Core* core);
 void   romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size);
