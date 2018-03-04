@@ -230,6 +230,7 @@ void Input::buttonEvent(Button button, bool pressed)
     case Button::kR3:     rbutton = RETRO_DEVICE_ID_JOYPAD_R3; break;
     case Button::kSelect: rbutton = RETRO_DEVICE_ID_JOYPAD_SELECT; break;
     case Button::kStart:  rbutton = RETRO_DEVICE_ID_JOYPAD_START; break;
+    default:              return;
     }
 
     pad->_state[rbutton] = pressed;
