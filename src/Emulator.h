@@ -21,6 +21,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
+#include "libretro/Core.h"
+
 #include "RA_Integration/RA_Interface.h"
 
 #include "Util.h"
@@ -44,6 +46,7 @@ enum class Emulator
 
 enum class System
 {
+  kNone           = UnknownConsoleID,
   kAtari2600      = VCS,
   kAtariLynx      = Lynx,
   kMasterSystem   = MasterSystem,
@@ -56,11 +59,13 @@ enum class System
   kGameBoyAdvance = GBA,
   kPlayStation1   = PlayStation,
   kNeoGeoPocket   = NeoGeo,
-  kVirtualBoy     = VirtualBoy
+  kVirtualBoy     = VirtualBoy,
+  kGameGear       = 15 // TODO use a value from the enumeration when it's changed
 };
 
 std::string getEmulatorName(Emulator emulator);
 std::string getEmulatorFileName(Emulator emulator);
 std::string getSystemName(System system);
 
-void romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size);
+System getSystem(Emulator emulator, const std::string game_path, libretro::Core* core);
+void   romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size);

@@ -641,74 +641,7 @@ bool Application::loadGame(const std::string& path)
     return false;
   }
 
-  switch (_emulator)
-  {
-  case Emulator::kNone:
-    break;
-
-  case Emulator::kStella:
-    _system = System::kAtari2600;
-    break;
-
-  case Emulator::kSnes9x:
-    _system = System::kSuperNintendo;
-    break;
-
-  case Emulator::kPicoDrive:
-  case Emulator::kGenesisPlusGx:
-    if (_core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM) == 0x2000)
-    {
-      _system = System::kMasterSystem;
-    }
-    else
-    {
-      _system = System::kMegaDrive;
-    }
-
-    break;
-  
-  case Emulator::kFceumm:
-    _system = System::kNintendo;
-    break;
-  
-  case Emulator::kHandy:
-    _system = System::kAtariLynx;
-    break;
-  
-  case Emulator::kBeetleSgx:
-    _system = System::kPCEngine;
-    break;
-  
-  case Emulator::kGambatte:
-  case Emulator::kMGBA:
-    if (path.substr(path.length() - 4) == ".gbc")
-    {
-      _system = System::kGameBoyColor;
-    }
-    else if (path.substr(path.length() - 4) == ".gba")
-    {
-      // Gambatte doesn't support GBA, but it won't be a problem to test it here
-      _system = System::kGameBoyAdvance;
-    }
-    else
-    {
-      _system = System::kGameBoy;
-    }
-
-    break;
-  
-  case Emulator::kMednafenPsx:
-    _system = System::kPlayStation1;
-    break;
-  
-  case Emulator::kMednafenNgp:
-    _system = System::kNeoGeoPocket;
-    break;
-  
-  case Emulator::kMednafenVb:
-    _system = System::kVirtualBoy;
-    break;
-  }
+  _system = getSystem(_emulator, path, &_core);
 
   RA_SetConsoleID((unsigned)_system);
   RA_ClearMemoryBanks();

@@ -36,9 +36,10 @@ std::string getEmulatorName(Emulator emulator)
   case Emulator::kMednafenPsx:   return "Mednafen PSX";
   case Emulator::kMednafenNgp:   return "Mednafen NGP";
   case Emulator::kMednafenVb:    return "Mednafen VB";
+  default:                       break;
   }
-
-  return "";
+  
+  return "?";
 }
 
 std::string getEmulatorFileName(Emulator emulator)
@@ -58,9 +59,10 @@ std::string getEmulatorFileName(Emulator emulator)
   case Emulator::kMednafenPsx:   return "mednafen_psx_libretro";
   case Emulator::kMednafenNgp:   return "mednafen_ngp_libretro";
   case Emulator::kMednafenVb:    return "mednafen_vb_libretro";
+  default:                       break;
   }
-
-  return "";
+  
+  return "?";
 }
 
 std::string getSystemName(System system)
@@ -80,9 +82,67 @@ std::string getSystemName(System system)
   case System::kPlayStation1:   return "PlayStation";
   case System::kNeoGeoPocket:   return "Neo Geo Pocket";
   case System::kVirtualBoy:     return "Virtual Boy";
+  case System::kGameGear:       return "Game Gear";
+  default:                      break;
+  }
+  
+  return "?";
+}
+
+System getSystem(Emulator emulator, const std::string game_path, libretro::Core* core)
+{
+  switch (emulator)
+  {
+  case Emulator::kNone:        return System::kNone;
+  case Emulator::kStella:      return System::kAtari2600;
+  case Emulator::kSnes9x:      return System::kSuperNintendo;
+  case Emulator::kFceumm:      return System::kNintendo;
+  case Emulator::kHandy:       return System::kAtariLynx;
+  case Emulator::kBeetleSgx:   return System::kPCEngine;
+  case Emulator::kMednafenPsx: return System::kPlayStation1;
+  case Emulator::kMednafenNgp: return System::kNeoGeoPocket;
+  case Emulator::kMednafenVb:  return System::kVirtualBoy;
+
+  case Emulator::kPicoDrive:
+  case Emulator::kGenesisPlusGx:
+    if (core->getMemorySize(RETRO_MEMORY_SYSTEM_RAM) == 0x2000)
+    {
+      if (game_path.substr(game_path.length() - 3) == ".gg")
+      {
+        return System::kGameGear;
+      }
+      else
+      {
+        return System::kMasterSystem;
+      }
+    }
+    else
+    {
+      return System::kMegaDrive;
+    }
+
+  case Emulator::kGambatte:
+  case Emulator::kMGBA:
+    if (game_path.substr(game_path.length() - 4) == ".gbc")
+    {
+      return System::kGameBoyColor;
+    }
+    else if (game_path.substr(game_path.length() - 4) == ".gba")
+    {
+      // Gambatte doesn't support GBA, but it won't be a problem to test it here
+      return System::kGameBoyAdvance;
+    }
+    else
+    {
+      return System::kGameBoy;
+    }
+  
+  default:
+    break;
   }
 
-  return "";
+
+  return System::kNone;
 }
 
 static void romLoadedWithPadding(void* rom, size_t size, size_t max_size, int fill)
@@ -153,10 +213,10 @@ static void romLoadedNes(void* rom, size_t size)
   int mapper = (header.rom_type >> 4) | (header.rom_type2 & 0xf0);
 
   /* for games not to the power of 2, so we just read enough
-    * PRG rom from it, but we have to keep ROM_size to the power of 2
-    * since PRGCartMapping wants ROM_size to be to the power of 2
-    * so instead if not to power of 2, we just use head.ROM_size when
-    * we use FCEU_read. */
+   * PRG rom from it, but we have to keep ROM_size to the power of 2
+   * since PRGCartMapping wants ROM_size to be to the power of 2
+   * so instead if not to power of 2, we just use head.ROM_size when
+   * we use FCEU_read. */
   bool round = mapper != 53 && mapper != 198 && mapper != 228;
   size_t bytes = round ? rom_size : header.rom_size;
 

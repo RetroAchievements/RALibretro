@@ -37,19 +37,19 @@ main MENU
 {
     POPUP "File"
     {
-        POPUP "Select System"
+        POPUP "Select Core"
         {
-            MENUITEM "Atari 2600 (Stella)", IDM_SYSTEM_STELLA
-            MENUITEM "Atari Lynx (Handy)", IDM_SYSTEM_HANDY
-            MENUITEM "Game Boy/Game Boy Color (Gambatte)", IDM_SYSTEM_GAMBATTE
-            MENUITEM "Game Boy Advance (mGBA)", IDM_SYSTEM_MGBA
-            MENUITEM "Master System/Mega Drive (Genesis Plus GX)", IDM_SYSTEM_GENESISPLUSGX
-            MENUITEM "Master System/Mega Drive (PicoDrive)", IDM_SYSTEM_PICODRIVE
-            MENUITEM "Neo Geo Pocket (Mednafen NGP)", IDM_SYSTEM_MEDNAFENNGP
-            MENUITEM "Nintendo (FCEUmm)", IDM_SYSTEM_FCEUMM
-            MENUITEM "PC Engine (Beetle SGX)", IDM_SYSTEM_BEETLESGX
-            MENUITEM "Super Nintendo (Snes9x)", IDM_SYSTEM_SNES9X
-            MENUITEM "Virtual Boy (Mednafen VB)", IDM_SYSTEM_MEDNAFENVB
+            MENUITEM "Beetle SGX (PC Engine)", IDM_SYSTEM_BEETLESGX
+            MENUITEM "FCEUmm (Nintendo)", IDM_SYSTEM_FCEUMM
+            MENUITEM "Gambatte (Game Boy, Game Boy Color)", IDM_SYSTEM_GAMBATTE
+            MENUITEM "Genesis Plus GX (Game Gear, Master System, Mega Drive)", IDM_SYSTEM_GENESISPLUSGX
+            MENUITEM "Handy (Atari Lynx)", IDM_SYSTEM_HANDY
+            MENUITEM "Mednafen NGP (Neo Geo Pocket)", IDM_SYSTEM_MEDNAFENNGP
+            MENUITEM "Mednafen VB (Virtual Boy)", IDM_SYSTEM_MEDNAFENVB
+            MENUITEM "mGBA (Game Boy Advance)", IDM_SYSTEM_MGBA
+            MENUITEM "PicoDrive (Master System, Mega Drive)", IDM_SYSTEM_PICODRIVE
+            MENUITEM "Snes9x (Super Nintendo)", IDM_SYSTEM_SNES9X
+            MENUITEM "Stella (Atari 2600)", IDM_SYSTEM_STELLA
         }
         MENUITEM SEPARATOR
         MENUITEM "Load Game", IDM_LOAD_GAME
