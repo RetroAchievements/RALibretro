@@ -145,6 +145,30 @@ System getSystem(Emulator emulator, const std::string game_path, libretro::Core*
   return System::kNone;
 }
 
+std::string getValidExtensions(Emulator emulator)
+{
+  // TODO: add extensions for 32x and Sega CD? Add zip, 7z, etc. to the list?
+  switch (emulator)
+  {
+  case Emulator::kNone:          break;
+  case Emulator::kStella:        return "a26;bin;rom";
+  case Emulator::kSnes9x:        return "bin;smc;sfc;fig;swc;mgd";
+  case Emulator::kPicoDrive:
+  case Emulator::kGenesisPlusGx: return "smd;bin;gen;md;sg;sms;gg";
+  case Emulator::kFceumm:        return "nes;fds";
+  case Emulator::kHandy:         return "lnx";
+  case Emulator::kBeetleSgx:     return "pce;ccd;cue";
+  case Emulator::kGambatte:      return "gb;gbc";
+  case Emulator::kMGBA:          return "gba";
+  case Emulator::kMednafenPsx:   return "cue;cbn;img;iso;m3u;mdf;pbp;toc;z;znx";
+  case Emulator::kMednafenNgp:   return "ngp;ngc";
+  case Emulator::kMednafenVb:    return "vb";
+  default:                       break;
+  }
+  
+  return "?";
+}
+
 static void romLoadedWithPadding(void* rom, size_t size, size_t max_size, int fill)
 {
   uint8_t* data = (uint8_t*)malloc(max_size);
