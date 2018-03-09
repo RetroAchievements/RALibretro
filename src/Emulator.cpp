@@ -36,6 +36,7 @@ const char* getEmulatorName(Emulator emulator)
   case Emulator::kMednafenPsx:   return "Mednafen PSX";
   case Emulator::kMednafenNgp:   return "Mednafen NGP";
   case Emulator::kMednafenVb:    return "Mednafen VB";
+  case Emulator::kFBAlpha:       return "Final Burn Alpha";
   default:                       break;
   }
   
@@ -59,6 +60,7 @@ const char* getEmulatorFileName(Emulator emulator)
   case Emulator::kMednafenPsx:   return "mednafen_psx_libretro";
   case Emulator::kMednafenNgp:   return "mednafen_ngp_libretro";
   case Emulator::kMednafenVb:    return "mednafen_vb_libretro";
+  case Emulator::kFBAlpha:       return "fbalpha_libretro";
   default:                       break;
   }
   
@@ -84,6 +86,7 @@ const char* getEmulatorExtensions(Emulator emulator)
   case Emulator::kMednafenPsx:   return EXTPREFIX "*.*\0";
   case Emulator::kMednafenNgp:   return EXTPREFIX "*.NGP;*.NGC;*.NGPC\0";                     // ngp|ngc|ngpc
   case Emulator::kMednafenVb:    return EXTPREFIX "*.VB;*.VBOY;*.BIN\0";                      // vb|vboy|bin
+  case Emulator::kFBAlpha:       return EXTPREFIX "*.ZIP\0";                                  // iso|zip|7z
   default:                       break;
   }
   
@@ -110,6 +113,7 @@ const char* getSystemName(System system)
   case System::kNeoGeoPocket:   return "Neo Geo Pocket";
   case System::kVirtualBoy:     return "Virtual Boy";
   case System::kGameGear:       return "Game Gear";
+  case System::kArcade:         return "Arcade";
   default:                      break;
   }
   
@@ -129,6 +133,7 @@ System getSystem(Emulator emulator, const std::string game_path, libretro::Core*
   case Emulator::kMednafenPsx: return System::kPlayStation1;
   case Emulator::kMednafenNgp: return System::kNeoGeoPocket;
   case Emulator::kMednafenVb:  return System::kVirtualBoy;
+  case Emulator::kFBAlpha:     return System::kArcade;
 
   case Emulator::kPicoDrive:
   case Emulator::kGenesisPlusGx:
@@ -172,7 +177,7 @@ System getSystem(Emulator emulator, const std::string game_path, libretro::Core*
   return System::kNone;
 }
 
-static void romLoadedWithPadding(void* rom, size_t size, size_t max_size, int fill)
+static bool romLoadedWithPadding(void* rom, size_t size, size_t max_size, int fill)
 {
   uint8_t* data = (uint8_t*)malloc(max_size);
 
@@ -190,10 +195,13 @@ static void romLoadedWithPadding(void* rom, size_t size, size_t max_size, int fi
 
     RA_OnLoadNewRom(data, max_size);
     free(data);
+    return true;
   }
+
+  return false;
 }
 
-static void romLoadedNes(void* rom, size_t size)
+static bool romLoadedNes(void* rom, size_t size)
 {
   /* Note about the references to the FCEU emulator below. There is no
    * core-specific code in this function, it's rather Retro Achievements
@@ -214,7 +222,7 @@ static void romLoadedNes(void* rom, size_t size)
 
   if (size < sizeof(NesHeader))
   {
-    return;
+    return false;
   }
 
   NesHeader header;
@@ -222,7 +230,7 @@ static void romLoadedNes(void* rom, size_t size)
 
   if (header.id[0] != 'N' || header.id[1] != 'E' || header.id[2] != 'S' || header.id[3] != 0x1a)
   {
-    return;
+    return false;
   }
 
   size_t rom_size;
@@ -251,17 +259,53 @@ static void romLoadedNes(void* rom, size_t size)
   size_t offset = sizeof(header) + (header.rom_type & 4 ? sizeof(header) : 0);
   size_t count = 0x4000 * bytes;
 
-  romLoadedWithPadding((uint8_t*)rom + offset, size, count, 0xff);
+  return romLoadedWithPadding((uint8_t*)rom + offset, size, count, 0xff);
 }
 
-static void romLoadPsx(const std::string& path)
+static bool romLoadPsx(const std::string& path)
 {
   (void)path;
+  return false;
 }
 
-void romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size)
+static bool romLoadArcade(const std::string& path)
+{
+  const char* str = path.c_str();
+  const char* name = strrchr(str, '/');
+  const char* bs = strrchr(str, '\\');
+
+  if (name == NULL)
+  {
+    name = str - 1;
+  }
+
+  if (bs == NULL)
+  {
+    bs = str - 1;
+  }
+
+  if (bs > name)
+  {
+    name = bs;
+  }
+
+  name++;
+
+  const char* dot = strchr(name, '.');
+
+  if (dot == NULL)
+  {
+    dot = name + strlen(name);
+  }
+
+  RA_OnLoadNewRom((BYTE*)name, dot - name);
+  return true;
+}
+
+bool romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size)
 {
   bool must_free = false;
+  bool ok;
 
   if (system != System::kPlayStation1 && rom == NULL)
   {
@@ -282,18 +326,24 @@ void romLoaded(Logger* logger, System system, const std::string& path, void* rom
   case System::kSuperNintendo:
   default:
     RA_OnLoadNewRom((BYTE*)rom, size);
+    ok = true;
     break;
 
   case System::kNintendo:
-    romLoadedNes(rom, size);
+    ok = romLoadedNes(rom, size);
     break;
   
   case System::kAtariLynx:
     RA_OnLoadNewRom((BYTE*)rom + 0x0040, size > 0x0240 ? 0x0200 : size - 0x0040);
+    ok = true;
     break;
   
   case System::kPlayStation1:
-    romLoadPsx(path);
+    ok = romLoadPsx(path);
+    break;
+  
+  case System::kArcade:
+    ok = romLoadArcade(path);
     break;
   }
 
@@ -301,4 +351,6 @@ void romLoaded(Logger* logger, System system, const std::string& path, void* rom
   {
     free(rom);
   }
+
+  return ok;
 }

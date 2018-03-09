@@ -60,6 +60,7 @@ namespace libretro
     inline bool                    getSupportsNoGame()      const { return _supportsNoGame; }
     inline unsigned                getRotation()            const { return _rotation; }
     inline bool                    getSupportAchievements() const { return _supportAchievements; }
+    inline void                    unloadGame()                   { _core.unloadGame(); }
     
     inline const struct retro_input_descriptor* getInputDescriptors(unsigned* count) const
     {

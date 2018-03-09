@@ -642,10 +642,17 @@ bool Application::loadGame(const std::string& path)
   }
 
   _system = getSystem(_emulator, path, &_core);
-
+  
   RA_SetConsoleID((unsigned)_system);
   RA_ClearMemoryBanks();
-  romLoaded(&_logger, _system, path, data, size);
+
+  if (!romLoaded(&_logger, _system, path, data, size))
+  {
+    _core.unloadGame();
+    free(data);
+    return false;
+  }
+
   free(data);
   _gamePath = path;
 
@@ -715,6 +722,7 @@ moved_recent_item:
   case Emulator::kGambatte:
   case Emulator::kMednafenPsx:
   case Emulator::kMednafenNgp:
+  case Emulator::kFBAlpha:
     data = _core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
     size = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
     registerMemoryRegion(data, size);
@@ -1467,12 +1475,13 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     case IDM_SYSTEM_MEDNAFENPSX:
     case IDM_SYSTEM_MEDNAFENNGP:
     case IDM_SYSTEM_MEDNAFENVB:
+    case IDM_SYSTEM_FBALPHA:
       {
         static Emulator emulators[] =
         {
           Emulator::kStella, Emulator::kSnes9x, Emulator::kPicoDrive, Emulator::kGenesisPlusGx, Emulator::kFceumm,
           Emulator::kHandy, Emulator::kBeetleSgx, Emulator::kGambatte, Emulator::kMGBA, Emulator::kMednafenPsx,
-          Emulator::kMednafenNgp, Emulator::kMednafenVb
+          Emulator::kMednafenNgp, Emulator::kMednafenVb, Emulator::kFBAlpha
         };
 
         _fsm.loadCore(emulators[cmd - IDM_SYSTEM_STELLA]);
