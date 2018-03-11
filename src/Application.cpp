@@ -664,7 +664,7 @@ bool Application::loadGame(const std::string& path)
     {
       _recentList.erase(_recentList.begin() + i);
       _recentList.insert(_recentList.begin(), item);
-      _logger.printf(RETRO_LOG_DEBUG, "Moved recent file %zu to front \"%s\" - %u - %u", i, item.path.c_str(), (unsigned)item.emulator, (unsigned)item.system);
+      _logger.printf(RETRO_LOG_DEBUG, "Moved recent file %zu to front \"%s\" - %u - %u", i, fileName(item.path).c_str(), (unsigned)item.emulator, (unsigned)item.system);
       goto moved_recent_item;
     }
   }
@@ -682,7 +682,7 @@ bool Application::loadGame(const std::string& path)
     item.system = _system;
 
     _recentList.insert(_recentList.begin(), item);
-    _logger.printf(RETRO_LOG_DEBUG, "Added recent file \"%s\" - %u - %u", item.path.c_str(), (unsigned)item.emulator, (unsigned)item.system);
+    _logger.printf(RETRO_LOG_DEBUG, "Added recent file \"%s\" - %u - %u", fileName(item.path).c_str(), (unsigned)item.emulator, (unsigned)item.system);
   }
 
 moved_recent_item:
@@ -1052,11 +1052,12 @@ void Application::enableRecent()
     info.fMask = MIIM_TYPE | MIIM_DATA;
     GetMenuItemInfo(_menu, id, false, &info);
 
-    std::string caption = _recentList[i].path;
-    caption += " - ";
+    std::string caption = fileName(_recentList[i].path);
+    caption += " (";
     caption += getEmulatorName(_recentList[i].emulator);
     caption += " - ";
     caption += getSystemName(_recentList[i].system);
+    caption += ")";
 
     info.dwTypeData = (char*)caption.c_str();
     SetMenuItemInfo(_menu, id, false, &info);
@@ -1405,7 +1406,7 @@ void Application::loadRecentList()
           else if (event == JSONSAX_OBJECT && num == 0)
           {
             ud->self->_recentList.push_back(ud->item);
-            ud->self->_logger.printf(RETRO_LOG_DEBUG, "Added recent file \"%s\" - %u - %u", ud->item.path.c_str(), (unsigned)ud->item.emulator, (unsigned)ud->item.system);
+            ud->self->_logger.printf(RETRO_LOG_DEBUG, "Added recent file \"%s\" - %u - %u", fileName(ud->item.path).c_str(), (unsigned)ud->item.emulator, (unsigned)ud->item.system);
           }
 
           return 0;
