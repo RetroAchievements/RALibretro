@@ -153,6 +153,7 @@ KeyBinds::Action KeyBinds::translate(const SDL_KeyboardEvent* key, unsigned* ext
     {SDLK_BACKSPACE,   0,          kSaveCurrent},
     // Emulation speed
     {SDLK_p,           0,          kPauseToggle},
+    {SDLK_ESCAPE,      0,          kPauseToggle},
     {SDLK_EQUALS,      0,          kFastForward},
     {SDLK_MINUS,       0,          kFastForwardToggle},
     {SDLK_SEMICOLON,   0,          kStep},
