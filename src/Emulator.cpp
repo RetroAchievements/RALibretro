@@ -270,35 +270,8 @@ static bool romLoadPsx(const std::string& path)
 
 static bool romLoadArcade(const std::string& path)
 {
-  const char* str = path.c_str();
-  const char* name = strrchr(str, '/');
-  const char* bs = strrchr(str, '\\');
-
-  if (name == NULL)
-  {
-    name = str - 1;
-  }
-
-  if (bs == NULL)
-  {
-    bs = str - 1;
-  }
-
-  if (bs > name)
-  {
-    name = bs;
-  }
-
-  name++;
-
-  const char* dot = strchr(name, '.');
-
-  if (dot == NULL)
-  {
-    dot = name + strlen(name);
-  }
-
-  RA_OnLoadNewRom((BYTE*)name, dot - name);
+  std::string name = fileName(path);
+  RA_OnLoadNewRom((BYTE*)name.c_str(), name.length());
   return true;
 }
 

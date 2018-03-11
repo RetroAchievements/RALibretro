@@ -155,3 +155,38 @@ std::string jsonUnescape(const std::string& str)
 
   return res;
 }
+
+std::string fileName(const std::string& path)
+{
+  const char* str = path.c_str();
+  const char* name = strrchr(str, '/');
+  const char* bs = strrchr(str, '\\');
+
+  if (name == NULL)
+  {
+    name = str - 1;
+  }
+
+  if (bs == NULL)
+  {
+    bs = str - 1;
+  }
+
+  if (bs > name)
+  {
+    name = bs;
+  }
+
+  name++;
+
+  const char* dot = strchr(name, '.');
+
+  if (dot == NULL)
+  {
+    return std::string(name);
+  }
+  else
+  {
+    return std::string(name, dot - name);
+  }
+}
