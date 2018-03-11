@@ -277,14 +277,7 @@ static bool romLoadArcade(const std::string& path)
 
 bool romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size)
 {
-  bool must_free = false;
-  bool ok;
-
-  if (system != System::kPlayStation1 && rom == NULL)
-  {
-    rom = util::loadFile(logger, path, &size);
-    must_free = true;
-  }
+  bool ok = false;
 
   switch (system)
   {
@@ -298,17 +291,23 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
   case System::kMegaDrive:
   case System::kSuperNintendo:
   default:
+    rom = util::loadFile(logger, path, &size);
     RA_OnLoadNewRom((BYTE*)rom, size);
     ok = true;
+    free(rom);
     break;
 
   case System::kNintendo:
+    rom = util::loadFile(logger, path, &size);
     ok = romLoadedNes(rom, size);
+    free(rom);
     break;
   
   case System::kAtariLynx:
+    rom = util::loadFile(logger, path, &size);
     RA_OnLoadNewRom((BYTE*)rom + 0x0040, size > 0x0240 ? 0x0200 : size - 0x0040);
     ok = true;
+    free(rom);
     break;
   
   case System::kPlayStation1:
@@ -318,11 +317,6 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
   case System::kArcade:
     ok = romLoadArcade(path);
     break;
-  }
-
-  if (must_free)
-  {
-    free(rom);
   }
 
   return ok;
