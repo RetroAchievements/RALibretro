@@ -24,7 +24,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <errno.h>
 #include <string.h>
 
-size_t nextPow2(size_t v)
+size_t util::nextPow2(size_t v)
 {
   v--;
   v |= v >> 1;
@@ -35,7 +35,7 @@ size_t nextPow2(size_t v)
   return v + 1;
 }
 
-void* loadFile(Logger* logger, const std::string& path, size_t* size)
+void* util::loadFile(Logger* logger, const std::string& path, size_t* size)
 {
   void* data;
   struct stat statbuf;
@@ -80,7 +80,7 @@ void* loadFile(Logger* logger, const std::string& path, size_t* size)
   return data;
 }
 
-bool saveFile(Logger* logger, const std::string& path, const void* data, size_t size)
+bool util::saveFile(Logger* logger, const std::string& path, const void* data, size_t size)
 {
   FILE* file = fopen(path.c_str(), "wb");
 
@@ -102,7 +102,7 @@ bool saveFile(Logger* logger, const std::string& path, const void* data, size_t 
   return true;
 }
 
-std::string jsonEscape(const std::string& str)
+std::string util::jsonEscape(const std::string& str)
 {
   std::string res;
   res.reserve(str.length());
@@ -126,7 +126,7 @@ std::string jsonEscape(const std::string& str)
   return res;
 }
 
-std::string jsonUnescape(const std::string& str)
+std::string util::jsonUnescape(const std::string& str)
 {
   std::string res;
   res.reserve(str.length());
@@ -156,7 +156,7 @@ std::string jsonUnescape(const std::string& str)
   return res;
 }
 
-std::string fileName(const std::string& path)
+std::string util::fileName(const std::string& path)
 {
   const char* str = path.c_str();
   const char* name = strrchr(str, '/');

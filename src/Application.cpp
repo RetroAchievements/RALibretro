@@ -416,7 +416,7 @@ void Application::destroy()
   json += serializeRecentList();
   json += "}";
 
-  saveFile(&_logger, getConfigPath(), json.c_str(), json.length());
+  util::saveFile(&_logger, getConfigPath(), json.c_str(), json.length());
 
   RA_Shutdown();
 
@@ -458,7 +458,7 @@ bool Application::loadCore(Emulator emulator)
   }
 
   size_t size;
-  void* data = loadFile(&_logger, getCoreConfigPath(emulator), &size);
+  void* data = util::loadFile(&_logger, getCoreConfigPath(emulator), &size);
 
   if (data != NULL)
   {
@@ -627,7 +627,7 @@ bool Application::loadGame(const std::string& path)
   }
   else
   {
-    data = loadFile(&_logger, path, &size);
+    data = util::loadFile(&_logger, path, &size);
 
     if (data == NULL)
     {
@@ -664,7 +664,7 @@ bool Application::loadGame(const std::string& path)
     {
       _recentList.erase(_recentList.begin() + i);
       _recentList.insert(_recentList.begin(), item);
-      _logger.printf(RETRO_LOG_DEBUG, "Moved recent file %zu to front \"%s\" - %u - %u", i, fileName(item.path).c_str(), (unsigned)item.emulator, (unsigned)item.system);
+      _logger.printf(RETRO_LOG_DEBUG, "Moved recent file %zu to front \"%s\" - %u - %u", i, util::fileName(item.path).c_str(), (unsigned)item.emulator, (unsigned)item.system);
       goto moved_recent_item;
     }
   }
@@ -682,14 +682,14 @@ bool Application::loadGame(const std::string& path)
     item.system = _system;
 
     _recentList.insert(_recentList.begin(), item);
-    _logger.printf(RETRO_LOG_DEBUG, "Added recent file \"%s\" - %u - %u", fileName(item.path).c_str(), (unsigned)item.emulator, (unsigned)item.system);
+    _logger.printf(RETRO_LOG_DEBUG, "Added recent file \"%s\" - %u - %u", util::fileName(item.path).c_str(), (unsigned)item.emulator, (unsigned)item.system);
   }
 
 moved_recent_item:
   if (_core.getMemorySize(RETRO_MEMORY_SAVE_RAM) != 0)
   {
     std::string sram = getSRamPath();
-    data = loadFile(&_logger, sram, &size);
+    data = util::loadFile(&_logger, sram, &size);
 
     if (data != NULL)
     {
@@ -845,7 +845,7 @@ void Application::unloadCore()
   json.append(_input.serialize());
   json.append("}");
 
-  saveFile(&_logger, getCoreConfigPath(_emulator), json.c_str(), json.length());
+  util::saveFile(&_logger, getCoreConfigPath(_emulator), json.c_str(), json.length());
 
   _core.destroy();
 }
@@ -876,7 +876,7 @@ bool Application::unloadGame()
   {
     void* data = _core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
     std::string sram = getSRamPath();
-    saveFile(&_logger, sram.c_str(), data, size);
+    util::saveFile(&_logger, sram.c_str(), data, size);
   }
 
   return true;
@@ -1052,7 +1052,7 @@ void Application::enableRecent()
     info.fMask = MIIM_TYPE | MIIM_DATA;
     GetMenuItemInfo(_menu, id, false, &info);
 
-    std::string caption = fileName(_recentList[i].path);
+    std::string caption = util::fileName(_recentList[i].path);
     caption += " (";
     caption += getEmulatorName(_recentList[i].emulator);
     caption += " - ";
@@ -1200,7 +1200,7 @@ void Application::saveState(unsigned ndx)
   std::string path = getStatePath(ndx);
   _logger.printf(RETRO_LOG_INFO, "Saving state to %s", path.c_str());
   
-  if (saveFile(&_logger, path.c_str(), data, size))
+  if (util::saveFile(&_logger, path.c_str(), data, size))
   {
     _validSlots |= 1 << ndx;
     enableSlots();
@@ -1223,7 +1223,7 @@ void Application::loadState(unsigned ndx)
   {
     std::string path = getStatePath(ndx);
     size_t size;
-    void* data = loadFile(&_logger, path.c_str(), &size);
+    void* data = util::loadFile(&_logger, path.c_str(), &size);
     
     if (data != NULL)
     {
@@ -1359,7 +1359,7 @@ void Application::loadRecentList()
   _logger.printf(RETRO_LOG_DEBUG, "Recent file list cleared");
 
   size_t size;
-  void* data = loadFile(&_logger, getConfigPath(), &size);
+  void* data = util::loadFile(&_logger, getConfigPath(), &size);
 
   if (data != NULL)
   {
@@ -1393,7 +1393,7 @@ void Application::loadRecentList()
           }
           else if (event == JSONSAX_STRING && ud->key == "path")
           {
-            ud->item.path = jsonUnescape(std::string(str, num));
+            ud->item.path = util::jsonUnescape(std::string(str, num));
           }
           else if (event == JSONSAX_NUMBER && ud->key == "emulator")
           {
@@ -1406,7 +1406,7 @@ void Application::loadRecentList()
           else if (event == JSONSAX_OBJECT && num == 0)
           {
             ud->self->_recentList.push_back(ud->item);
-            ud->self->_logger.printf(RETRO_LOG_DEBUG, "Added recent file \"%s\" - %u - %u", fileName(ud->item.path).c_str(), (unsigned)ud->item.emulator, (unsigned)ud->item.system);
+            ud->self->_logger.printf(RETRO_LOG_DEBUG, "Added recent file \"%s\" - %u - %u", util::fileName(ud->item.path).c_str(), (unsigned)ud->item.emulator, (unsigned)ud->item.system);
           }
 
           return 0;
@@ -1435,7 +1435,7 @@ std::string Application::serializeRecentList()
 
     json += "{";
     json += "\"path\":\"";
-    json += jsonEscape(_recentList[i].path);
+    json += util::jsonEscape(_recentList[i].path);
 
     json += "\",\"emulator\":";
     snprintf(buffer, sizeof(buffer), "%u", (unsigned)_recentList[i].emulator);

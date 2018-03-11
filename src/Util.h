@@ -24,9 +24,12 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <stddef.h>
 #include <string>
 
-size_t      nextPow2(size_t v);
-void*       loadFile(Logger* logger, const std::string& path, size_t* size);
-bool        saveFile(Logger* logger, const std::string& path, const void* data, size_t size);
-std::string jsonEscape(const std::string& str);
-std::string jsonUnescape(const std::string& str);
-std::string fileName(const std::string& path);
+namespace util
+{
+  size_t      nextPow2(size_t v);
+  void*       loadFile(Logger* logger, const std::string& path, size_t* size);
+  bool        saveFile(Logger* logger, const std::string& path, const void* data, size_t size);
+  std::string jsonEscape(const std::string& str);
+  std::string jsonUnescape(const std::string& str);
+  std::string fileName(const std::string& path);
+}

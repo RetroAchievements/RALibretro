@@ -237,7 +237,7 @@ static bool romLoadedNes(void* rom, size_t size)
 
   if (header.rom_size != 0)
   {
-    rom_size = nextPow2(header.rom_size);
+    rom_size = util::nextPow2(header.rom_size);
   }
   else
   {
@@ -270,7 +270,7 @@ static bool romLoadPsx(const std::string& path)
 
 static bool romLoadArcade(const std::string& path)
 {
-  std::string name = fileName(path);
+  std::string name = util::fileName(path);
   RA_OnLoadNewRom((BYTE*)name.c_str(), name.length());
   return true;
 }
@@ -282,7 +282,7 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
 
   if (system != System::kPlayStation1 && rom == NULL)
   {
-    rom = loadFile(logger, path, &size);
+    rom = util::loadFile(logger, path, &size);
     must_free = true;
   }
 
