@@ -26,8 +26,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "jsonsax/jsonsax.h"
 
 #include "RA_Integration/RA_Implementation.h"
-#include "RA_Integration/RA_Interface.h"
-#include "RA_Integration/RA_Resource.h"
+#include <RA_Resource.h>
 
 #include "About.h"
 #include "KeyBinds.h"

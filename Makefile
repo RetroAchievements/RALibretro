@@ -2,7 +2,7 @@
 CC=gcc
 CXX=g++
 RC=windres
-INCLUDES=-Isrc -I../RA_Integration/rapidjson/include
+INCLUDES=-Isrc -I../RA_Integration -I../RA_Integration/rapidjson/include
 DEFINES=-DOUTSIDE_SPEEX -DRANDOM_PREFIX=speex -DEXPORT= -D_USE_SSE2 -DFIXED_POINT
 CCFLAGS=-Wall -m32 $(INCLUDES) $(DEFINES) `sdl2-config --cflags`
 CXXFLAGS=$(CCFLAGS) -std=c++11
@@ -24,7 +24,7 @@ OBJS=\
 	src/libretro/BareCore.o \
 	src/libretro/Core.o \
 	src/RA_Integration/RA_Implementation.o \
-	src/RA_Integration/RA_Interface.o \
+	../RA_Integration/RA_Interface.o \
 	src/components/Audio.o \
 	src/components/Config.o \
 	src/components/Dialog.o \
@@ -54,7 +54,7 @@ OBJS=\
 all: bin/RALibretro
 
 bin/RALibretro: $(OBJS)
-        mkdir -p bin
+	mkdir -p bin
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LIBS)
 	rm -f bin/RALibretro-*.zip
 	zip -9 bin/RALibretro-`date +%Y-%m-%d-%H-%M-%S | tr -d "\n"`-`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`.zip bin/RALibretro.exe
