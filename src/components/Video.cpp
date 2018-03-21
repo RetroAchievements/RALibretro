@@ -26,6 +26,9 @@ bool Video::init(libretro::LoggerComponent* logger, Config* config, SDL_Renderer
 {
   _logger = logger;
   _config = config;
+
+  _inited = false;
+
   _renderer = renderer;
   _texture = NULL;
   _linearFilter = false;
@@ -35,15 +38,16 @@ bool Video::init(libretro::LoggerComponent* logger, Config* config, SDL_Renderer
 
 void Video::destroy()
 {
-  if (_texture != NULL)
+  /*if (_texture != NULL)
   {
     SDL_DestroyTexture(_texture);
     _texture = NULL;
-  }
+  }*/
 }
 
 void Video::draw()
 {
+#if 0
   if (_texture != NULL)
   {
     bool linearFilter = _config->linearFilter();
@@ -101,10 +105,49 @@ void Video::draw()
       return;
     }
   }
+#endif
 }
 
 bool Video::setGeometry(unsigned width, unsigned height, float aspect, enum retro_pixel_format pixelFormat, bool needsHardwareRender)
 {
+#if 0
+  if (_inited)
+  {
+    // Destroy everything
+  }
+
+  Gl gl(_logger);
+
+  GLuint _framebuffer;
+  gl.genFramebuffers(1, &_framebuffer);
+  gl.bindFramebuffer(GL_FRAMEBUFFER, _framebuffer);
+
+  GLuint _texture;
+  gl.genTextures(1, &_texture);
+  gl.bindTexture(GL_TEXTURE_2D, _texture);
+
+  gl.texImage2D(GL_TEXTURE_2D, 0,GL_RGB, 1024, 768, 0,GL_RGB, GL_UNSIGNED_BYTE, 0);
+
+  gl.texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  gl.texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+  gl.framebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, _texture, 0);
+
+  GLuint _depth;
+  gl.genRenderbuffers(1, &_depth);
+  gl.bindRenderbuffer(GL_RENDERBUFFER, _depth);
+  gl.renderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+  gl.framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth);
+
+  GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+  gl.drawBuffers(1, drawBuffers);
+
+
+
+
+
+
+
   // TODO implement an OpenGL renderer
   (void)needsHardwareRender;
 
@@ -149,12 +192,14 @@ bool Video::setGeometry(unsigned width, unsigned height, float aspect, enum retr
   _textureHeight = height;
   _pixelFormat = pixelFormat;
   _aspect = aspect;
+#endif
 
   return true;
 }
 
 void Video::refresh(const void* data, unsigned width, unsigned height, size_t pitch)
 {
+#if 0
   if (data != NULL && data != RETRO_HW_FRAME_BUFFER_VALID)
   {
     SDL_Rect rect;
@@ -193,6 +238,7 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
     _width = width;
     _height = height;
   }
+#endif
 }
 
 bool Video::supportsContext(enum retro_hw_context_type type)
@@ -220,7 +266,9 @@ uintptr_t Video::getCurrentFramebuffer()
 
 retro_proc_address_t Video::getProcAddress(const char* symbol)
 {
-  return (retro_proc_address_t)SDL_GL_GetProcAddress(symbol);
+  void* address = SDL_GL_GetProcAddress(symbol);
+  _logger->printf(RETRO_LOG_DEBUG, "OpenGL symbol: %p resolved for %s", address, symbol);
+  return (retro_proc_address_t)address;
 }
 
 void Video::showMessage(const char* msg, unsigned frames)

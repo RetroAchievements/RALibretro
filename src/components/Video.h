@@ -47,6 +47,8 @@ protected:
   libretro::LoggerComponent* _logger;
   Config* _config;
 
+  bool _inited;
+
   SDL_Renderer*           _renderer;
   SDL_Texture*            _texture;
   bool                    _linearFilter;

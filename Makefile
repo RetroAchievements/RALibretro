@@ -37,6 +37,7 @@ OBJS=\
 	src/Emulator.o \
 	src/Fsm.o \
 	src/Git.o \
+	src/Gl.o \
 	src/KeyBinds.o \
 	src/main.o \
 	src/menu.res \

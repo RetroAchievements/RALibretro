@@ -43,6 +43,7 @@ enum class Emulator
   kMednafenNgp,
   kMednafenVb,
   kFBAlpha,
+  kMupen64Plus
 };
 
 enum class System
@@ -61,8 +62,9 @@ enum class System
   kPlayStation1   = PlayStation,
   kNeoGeoPocket   = NeoGeo,
   kVirtualBoy     = VirtualBoy,
-  kGameGear       = GameGear,
-  kArcade         = Arcade
+  kGameGear       = Xbox360, //GameGear,
+  kArcade         = Arcade,
+  kNintendo64     = N64
 };
 
 const char* getEmulatorName(Emulator emulator);

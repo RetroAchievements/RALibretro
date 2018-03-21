@@ -48,6 +48,7 @@ main MENU
             MENUITEM "Mednafen NGP (Neo Geo Pocket)", IDM_SYSTEM_MEDNAFENNGP
             MENUITEM "Mednafen VB (Virtual Boy)", IDM_SYSTEM_MEDNAFENVB
             MENUITEM "mGBA (Game Boy Advance)", IDM_SYSTEM_MGBA
+            MENUITEM "Mupen64 Plus (Nintendo 64)", IDM_SYSTEM_MUPEN64PLUS
             MENUITEM "PicoDrive (Master System, Mega Drive)", IDM_SYSTEM_PICODRIVE
             MENUITEM "Snes9x (Super Nintendo)", IDM_SYSTEM_SNES9X
             MENUITEM "Stella (Atari 2600)", IDM_SYSTEM_STELLA

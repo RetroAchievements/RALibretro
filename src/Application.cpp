@@ -118,6 +118,9 @@ bool Application::init(const char* title, int width, int height)
   inited = kSdlInited;
 
   // Setup window
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+
   _window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
   if (_window == NULL)
@@ -125,6 +128,11 @@ bool Application::init(const char* title, int width, int height)
     _logger.printf(RETRO_LOG_ERROR, "SDL_CreateWindow: %s", SDL_GetError());
     goto error;
   }
+
+  int major, minor;
+  SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &major);
+  SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minor);
+  _logger.printf(RETRO_LOG_ERROR, "Got OpenGL %d.%d", major, minor);
 
   inited = kWindowInited;
 
@@ -1477,12 +1485,13 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     case IDM_SYSTEM_MEDNAFENNGP:
     case IDM_SYSTEM_MEDNAFENVB:
     case IDM_SYSTEM_FBALPHA:
+    case IDM_SYSTEM_MUPEN64PLUS:
       {
         static Emulator emulators[] =
         {
           Emulator::kStella, Emulator::kSnes9x, Emulator::kPicoDrive, Emulator::kGenesisPlusGx, Emulator::kFceumm,
           Emulator::kHandy, Emulator::kBeetleSgx, Emulator::kGambatte, Emulator::kMGBA, Emulator::kMednafenPsx,
-          Emulator::kMednafenNgp, Emulator::kMednafenVb, Emulator::kFBAlpha
+          Emulator::kMednafenNgp, Emulator::kMednafenVb, Emulator::kFBAlpha, Emulator::kMupen64Plus
         };
 
         _fsm.loadCore(emulators[cmd - IDM_SYSTEM_STELLA]);
