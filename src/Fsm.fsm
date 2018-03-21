@@ -76,6 +76,8 @@ fsm Fsm {
       ctx.resetGame();
     }
 
+    step() => FrameStep;
+    
     turbo() => GameTurbo {
       if (ctx.hardcore()) {
         forbid;
@@ -142,6 +144,8 @@ fsm Fsm {
       }
     }
 
+    step() => FrameStep;
+    
     pauseGame() => GamePaused {
       if (ctx.hardcore()) {
         forbid;
