@@ -1143,7 +1143,7 @@ bool libretro::Core::setMemoryMaps(const struct retro_memory_map* data)
   preprocessMemoryDescriptors(descriptors, _memoryMap.num_descriptors);
 
   debug("retro_memory_map");
-  debug("  ndx flags  ptr              offset   start    select   disconn  len      addrspace");
+  debug("  ndx flags  ptr      offset   start    select   disconn  len      addrspace");
 
   const struct retro_memory_descriptor* end = descriptors + _memoryMap.num_descriptors;
 
