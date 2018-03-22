@@ -3,6 +3,8 @@
 #############
 # Download all cores supported by RALibretro
 #
+# dependencies: wget, unzip
+#
 # meleu - March/2018
 
 
@@ -14,15 +16,53 @@ SUPPORTED_CORES=(
 NIGHTLY_URL="https://buildbot.libretro.com/nightly/windows/x86/latest"
 DEST_DIR="bin/Cores"
 LOGFILE="dl-cores.log"
-
+DEPS=(wget unzip)
 ###############################################################################
 
 
 function print_help() {
     echo "USAGE: $0 [CORE_NAME]"
     echo
+    echo "The CORE_NAME must be a supported core."
+    echo "Or use 'all' to download all supported cores."
+    echo
     echo "List of supported cores:"
     echo "${SUPPORTED_CORES[@]}"
+}
+
+
+function check_deps() {
+    local dep
+    local hasPacman=false
+    local ret=0
+
+    which pacman > /dev/null 2>&1 && hasPacman=true
+
+    for dep in "${DEPS[@]}"; do
+        which "$dep" > /dev/null 2>&1 && continue
+
+        echolog "WARNING: \"$dep\" is a dependency for this script and is not installed." >&2
+
+        if [[ "$hasPacman" == true ]]; then
+            echolog "Trying to install \"$dep\"..." >&2
+            if ! pacman -Sq --noconfirm "$dep"; then
+                echolog "ERROR: failed to install the \"$dep\" dependency." >&2
+                ret=1
+            fi
+        else
+            ret=1
+        fi
+    done
+
+    if [[ "$ret" != 0 ]]; then
+        echolog "Try to install the dependencies and then run the script again." >&2
+        exit 1
+    fi
+}
+
+
+function echolog() {
+    echo "$@" | tee -a "$LOGFILE"
 }
 
 
@@ -30,45 +70,73 @@ function dl_core() {
     [[ -z "$1" ]] && return 1
 
     local core="${1}_libretro.dll.zip"
-    if wget -a "$LOGFILE" -c "${NIGHTLY_URL}/$core" -O "$DEST_DIR/$core"; then
-        echo "SUCCESS: downloaded \"$core\"." | tee -a "$LOGFILE" >&2
-        if ! unzip -q -o "$DEST_DIR/$core" -d "$DEST_DIR"; then
-            echo "WARNING: failed to unzip \"$DEST_DIR/$core\"" | tee -a "$LOGFILE" >&2
+
+    echolog -e "\nDownloading \"$core\". Please wait..."
+    if wget -nv -a "$LOGFILE" "${NIGHTLY_URL}/$core" -O "$DEST_DIR/$core"; then
+        echolog "--- Downloaded \"$core\"." >&2
+        if ! unzip -o "$DEST_DIR/$core" -d "$DEST_DIR" >> "$LOGFILE" ; then
+            echolog "WARNING: failed to unzip \"$DEST_DIR/$core\"" >&2
             return 1
         fi
     else
-        echo "WARNING: failed to download \"$core\"." | tee -a "$LOGFILE" >&2
+        echolog "WARNING: failed to download \"$core\"." >&2
         return 1
     fi
 }
 
 
 function main() {
-    local core="$1"
-    local ret=0
-
     if [[ -z "$1" || "$1" == "-h" || "$1" == "--help" ]]; then
         print_help
         exit 0
     fi
 
+    local core="$1"
+    local ret=0
+    local failed_cores=()
+
     echo "--- starting $(basename "$0") log - $(date) ---" > "$LOGFILE"
-    
+
+    check_deps
+
     mkdir -p "$DEST_DIR"
 
     if [[ "$core" == "all" ]]; then
+        echolog "--- DOWNLOADING ALL SUPPORTED CORES ---"
         for core in "${SUPPORTED_CORES[@]}"; do
-            dl_core "$core" || ret="$?"
+            if dl_core "$core"; then
+                echolog "SUCCESS: \"$core\" has been installed"
+            else
+                echolog "WARNING: failed to install \"$core\"."
+                failed_cores+=("$core")
+                ret=1
+            fi
         done
-        exit "$ret"
+        if [[ "$ret" == 0 ]]; then
+            echolog "--- ALL CORES WERE SUCCESSFULLY INSTALLED ---"
+            exit 0
+        else
+            echolog -e "\n--- WARNING! WARNING! WARNING! ---"
+            echolog -e "Failed to install the following cores:\n${failed_cores[@]}"
+            echolog "--- FINISH ---"
+            exit "$ret"
+        fi
     fi
 
     # ugly hack to check if an array contains an element
-    if [[ "${SUPPORTED_CORES[@]//$1/}" == "${SUPPORTED_CORES[@]}" ]]; then
-        echo "ERROR: \"$1\" is NOT a supported core." | tee -a "$LOGFILE" >&2
+    if [[ "${SUPPORTED_CORES[@]//$core/}" == "${SUPPORTED_CORES[@]}" ]]; then
+        echolog "ERROR: \"$core\" is NOT a supported core." >&2
+        exit 1
+    fi
+
+    if dl_core "$core"; then
+        echolog "SUCCESS: \"$core\" has been installed"
+    else
+        echolog "WARNING: failed to install \"$core\"."
         exit 1
     fi
 }
 
 
 main "$@"
+
