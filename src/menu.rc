@@ -41,7 +41,7 @@ main MENU
         {
             MENUITEM "Beetle SGX (PC Engine)", IDM_SYSTEM_BEETLESGX
             MENUITEM "FCEUmm (Nintendo)", IDM_SYSTEM_FCEUMM
-            MENUITEM "Final Burn Alpha (Neo Geo)", IDM_SYSTEM_FBALPHA
+            MENUITEM "Final Burn Alpha (Neo Geo, CPS1, CPS2)", IDM_SYSTEM_FBALPHA
             MENUITEM "Gambatte (Game Boy, Game Boy Color)", IDM_SYSTEM_GAMBATTE
             MENUITEM "Genesis Plus GX (Game Gear, Master System, Mega Drive)", IDM_SYSTEM_GENESISPLUSGX
             MENUITEM "Handy (Atari Lynx)", IDM_SYSTEM_HANDY
