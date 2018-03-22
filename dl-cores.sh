@@ -15,8 +15,9 @@ SUPPORTED_CORES=(
 )
 NIGHTLY_URL="https://buildbot.libretro.com/nightly/windows/x86/latest"
 DEST_DIR="bin/Cores"
-LOGFILE="dl-cores.log"
 DEPS=(wget unzip)
+# uncomment the line below to have a logfile
+#LOGFILE="dl-cores.log"
 ###############################################################################
 
 
@@ -62,7 +63,11 @@ function check_deps() {
 
 
 function echolog() {
-    echo "$@" | tee -a "$LOGFILE"
+    if [[ -f "$LOGFILE" ]]; then
+        echo "$@" | tee -a "$LOGFILE"
+    else
+        echo "$@"
+    fi
 }
 
 
@@ -95,7 +100,11 @@ function main() {
     local ret=0
     local failed_cores=()
 
-    echo "--- starting $(basename "$0") log - $(date) ---" > "$LOGFILE"
+    if [[ -f "$LOGFILE" ]]; then
+        echo "--- starting $(basename "$0") log - $(date) ---" > "$LOGFILE"
+    else
+        LOGFILE="/dev/tty"
+    fi
 
     check_deps
 
