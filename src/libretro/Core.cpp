@@ -1032,8 +1032,8 @@ bool libretro::Core::setSubsystemInfo(const struct retro_subsystem_info* data)
 
       for (unsigned k = 0; k < info->roms[j].num_memory; k++, memory++)
       {
-        debug("      memory[%u].type      = %u", memory->type);
-        debug("      memory[%u].extension = %s", memory->extension);
+        debug("      memory[%u].type         = %u", k, memory->type);
+        debug("      memory[%u].extension    = %s", k, memory->extension);
       }
     }
   }
