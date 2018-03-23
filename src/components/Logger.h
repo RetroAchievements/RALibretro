@@ -21,7 +21,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "libretro/Components.h"
 
-#ifdef DEBUG
+#ifdef LOG_TO_FILE
 #include <stdio.h>
 #endif
 
@@ -69,7 +69,7 @@ protected:
   size_t _first;
   size_t _last;
 
-#ifndef NDEBUG
+#ifdef LOG_TO_FILE
   FILE* _file;
 #endif
 };
