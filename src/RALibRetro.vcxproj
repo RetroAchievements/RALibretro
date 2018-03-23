@@ -78,7 +78,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\SDL2\include;$(MSBuildProjectDirectory)\miniz;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\SDL2\include;$(MSBuildProjectDirectory)\miniz;$(MSBuildProjectDirectory)\..\..\RA_Integration;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -94,7 +94,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\SDL2\include;$(MSBuildProjectDirectory)\miniz;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\SDL2\include;$(MSBuildProjectDirectory)\miniz;$(MSBuildProjectDirectory)\..\..\RA_Integration;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -125,7 +125,7 @@
     <ClCompile Include="libretro\Core.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ra_integration\RA_Implementation.cpp" />
-    <ClCompile Include="ra_integration\RA_Interface.cpp" />
+    <ClCompile Include="..\..\RA_Integration\RA_Interface.cpp" />
     <ClCompile Include="speex\resample.c" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
