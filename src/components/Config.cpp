@@ -53,6 +53,10 @@ bool Config::init(libretro::LoggerComponent* logger)
   _systemFolder = _rootFolder + "System\\";
   _screenshotsFolder = _rootFolder + "Screenshots\\";
 
+#ifdef WIN32
+ #define mkdir(path) CreateDirectory(path, NULL)
+#endif
+
   mkdir(_assetsFolder.c_str());
   mkdir(_saveFolder.c_str());
   mkdir(_systemFolder.c_str());
