@@ -35,7 +35,19 @@ bool Logger::init()
 
   _avail = RING_LOG_MAX_BUFFER_SIZE;
   _first = _last = 0;
+
+#ifdef LOG_TO_FILE
+  _file = fopen("log.txt", "w");
+#endif
+
   return true;
+}
+
+void Logger::destroy()
+{
+#ifdef LOG_TO_FILE
+  fclose(_file);
+#endif
 }
 
 void Logger::vprintf(enum retro_log_level level, const char* fmt, va_list args)
@@ -79,6 +91,10 @@ void Logger::vprintf(enum retro_log_level level, const char* fmt, va_list args)
 
   ::printf("%s\n", line);
   fflush(stdout);
+
+#ifdef LOG_TO_FILE
+  fprintf(_file, "%s\n", line);
+#endif
 }
 
 void Logger::debug(const char* format, ...)

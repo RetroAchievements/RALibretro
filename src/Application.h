@@ -25,7 +25,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <SDL.h>
 #include "Fsm.h"
 
-#include "RA_Integration/RA_Interface.h"
+#include <RA_Interface.h>
 
 #include "components/Allocator.h"
 #include "components/Audio.h"

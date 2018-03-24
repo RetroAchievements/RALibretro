@@ -23,7 +23,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "libretro/Core.h"
 
-#include "RA_Integration/RA_Interface.h"
+#include <RA_Interface.h>
 
 #include "Util.h"
 

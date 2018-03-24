@@ -1032,8 +1032,8 @@ bool libretro::Core::setSubsystemInfo(const struct retro_subsystem_info* data)
 
       for (unsigned k = 0; k < info->roms[j].num_memory; k++, memory++)
       {
-        debug("      memory[%u].type      = %u", memory->type);
-        debug("      memory[%u].extension = %s", memory->extension);
+        debug("      memory[%u].type         = %u", k, memory->type);
+        debug("      memory[%u].extension    = %s", k, memory->extension);
       }
     }
   }
@@ -1143,7 +1143,7 @@ bool libretro::Core::setMemoryMaps(const struct retro_memory_map* data)
   preprocessMemoryDescriptors(descriptors, _memoryMap.num_descriptors);
 
   debug("retro_memory_map");
-  debug("  ndx flags  ptr              offset   start    select   disconn  len      addrspace");
+  debug("  ndx flags  ptr      offset   start    select   disconn  len      addrspace");
 
   const struct retro_memory_descriptor* end = descriptors + _memoryMap.num_descriptors;
 

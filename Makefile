@@ -2,18 +2,18 @@
 CC=gcc
 CXX=g++
 RC=windres
-INCLUDES=-Isrc -I../RA_Integration/rapidjson/include
+INCLUDES=-Isrc -I../RA_Integration -I../RA_Integration/rapidjson/include
 DEFINES=-DOUTSIDE_SPEEX -DRANDOM_PREFIX=speex -DEXPORT= -D_USE_SSE2 -DFIXED_POINT
 CCFLAGS=-Wall -m32 $(INCLUDES) $(DEFINES) `sdl2-config --cflags`
 CXXFLAGS=$(CCFLAGS) -std=c++11
 LDFLAGS=-m32
 
 ifneq ($(DEBUG),)
-  CFLAGS   += -O0 -g -DDEBUG_FSM
-  CXXFLAGS += -O0 -g -DDEBUG_FSM
+  CFLAGS   += -O0 -g -DDEBUG_FSM -DLOG_TO_FILE
+  CXXFLAGS += -O0 -g -DDEBUG_FSM -DLOG_TO_FILE
 else
-  CFLAGS   += -O3 -DNDEBUG
-  CXXFLAGS += -O3 -DNDEBUG
+  CFLAGS   += -O3 -DNDEBUG -DLOG_TO_FILE
+  CXXFLAGS += -O3 -DNDEBUG -DLOG_TO_FILE
 endif
 
 # main
@@ -24,7 +24,7 @@ OBJS=\
 	src/libretro/BareCore.o \
 	src/libretro/Core.o \
 	src/RA_Integration/RA_Implementation.o \
-	src/RA_Integration/RA_Interface.o \
+	../RA_Integration/RA_Interface.o \
 	src/components/Audio.o \
 	src/components/Config.o \
 	src/components/Dialog.o \
@@ -55,14 +55,17 @@ OBJS=\
 all: bin/RALibretro
 
 bin/RALibretro: $(OBJS)
+	mkdir -p bin
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LIBS)
-	rm -f bin/RALibretro-*.zip
-	zip -9 bin/RALibretro-`date +%Y-%m-%d-%H-%M-%S | tr -d "\n"`-`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`.zip bin/RALibretro.exe
 
 src/Git.cpp: etc/Git.cpp.template FORCE
 	cat $< | sed s/GITFULLHASH/`git rev-parse HEAD | tr -d "\n"`/g | sed s/GITMINIHASH/`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`/g > $@
 
+zip:
+	rm -f bin/RALibretro-*.zip
+	zip -9 bin/RALibretro-`date +%Y-%m-%d-%H-%M-%S | tr -d "\n"`-`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`.zip bin/RALibretro.exe
+
 clean:
-	rm -f bin/RALibretro $(OBJS)
+	rm -f bin/RALibretro $(OBJS) bin/RALibretro-*.zip
 
 .PHONY: clean FORCE

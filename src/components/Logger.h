@@ -21,6 +21,10 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "libretro/Components.h"
 
+#ifdef LOG_TO_FILE
+#include <stdio.h>
+#endif
+
 // Must be at most 65535
 #ifndef RING_LOG_MAX_LINE_SIZE
 #define RING_LOG_MAX_LINE_SIZE 1024
@@ -35,7 +39,7 @@ class Logger: public libretro::LoggerComponent
 {
 public:
   bool init();
-  void destroy() {}
+  void destroy();
 
   virtual void vprintf(enum retro_log_level level, const char* fmt, va_list args) override;
 
@@ -64,4 +68,8 @@ protected:
   size_t _avail;
   size_t _first;
   size_t _last;
+
+#ifdef LOG_TO_FILE
+  FILE* _file;
+#endif
 };
