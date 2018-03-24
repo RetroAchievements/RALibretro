@@ -61,7 +61,7 @@ enum class System
   kPlayStation1   = PlayStation,
   kNeoGeoPocket   = NeoGeo,
   kVirtualBoy     = VirtualBoy,
-  kGameGear       = Xbox360,
+  kGameGear       = GameGear,
   kArcade         = Arcade
 };
 
