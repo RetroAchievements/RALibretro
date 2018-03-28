@@ -100,6 +100,7 @@ protected:
   void        loadRecentList();
   std::string serializeRecentList();
   void        handle(const SDL_SysWMEvent* syswm);
+  void        handle(const SDL_WindowEvent* window);
   void        handle(const SDL_KeyboardEvent* key);
 
   Fsm _fsm;
@@ -109,7 +110,6 @@ protected:
   System   _system;
 
   SDL_Window*       _window;
-  SDL_Renderer*     _renderer;
   SDL_AudioSpec     _audioSpec;
   SDL_AudioDeviceID _audioDev;
 

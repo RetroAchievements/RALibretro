@@ -18,240 +18,276 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "Video.h"
+#include "Gl.h"
 
-#include <SDL_hints.h>
+#include <SDL_render.h>
+
 #include <math.h>
 
-bool Video::init(libretro::LoggerComponent* logger, Config* config, SDL_Renderer* renderer)
+bool Video::init(libretro::LoggerComponent* logger, Config* config)
 {
   _logger = logger;
   _config = config;
 
-  _inited = false;
-
-  _renderer = renderer;
-  _texture = NULL;
   _linearFilter = false;
-  _width = _height = 0;
+  _windowWidth = _windowHeight = 0;
+  _textureWidth = _textureHeight = 0;
+  _viewWidth = _viewHeight = 0;
+
+  _program = 0;
+  _posAttribute = -1;
+  _uvAttribute = -1;
+  _ratioUniform = -1;
+  _vertexBuffer = 0;
+  _texture = 0;
+  _framebuffer = 0;
+  _renderbuffer = 0;
+
+  if (!_gl.init(logger))
+  {
+    return false;
+  }
+
+  createProgram();
+  createVertexAttributes();
+
+  if (!_gl.ok())
+  {
+    destroy();
+    return false;
+  }
+
   return true;
 }
 
 void Video::destroy()
 {
-  /*if (_texture != NULL)
+  if (_renderbuffer != 0)
   {
-    SDL_DestroyTexture(_texture);
-    _texture = NULL;
-  }*/
+    _gl.reset();
+    _gl.deleteRenderbuffers(1, &_renderbuffer);
+    _renderbuffer = 0;
+  }
+
+  if (_framebuffer != 0)
+  {
+    _gl.reset();
+    _gl.deleteFramebuffers(1, &_framebuffer);
+    _framebuffer = 0;
+  }
+
+  if (_texture != 0)
+  {
+    _gl.reset();
+    _gl.deleteTextures(1, &_texture);
+    _texture = 0;
+  }
+
+  if (_vertexBuffer != 0)
+  {
+    _gl.reset();
+    _gl.deleteBuffers(1, &_vertexBuffer);
+    _vertexBuffer = 0;
+  }
+
+  if (_program != 0)
+  {
+    _gl.reset();
+    _gl.deleteProgram(_program);
+    _program = 0;
+  }
 }
 
 void Video::draw()
 {
-#if 0
-  if (_texture != NULL)
+  if (_texture != 0)
   {
+    _gl.reset();
+
     bool linearFilter = _config->linearFilter();
 
     if (linearFilter != _linearFilter)
     {
-      SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, linearFilter ? "linear" : "nearest");
       _linearFilter = linearFilter;
-
-      setGeometry(_width, _height, _aspect, _pixelFormat, false);
+      GLint filter = linearFilter ? GL_LINEAR : GL_NEAREST;
+      _gl.texParameteri(_texture, GL_TEXTURE_MIN_FILTER, filter);
+      _gl.texParameteri(_texture, GL_TEXTURE_MAG_FILTER, filter);
     }
 
-    int w, h;
-
-    if (SDL_GetRendererOutputSize(_renderer, &w, &h) != 0)
-    {
-      _logger->printf(RETRO_LOG_ERROR, "SDL_GetRendererOutputSize: %s", SDL_GetError());
-      return;
-    }
-
-    float height = h;
+    float height = _windowHeight;
     float width = height * _aspect;
 
-    if (width > w)
+    if (width > _windowWidth)
     {
-      width = w;
+      width = _windowWidth;
       height = width / _aspect;
     }
 
-    SDL_Rect src;
-    src.x = src.y = 0;
-    src.w = _width;
-    src.h = _height;
-
-    int res;
+    float sx = 1.0f;
+    float sy = 1.0f;
 
     if (_config->preserveAspect())
     {
-      SDL_Rect dst;
-      dst.w = ceil(width);
-      dst.h = ceil(height);
-      dst.x = (w - dst.w) / 2;
-      dst.y = (h - dst.h) / 2;
-
-      res = SDL_RenderCopy(_renderer, _texture, &src, &dst);
-    }
-    else
-    {
-      res = SDL_RenderCopy(_renderer, _texture, &src, NULL);
+      sx = (float)_viewWidth / (float)_windowWidth;
+      sy = (float)_viewHeight / (float)_windowHeight;
     }
 
-    if (res != 0)
-    {
-      _logger->printf(RETRO_LOG_ERROR, "SDL_RenderCopy: %s", SDL_GetError());
-      return;
-    }
+    _gl.clearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    _gl.clear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+    
+    _gl.useProgram(_program);
+    _gl.enableVertexAttribArray(_posAttribute);
+    _gl.enableVertexAttribArray(_uvAttribute);
+    _gl.uniform2f(_ratioUniform, sx, sy);
+
+    _gl.drawArrays(GL_TRIANGLES, 0, 3);
   }
-#endif
 }
 
-bool Video::setGeometry(unsigned width, unsigned height, float aspect, enum retro_pixel_format pixelFormat, bool needsHardwareRender)
+bool Video::setGeometry(unsigned width, unsigned height, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback)
 {
-#if 0
-  if (_inited)
+  destroy();
+  _gl.reset();
+
+  _gl.genTextures(1, &_texture);
+
+  if (!_gl.ok())
   {
-    // Destroy everything
+    return false;
   }
 
-  Gl gl(_logger);
-
-  GLuint _framebuffer;
-  gl.genFramebuffers(1, &_framebuffer);
-  gl.bindFramebuffer(GL_FRAMEBUFFER, _framebuffer);
-
-  GLuint _texture;
-  gl.genTextures(1, &_texture);
-  gl.bindTexture(GL_TEXTURE_2D, _texture);
-
-  gl.texImage2D(GL_TEXTURE_2D, 0,GL_RGB, 1024, 768, 0,GL_RGB, GL_UNSIGNED_BYTE, 0);
-
-  gl.texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  gl.texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-  gl.framebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, _texture, 0);
-
-  GLuint _depth;
-  gl.genRenderbuffers(1, &_depth);
-  gl.bindRenderbuffer(GL_RENDERBUFFER, _depth);
-  gl.renderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
-  gl.framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth);
-
-  GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
-  gl.drawBuffers(1, drawBuffers);
-
-
-
-
-
-
-
-  // TODO implement an OpenGL renderer
-  (void)needsHardwareRender;
-
-  if (_texture != NULL)
-  {
-    SDL_DestroyTexture(_texture);
-  }
-
-  unsigned format;
+  _gl.bindTexture(GL_TEXTURE_2D, _texture);
 
   switch (pixelFormat)
   {
   case RETRO_PIXEL_FORMAT_XRGB8888:
-    format = SDL_PIXELFORMAT_ARGB8888;
+    _gl.texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     break;
     
   case RETRO_PIXEL_FORMAT_RGB565:
-    format = SDL_PIXELFORMAT_RGB565;
+    _gl.texImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, NULL);
     break;
     
   case RETRO_PIXEL_FORMAT_0RGB1555:
   default:
-    format = SDL_PIXELFORMAT_ARGB1555;
+    _gl.texImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT_1_5_5_5_REV, NULL);
     break;
-  }
-
-  _texture = SDL_CreateTexture(_renderer, format, SDL_TEXTUREACCESS_STREAMING, width, height);
-
-  if (_texture == NULL)
-  {
-    _logger->printf(RETRO_LOG_ERROR, "SDL_CreateTexture: %s", SDL_GetError());
-    return false;
-  }
-
-  if (SDL_SetTextureBlendMode(_texture, SDL_BLENDMODE_NONE) != 0)
-  {
-    _logger->printf(RETRO_LOG_ERROR, "SDL_SetTextureBlendMode: %s", SDL_GetError());
-    return false;
   }
 
   _textureWidth = width;
   _textureHeight = height;
-  _pixelFormat = pixelFormat;
   _aspect = aspect;
-#endif
+  _pixelFormat = pixelFormat;
+
+  _logger->printf(RETRO_LOG_DEBUG, "Geometry set to %u x %u (1:%f)", width, height, aspect);
+
+  if (hwRenderCallback != NULL)
+  {
+    // Hardware framebuffer
+    _gl.genFramebuffers(1, &_framebuffer);
+    _gl.bindFramebuffer(GL_FRAMEBUFFER, _framebuffer);
+
+    _gl.framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _texture, 0);
+
+    _gl.genRenderbuffers(1, &_renderbuffer);
+    _gl.bindRenderbuffer(GL_RENDERBUFFER, _renderbuffer);
+    GLenum internalFormat = hwRenderCallback->stencil ? GL_DEPTH24_STENCIL8 : GL_DEPTH_COMPONENT24;
+    _gl.renderbufferStorage(GL_RENDERBUFFER, internalFormat, width, height);
+    _gl.framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _renderbuffer);
+
+    GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
+    _gl.drawBuffers(sizeof(drawBuffers) / sizeof(drawBuffers[0]), drawBuffers);
+  }
+
+  if (!_gl.ok())
+  {
+    destroy();
+    return false;
+  }
 
   return true;
 }
 
 void Video::refresh(const void* data, unsigned width, unsigned height, size_t pitch)
 {
-#if 0
   if (data != NULL && data != RETRO_HW_FRAME_BUFFER_VALID)
   {
-    SDL_Rect rect;
-    rect.x = 0;
-    rect.y = 0;
-    rect.w = width;
-    rect.h = height;
+    _gl.reset();
 
-    uint8_t* target_pixels;
-    int target_pitch;
+    _gl.bindTexture(GL_TEXTURE_2D, _texture);
+    uint8_t* p = (uint8_t*)data;
 
-    if (SDL_LockTexture(_texture, &rect, (void**)&target_pixels, &target_pitch) != 0)
+    switch (_pixelFormat)
     {
-      _logger->printf(RETRO_LOG_ERROR, "SDL_LockTexture: %s", SDL_GetError());
-      return;
+    case RETRO_PIXEL_FORMAT_XRGB8888:
+      {
+        uint32_t* q = (uint32_t*)alloca(width * 4);
+
+        if (q != NULL)
+        {
+          for (unsigned y = 0; y < height; y++)
+          {
+            uint32_t* r = q;
+            uint32_t* s = (uint32_t*)p;
+
+            for (unsigned x = 0; x < width; x++)
+            {
+              uint32_t color = *s++;
+              uint32_t red   = (color >> 16) & 255;
+              uint32_t green = (color >> 8) & 255;
+              uint32_t blue  = color & 255;
+              *r++ = 0xff000000UL | blue << 16 | green << 8 | red;
+            }
+
+            _gl.texSubImage2D(GL_TEXTURE_2D, 0, 0, y, width, 1, GL_RGBA, GL_UNSIGNED_BYTE, (void*)q);
+            p += pitch;
+          }
+        }
+      }
+      
+      break;
+      
+    case RETRO_PIXEL_FORMAT_RGB565:
+      for (unsigned y = 0; y < height; y++)
+      {
+        _gl.texSubImage2D(GL_TEXTURE_2D, 0, 0, y, width, 1, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, (void*)p);
+        p += pitch;
+      }
+
+      break;
+      
+    case RETRO_PIXEL_FORMAT_0RGB1555:
+    default:
+      for (unsigned y = 0; y < height; y++)
+      {
+        _gl.texSubImage2D(GL_TEXTURE_2D, 0, 0, y, width, 1, GL_RGB, GL_UNSIGNED_SHORT_1_5_5_5_REV, (void*)p);
+        p += pitch;
+      }
+
+      break;
     }
 
-    auto source_pixels = (uint8_t*)data;
-    size_t bpp = _pixelFormat == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 2;
-    size_t bytes = width * bpp;
-
-    if (bytes > (unsigned)target_pitch)
+    if (width != _viewWidth || height != _viewHeight)
     {
-      bytes = target_pitch;
+      _viewWidth = width;
+      _viewHeight = height;
+
+      _logger->printf(RETRO_LOG_DEBUG, "Video refreshed with geometry %u x %u", width, height);
     }
-
-    for (unsigned y = 0; y < height; y++)
-    {
-      memcpy(target_pixels, source_pixels, bytes);
-      source_pixels += pitch;
-      target_pixels += target_pitch;
-    }
-
-    SDL_UnlockTexture(_texture);
-
-    _width = width;
-    _height = height;
   }
-#endif
 }
 
 bool Video::supportsContext(enum retro_hw_context_type type)
 {
-  // TODO Do we really support all those types?
+  // Do we really support those two?
 
   switch (type)
   {
   case RETRO_HW_CONTEXT_OPENGL:
-  case RETRO_HW_CONTEXT_OPENGLES2:
+  //case RETRO_HW_CONTEXT_OPENGLES2:
   case RETRO_HW_CONTEXT_OPENGL_CORE:
-  case RETRO_HW_CONTEXT_OPENGLES3:
-  case RETRO_HW_CONTEXT_OPENGLES_VERSION:
+  //case RETRO_HW_CONTEXT_OPENGLES3:
+  //case RETRO_HW_CONTEXT_OPENGLES_VERSION:
     return true;
   
   default:
@@ -276,8 +312,15 @@ void Video::showMessage(const char* msg, unsigned frames)
   _logger->printf(RETRO_LOG_INFO, "OSD message (%u): %s", frames, msg);
 }
 
+void Video::windowResized(unsigned width, unsigned height)
+{
+  _windowWidth = width;
+  _windowHeight = height;
+}
+
 const void* Video::getFramebuffer(unsigned* width, unsigned* height, unsigned* pitch, enum retro_pixel_format* format)
 {
+#if 0
   unsigned bpp = _pixelFormat == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 2;
   void* result = malloc(_width * _height * bpp);
 
@@ -325,4 +368,54 @@ const void* Video::getFramebuffer(unsigned* width, unsigned* height, unsigned* p
   *pitch = target_pitch;
   *format = _pixelFormat;
   return result;
+#endif
+  return NULL;
+}
+
+void Video::createProgram()
+{
+  static const char* s_vertexShader =
+    "attribute vec2 a_pos;\n"
+    "attribute vec2 a_uv;\n"
+    "varying vec2 v_uv;\n"
+    "uniform vec2 u_ratio;\n"
+    "void main() {\n"
+    "  v_uv = a_uv;\n"
+    "  gl_Position = vec4(a_pos * u_ratio, 0.0, 1.0);\n"
+    "}";
+  
+  static const char* s_fragmentShader =
+    "varying vec2 v_uv;\n"
+    "uniform sampler2D u_tex;\n"
+    "void main() {\n"
+    "  gl_FragColor = texture2D(u_tex, v_uv);\n"
+    "}";
+  
+  _program = _gl.createProgram(s_vertexShader, s_fragmentShader);
+
+  _posAttribute = _gl.getAttribLocation(_program, "a_pos");
+  _uvAttribute = _gl.getAttribLocation(_program, "a_uv");
+  _ratioUniform = _gl.getUniformLocation(_program, "u_ratio");
+}
+
+void Video::createVertexAttributes()
+{
+  struct VertexData
+  {
+    float x, y, u, v;
+  };
+
+  static const VertexData vertexData[] = {
+    {-1.0f, -1.0f, 0.0f, 0.0f},
+    {-1.0f,  1.0f, 0.0f, 1.0f},
+    { 1.0f, -1.0f, 1.0f, 0.0f},
+    { 1.0f,  1.0f, 1.0f, 1.0f}
+  };
+  
+  _gl.genBuffers(1, &_vertexBuffer);
+  _gl.bindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
+  _gl.bufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
+  
+  _gl.vertexAttribPointer(_posAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, x));
+  _gl.vertexAttribPointer(_uvAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, u));
 }

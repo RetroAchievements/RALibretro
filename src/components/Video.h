@@ -21,18 +21,19 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "libretro/Components.h"
 #include "Config.h"
+#include "Gl.h"
 
-#include <SDL_render.h>
+#include <SDL_opengl.h>
 
 class Video: public libretro::VideoComponent
 {
 public:
-  bool init(libretro::LoggerComponent* logger, Config* config, SDL_Renderer* renderer);
+  bool init(libretro::LoggerComponent* logger, Config* config);
   void destroy();
 
   void draw();
 
-  virtual bool setGeometry(unsigned width, unsigned height, float aspect, enum retro_pixel_format pixelFormat, bool needsHardwareRender) override;
+  virtual bool setGeometry(unsigned width, unsigned height, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback) override;
   virtual void refresh(const void* data, unsigned width, unsigned height, size_t pitch) override;
 
   virtual bool                 supportsContext(enum retro_hw_context_type type) override;
@@ -41,21 +42,34 @@ public:
 
   virtual void showMessage(const char* msg, unsigned frames) override;
 
+  void windowResized(unsigned width, unsigned height);
   const void* getFramebuffer(unsigned* width, unsigned* height, unsigned* pitch, enum retro_pixel_format* format);
 
 protected:
+  void createProgram();
+  void createVertexAttributes();
+
+
   libretro::LoggerComponent* _logger;
   Config* _config;
+  Gl _gl;
 
-  bool _inited;
+  GLuint                  _program;
+  GLint                   _posAttribute;
+  GLint                   _uvAttribute;
+  GLint                   _ratioUniform;
+  GLuint                  _vertexBuffer;
+  GLuint                  _texture;
+  GLuint                  _framebuffer;
+  GLuint                  _renderbuffer;
 
-  SDL_Renderer*           _renderer;
-  SDL_Texture*            _texture;
   bool                    _linearFilter;
+  unsigned                _windowWidth;
+  unsigned                _windowHeight;
   unsigned                _textureWidth;
   unsigned                _textureHeight;
+  unsigned                _viewWidth;
+  unsigned                _viewHeight;
   enum retro_pixel_format _pixelFormat;
-  unsigned                _width;
-  unsigned                _height;
   float                   _aspect;
 };

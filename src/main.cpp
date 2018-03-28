@@ -56,8 +56,8 @@ int main(int argc, char* argv[])
   if (ok)
   {
     app.run();
+	app.destroy();
   }
 
-  app.destroy();
   return ok ? 0 : 1;
 }

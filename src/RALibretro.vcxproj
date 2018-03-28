@@ -65,7 +65,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)bin\$(Configuration)</OutDir>
+    <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -85,7 +85,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <AdditionalLibraryDirectories>$(MSBuildProjectDirectory)\..\SDL2\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2main.lib;SDL2.lib;dinput8.lib;dxguid.lib;winmm.lib;imm32.lib;version.lib;winhttp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2main.lib;SDL2.lib;dinput8.lib;dxguid.lib;winmm.lib;imm32.lib;version.lib;winhttp.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -119,6 +119,7 @@
     <ClCompile Include="Emulator.cpp" />
     <ClCompile Include="Fsm.cpp" />
     <ClCompile Include="Git.cpp" />
+    <ClCompile Include="Gl.cpp" />
     <ClCompile Include="jsonsax\jsonsax.c" />
     <ClCompile Include="KeyBinds.cpp" />
     <ClCompile Include="libretro\BareCore.cpp" />
@@ -143,6 +144,7 @@
     <ClInclude Include="Emulator.h" />
     <ClInclude Include="Fsm.h" />
     <ClInclude Include="Git.h" />
+    <ClInclude Include="Gl.h" />
     <ClInclude Include="jsonsax\jsonsax.h" />
     <ClInclude Include="KeyBinds.h" />
     <ClInclude Include="libretro\BareCore.h" />

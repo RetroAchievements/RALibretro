@@ -107,12 +107,12 @@ namespace
   class Video: public libretro::VideoComponent
   {
   public:
-    virtual bool setGeometry(unsigned width, unsigned height, float aspect, enum retro_pixel_format pixelFormat, bool needsHardwareRender) override
+    virtual bool setGeometry(unsigned width, unsigned height, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback) override
     {
       (void)width;
       (void)height;
       (void)pixelFormat;
-      (void)needsHardwareRender;
+      (void)hwRenderCallback;
       return false;
     }
 
@@ -492,7 +492,9 @@ bool libretro::Core::initAV()
     _systemAVInfo.geometry.aspect_ratio = (float)_systemAVInfo.geometry.base_width / (float)_systemAVInfo.geometry.base_height;
   }
 
-  if (!_video->setGeometry(_systemAVInfo.geometry.base_width, _systemAVInfo.geometry.base_height, _systemAVInfo.geometry.aspect_ratio, _pixelFormat, _needsHardwareRender))
+  const struct retro_hw_render_callback* cb = _needsHardwareRender ? &_hardwareRenderCallback : NULL;
+
+  if (!_video->setGeometry(_systemAVInfo.geometry.base_width, _systemAVInfo.geometry.base_height, _systemAVInfo.geometry.aspect_ratio, _pixelFormat, cb))
   {
     goto error;
   }
@@ -921,7 +923,9 @@ bool libretro::Core::setSystemAVInfo(const struct retro_system_av_info* data)
     _systemAVInfo.geometry.aspect_ratio = (float)_systemAVInfo.geometry.base_width / (float)_systemAVInfo.geometry.base_height;
   }
 
-  if (!_video->setGeometry(_systemAVInfo.geometry.base_width, _systemAVInfo.geometry.base_height, _systemAVInfo.geometry.aspect_ratio, _pixelFormat, _needsHardwareRender))
+  const struct retro_hw_render_callback* cb = _needsHardwareRender ? &_hardwareRenderCallback : NULL;
+
+  if (!_video->setGeometry(_systemAVInfo.geometry.base_width, _systemAVInfo.geometry.base_height, _systemAVInfo.geometry.aspect_ratio, _pixelFormat, cb))
   {
     return false;
   }
@@ -1215,7 +1219,9 @@ bool libretro::Core::setGeometry(const struct retro_game_geometry* data)
     _systemAVInfo.geometry.aspect_ratio = (float)_systemAVInfo.geometry.base_width / _systemAVInfo.geometry.base_height;
   }
 
-  if (!_video->setGeometry(_systemAVInfo.geometry.base_width, _systemAVInfo.geometry.base_height, _systemAVInfo.geometry.aspect_ratio, _pixelFormat, _needsHardwareRender))
+  const struct retro_hw_render_callback* cb = _needsHardwareRender ? &_hardwareRenderCallback : NULL;
+
+  if (!_video->setGeometry(_systemAVInfo.geometry.base_width, _systemAVInfo.geometry.base_height, _systemAVInfo.geometry.aspect_ratio, _pixelFormat, cb))
   {
     return false;
   }
