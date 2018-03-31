@@ -35,5 +35,7 @@ namespace util
   std::string jsonEscape(const std::string& str);
   std::string jsonUnescape(const std::string& str);
   std::string fileName(const std::string& path);
-  bool        openFileDialog(char* buffer, size_t bufferSize, HWND hWnd, const char* extensionsFilter);
+  std::string extension(const std::string& path);
+  std::string openFileDialog(HWND hWnd, const char* extensionsFilter);
+  std::string saveFileDialog(HWND hWnd, const char* extensionsFilter);
 }

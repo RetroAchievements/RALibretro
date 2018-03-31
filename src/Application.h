@@ -95,6 +95,8 @@ protected:
   std::string getScreenshotPath();
   void        saveState(unsigned ndx);
   void        loadState(unsigned ndx);
+  void        saveState();
+  void        loadState();
   void        screenshot();
   void        aboutDialog();
   void        loadRecentList();

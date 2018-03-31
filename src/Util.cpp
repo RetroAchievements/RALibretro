@@ -195,12 +195,25 @@ std::string util::fileName(const std::string& path)
   }
 }
 
-bool util::openFileDialog(char* buffer, size_t bufferSize, HWND hWnd, const char* extensionsFilter)
+std::string util::extension(const std::string& path)
 {
-  if (bufferSize > 0)
+  const char* str = path.c_str();
+  const char* dot = strrchr(str, '.');
+
+  if (dot == NULL)
   {
-    *buffer = 0;
+    return "";
   }
+  else
+  {
+    return path.substr(dot - str);
+  }
+}
+
+std::string util::openFileDialog(HWND hWnd, const char* extensionsFilter)
+{
+  char path[_MAX_PATH];
+  path[0] = 0;
 
   OPENFILENAME cfg;
 
@@ -211,8 +224,8 @@ bool util::openFileDialog(char* buffer, size_t bufferSize, HWND hWnd, const char
   cfg.lpstrCustomFilter = NULL;
   cfg.nMaxCustFilter = 0;
   cfg.nFilterIndex = 2;
-  cfg.lpstrFile = buffer;
-  cfg.nMaxFile = bufferSize;
+  cfg.lpstrFile = path;
+  cfg.nMaxFile = sizeof(path);
   cfg.lpstrFileTitle = NULL;
   cfg.nMaxFileTitle = 0;
   cfg.lpstrInitialDir = NULL;
@@ -225,5 +238,50 @@ bool util::openFileDialog(char* buffer, size_t bufferSize, HWND hWnd, const char
   cfg.lpfnHook = NULL;
   cfg.lpTemplateName = NULL;
 
-  return GetOpenFileName(&cfg) == TRUE;
+  if (GetOpenFileName(&cfg) == TRUE)
+  {
+    return path;
+  }
+  else
+  {
+    return "";
+  }
+}
+
+std::string util::saveFileDialog(HWND hWnd, const char* extensionsFilter)
+{
+  char path[_MAX_PATH];
+  path[0] = 0;
+
+  OPENFILENAME cfg;
+
+  cfg.lStructSize = sizeof(cfg);
+  cfg.hwndOwner = hWnd;
+  cfg.hInstance = NULL;
+  cfg.lpstrFilter = extensionsFilter;
+  cfg.lpstrCustomFilter = NULL;
+  cfg.nMaxCustFilter = 0;
+  cfg.nFilterIndex = 2;
+  cfg.lpstrFile = path;
+  cfg.nMaxFile = sizeof(path);
+  cfg.lpstrFileTitle = NULL;
+  cfg.nMaxFileTitle = 0;
+  cfg.lpstrInitialDir = NULL;
+  cfg.lpstrTitle = "Save";
+  cfg.Flags = OFN_NOREADONLYRETURN | OFN_OVERWRITEPROMPT;
+  cfg.nFileOffset = 0;
+  cfg.nFileExtension = 0;
+  cfg.lpstrDefExt = NULL;
+  cfg.lCustData = 0;
+  cfg.lpfnHook = NULL;
+  cfg.lpTemplateName = NULL;
+
+  if (GetSaveFileName(&cfg) == TRUE)
+  {
+    return path;
+  }
+  else
+  {
+    return "";
+  }
 }
