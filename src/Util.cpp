@@ -24,6 +24,10 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <errno.h>
 #include <string.h>
 
+#define WIN32_LEAN_AND_MEAN
+#include <commdlg.h>
+#include <shlobj.h>
+
 size_t util::nextPow2(size_t v)
 {
   v--;
@@ -189,4 +193,37 @@ std::string util::fileName(const std::string& path)
   {
     return std::string(name, dot - name);
   }
+}
+
+bool util::openFileDialog(char* buffer, size_t bufferSize, HWND hWnd, const char* extensionsFilter)
+{
+  if (bufferSize > 0)
+  {
+    *buffer = 0;
+  }
+
+  OPENFILENAME cfg;
+
+  cfg.lStructSize = sizeof(cfg);
+  cfg.hwndOwner = hWnd;
+  cfg.hInstance = NULL;
+  cfg.lpstrFilter = extensionsFilter;
+  cfg.lpstrCustomFilter = NULL;
+  cfg.nMaxCustFilter = 0;
+  cfg.nFilterIndex = 2;
+  cfg.lpstrFile = buffer;
+  cfg.nMaxFile = bufferSize;
+  cfg.lpstrFileTitle = NULL;
+  cfg.nMaxFileTitle = 0;
+  cfg.lpstrInitialDir = NULL;
+  cfg.lpstrTitle = "Load";
+  cfg.Flags = OFN_FILEMUSTEXIST;
+  cfg.nFileOffset = 0;
+  cfg.nFileExtension = 0;
+  cfg.lpstrDefExt = NULL;
+  cfg.lCustData = 0;
+  cfg.lpfnHook = NULL;
+  cfg.lpTemplateName = NULL;
+
+  return GetOpenFileName(&cfg) == TRUE;
 }

@@ -953,30 +953,7 @@ void Application::loadGame()
   char game_path[1024];
   game_path[0] = 0;
 
-  OPENFILENAME cfg;
-
-  cfg.lStructSize = sizeof(cfg);
-  cfg.hwndOwner = g_mainWindow;
-  cfg.hInstance = NULL;
-  cfg.lpstrFilter = getEmulatorExtensions(_emulator);
-  cfg.lpstrCustomFilter = NULL;
-  cfg.nMaxCustFilter = 0;
-  cfg.nFilterIndex = 2;
-  cfg.lpstrFile = game_path;
-  cfg.nMaxFile = sizeof(game_path);
-  cfg.lpstrFileTitle = NULL;
-  cfg.nMaxFileTitle = 0;
-  cfg.lpstrInitialDir = NULL;
-  cfg.lpstrTitle = "Load Game";
-  cfg.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-  cfg.nFileOffset = 0;
-  cfg.nFileExtension = 0;
-  cfg.lpstrDefExt = NULL;
-  cfg.lCustData = 0;
-  cfg.lpfnHook = NULL;
-  cfg.lpTemplateName = NULL;
-
-  if (GetOpenFileName(&cfg) == TRUE)
+  if (util::openFileDialog(game_path, sizeof(game_path), g_mainWindow, getEmulatorExtensions(_emulator)))
   {
     _fsm.loadGame(game_path);
   }

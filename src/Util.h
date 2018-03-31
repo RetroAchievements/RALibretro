@@ -24,6 +24,9 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <stddef.h>
 #include <string>
 
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
 namespace util
 {
   size_t      nextPow2(size_t v);
@@ -32,4 +35,5 @@ namespace util
   std::string jsonEscape(const std::string& str);
   std::string jsonUnescape(const std::string& str);
   std::string fileName(const std::string& path);
+  bool        openFileDialog(char* buffer, size_t bufferSize, HWND hWnd, const char* extensionsFilter);
 }
