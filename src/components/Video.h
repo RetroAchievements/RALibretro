@@ -52,12 +52,12 @@ protected:
 
   libretro::LoggerComponent* _logger;
   Config* _config;
-  Gl _gl;
 
   GLuint                  _program;
   GLint                   _posAttribute;
   GLint                   _uvAttribute;
   GLint                   _ratioUniform;
+  GLint                   _texUniform;
   GLuint                  _vertexBuffer;
   GLuint                  _texture;
   GLuint                  _framebuffer;

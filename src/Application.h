@@ -36,6 +36,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Emulator.h"
 #include "KeyBinds.h"
+#include "Gl.h"
 
 class Application
 {

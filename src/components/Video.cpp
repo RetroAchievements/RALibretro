@@ -38,20 +38,16 @@ bool Video::init(libretro::LoggerComponent* logger, Config* config)
   _posAttribute = -1;
   _uvAttribute = -1;
   _ratioUniform = -1;
+  _texUniform = -1;
   _vertexBuffer = 0;
   _texture = 0;
   _framebuffer = 0;
   _renderbuffer = 0;
 
-  if (!_gl.init(logger))
-  {
-    return false;
-  }
-
   createProgram();
   createVertexAttributes();
 
-  if (!_gl.ok())
+  if (!Gl::ok())
   {
     destroy();
     return false;
@@ -62,64 +58,57 @@ bool Video::init(libretro::LoggerComponent* logger, Config* config)
 
 void Video::destroy()
 {
-  if (_renderbuffer != 0)
+  /*if (_renderbuffer != 0)
   {
-    _gl.reset();
-    _gl.deleteRenderbuffers(1, &_renderbuffer);
+    Gl::deleteRenderbuffers(1, &_renderbuffer);
     _renderbuffer = 0;
   }
 
   if (_framebuffer != 0)
   {
-    _gl.reset();
-    _gl.deleteFramebuffers(1, &_framebuffer);
+    Gl::deleteFramebuffers(1, &_framebuffer);
     _framebuffer = 0;
   }
 
   if (_texture != 0)
   {
-    _gl.reset();
-    _gl.deleteTextures(1, &_texture);
+    Gl::deleteTextures(1, &_texture);
     _texture = 0;
   }
 
   if (_vertexBuffer != 0)
   {
-    _gl.reset();
-    _gl.deleteBuffers(1, &_vertexBuffer);
+    Gl::deleteBuffers(1, &_vertexBuffer);
     _vertexBuffer = 0;
   }
 
   if (_program != 0)
   {
-    _gl.reset();
-    _gl.deleteProgram(_program);
+    Gl::deleteProgram(_program);
     _program = 0;
-  }
+  }*/
 }
 
 void Video::draw()
 {
   if (_texture != 0)
   {
-    _gl.reset();
-
     bool linearFilter = _config->linearFilter();
 
     if (linearFilter != _linearFilter)
     {
       _linearFilter = linearFilter;
       GLint filter = linearFilter ? GL_LINEAR : GL_NEAREST;
-      _gl.texParameteri(_texture, GL_TEXTURE_MIN_FILTER, filter);
-      _gl.texParameteri(_texture, GL_TEXTURE_MAG_FILTER, filter);
+      Gl::texParameteri(_texture, GL_TEXTURE_MIN_FILTER, filter);
+      Gl::texParameteri(_texture, GL_TEXTURE_MAG_FILTER, filter);
     }
 
-    float height = _windowHeight;
+    float height = (float)_windowHeight;
     float width = height * _aspect;
 
     if (width > _windowWidth)
     {
-      width = _windowWidth;
+      width = (float)_windowWidth;
       height = width / _aspect;
     }
 
@@ -132,45 +121,50 @@ void Video::draw()
       sy = (float)_viewHeight / (float)_windowHeight;
     }
 
-    _gl.clearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    _gl.clear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+    /*Gl::clearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    Gl::clear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);*/
     
-    _gl.useProgram(_program);
-    _gl.enableVertexAttribArray(_posAttribute);
-    _gl.enableVertexAttribArray(_uvAttribute);
-    _gl.uniform2f(_ratioUniform, sx, sy);
+    Gl::useProgram(_program);
 
-    _gl.drawArrays(GL_TRIANGLES, 0, 3);
+    Gl::enableVertexAttribArray(_posAttribute);
+    Gl::enableVertexAttribArray(_uvAttribute);
+
+    Gl::activeTexture(GL_TEXTURE0);
+    Gl::bindTexture(GL_TEXTURE_2D, _texture);
+    Gl::uniform1i(_texUniform, 0);
+
+    Gl::uniform2f(_ratioUniform, sx, sy);
+
+    Gl::drawArrays(GL_TRIANGLE_STRIP, 0, 4);
   }
 }
 
 bool Video::setGeometry(unsigned width, unsigned height, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback)
 {
   destroy();
-  _gl.reset();
 
-  _gl.genTextures(1, &_texture);
+  Gl::genTextures(1, &_texture);
 
-  if (!_gl.ok())
+  if (!Gl::ok())
   {
     return false;
   }
 
-  _gl.bindTexture(GL_TEXTURE_2D, _texture);
+  Gl::bindTexture(GL_TEXTURE_2D, _texture);
 
   switch (pixelFormat)
   {
   case RETRO_PIXEL_FORMAT_XRGB8888:
-    _gl.texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    Gl::texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     break;
     
   case RETRO_PIXEL_FORMAT_RGB565:
-    _gl.texImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, NULL);
+    Gl::texImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, NULL);
     break;
     
   case RETRO_PIXEL_FORMAT_0RGB1555:
   default:
-    _gl.texImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT_1_5_5_5_REV, NULL);
+    Gl::texImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT_1_5_5_5_REV, NULL);
     break;
   }
 
@@ -184,22 +178,22 @@ bool Video::setGeometry(unsigned width, unsigned height, float aspect, enum retr
   if (hwRenderCallback != NULL)
   {
     // Hardware framebuffer
-    _gl.genFramebuffers(1, &_framebuffer);
-    _gl.bindFramebuffer(GL_FRAMEBUFFER, _framebuffer);
+    Gl::genFramebuffers(1, &_framebuffer);
+    Gl::bindFramebuffer(GL_FRAMEBUFFER, _framebuffer);
 
-    _gl.framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _texture, 0);
+    Gl::framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _texture, 0);
 
-    _gl.genRenderbuffers(1, &_renderbuffer);
-    _gl.bindRenderbuffer(GL_RENDERBUFFER, _renderbuffer);
+    Gl::genRenderbuffers(1, &_renderbuffer);
+    Gl::bindRenderbuffer(GL_RENDERBUFFER, _renderbuffer);
     GLenum internalFormat = hwRenderCallback->stencil ? GL_DEPTH24_STENCIL8 : GL_DEPTH_COMPONENT24;
-    _gl.renderbufferStorage(GL_RENDERBUFFER, internalFormat, width, height);
-    _gl.framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _renderbuffer);
+    Gl::renderbufferStorage(GL_RENDERBUFFER, internalFormat, width, height);
+    Gl::framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _renderbuffer);
 
     GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
-    _gl.drawBuffers(sizeof(drawBuffers) / sizeof(drawBuffers[0]), drawBuffers);
+    Gl::drawBuffers(sizeof(drawBuffers) / sizeof(drawBuffers[0]), drawBuffers);
   }
 
-  if (!_gl.ok())
+  if (!Gl::ok())
   {
     destroy();
     return false;
@@ -212,9 +206,7 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
 {
   if (data != NULL && data != RETRO_HW_FRAME_BUFFER_VALID)
   {
-    _gl.reset();
-
-    _gl.bindTexture(GL_TEXTURE_2D, _texture);
+    Gl::bindTexture(GL_TEXTURE_2D, _texture);
     uint8_t* p = (uint8_t*)data;
 
     switch (_pixelFormat)
@@ -239,7 +231,7 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
               *r++ = 0xff000000UL | blue << 16 | green << 8 | red;
             }
 
-            _gl.texSubImage2D(GL_TEXTURE_2D, 0, 0, y, width, 1, GL_RGBA, GL_UNSIGNED_BYTE, (void*)q);
+            Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, y, width, 1, GL_RGBA, GL_UNSIGNED_BYTE, (void*)q);
             p += pitch;
           }
         }
@@ -250,7 +242,7 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
     case RETRO_PIXEL_FORMAT_RGB565:
       for (unsigned y = 0; y < height; y++)
       {
-        _gl.texSubImage2D(GL_TEXTURE_2D, 0, 0, y, width, 1, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, (void*)p);
+        Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, y, width, 1, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, (void*)p);
         p += pitch;
       }
 
@@ -260,7 +252,7 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
     default:
       for (unsigned y = 0; y < height; y++)
       {
-        _gl.texSubImage2D(GL_TEXTURE_2D, 0, 0, y, width, 1, GL_RGB, GL_UNSIGNED_SHORT_1_5_5_5_REV, (void*)p);
+        Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, y, width, 1, GL_RGB, GL_UNSIGNED_SHORT_1_5_5_5_REV, (void*)p);
         p += pitch;
       }
 
@@ -391,11 +383,12 @@ void Video::createProgram()
     "  gl_FragColor = texture2D(u_tex, v_uv);\n"
     "}";
   
-  _program = _gl.createProgram(s_vertexShader, s_fragmentShader);
+  _program = Gl::createProgram(s_vertexShader, s_fragmentShader);
 
-  _posAttribute = _gl.getAttribLocation(_program, "a_pos");
-  _uvAttribute = _gl.getAttribLocation(_program, "a_uv");
-  _ratioUniform = _gl.getUniformLocation(_program, "u_ratio");
+  _posAttribute = Gl::getAttribLocation(_program, "a_pos");
+  _uvAttribute = Gl::getAttribLocation(_program, "a_uv");
+  _ratioUniform = Gl::getUniformLocation(_program, "u_ratio");
+  _texUniform = Gl::getUniformLocation(_program, "u_tex");
 }
 
 void Video::createVertexAttributes()
@@ -412,10 +405,10 @@ void Video::createVertexAttributes()
     { 1.0f,  1.0f, 1.0f, 1.0f}
   };
   
-  _gl.genBuffers(1, &_vertexBuffer);
-  _gl.bindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
-  _gl.bufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
+  Gl::genBuffers(1, &_vertexBuffer);
+  Gl::bindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
+  Gl::bufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
   
-  _gl.vertexAttribPointer(_posAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, x));
-  _gl.vertexAttribPointer(_uvAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, u));
+  Gl::vertexAttribPointer(_posAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, x));
+  Gl::vertexAttribPointer(_uvAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, u));
 }

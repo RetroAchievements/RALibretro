@@ -78,6 +78,7 @@ bool Application::init(const char* title, int width, int height)
     kAllocatorInited,
     kSdlInited,
     kWindowInited,
+	kGlInited,
     kAudioDeviceInited,
     kFifoInited,
     kAudioInited,
@@ -153,6 +154,15 @@ bool Application::init(const char* title, int width, int height)
   _logger.printf(RETRO_LOG_ERROR, "Got OpenGL %d.%d", major, minor);
 
   inited = kWindowInited;
+
+  Gl::init(&_logger);
+
+  if (!Gl::ok())
+  {
+	goto error;
+  }
+
+  inited = kGlInited;
 
   // Init audio
   SDL_AudioSpec want;
@@ -261,6 +271,7 @@ error:
   case kAudioInited:       _audio.destroy();
   case kFifoInited:        _fifo.destroy();
   case kAudioDeviceInited: SDL_CloseAudioDevice(_audioDev);
+  case kGlInited:          // nothing to undo
   case kWindowInited:      SDL_DestroyWindow(_window);
   case kSdlInited:         SDL_Quit();
   case kAllocatorInited:   _allocator.destroy();
@@ -349,7 +360,9 @@ void Application::run()
       RA_DoAchievementsFrame();
     }
 
-    _video.draw();
+	Gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  _video.draw();
+	SDL_GL_SwapWindow(_window);
 
     RA_HandleHTTPResults();
 
