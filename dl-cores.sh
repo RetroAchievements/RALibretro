@@ -83,6 +83,7 @@ function dl_core() {
             echolog "WARNING: failed to unzip \"$DEST_DIR/$core\"" >&2
             return 1
         fi
+	rm -fv "$DEST_DIR/$core"
     else
         echolog "WARNING: failed to download \"$core\"." >&2
         return 1
