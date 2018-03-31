@@ -947,35 +947,11 @@ void Application::s_audioCallback(void* udata, Uint8* stream, int len)
 
 void Application::loadGame()
 {
-  char game_path[1024];
-  game_path[0] = 0;
+  std::string path = util::openFileDialog(g_mainWindow, getEmulatorExtensions(_emulator));
 
-  OPENFILENAME cfg;
-
-  cfg.lStructSize = sizeof(cfg);
-  cfg.hwndOwner = g_mainWindow;
-  cfg.hInstance = NULL;
-  cfg.lpstrFilter = getEmulatorExtensions(_emulator);
-  cfg.lpstrCustomFilter = NULL;
-  cfg.nMaxCustFilter = 0;
-  cfg.nFilterIndex = 2;
-  cfg.lpstrFile = game_path;
-  cfg.nMaxFile = sizeof(game_path);
-  cfg.lpstrFileTitle = NULL;
-  cfg.nMaxFileTitle = 0;
-  cfg.lpstrInitialDir = NULL;
-  cfg.lpstrTitle = "Load Game";
-  cfg.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-  cfg.nFileOffset = 0;
-  cfg.nFileExtension = 0;
-  cfg.lpstrDefExt = NULL;
-  cfg.lCustData = 0;
-  cfg.lpfnHook = NULL;
-  cfg.lpTemplateName = NULL;
-
-  if (GetOpenFileName(&cfg) == TRUE)
+  if (!path.empty())
   {
-    _fsm.loadGame(game_path);
+    _fsm.loadGame(path);
   }
 }
 
@@ -1196,6 +1172,74 @@ void Application::loadState(unsigned ndx)
     std::string path = getStatePath(ndx);
     size_t size;
     void* data = util::loadFile(&_logger, path.c_str(), &size);
+    
+    if (data != NULL)
+    {
+      _core.unserialize(data, size);
+      free(data);
+
+      RA_OnLoadState(path.c_str());
+    }
+  }
+}
+
+void Application::saveState()
+{
+  if (hardcore())
+  {
+    _logger.printf(RETRO_LOG_INFO, "Hardcore mode is active, can't save state");
+    return;
+  }
+
+  size_t size = _core.serializeSize();
+  void* data = malloc(size);
+
+  if (data == NULL)
+  {
+    _logger.printf(RETRO_LOG_ERROR, "Out of memory allocating %lu bytes for the game state", size);
+    return;
+  }
+
+  if (!_core.serialize(data, size))
+  {
+    free(data);
+    return;
+  }
+
+  std::string path = util::saveFileDialog(g_mainWindow, "*.STATE\0");
+
+  if (!path.empty())
+  {
+    if (util::extension(path).empty())
+    {
+      path += ".state";
+    }
+
+    _logger.printf(RETRO_LOG_INFO, "Saving state to %s", path.c_str());
+    
+    if (util::saveFile(&_logger, path, data, size))
+    {
+      RA_OnSaveState(path.c_str());
+    }
+  }
+
+  free(data);
+}
+
+void Application::loadState()
+{
+  if (hardcore())
+  {
+    _logger.printf(RETRO_LOG_INFO, "Hardcore mode is active, can't load state");
+    return;
+  }
+
+  std::string path = util::openFileDialog(g_mainWindow, "*.STATE\0");
+
+  if (!path.empty())
+  {
+    size_t size;
+    void* data = util::loadFile(&_logger, path, &size);
     
     if (data != NULL)
     {
@@ -1520,6 +1564,14 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     case IDM_LOAD_STATE_9:
     case IDM_LOAD_STATE_10:
       loadState(cmd - IDM_LOAD_STATE_1 + 1);
+      break;
+    
+    case IDM_LOAD_STATE:
+      loadState();
+      break;
+    
+    case IDM_SAVE_STATE:
+      saveState();
       break;
       
     case IDM_CORE:

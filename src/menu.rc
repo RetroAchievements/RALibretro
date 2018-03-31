@@ -54,7 +54,7 @@ main MENU
             MENUITEM "Stella (Atari 2600)", IDM_SYSTEM_STELLA
         }
         MENUITEM SEPARATOR
-        MENUITEM "Load Game", IDM_LOAD_GAME
+        MENUITEM "Load Game...", IDM_LOAD_GAME
         POPUP "Load Recent"
         {
             MENUITEM "Empty", IDM_LOAD_RECENT_1
@@ -87,6 +87,7 @@ main MENU
             MENUITEM "Slot #9", IDM_SAVE_STATE_9
             MENUITEM "Slot #10", IDM_SAVE_STATE_10
         }
+        MENUITEM "Save Game State...", IDM_SAVE_STATE
         POPUP "Load Game State"
         {
             MENUITEM "Slot #1", IDM_LOAD_STATE_1
@@ -100,6 +101,7 @@ main MENU
             MENUITEM "Slot #9", IDM_LOAD_STATE_9
             MENUITEM "Slot #10", IDM_LOAD_STATE_10
         }
+        MENUITEM "Load Game State...", IDM_LOAD_STATE
         MENUITEM SEPARATOR
         MENUITEM "Exit", IDM_EXIT
     }

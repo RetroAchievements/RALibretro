@@ -82,3 +82,5 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #define IDM_PAUSE_GAME                          40006
 #define IDM_RESUME_GAME                         40007
 #define IDM_TURBO_GAME                          40008
+#define IDM_LOAD_STATE                          40009
+#define IDM_SAVE_STATE                          40010

@@ -24,6 +24,10 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <errno.h>
 #include <string.h>
 
+#define WIN32_LEAN_AND_MEAN
+#include <commdlg.h>
+#include <shlobj.h>
+
 size_t util::nextPow2(size_t v)
 {
   v--;
@@ -188,5 +192,96 @@ std::string util::fileName(const std::string& path)
   else
   {
     return std::string(name, dot - name);
+  }
+}
+
+std::string util::extension(const std::string& path)
+{
+  const char* str = path.c_str();
+  const char* dot = strrchr(str, '.');
+
+  if (dot == NULL)
+  {
+    return "";
+  }
+  else
+  {
+    return path.substr(dot - str);
+  }
+}
+
+std::string util::openFileDialog(HWND hWnd, const char* extensionsFilter)
+{
+  char path[_MAX_PATH];
+  path[0] = 0;
+
+  OPENFILENAME cfg;
+
+  cfg.lStructSize = sizeof(cfg);
+  cfg.hwndOwner = hWnd;
+  cfg.hInstance = NULL;
+  cfg.lpstrFilter = extensionsFilter;
+  cfg.lpstrCustomFilter = NULL;
+  cfg.nMaxCustFilter = 0;
+  cfg.nFilterIndex = 2;
+  cfg.lpstrFile = path;
+  cfg.nMaxFile = sizeof(path);
+  cfg.lpstrFileTitle = NULL;
+  cfg.nMaxFileTitle = 0;
+  cfg.lpstrInitialDir = NULL;
+  cfg.lpstrTitle = "Load";
+  cfg.Flags = OFN_FILEMUSTEXIST;
+  cfg.nFileOffset = 0;
+  cfg.nFileExtension = 0;
+  cfg.lpstrDefExt = NULL;
+  cfg.lCustData = 0;
+  cfg.lpfnHook = NULL;
+  cfg.lpTemplateName = NULL;
+
+  if (GetOpenFileName(&cfg) == TRUE)
+  {
+    return path;
+  }
+  else
+  {
+    return "";
+  }
+}
+
+std::string util::saveFileDialog(HWND hWnd, const char* extensionsFilter)
+{
+  char path[_MAX_PATH];
+  path[0] = 0;
+
+  OPENFILENAME cfg;
+
+  cfg.lStructSize = sizeof(cfg);
+  cfg.hwndOwner = hWnd;
+  cfg.hInstance = NULL;
+  cfg.lpstrFilter = extensionsFilter;
+  cfg.lpstrCustomFilter = NULL;
+  cfg.nMaxCustFilter = 0;
+  cfg.nFilterIndex = 2;
+  cfg.lpstrFile = path;
+  cfg.nMaxFile = sizeof(path);
+  cfg.lpstrFileTitle = NULL;
+  cfg.nMaxFileTitle = 0;
+  cfg.lpstrInitialDir = NULL;
+  cfg.lpstrTitle = "Save";
+  cfg.Flags = OFN_NOREADONLYRETURN | OFN_OVERWRITEPROMPT;
+  cfg.nFileOffset = 0;
+  cfg.nFileExtension = 0;
+  cfg.lpstrDefExt = NULL;
+  cfg.lCustData = 0;
+  cfg.lpfnHook = NULL;
+  cfg.lpTemplateName = NULL;
+
+  if (GetSaveFileName(&cfg) == TRUE)
+  {
+    return path;
+  }
+  else
+  {
+    return "";
   }
 }
