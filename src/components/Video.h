@@ -47,7 +47,7 @@ public:
 
 protected:
   GLuint createProgram(GLint* pos, GLint* uv, GLint* tex);
-  GLuint createVertexBuffer(float textureWidth, float textureHeight, GLint pos, GLint uv);
+  GLuint createVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv);
   GLuint createTexture(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linear);
 
   libretro::LoggerComponent* _logger;
@@ -62,6 +62,7 @@ protected:
   GLuint                  _framebuffer;
   GLuint                  _renderbuffer;
 
+  bool                    _preserveAspect;
   bool                    _linearFilter;
   unsigned                _windowWidth;
   unsigned                _windowHeight;

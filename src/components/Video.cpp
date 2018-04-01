@@ -29,7 +29,8 @@ bool Video::init(libretro::LoggerComponent* logger, Config* config)
   _logger = logger;
   _config = config;
 
-  _linearFilter = false;
+  _preserveAspect = config->preserveAspect();
+  _linearFilter = config->linearFilter();
   _pixelFormat = RETRO_PIXEL_FORMAT_UNKNOWN;
   _windowWidth = _windowHeight = 0;
   _textureWidth = _textureHeight = 0;
@@ -216,13 +217,19 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
       updateVertexBuffer = true;
     }
 
+    if (_config->preserveAspect() != _preserveAspect)
+    {
+      _preserveAspect = _config->preserveAspect();
+      updateVertexBuffer = true;
+    }
+
     if (updateVertexBuffer)
     {
-      float width = (float)_viewWidth / (float)_textureWidth;
-      float height = (float)_viewHeight / (float)_textureHeight;
+      float texScaleX = (float)_viewWidth / (float)_textureWidth;
+      float texScaleY = (float)_viewHeight / (float)_textureHeight;
 
       Gl::deleteBuffers(1, &_vertexBuffer);
-      _vertexBuffer = createVertexBuffer(width, height, _posAttribute, _uvAttribute);
+      _vertexBuffer = createVertexBuffer(_windowWidth, _windowHeight, texScaleX, texScaleY, _posAttribute, _uvAttribute);
     }
   }
 }
@@ -266,6 +273,14 @@ void Video::windowResized(unsigned width, unsigned height)
 {
   _windowWidth = width;
   _windowHeight = height;
+  Gl::viewport(0, 0, width, height);
+
+  _logger->printf(RETRO_LOG_INFO, "Window resized to %u x %u", width, height);
+
+  float texScaleX = (float)_viewWidth / (float)_textureWidth;
+  float texScaleY = (float)_viewHeight / (float)_textureHeight;
+
+  createVertexBuffer(width, height, texScaleX, texScaleY, _posAttribute, _uvAttribute);
 }
 
 const void* Video::getFramebuffer(unsigned* width, unsigned* height, unsigned* pitch, enum retro_pixel_format* format)
@@ -349,18 +364,39 @@ GLuint Video::createProgram(GLint* pos, GLint* uv, GLint* tex)
   return program;
 }
 
-GLuint Video::createVertexBuffer(float textureWidth, float textureHeight, GLint pos, GLint uv)
+GLuint Video::createVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv)
 {
   struct VertexData
   {
     float x, y, u, v;
   };
 
+  float winScaleX, winScaleY;
+
+  if (_preserveAspect)
+  {
+    unsigned h = windowHeight;
+    unsigned w = (unsigned)(windowWidth * _aspect);
+
+    if (w > windowWidth)
+    {
+      w = windowWidth;
+      h = (unsigned)(windowHeight / _aspect);
+    }
+
+    winScaleX = (float)w / (float)windowWidth;
+    winScaleY = (float)h / (float)windowHeight;
+  }
+  else
+  {
+    winScaleX = winScaleY = 1.0f;
+  }
+
   const VertexData vertexData[] = {
-    {-1.0f, -1.0f,         0.0f, textureHeight},
-    {-1.0f,  1.0f,         0.0f,          0.0f},
-    { 1.0f, -1.0f, textureWidth, textureHeight},
-    { 1.0f,  1.0f, textureWidth,          0.0f}
+    {-winScaleX, -winScaleY,      0.0f, texScaleY},
+    {-winScaleX,  winScaleY,      0.0f,      0.0f},
+    { winScaleX, -winScaleY, texScaleX, texScaleY},
+    { winScaleX,  winScaleY, texScaleX,      0.0f}
   };
   
   GLuint vertexBuffer;
@@ -372,7 +408,7 @@ GLuint Video::createVertexBuffer(float textureWidth, float textureHeight, GLint 
   Gl::vertexAttribPointer(pos, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, x));
   Gl::vertexAttribPointer(uv, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, u));
 
-  _logger->printf(RETRO_LOG_DEBUG, "Vertices updated with texture %f x %f", textureWidth, textureHeight);
+  _logger->printf(RETRO_LOG_DEBUG, "Vertices updated with window scale %f x %f and texture scale %f x %f", winScaleX, winScaleY, texScaleX, texScaleY);
   return vertexBuffer;
 }
 
