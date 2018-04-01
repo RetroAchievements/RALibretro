@@ -450,7 +450,6 @@ bool Application::loadCore(Emulator emulator)
 
   if (!_core.loadCore(path.c_str()))
   {
-    _core.destroy();
     return false;
   }
 
@@ -1263,11 +1262,19 @@ void Application::screenshot()
   unsigned width, height, pitch;
   enum retro_pixel_format format;
   const void* data = _video.getFramebuffer(&width, &height, &pitch, &format);
-  const void* pixels;
 
   if (data == NULL)
   {
     _logger.printf(RETRO_LOG_ERROR, "Error getting framebuffer from the video component");
+    return;
+  }
+
+  void* pixels = malloc(width * height * 3);
+
+  if (pixels == NULL)
+  {
+    _logger.printf(RETRO_LOG_ERROR, "Error allocating memory for the screenshot");
+	free((void*)data);
     return;
   }
 
@@ -1276,8 +1283,7 @@ void Application::screenshot()
     _logger.printf(RETRO_LOG_INFO, "Pixel format is RGB565, converting to 24-bits RGB");
 
     uint16_t* source_rgba5650 = (uint16_t*)data;
-    uint8_t* target_rgba8880 = (uint8_t*)malloc(width * height * 3);
-    pixels = (void*)target_rgba8880;
+	uint8_t* target_rgba8880 = (uint8_t*)pixels;
 
     if (target_rgba8880 == NULL)
     {
@@ -1287,6 +1293,8 @@ void Application::screenshot()
 
     for (unsigned y = 0; y < height; y++)
     {
+      uint8_t* row = (uint8_t*)source_rgba5650;
+
       for (unsigned x = 0; x < width; x++)
       {
         uint16_t rgba5650 = *source_rgba5650++;
@@ -1295,6 +1303,8 @@ void Application::screenshot()
         *target_rgba8880++ = ((rgba5650 >> 5) & 0x3f) * 255 / 63;
         *target_rgba8880++ = (rgba5650 & 0x1f) * 255 / 31;
       }
+
+      source_rgba5650 = (uint16_t*)(row + pitch);
     }
   }
   else if (format == RETRO_PIXEL_FORMAT_0RGB1555)
@@ -1302,8 +1312,7 @@ void Application::screenshot()
     _logger.printf(RETRO_LOG_INFO, "Pixel format is 0RGB1565, converting to 24-bits RGB");
 
     uint16_t* source_argb1555 = (uint16_t*)data;
-    uint8_t* target_rgba8880 = (uint8_t*)malloc(width * height * 3);
-    pixels = (void*)target_rgba8880;
+	uint8_t* target_rgba8880 = (uint8_t*)pixels;
 
     if (target_rgba8880 == NULL)
     {
@@ -1313,6 +1322,8 @@ void Application::screenshot()
 
     for (unsigned y = 0; y < height; y++)
     {
+      uint8_t* row = (uint8_t*)source_argb1555;
+
       for (unsigned x = 0; x < width; x++)
       {
         uint16_t argb1555 = *source_argb1555++;
@@ -1321,6 +1332,8 @@ void Application::screenshot()
         *target_rgba8880++ = ((argb1555 >> 5) & 0x1f) * 255 / 31;
         *target_rgba8880++ = (argb1555 & 0x1f) * 255 / 31;
       }
+
+      source_argb1555 = (uint16_t*)(row + pitch);
     }
   }
   else if (format == RETRO_PIXEL_FORMAT_XRGB8888)
@@ -1328,8 +1341,7 @@ void Application::screenshot()
     _logger.printf(RETRO_LOG_INFO, "Pixel format is XRGB8888, converting to 24-bits RGB");
 
     uint32_t* source_argb8888 = (uint32_t*)data;
-    uint8_t* target_rgba8880 = (uint8_t*)malloc(width * height * 3);
-    pixels = (void*)target_rgba8880;
+	uint8_t* target_rgba8880 = (uint8_t*)pixels;
 
     if (target_rgba8880 == NULL)
     {
@@ -1339,6 +1351,8 @@ void Application::screenshot()
 
     for (unsigned y = 0; y < height; y++)
     {
+      uint8_t* row = (uint8_t*)source_argb8888;
+
       for (unsigned x = 0; x < width; x++)
       {
         uint32_t argb8888 = *source_argb8888++;
@@ -1347,6 +1361,8 @@ void Application::screenshot()
         *target_rgba8880++ = argb8888 >> 8;
         *target_rgba8880++ = argb8888;
       }
+
+      source_argb8888 = (uint32_t*)(row + pitch);
     }
   }
   else
@@ -1361,7 +1377,7 @@ void Application::screenshot()
 
   _logger.printf(RETRO_LOG_INFO, "Wrote screenshot to \"%s\"", path.c_str());
 
-  free((void*)pixels);
+  free(pixels);
   free((void*)data);
 }
 
