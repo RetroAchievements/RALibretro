@@ -46,9 +46,9 @@ public:
   const void* getFramebuffer(unsigned* width, unsigned* height, unsigned* pitch, enum retro_pixel_format* format);
 
 protected:
-  void createProgram();
-  void createVertexAttributes();
-
+  GLuint createProgram(GLint* pos, GLint* uv, GLint* tex);
+  GLuint createVertexBuffer(float textureWidth, float textureHeight, GLint pos, GLint uv);
+  GLuint createTexture(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linear);
 
   libretro::LoggerComponent* _logger;
   Config* _config;
@@ -56,7 +56,6 @@ protected:
   GLuint                  _program;
   GLint                   _posAttribute;
   GLint                   _uvAttribute;
-  GLint                   _ratioUniform;
   GLint                   _texUniform;
   GLuint                  _vertexBuffer;
   GLuint                  _texture;
