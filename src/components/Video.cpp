@@ -376,12 +376,12 @@ GLuint Video::createVertexBuffer(unsigned windowWidth, unsigned windowHeight, fl
   if (_preserveAspect)
   {
     unsigned h = windowHeight;
-    unsigned w = (unsigned)(windowWidth * _aspect);
+    unsigned w = (unsigned)(windowHeight * _aspect);
 
     if (w > windowWidth)
     {
       w = windowWidth;
-      h = (unsigned)(windowHeight / _aspect);
+      h = (unsigned)(windowWidth / _aspect);
     }
 
     winScaleX = (float)w / (float)windowWidth;
