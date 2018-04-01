@@ -199,6 +199,13 @@ void Gl::texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
   check(__FUNCTION__);
 }
 
+void Gl::getTexImage(GLenum target, GLint level, GLenum format, GLenum type, GLvoid* pixels)
+{
+  if (!s_ok) return;
+  glGetTexImage(target, level, format, type, pixels);
+  check(__FUNCTION__);
+}
+
 void Gl::genBuffers(GLsizei n, GLuint* buffers)
 {
   if (!s_ok || s_glGenBuffers == NULL) return;

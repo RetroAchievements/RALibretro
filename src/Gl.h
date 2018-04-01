@@ -16,6 +16,7 @@ namespace Gl
 	void texParameteri(GLenum target, GLenum pname, GLint param);
 	void texImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data);
 	void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels);
+	void getTexImage(GLenum target, GLint level, GLenum format, GLenum type, GLvoid* pixels);
 
 	void genBuffers(GLsizei n, GLuint* buffers);
 	void deleteBuffers(GLsizei n, const GLuint* buffers);
