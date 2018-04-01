@@ -6,7 +6,7 @@
 
 namespace Gl
 {
-	bool init(libretro::LoggerComponent* logger);
+	void init(libretro::LoggerComponent* logger);
   bool ok();
 
 	void genTextures(GLsizei n, GLuint* textures);

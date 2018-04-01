@@ -49,13 +49,10 @@ static PFNGLRENDERBUFFERSTORAGEPROC s_glRenderbufferStorage;
 
 static void* getProcAddress(const char* symbol)
 {
-  if (!s_ok) return NULL;
-
   void* address = SDL_GL_GetProcAddress(symbol);
 
   if (address == NULL)
   {
-    s_ok = false;
     s_logger->printf(RETRO_LOG_ERROR, "Error in %s: symbol %s not found", __FUNCTION__, symbol);
   }
 
@@ -101,7 +98,7 @@ static void check(const char* function, bool ok = true)
   }
 }
 
-bool Gl::init(libretro::LoggerComponent* logger)
+void Gl::init(libretro::LoggerComponent* logger)
 {
   s_logger = logger;
   s_ok = true;
@@ -146,8 +143,6 @@ bool Gl::init(libretro::LoggerComponent* logger)
 
   s_glGenRenderbuffers = (PFNGLGENRENDERBUFFERSPROC)getProcAddress("glGenRenderbuffers");
   s_glDeleteRenderbuffers = (PFNGLDELETERENDERBUFFERSPROC)getProcAddress("glDeleteRenderbuffers");
-
-  return s_ok;
 }
 
 bool Gl::ok()
@@ -206,49 +201,49 @@ void Gl::texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
 
 void Gl::genBuffers(GLsizei n, GLuint* buffers)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glGenBuffers == NULL) return;
   s_glGenBuffers(n, buffers);
   check(__FUNCTION__);
 }
 
 void Gl::deleteBuffers(GLsizei n, const GLuint* buffers)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glDeleteBuffers == NULL) return;
   s_glDeleteBuffers(n, buffers);
   check(__FUNCTION__);
 }
 
 void Gl::bindBuffer(GLenum target, GLuint buffer)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glBindBuffer == NULL) return;
   s_glBindBuffer(target, buffer);
   check(__FUNCTION__);
 }
 
 void Gl::bufferData(GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glBufferData == NULL) return;
   s_glBufferData(target, size, data, usage);
   check(__FUNCTION__);
 }
 
 void Gl::vertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* pointer)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glVertexAttribPointer == NULL) return;
   s_glVertexAttribPointer(index, size, type, normalized, stride, pointer);
   check(__FUNCTION__);
 }
 
 void Gl::enableVertexAttribArray(GLuint index)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glEnableVertexAttribArray == NULL) return;
   s_glEnableVertexAttribArray(index);
   check(__FUNCTION__);
 }
 
 GLuint Gl::createShader(GLenum shaderType)
 {
-  if (!s_ok) return 0;
+  if (!s_ok || s_glCreateShader == NULL) return 0;
   GLuint shader = s_glCreateShader(shaderType);
   check(__FUNCTION__, shader != 0);
   return shader;
@@ -256,35 +251,35 @@ GLuint Gl::createShader(GLenum shaderType)
 
 void Gl::deleteShader(GLuint shader)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glDeleteShader == NULL) return;
   s_glDeleteShader(shader);
   check(__FUNCTION__);
 }
 
 void Gl::shaderSource(GLuint shader, GLsizei count, const GLchar** string, const GLint* length)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glShaderSource == NULL) return;
   s_glShaderSource(shader, count, string, length);
   check(__FUNCTION__);
 }
 
 void Gl::compileShader(GLuint shader)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glCompileShader == NULL) return;
   s_glCompileShader(shader);
   check(__FUNCTION__);
 }
 
 void Gl::getShaderiv(GLuint shader, GLenum pname, GLint* params)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glGetShaderiv == NULL) return;
   s_glGetShaderiv(shader, pname, params);
   check(__FUNCTION__);
 }
 
 void Gl::getShaderInfoLog(GLuint shader, GLsizei maxLength, GLsizei* length, GLchar* infoLog)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glGetShaderInfoLog == NULL) return;
   s_glGetShaderInfoLog(shader, maxLength, length, infoLog);
   check(__FUNCTION__);
 }
@@ -320,7 +315,7 @@ GLuint Gl::createShader(GLenum shaderType, const char* source)
 
 GLuint Gl::createProgram()
 {
-  if (!s_ok) return 0;
+  if (!s_ok || s_glCreateProgram == NULL) return 0;
   GLuint program = s_glCreateProgram();
   check(__FUNCTION__, program != 0);
   return program;
@@ -328,56 +323,56 @@ GLuint Gl::createProgram()
 
 void Gl::deleteProgram(GLuint program)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glDeleteProgram == NULL) return;
   s_glDeleteProgram(program);
   check(__FUNCTION__);
 }
 
 void Gl::attachShader(GLuint program, GLuint shader)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glAttachShader == NULL) return;
   s_glAttachShader(program, shader);
   check(__FUNCTION__);
 }
 
 void Gl::linkProgram(GLuint program)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glLinkProgram == NULL) return;
   s_glLinkProgram(program);
   check(__FUNCTION__);
 }
 
 void Gl::validateProgram(GLuint program)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glValidateProgram == NULL) return;
   s_glValidateProgram(program);
   check(__FUNCTION__);
 }
 
 void Gl::getProgramiv(GLuint program, GLenum pname, GLint* params)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glGetProgramiv == NULL) return;
   s_glGetProgramiv(program, pname, params);
   check(__FUNCTION__);
 }
 
 void Gl::getProgramInfoLog(GLuint program, GLsizei maxLength, GLsizei* length, GLchar* infoLog)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glGetProgramInfoLog == NULL) return;
   s_glGetProgramInfoLog(program, maxLength, length, infoLog);
   check(__FUNCTION__);
 }
 
 void Gl::useProgram(GLuint program)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glUseProgram == NULL) return;
   s_glUseProgram(program);
   check(__FUNCTION__);
 }
 
 GLint Gl::getAttribLocation(GLuint program, const GLchar* name)
 {
-  if (!s_ok) return -1;
+  if (!s_ok || s_glGetAttribLocation == NULL) return -1;
   GLint location = s_glGetAttribLocation(program, name);
   check(__FUNCTION__, location != -1);
   return location;
@@ -385,7 +380,7 @@ GLint Gl::getAttribLocation(GLuint program, const GLchar* name)
 
 GLint Gl::getUniformLocation(GLuint program, const GLchar* name)
 {
-  if (!s_ok) return -1;
+  if (!s_ok || s_glGetUniformLocation == NULL) return -1;
   GLint location = s_glGetUniformLocation(program, name);
   check(__FUNCTION__, location != -1);
   return location;
@@ -393,14 +388,14 @@ GLint Gl::getUniformLocation(GLuint program, const GLchar* name)
 
 void Gl::uniform1i(GLint location, GLint v0)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glUniform1i == NULL) return;
   s_glUniform1i(location, v0);
   check(__FUNCTION__);
 }
 
 void Gl::uniform2f(GLint location, GLfloat v0, GLfloat v1)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glUniform2f == NULL) return;
   s_glUniform2f(location, v0, v1);
   check(__FUNCTION__);
 }
@@ -445,70 +440,70 @@ GLuint Gl::createProgram(const char* vertexShader, const char* fragmentShader)
 
 void Gl::genFramebuffers(GLsizei n, GLuint* ids)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glGenFramebuffers == NULL) return;
   s_glGenFramebuffers(n, ids);
   check(__FUNCTION__);
 }
 
 void Gl::deleteFramebuffers(GLsizei n, GLuint* ids)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glDeleteFramebuffers == NULL) return;
   s_glDeleteFramebuffers(n, ids);
   check(__FUNCTION__);
 }
 
 void Gl::bindFramebuffer(GLenum target, GLuint framebuffer)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glBindFramebuffer == NULL) return;
   s_glBindFramebuffer(target, framebuffer);
   check(__FUNCTION__);
 }
 
 void Gl::framebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glFramebufferTexture2D == NULL) return;
   s_glFramebufferTexture2D(target, attachment, textarget, texture, level);
   check(__FUNCTION__);
 }
 
 void Gl::framebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glFramebufferRenderbuffer == NULL) return;
   s_glFramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
   check(__FUNCTION__);
 }
 
 void Gl::drawBuffers(GLsizei n, const GLenum* bufs)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glDrawBuffers == NULL) return;
   s_glDrawBuffers(n, bufs);
   check(__FUNCTION__);
 }
 
 void Gl::genRenderbuffers(GLsizei n, GLuint* renderbuffers)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glGenRenderbuffers == NULL) return;
   s_glGenRenderbuffers(n, renderbuffers);
   check(__FUNCTION__);
 }
 
 void Gl::deleteRenderbuffers(GLsizei n, const GLuint* renderbuffers)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glDeleteRenderbuffers == NULL) return;
   s_glDeleteRenderbuffers(n, renderbuffers);
   check(__FUNCTION__);
 }
 
 void Gl::bindRenderbuffer(GLenum target, GLuint renderbuffer)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glBindRenderbuffer == NULL) return;
   s_glBindRenderbuffer(target, renderbuffer);
   check(__FUNCTION__);
 }
 
 void Gl::renderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height)
 {
-  if (!s_ok) return;
+  if (!s_ok || s_glRenderbufferStorage == NULL) return;
   s_glRenderbufferStorage(target, internalformat, width, height);
   check(__FUNCTION__);
 }
