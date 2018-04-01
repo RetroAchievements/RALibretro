@@ -45,6 +45,10 @@ public:
   void windowResized(unsigned width, unsigned height);
   const void* getFramebuffer(unsigned* width, unsigned* height, unsigned* pitch, enum retro_pixel_format* format);
 
+  std::string serialize();
+  void deserialize(const char* json);
+  void showDialog();
+
 protected:
   GLuint createProgram(GLint* pos, GLint* uv, GLint* tex);
   GLuint createVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv);
@@ -62,8 +66,6 @@ protected:
   GLuint                  _framebuffer;
   GLuint                  _renderbuffer;
 
-  bool                    _preserveAspect;
-  bool                    _linearFilter;
   unsigned                _windowWidth;
   unsigned                _windowHeight;
   unsigned                _textureWidth;
@@ -72,4 +74,7 @@ protected:
   unsigned                _viewHeight;
   enum retro_pixel_format _pixelFormat;
   float                   _aspect;
+
+  bool                    _preserveAspect;
+  bool                    _linearFilter;
 };

@@ -107,8 +107,9 @@ main MENU
     }
     POPUP "Settings"
     {
-        MENUITEM "Emulation", IDM_CORE
-        MENUITEM "Input", IDM_INPUT
+        MENUITEM "Emulation", IDM_CORE_CONFIG
+        MENUITEM "Input", IDM_INPUT_CONFIG
+        MENUITEM "Video", IDM_VIDEO_CONFIG
     }
     MENUITEM "About", IDM_ABOUT
 }

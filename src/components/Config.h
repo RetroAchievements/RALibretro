@@ -50,16 +50,6 @@ public:
   void deserialize(const char* json);
   void showDialog();
 
-  bool preserveAspect()
-  {
-    return _preserveAspect;
-  }
-
-  bool linearFilter()
-  {
-    return _linearFilter;
-  }
-
 protected:
   static const char* s_getOption(int index, void* udata);
 
@@ -81,9 +71,6 @@ protected:
   std::string _screenshotsFolder;
 
   std::vector<Variable> _variables;
-
-  bool _preserveAspect;
-  bool _linearFilter;
 
   bool _updated;
 

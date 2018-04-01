@@ -20,6 +20,9 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "Video.h"
 #include "Gl.h"
 
+#include "Dialog.h"
+#include "jsonsax/jsonsax.h"
+
 #include <SDL_render.h>
 
 #include <math.h>
@@ -29,8 +32,8 @@ bool Video::init(libretro::LoggerComponent* logger, Config* config)
   _logger = logger;
   _config = config;
 
-  _preserveAspect = config->preserveAspect();
-  _linearFilter = config->linearFilter();
+  _preserveAspect = false;
+  _linearFilter = false;
   _pixelFormat = RETRO_PIXEL_FORMAT_UNKNOWN;
   _windowWidth = _windowHeight = 0;
   _textureWidth = _textureHeight = 0;
@@ -163,8 +166,6 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
   {
     bool updateVertexBuffer = false;
 
-    bool linearFilter = _config->linearFilter();
-
     unsigned textureWidth = pitch;
 
     switch (_pixelFormat)
@@ -175,16 +176,15 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
     default:                          textureWidth /= 2; break;
     }
 
-    if (linearFilter != _linearFilter || textureWidth > _textureWidth || height > _textureHeight)
+    if (textureWidth > _textureWidth || height > _textureHeight)
     {
       if (_texture != 0)
       {
         Gl::deleteTextures(1, &_texture);
       }
 
-      _texture = createTexture(textureWidth, height, _pixelFormat, linearFilter);
+      _texture = createTexture(textureWidth, height, _pixelFormat, _linearFilter);
 
-      _linearFilter = linearFilter;
       _textureWidth = textureWidth;
       _textureHeight = height;
 
@@ -214,12 +214,6 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
       _viewWidth = width;
       _viewHeight = height;
 
-      updateVertexBuffer = true;
-    }
-
-    if (_config->preserveAspect() != _preserveAspect)
-    {
-      _preserveAspect = _config->preserveAspect();
       updateVertexBuffer = true;
     }
 
@@ -317,6 +311,104 @@ const void* Video::getFramebuffer(unsigned* width, unsigned* height, unsigned* p
   *format = _pixelFormat;
 
   return pixels;
+}
+
+std::string Video::serialize()
+{
+  std::string json("{");
+
+  json.append("\"_preserveAspect\":");
+  json.append(_preserveAspect ? "true" : "false");
+  json.append(",");
+
+  json.append("\"_linearFilter\":");
+  json.append(_linearFilter ? "true" : "false");
+
+  json.append("}");
+  return json;
+}
+
+void Video::deserialize(const char* json)
+{
+  struct Deserialize
+  {
+    Video* self;
+    std::string key;
+  };
+
+  Deserialize ud;
+  ud.self = this;
+
+  jsonsax_parse(json, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num) {
+    auto ud = (Deserialize*)udata;
+
+    if (event == JSONSAX_KEY)
+    {
+      ud->key = std::string(str, num);
+    }
+    else if (event == JSONSAX_BOOLEAN)
+    {
+      if (ud->key == "_preserveAspect")
+      {
+        ud->self->_preserveAspect = num != 0;
+      }
+      if (ud->key == "_linearFilter")
+      {
+        ud->self->_linearFilter = num != 0;
+      }
+    }
+
+    return 0;
+  });
+}
+
+void Video::showDialog()
+{
+  const WORD WIDTH = 280;
+  const WORD LINE = 15;
+
+  Dialog db;
+  db.init("Video Settings");
+
+  WORD y = 0;
+
+  db.addCheckbox("Preserve aspect ratio", 51001, 0, y, WIDTH / 2 - 5, 8, &_preserveAspect);
+  db.addCheckbox("Linear filtering", 51002, WIDTH / 2 + 5, y, WIDTH / 2 - 5, 8, &_linearFilter);
+
+  y += LINE;
+
+  db.addButton("OK", IDOK, WIDTH - 55 - 50, y, 50, 14, true);
+  db.addButton("Cancel", IDCANCEL, WIDTH - 50, y, 50, 14, false);
+
+  bool preserveAspect = _preserveAspect;
+  bool linearFilter = _linearFilter;
+
+  if (db.show())
+  {
+    if (linearFilter != _linearFilter)
+    {
+      if (_texture != 0)
+      {
+        Gl::deleteTextures(1, &_texture);
+      }
+
+      _texture = createTexture(_textureWidth, _textureHeight, _pixelFormat, _linearFilter);
+    }
+
+    if (preserveAspect != _preserveAspect)
+    {
+      if (_vertexBuffer != 0)
+      {
+        Gl::deleteBuffers(1, &_vertexBuffer);
+      }
+
+      float texScaleX = (float)_viewWidth / (float)_textureWidth;
+      float texScaleY = (float)_viewHeight / (float)_textureHeight;
+
+      Gl::deleteBuffers(1, &_vertexBuffer);
+      _vertexBuffer = createVertexBuffer(_windowWidth, _windowHeight, texScaleX, texScaleY, _posAttribute, _uvAttribute);
+    }
+  }
 }
 
 GLuint Video::createProgram(GLint* pos, GLint* uv, GLint* tex)

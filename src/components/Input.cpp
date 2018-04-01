@@ -590,7 +590,7 @@ void Input::showDialog()
   const WORD LINE = 15;
 
   Dialog db;
-  db.init("Settings");
+  db.init("Input Settings");
 
   WORD y = 0;
   DWORD id = 0;

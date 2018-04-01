@@ -77,9 +77,6 @@ bool Config::init(libretro::LoggerComponent* logger)
 
 void Config::reset()
 {
-  _preserveAspect = false;
-  _linearFilter = false;
-
   _variables.clear();
   _updated = false;
 }
@@ -163,22 +160,19 @@ const char* Config::getVariable(const char* variable)
 std::string Config::serialize()
 {
   std::string json("{");
+  const char* comma = "";
 
   for (auto& var: _variables)
   {
+    json.append(comma);
+    comma = ",";
+
     json.append("\"");
     json.append(var._key);
     json.append("\":\"");
     json.append(var._options[var._selected]);
-    json.append("\",");
+    json.append("\"");
   }
-
-  json.append("\"_preserveAspect\":");
-  json.append(_preserveAspect ? "true" : "false");
-  json.append(",");
-
-  json.append("\"_linearFilter\":");
-  json.append(_linearFilter ? "true" : "false");
 
   json.append("}");
   return json;
@@ -233,21 +227,6 @@ void Config::deserialize(const char* json)
         }
       }
     }
-    else if (event == JSONSAX_BOOLEAN)
-    {
-      if (ud->key == "_preserveAspect")
-      {
-        bool val = num != 0;
-        ud->self->_updated = ud->self->_updated || ud->self->_preserveAspect != val;
-        ud->self->_preserveAspect = val;
-      }
-      if (ud->key == "_linearFilter")
-      {
-        bool val = num != 0;
-        ud->self->_updated = ud->self->_updated || ud->self->_linearFilter != val;
-        ud->self->_linearFilter = val;
-      }
-    }
 
     return 0;
   });
@@ -259,14 +238,9 @@ void Config::showDialog()
   const WORD LINE = 15;
 
   Dialog db;
-  db.init("Settings");
+  db.init("Emulation Settings");
 
   WORD y = 0;
-
-  db.addCheckbox("Preserve aspect ratio", 51001, 0, y, WIDTH / 2 - 5, 8, &_preserveAspect);
-  db.addCheckbox("Linear filtering", 51002, WIDTH / 2 + 5, y, WIDTH / 2 - 5, 8, &_linearFilter);
-  y += LINE;
-
   DWORD id = 0;
 
   for (auto& var: _variables)

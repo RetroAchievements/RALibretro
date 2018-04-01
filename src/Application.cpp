@@ -485,6 +485,10 @@ bool Application::loadCore(Emulator emulator)
         {
           ud->self->_input.deserialize(str);
         }
+        else if (ud->key == "video")
+        {
+          ud->self->_video.deserialize(str);
+        }
       }
 
       return 0;
@@ -505,7 +509,7 @@ void Application::updateMenu()
     IDM_PAUSE_GAME, IDM_RESUME_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
-    IDM_CORE, IDM_INPUT, IDM_TURBO_GAME, IDM_ABOUT
+    IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   static const UINT start_items[] =
@@ -515,7 +519,7 @@ void Application::updateMenu()
 
   static const UINT core_loaded_items[] =
   {
-    IDM_LOAD_GAME, IDM_EXIT, IDM_CORE, IDM_INPUT, IDM_ABOUT
+    IDM_LOAD_GAME, IDM_EXIT, IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_ABOUT
   };
 
   static const UINT game_running_items[] =
@@ -523,7 +527,7 @@ void Application::updateMenu()
     IDM_LOAD_GAME, IDM_PAUSE_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
-    IDM_CORE, IDM_INPUT, IDM_TURBO_GAME, IDM_ABOUT
+    IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   static const UINT game_paused_items[] =
@@ -531,7 +535,7 @@ void Application::updateMenu()
     IDM_LOAD_GAME, IDM_RESUME_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
-    IDM_CORE, IDM_INPUT, IDM_TURBO_GAME, IDM_ABOUT
+    IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   static const UINT game_turbo_items[] =
@@ -539,7 +543,7 @@ void Application::updateMenu()
     IDM_LOAD_GAME, IDM_PAUSE_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
-    IDM_CORE, IDM_INPUT, IDM_TURBO_GAME, IDM_ABOUT
+    IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   enableItems(all_items, sizeof(all_items) / sizeof(all_items[0]), MF_DISABLED);
@@ -815,6 +819,8 @@ void Application::unloadCore()
   json.append(_config.serialize());
   json.append(",\"input\":");
   json.append(_input.serialize());
+  json.append(",\"video\":");
+  json.append(_video.serialize());
   json.append("}");
 
   util::saveFile(&_logger, getCoreConfigPath(_emulator), json.c_str(), json.length());
@@ -1591,12 +1597,16 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       saveState();
       break;
       
-    case IDM_CORE:
+    case IDM_CORE_CONFIG:
       _config.showDialog();
       break;
 
-    case IDM_INPUT:
+    case IDM_INPUT_CONFIG:
       _input.showDialog();
+      break;
+    
+    case IDM_VIDEO_CONFIG:
+      _video.showDialog();
       break;
     
     case IDM_EXIT:
