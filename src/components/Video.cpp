@@ -30,6 +30,7 @@ bool Video::init(libretro::LoggerComponent* logger, Config* config)
   _config = config;
 
   _linearFilter = false;
+  _pixelFormat = RETRO_PIXEL_FORMAT_UNKNOWN;
   _windowWidth = _windowHeight = 0;
   _textureWidth = _textureHeight = 0;
   _viewWidth = _viewHeight = 0;
@@ -96,15 +97,6 @@ void Video::draw()
       height = width / _aspect;
     }
 
-    float sx = 1.0f;
-    float sy = 1.0f;
-
-    if (_config->preserveAspect())
-    {
-      sx = (float)_viewWidth / (float)_windowWidth;
-      sy = (float)_viewHeight / (float)_windowHeight;
-    }
-
     Gl::useProgram(_program);
 
     Gl::enableVertexAttribArray(_posAttribute);
@@ -123,6 +115,12 @@ bool Video::setGeometry(unsigned width, unsigned height, float aspect, enum retr
   (void)width;
   (void)height;
   (void)hwRenderCallback;
+
+  if (pixelFormat != _pixelFormat && _texture != 0)
+  {
+    Gl::deleteTextures(1, &_texture);
+    _textureWidth = _textureHeight = 0;
+  }
 
   _aspect = aspect;
   _pixelFormat = pixelFormat;
@@ -172,7 +170,8 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
     {
     case RETRO_PIXEL_FORMAT_XRGB8888: textureWidth /= 4; break;
     case RETRO_PIXEL_FORMAT_RGB565:   // fallthrough
-    case RETRO_PIXEL_FORMAT_0RGB1555: textureWidth /= 2; break;
+    case RETRO_PIXEL_FORMAT_0RGB1555: // fallthrough
+    default:                          textureWidth /= 2; break;
     }
 
     if (linearFilter != _linearFilter || textureWidth > _textureWidth || height > _textureHeight)
