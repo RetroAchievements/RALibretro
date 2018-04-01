@@ -183,7 +183,7 @@ std::string util::fileName(const std::string& path)
 
   name++;
 
-  const char* dot = strchr(name, '.');
+  const char* dot = strrchr(name, '.');
 
   if (dot == NULL)
   {
