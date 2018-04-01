@@ -285,56 +285,38 @@ void Video::windowResized(unsigned width, unsigned height)
 
 const void* Video::getFramebuffer(unsigned* width, unsigned* height, unsigned* pitch, enum retro_pixel_format* format)
 {
-#if 0
   unsigned bpp = _pixelFormat == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 2;
-  void* result = malloc(_width * _height * bpp);
+  void* pixels = malloc(_textureWidth * _textureHeight * bpp);
 
-  if (result == NULL)
+  if (pixels == NULL)
   {
     return NULL;
   }
 
-  uint8_t* target_pixels = (uint8_t*)result;
-  int target_pitch = _width * bpp;
+  Gl::bindTexture(GL_TEXTURE_2D, _texture);
 
-  SDL_Rect rect;
-  rect.x = 0;
-  rect.y = 0;
-  rect.w = _width;
-  rect.h = _height;
-
-  uint8_t* source_pixels;
-  int source_pitch;
-
-  if (SDL_LockTexture(_texture, &rect, (void**)&source_pixels, &source_pitch) != 0)
+  switch (_pixelFormat)
   {
-    _logger->printf(RETRO_LOG_ERROR, "SDL_LockTexture: %s", SDL_GetError());
-    return NULL;
+  case RETRO_PIXEL_FORMAT_XRGB8888:
+    Gl::getTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, pixels);
+    break;
+    
+  case RETRO_PIXEL_FORMAT_RGB565:
+    Gl::getTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, pixels);
+    break;
+    
+  case RETRO_PIXEL_FORMAT_0RGB1555:
+  default:
+    Gl::getTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_SHORT_1_5_5_5_REV, pixels);
+    break;
   }
 
-  size_t bytes = target_pitch;
-
-  if (bytes > (unsigned)source_pitch)
-  {
-    bytes = source_pitch;
-  }
-
-  for (unsigned y = 0; y < _height; y++)
-  {
-    memcpy(target_pixels, source_pixels, bytes);
-    source_pixels += source_pitch;
-    target_pixels += target_pitch;
-  }
-
-  SDL_UnlockTexture(_texture);
-
-  *width = _width;
-  *height = _height;
-  *pitch = target_pitch;
+  *width = _viewWidth;
+  *height = _viewHeight;
+  *pitch = _textureWidth * bpp;
   *format = _pixelFormat;
-  return result;
-#endif
-  return NULL;
+
+  return pixels;
 }
 
 GLuint Video::createProgram(GLint* pos, GLint* uv, GLint* tex)
