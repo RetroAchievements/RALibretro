@@ -543,6 +543,13 @@ void Gl::blendFunc(GLenum sfactor, GLenum dfactor)
   check(__FUNCTION__);
 }
 
+void Gl::viewport(GLint x, GLint y, GLsizei width, GLsizei height)
+{
+  if (!s_ok) return;
+  glViewport(x, y, width, height);
+  check(__FUNCTION__);
+}
+
 void Gl::drawArrays(GLenum mode, GLint first, GLsizei count)
 {
   if (!s_ok) return;

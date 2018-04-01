@@ -63,5 +63,6 @@ namespace Gl
 	void enable(GLenum cap);
 	void disable(GLenum cap);
 	void blendFunc(GLenum sfactor, GLenum dfactor);
+	void viewport(GLint x, GLint y, GLsizei width, GLsizei height);
 	void drawArrays(GLenum mode, GLint first, GLsizei count);
 }
