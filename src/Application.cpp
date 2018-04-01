@@ -75,6 +75,7 @@ bool Application::init(const char* title, int width, int height)
   {
     kNothingInited,
     kLoggerInited,
+    kConfigInited,
     kAllocatorInited,
     kSdlInited,
     kWindowInited,
@@ -82,7 +83,6 @@ bool Application::init(const char* title, int width, int height)
     kAudioDeviceInited,
     kFifoInited,
     kAudioInited,
-    kConfigInited,
     kInputInited,
     kKeyBindsInited,
     kVideoInited
@@ -97,7 +97,15 @@ bool Application::init(const char* title, int width, int height)
   }
 
   inited = kLoggerInited;
+
   _logger.printf(RETRO_LOG_INFO, "RALibretro version %s starting", git::getFullHash());
+
+  if (!_config.init(&_logger))
+  {
+    goto error;
+  }
+
+  inited = kConfigInited;
 
   if (!_allocator.init(&_logger))
   {
@@ -159,7 +167,7 @@ bool Application::init(const char* title, int width, int height)
 
   if (!Gl::ok())
   {
-	goto error;
+	  goto error;
   }
 
   inited = kGlInited;
@@ -202,13 +210,6 @@ bool Application::init(const char* title, int width, int height)
   }
 
   inited = kAudioInited;
-
-  if (!_config.init(&_logger))
-  {
-    goto error;
-  }
-
-  inited = kConfigInited;
 
   if (!_input.init(&_logger))
   {
@@ -267,7 +268,6 @@ error:
   case kVideoInited:       _video.destroy();
   case kKeyBindsInited:    _keybinds.destroy();
   case kInputInited:       _input.destroy();
-  case kConfigInited:      _config.destroy();
   case kAudioInited:       _audio.destroy();
   case kFifoInited:        _fifo.destroy();
   case kAudioDeviceInited: SDL_CloseAudioDevice(_audioDev);
@@ -275,6 +275,7 @@ error:
   case kWindowInited:      SDL_DestroyWindow(_window);
   case kSdlInited:         SDL_Quit();
   case kAllocatorInited:   _allocator.destroy();
+  case kConfigInited:      _config.destroy();
   case kLoggerInited:      _logger.destroy();
   case kNothingInited:     break;
   }
