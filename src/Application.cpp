@@ -78,7 +78,7 @@ bool Application::init(const char* title, int width, int height)
     kAllocatorInited,
     kSdlInited,
     kWindowInited,
-	kGlInited,
+    kGlInited,
     kAudioDeviceInited,
     kFifoInited,
     kAudioInited,
@@ -360,9 +360,9 @@ void Application::run()
       RA_DoAchievementsFrame();
     }
 
-	Gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  _video.draw();
-	SDL_GL_SwapWindow(_window);
+    Gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    _video.draw();
+    SDL_GL_SwapWindow(_window);
 
     RA_HandleHTTPResults();
 
