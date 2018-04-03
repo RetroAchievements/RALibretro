@@ -49,6 +49,11 @@ public:
     // State state management
     kSaveState,
     kLoadState,
+    // Window size
+    kSetWindowSize1,
+    kSetWindowSize2,
+    kSetWindowSize3,
+    kSetWindowSize4,
     // Emulation speed
     kPauseToggle,
     kFastForward,

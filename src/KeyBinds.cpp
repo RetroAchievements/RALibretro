@@ -88,6 +88,11 @@ KeyBinds::Action KeyBinds::translate(const SDL_KeyboardEvent* key, unsigned* ext
     kSetSlot10,
     kLoadCurrent,
     kSaveCurrent,
+    // Window size
+    kSetWindowSize1,
+    kSetWindowSize2,
+    kSetWindowSize3,
+    kSetWindowSize4,
     // Emulation speed
     kPauseToggle,
     kFastForward,
@@ -151,6 +156,11 @@ KeyBinds::Action KeyBinds::translate(const SDL_KeyboardEvent* key, unsigned* ext
     {SDLK_0,           0,          kSetSlot10},
     {SDLK_F11,         0,          kLoadCurrent},
     {SDLK_BACKSPACE,   0,          kSaveCurrent},
+    // Window size
+    {SDLK_1,           KMOD_ALT,   kSetWindowSize1},
+    {SDLK_2,           KMOD_ALT,   kSetWindowSize2},
+    {SDLK_3,           KMOD_ALT,   kSetWindowSize3},
+    {SDLK_4,           KMOD_ALT,   kSetWindowSize4},
     // Emulation speed
     {SDLK_p,           0,          kPauseToggle},
     {SDLK_ESCAPE,      0,          kPauseToggle},
@@ -238,6 +248,11 @@ KeyBinds::Action KeyBinds::translate(const SDL_KeyboardEvent* key, unsigned* ext
         case kSetSlot10:    _slot = 10; return Action::kNothing;
         case kLoadCurrent:  *extra = _slot; return Action::kLoadState;
         case kSaveCurrent:  *extra = _slot; return Action::kSaveState;
+        // Window size
+        case kSetWindowSize1: return Action::kSetWindowSize1;
+        case kSetWindowSize2: return Action::kSetWindowSize2;
+        case kSetWindowSize3: return Action::kSetWindowSize3;
+        case kSetWindowSize4: return Action::kSetWindowSize4;
         // Emulation speed
         case kPauseToggle:       return Action::kPauseToggle;
         case kFastForward:       *extra = (unsigned)!_ff; return Action::kFastForward;
