@@ -277,6 +277,31 @@ void Video::windowResized(unsigned width, unsigned height)
   createVertexBuffer(width, height, texScaleX, texScaleY, _posAttribute, _uvAttribute);
 }
 
+void Video::getFramebufferSize(unsigned* width, unsigned* height)
+{
+  unsigned w, h;
+
+  if (_preserveAspect)
+  {
+    h = _viewHeight;
+    w = (unsigned)(_viewHeight * _aspect);
+
+    if (w < _viewWidth)
+    {
+      w = _viewWidth;
+      h = (unsigned)(_viewWidth / _aspect);
+    }
+  }
+  else
+  {
+    w = _viewWidth;
+    h = _viewHeight;
+  }
+
+  *width = w;
+  *height = h;
+}
+
 const void* Video::getFramebuffer(unsigned* width, unsigned* height, unsigned* pitch, enum retro_pixel_format* format)
 {
   unsigned bpp = _pixelFormat == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 2;

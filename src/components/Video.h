@@ -43,6 +43,7 @@ public:
   virtual void showMessage(const char* msg, unsigned frames) override;
 
   void windowResized(unsigned width, unsigned height);
+  void getFramebufferSize(unsigned* width, unsigned* height);
   const void* getFramebuffer(unsigned* width, unsigned* height, unsigned* pitch, enum retro_pixel_format* format);
 
   std::string serialize();

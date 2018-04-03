@@ -1491,6 +1491,13 @@ std::string Application::serializeRecentList()
   return json;
 }
 
+void Application::resizeWindow(unsigned multiplier)
+{
+  unsigned width, height;
+  _video.getFramebufferSize(&width, &height);
+  SDL_SetWindowSize(_window, width * multiplier, height * multiplier);
+}
+
 void Application::handle(const SDL_SysWMEvent* syswm)
 {
   if (syswm->msg->msg.win.msg == WM_PAINT)
@@ -1607,6 +1614,13 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     
     case IDM_VIDEO_CONFIG:
       _video.showDialog();
+      break;
+    
+    case IDM_WINDOW_1X:
+    case IDM_WINDOW_2X:
+    case IDM_WINDOW_3X:
+    case IDM_WINDOW_4X:
+      resizeWindow(cmd - IDM_WINDOW_1X + 1);
       break;
     
     case IDM_EXIT:

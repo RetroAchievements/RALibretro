@@ -102,6 +102,7 @@ protected:
   void        aboutDialog();
   void        loadRecentList();
   std::string serializeRecentList();
+  void        resizeWindow(unsigned multiplier);
   void        handle(const SDL_SysWMEvent* syswm);
   void        handle(const SDL_WindowEvent* window);
   void        handle(const SDL_KeyboardEvent* key);

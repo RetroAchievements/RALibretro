@@ -110,6 +110,13 @@ main MENU
         MENUITEM "Emulation", IDM_CORE_CONFIG
         MENUITEM "Input", IDM_INPUT_CONFIG
         MENUITEM "Video", IDM_VIDEO_CONFIG
+        POPUP "Window Size"
+        {
+            MENUITEM "Resize to 1x", IDM_WINDOW_1X
+            MENUITEM "Resize to 2x", IDM_WINDOW_2X
+            MENUITEM "Resize to 3x", IDM_WINDOW_3X
+            MENUITEM "Resize to 4x", IDM_WINDOW_4X
+        }
     }
     MENUITEM "About", IDM_ABOUT
 }

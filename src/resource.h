@@ -73,6 +73,12 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #define IDM_LOAD_RECENT_9                       53008
 #define IDM_LOAD_RECENT_10                      53009
 
+// Keep those in increasing order
+#define IDM_WINDOW_1X                           54000
+#define IDM_WINDOW_2X                           54001
+#define IDM_WINDOW_3X                           54002
+#define IDM_WINDOW_4X                           54003
+
 #define IDM_LOAD_GAME                           40000
 #define IDM_RESET_GAME                          40001
 #define IDM_EXIT                                40002
