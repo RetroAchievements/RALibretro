@@ -2,16 +2,12 @@
 	path = src/RA_Integration
 	url = https://github.com/RetroAchievements/RASuite.git
 	branch = raintegration
-	shallow = true
 [submodule "src/SDL2"]
 	path = src/SDL2
 	url = https://github.com/RetroAchievements/SDL2
-	shallow = true
 [submodule "src/jsonsax"]
 	path = src/jsonsax
 	url = https://github.com/leiradel/jsonsax
-	shallow = true
 [submodule "src/miniz"]
 	path = src/miniz
 	url = https://github.com/richgel999/miniz.git
-	shallow = true
