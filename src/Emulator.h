@@ -49,7 +49,7 @@ enum class Emulator
 enum class System
 {
   kNone           = UnknownConsoleID,
-  kAtari2600      = VCS,
+  kAtari2600      = Atari2600,
   kAtariLynx      = Lynx,
   kMasterSystem   = MasterSystem,
   kMegaDrive      = MegaDrive,

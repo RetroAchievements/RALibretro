@@ -2,7 +2,7 @@
 CC=gcc
 CXX=g++
 RC=windres
-INCLUDES=-Isrc -I../RA_Integration -I../RA_Integration/rapidjson/include
+INCLUDES=-Isrc -I./src/RA_Integration/src -I./src/RA_Integration/src/rapidjson/include
 DEFINES=-DOUTSIDE_SPEEX -DRANDOM_PREFIX=speex -DEXPORT= -D_USE_SSE2 -DFIXED_POINT
 CCFLAGS=-Wall -m32 $(INCLUDES) $(DEFINES) `sdl2-config --cflags`
 CXXFLAGS=$(CCFLAGS) -std=c++11
@@ -23,8 +23,8 @@ OBJS=\
 	src/jsonsax/jsonsax.o \
 	src/libretro/BareCore.o \
 	src/libretro/Core.o \
-	src/RA_Integration/RA_Implementation.o \
-	../RA_Integration/RA_Interface.o \
+	src/RA_Implementation.o \
+	src/RA_Integration/src/RA_Interface.o \
 	src/components/Audio.o \
 	src/components/Config.o \
 	src/components/Dialog.o \

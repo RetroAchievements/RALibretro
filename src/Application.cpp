@@ -25,7 +25,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "libretro/Core.h"
 #include "jsonsax/jsonsax.h"
 
-#include "RA_Integration/RA_Implementation.h"
+#include "RA_Integration/RA_Implementation/RA_Implementation.h"
 #include <RA_Resource.h>
 
 #include "About.h"

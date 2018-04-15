@@ -48,9 +48,6 @@
     <ClCompile Include="Fsm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Git.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="jsonsax\jsonsax.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -66,19 +63,22 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ra_integration\RA_Implementation.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="speex\resample.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\RA_Integration\RA_Interface.cpp">
+    <ClCompile Include="Gl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Gl.cpp">
+    <ClCompile Include="RA_Integration\src\RA_Interface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RA_Implementation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Git.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -122,9 +122,6 @@
     <ClInclude Include="Git.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="jsonsax\jsonsax.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="KeyBinds.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -138,18 +135,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="libretro\libretro.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ra_integration\RA_Defs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ra_integration\RA_Implementation.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ra_integration\RA_Interface.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ra_integration\RA_Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Util.h">
