@@ -72,11 +72,21 @@ fsm Fsm {
       ctx.pauseGame(true);
     }
 
+    pauseGameNoOvl() => GamePausedNoOvl {
+      if (ctx.hardcore()) {
+        forbid;
+      }
+    }
+
     resetGame() => GameRunning {
       ctx.resetGame();
     }
 
-    step() => FrameStep;
+    step() => FrameStep {
+      if (ctx.hardcore()) {
+        forbid;
+      }
+    }
     
     turbo() => GameTurbo {
       if (ctx.hardcore()) {
@@ -129,6 +139,34 @@ fsm Fsm {
     quit() => unloadGame() => quit();
   }
 
+  GamePausedNoOvl {
+    resumeGame() => GameRunning;
+
+    resetGame() => resumeGame() => resetGame();
+
+    step() => FrameStep;
+    
+    turbo() => GameTurbo {
+      if (ctx.hardcore()) {
+        forbid;
+      }
+    }
+
+    unloadGame() => CoreLoaded {
+      if (!ctx.unloadGame()) {
+        forbid;
+      }
+    }
+
+    loadCore(Emulator core) => unloadGame() => unloadCore() => loadCore(core);
+
+    loadGame(const_string path) => unloadGame() => loadGame(path);
+
+    loadRecent(Emulator core, const_string path) => unloadGame() => loadRecent(core, path);
+
+    quit() => unloadGame() => quit();
+  }
+
   FrameStep {
     resumeGame() => GamePaused;
   }
@@ -154,6 +192,12 @@ fsm Fsm {
       ctx.pauseGame(true);
     }
 
+    pauseGameNoOvl() => GamePausedNoOvl {
+      if (ctx.hardcore()) {
+        forbid;
+      }
+    }
+
     loadCore(Emulator core) => unloadGame() => unloadCore() => loadCore(core);
 
     loadGame(const_string path) => unloadGame() => loadGame(path);
@@ -163,3 +207,4 @@ fsm Fsm {
     quit() => unloadGame() => quit();
   }
 }
+

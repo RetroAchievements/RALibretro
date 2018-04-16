@@ -131,10 +131,12 @@ bool Application::init(const char* title, int width, int height)
     goto error;
   }
 
-  SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+  SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+  SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+  SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+  SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
   _window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
@@ -338,6 +340,7 @@ void Application::run()
       break;
 
     case Fsm::State::GamePaused:
+    case Fsm::State::GamePausedNoOvl:
     default:
       limit = 0;
       audio = false;
@@ -1699,6 +1702,18 @@ void Application::handle(const SDL_KeyboardEvent* key)
 
     break;
 
+  case KeyBinds::Action::kPauseToggleNoOvl:
+    if (_fsm.currentState() == Fsm::State::GamePausedNoOvl)
+    {
+      _fsm.resumeGame();
+    }
+    else
+    {
+      _fsm.pauseGameNoOvl();
+    }
+
+    break;
+
   case KeyBinds::Action::kFastForward:
     if (_fsm.currentState() == Fsm::State::GameTurbo)
     {
@@ -1716,3 +1731,4 @@ void Application::handle(const SDL_KeyboardEvent* key)
     break;
   }
 }
+

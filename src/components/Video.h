@@ -64,8 +64,6 @@ protected:
   GLint                   _texUniform;
   GLuint                  _vertexBuffer;
   GLuint                  _texture;
-  GLuint                  _framebuffer;
-  GLuint                  _renderbuffer;
 
   unsigned                _windowWidth;
   unsigned                _windowHeight;
@@ -79,3 +77,4 @@ protected:
   bool                    _preserveAspect;
   bool                    _linearFilter;
 };
+

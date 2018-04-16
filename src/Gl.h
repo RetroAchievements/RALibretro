@@ -53,6 +53,7 @@ namespace Gl
 	void framebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
 	void framebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
 	void drawBuffers(GLsizei n, const GLenum* bufs);
+  GLenum checkFramebufferStatus(GLenum target);
 
 	void genRenderbuffers(GLsizei n, GLuint* renderbuffers);
 	void deleteRenderbuffers(GLsizei n, const GLuint* renderbuffers);
@@ -67,3 +68,4 @@ namespace Gl
 	void viewport(GLint x, GLint y, GLsizei width, GLsizei height);
 	void drawArrays(GLenum mode, GLint first, GLsizei count);
 }
+

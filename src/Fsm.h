@@ -16,6 +16,7 @@ public:
     CoreLoaded,
     FrameStep,
     GamePaused,
+    GamePausedNoOvl,
     GameRunning,
     GameTurbo,
     Quit,
@@ -35,6 +36,7 @@ public:
   bool loadRecent(Emulator core, const_string path);
   bool normal();
   bool pauseGame();
+  bool pauseGameNoOvl();
   bool quit();
   bool resetGame();
   bool resumeGame();
@@ -52,3 +54,4 @@ protected:
   Application& ctx;
   State __state;
 };
+

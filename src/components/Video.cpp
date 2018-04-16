@@ -32,8 +32,6 @@ bool Video::init(libretro::LoggerComponent* logger, Config* config)
   _logger = logger;
   _config = config;
 
-  _preserveAspect = false;
-  _linearFilter = false;
   _pixelFormat = RETRO_PIXEL_FORMAT_UNKNOWN;
   _windowWidth = _windowHeight = 0;
   _textureWidth = _textureHeight = 0;
@@ -41,8 +39,9 @@ bool Video::init(libretro::LoggerComponent* logger, Config* config)
 
   _vertexBuffer = 0;
   _texture = 0;
-  _framebuffer = 0;
-  _renderbuffer = 0;
+
+  _preserveAspect = false;
+  _linearFilter = false;
 
   _program = createProgram(&_posAttribute, &_uvAttribute, &_texUniform);
 
@@ -57,18 +56,6 @@ bool Video::init(libretro::LoggerComponent* logger, Config* config)
 
 void Video::destroy()
 {
-  if (_renderbuffer != 0)
-  {
-    Gl::deleteRenderbuffers(1, &_renderbuffer);
-    _renderbuffer = 0;
-  }
-
-  if (_framebuffer != 0)
-  {
-    Gl::deleteFramebuffers(1, &_framebuffer);
-    _framebuffer = 0;
-  }
-
   if (_texture != 0)
   {
     Gl::deleteTextures(1, &_texture);
@@ -92,15 +79,6 @@ void Video::draw()
 {
   if (_texture != 0)
   {
-    float height = (float)_windowHeight;
-    float width = height * _aspect;
-
-    if (width > _windowWidth)
-    {
-      width = (float)_windowWidth;
-      height = width / _aspect;
-    }
-
     Gl::useProgram(_program);
 
     Gl::enableVertexAttribArray(_posAttribute);
@@ -116,13 +94,10 @@ void Video::draw()
 
 bool Video::setGeometry(unsigned width, unsigned height, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback)
 {
-  (void)width;
-  (void)height;
   (void)hwRenderCallback;
 
   if (pixelFormat != _pixelFormat && _texture != 0)
   {
-    Gl::deleteTextures(1, &_texture);
     _textureWidth = _textureHeight = 0;
   }
 
@@ -130,33 +105,6 @@ bool Video::setGeometry(unsigned width, unsigned height, float aspect, enum retr
   _pixelFormat = pixelFormat;
 
   _logger->printf(RETRO_LOG_DEBUG, "Geometry set to %u x %u (1:%f)", width, height, aspect);
-
-#if 0
-  if (hwRenderCallback != NULL)
-  {
-    // Hardware framebuffer
-    Gl::genFramebuffers(1, &_framebuffer);
-    Gl::bindFramebuffer(GL_FRAMEBUFFER, _framebuffer);
-
-    Gl::framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _texture, 0);
-
-    Gl::genRenderbuffers(1, &_renderbuffer);
-    Gl::bindRenderbuffer(GL_RENDERBUFFER, _renderbuffer);
-    GLenum internalFormat = hwRenderCallback->stencil ? GL_DEPTH24_STENCIL8 : GL_DEPTH_COMPONENT24;
-    Gl::renderbufferStorage(GL_RENDERBUFFER, internalFormat, width, height);
-    Gl::framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _renderbuffer);
-
-    GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
-    Gl::drawBuffers(sizeof(drawBuffers) / sizeof(drawBuffers[0]), drawBuffers);
-
-    if (!Gl::ok())
-    {
-      destroy();
-      return false;
-    }
-  }
-#endif
-
   return true;
 }
 
@@ -165,7 +113,6 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
   if (data != NULL && data != RETRO_HW_FRAME_BUFFER_VALID)
   {
     bool updateVertexBuffer = false;
-
     unsigned textureWidth = pitch;
 
     switch (_pixelFormat)
@@ -230,20 +177,8 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
 
 bool Video::supportsContext(enum retro_hw_context_type type)
 {
-  // Do we really support those two?
-
-  switch (type)
-  {
-  case RETRO_HW_CONTEXT_OPENGL:
-  //case RETRO_HW_CONTEXT_OPENGLES2:
-  case RETRO_HW_CONTEXT_OPENGL_CORE:
-  //case RETRO_HW_CONTEXT_OPENGLES3:
-  //case RETRO_HW_CONTEXT_OPENGLES_VERSION:
-    return true;
-  
-  default:
-    return false;
-  }
+  (void)type;
+  return false;
 }
 
 uintptr_t Video::getCurrentFramebuffer()
@@ -269,12 +204,11 @@ void Video::windowResized(unsigned width, unsigned height)
   _windowHeight = height;
   Gl::viewport(0, 0, width, height);
 
-  _logger->printf(RETRO_LOG_INFO, "Window resized to %u x %u", width, height);
-
   float texScaleX = (float)_viewWidth / (float)_textureWidth;
   float texScaleY = (float)_viewHeight / (float)_textureHeight;
 
   createVertexBuffer(width, height, texScaleX, texScaleY, _posAttribute, _uvAttribute);
+  _logger->printf(RETRO_LOG_INFO, "Window resized to %u x %u", width, height);
 }
 
 void Video::getFramebufferSize(unsigned* width, unsigned* height)
@@ -326,7 +260,7 @@ const void* Video::getFramebuffer(unsigned* width, unsigned* height, unsigned* p
     
   case RETRO_PIXEL_FORMAT_0RGB1555:
   default:
-    Gl::getTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_SHORT_1_5_5_5_REV, pixels);
+    Gl::getTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, pixels);
     break;
   }
 
@@ -538,7 +472,7 @@ GLuint Video::createTexture(unsigned width, unsigned height, retro_pixel_format 
 
   case RETRO_PIXEL_FORMAT_0RGB1555:
   default:
-    Gl::texImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT_1_5_5_5_REV, NULL);
+    Gl::texImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, NULL);
     format = "RGBA5551";
     break;
   }
@@ -546,3 +480,4 @@ GLuint Video::createTexture(unsigned width, unsigned height, retro_pixel_format 
   _logger->printf(RETRO_LOG_DEBUG, "Texture created with dimensions %u x %u (%s, %s)", width, height, format, linear ? "linear" : "nearest");
   return texture;
 }
+

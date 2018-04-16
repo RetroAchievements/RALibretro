@@ -41,6 +41,7 @@ static PFNGLBINDFRAMEBUFFERPROC s_glBindFramebuffer;
 static PFNGLFRAMEBUFFERTEXTURE2DPROC s_glFramebufferTexture2D;
 static PFNGLFRAMEBUFFERRENDERBUFFERPROC s_glFramebufferRenderbuffer;
 static PFNGLDRAWBUFFERSPROC s_glDrawBuffers;
+static PFNGLCHECKFRAMEBUFFERSTATUSPROC s_glCheckFramebufferStatus;
 
 static PFNGLGENRENDERBUFFERSPROC s_glGenRenderbuffers;
 static PFNGLDELETERENDERBUFFERSPROC s_glDeleteRenderbuffers;
@@ -140,6 +141,7 @@ void Gl::init(libretro::LoggerComponent* logger)
   s_glRenderbufferStorage = (PFNGLRENDERBUFFERSTORAGEPROC)getProcAddress("glRenderbufferStorage");
   s_glFramebufferRenderbuffer = (PFNGLFRAMEBUFFERRENDERBUFFERPROC)getProcAddress("glFramebufferRenderbuffer");
   s_glDrawBuffers = (PFNGLDRAWBUFFERSPROC)getProcAddress("glDrawBuffers");
+  s_glCheckFramebufferStatus = (PFNGLCHECKFRAMEBUFFERSTATUSPROC)getProcAddress("glCheckFramebufferStatus");
 
   s_glGenRenderbuffers = (PFNGLGENRENDERBUFFERSPROC)getProcAddress("glGenRenderbuffers");
   s_glDeleteRenderbuffers = (PFNGLDELETERENDERBUFFERSPROC)getProcAddress("glDeleteRenderbuffers");
@@ -487,6 +489,14 @@ void Gl::drawBuffers(GLsizei n, const GLenum* bufs)
   check(__FUNCTION__);
 }
 
+GLenum Gl::checkFramebufferStatus(GLenum target)
+{
+  if (!s_ok || s_glCheckFramebufferStatus == NULL) return 0;
+  GLenum status = s_glCheckFramebufferStatus(target);
+  check(__FUNCTION__, status != 0);
+  return status;
+}
+
 void Gl::genRenderbuffers(GLsizei n, GLuint* renderbuffers)
 {
   if (!s_ok || s_glGenRenderbuffers == NULL) return;
@@ -563,3 +573,4 @@ void Gl::drawArrays(GLenum mode, GLint first, GLsizei count)
   glDrawArrays(mode, first, count);
   check(__FUNCTION__);
 }
+

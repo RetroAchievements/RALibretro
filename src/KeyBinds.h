@@ -56,6 +56,7 @@ public:
     kSetWindowSize4,
     // Emulation speed
     kPauseToggle,
+    kPauseToggleNoOvl,
     kFastForward,
     kStep,
     // Screenshot
@@ -75,3 +76,4 @@ protected:
   unsigned _slot;
   bool _ff;
 };
+

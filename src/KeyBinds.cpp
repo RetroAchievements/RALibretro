@@ -95,6 +95,7 @@ KeyBinds::Action KeyBinds::translate(const SDL_KeyboardEvent* key, unsigned* ext
     kSetWindowSize4,
     // Emulation speed
     kPauseToggle,
+    kPauseToggleNoOvl,
     kFastForward,
     kFastForwardToggle,
     kStep,
@@ -162,8 +163,8 @@ KeyBinds::Action KeyBinds::translate(const SDL_KeyboardEvent* key, unsigned* ext
     {SDLK_3,           KMOD_ALT,   kSetWindowSize3},
     {SDLK_4,           KMOD_ALT,   kSetWindowSize4},
     // Emulation speed
-    {SDLK_p,           0,          kPauseToggle},
     {SDLK_ESCAPE,      0,          kPauseToggle},
+    {SDLK_p,           0,          kPauseToggleNoOvl},
     {SDLK_EQUALS,      0,          kFastForward},
     {SDLK_MINUS,       0,          kFastForwardToggle},
     {SDLK_SEMICOLON,   0,          kStep},
@@ -254,6 +255,7 @@ KeyBinds::Action KeyBinds::translate(const SDL_KeyboardEvent* key, unsigned* ext
         case kSetWindowSize3: return Action::kSetWindowSize3;
         case kSetWindowSize4: return Action::kSetWindowSize4;
         // Emulation speed
+        case kPauseToggleNoOvl:  return Action::kPauseToggleNoOvl;
         case kPauseToggle:       return Action::kPauseToggle;
         case kFastForward:       *extra = (unsigned)!_ff; return Action::kFastForward;
         case kFastForwardToggle: _ff = !_ff; *extra = (unsigned)_ff; return Action::kFastForward;
@@ -275,3 +277,4 @@ KeyBinds::Action KeyBinds::translate(const SDL_KeyboardEvent* key, unsigned* ext
 
   return Action::kNothing;
 }
+
