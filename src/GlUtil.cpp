@@ -97,3 +97,51 @@ GLuint GlUtil::createProgram(const char* vertexShader, const char* fragmentShade
 
   return program;
 }
+
+GLuint GlUtil::createFramebuffer(GLuint* renderbuffer, GLsizei width, GLsizei height, GLuint texture, bool depth, bool stencil)
+{
+  if (!Gl::ok()) return 0;
+
+  GLuint framebuffer;
+  Gl::genFramebuffers(1, &framebuffer);
+  Gl::bindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+  Gl::framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+
+  *renderbuffer = 0;
+
+  if (depth && stencil)
+  {
+    Gl::genRenderbuffers(1, renderbuffer);
+    Gl::bindRenderbuffer(GL_RENDERBUFFER, *renderbuffer);
+    Gl::renderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+    Gl::framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, *renderbuffer);
+    Gl::bindRenderbuffer(GL_RENDERBUFFER, 0);
+  }
+  else if (depth)
+  {
+    Gl::genRenderbuffers(1, renderbuffer);
+    Gl::bindRenderbuffer(GL_RENDERBUFFER, *renderbuffer);
+    Gl::renderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
+    Gl::framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, *renderbuffer);
+    Gl::bindRenderbuffer(GL_RENDERBUFFER, 0);
+  }
+
+  if (Gl::checkFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+  {
+    if (renderbuffer != 0)
+    {
+      Gl::deleteRenderbuffers(1, renderbuffer);
+    }
+
+    Gl::deleteFramebuffers(1, &framebuffer);
+    *renderbuffer = 0;
+    return 0;
+  }
+
+  Gl::clearColor(0, 0, 0, 1);
+  Gl::clear(GL_COLOR_BUFFER_BIT);
+
+  Gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
+  return framebuffer;
+}
