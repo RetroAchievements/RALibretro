@@ -25,7 +25,7 @@ $ pacman -S make git zip mingw-w64-i686-gcc mingw-w64-i686-SDL2 mingw-w64-i686-g
 ### Clone the repo
 
 ```
-$ git clone --recursive --depth 1 https://github.com/leiradel/RASuite.git
+$ git clone --recursive --depth 1 https://github.com/RetroAchievements/RALibretro.git
 ```
 
 ### Build
@@ -42,7 +42,7 @@ $ make
 ### Clone the repo
 
 ```
-$ git clone --recursive --depth 1 https://github.com/leiradel/RASuite.git
+$ git clone --recursive --depth 1 https://github.com/RetroAchievements/RALibretro.git
 ```
 
 ### Build
