@@ -32,6 +32,9 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "KeyBinds.h"
 #include "Util.h"
 
+#include "Gl.h"
+#include "GlUtil.h"
+
 #include "resource.h"
 
 #include <time.h>
@@ -166,6 +169,7 @@ bool Application::init(const char* title, int width, int height)
   inited = kWindowInited;
 
   Gl::init(&_logger);
+  GlUtil::init(&_logger);
 
   if (!Gl::ok())
   {

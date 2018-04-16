@@ -293,35 +293,6 @@ void Gl::getShaderInfoLog(GLuint shader, GLsizei maxLength, GLsizei* length, GLc
   check(__FUNCTION__);
 }
 
-GLuint Gl::createShader(GLenum shaderType, const char* source)
-{
-  if (!s_ok) return 0;
-
-	GLuint shader = createShader(shaderType);
-	shaderSource(shader, 1, &source, NULL);
-	compileShader(shader);
-
-	GLint status;
-	getShaderiv(shader, GL_COMPILE_STATUS, &status);
-
-	if (status == GL_FALSE)
-  {
-		char buffer[4096];
-		getShaderInfoLog(shader, sizeof(buffer), NULL, buffer);
-    s_logger->printf(RETRO_LOG_ERROR, "Error in shader: %s", buffer);
-    deleteShader(shader);
-    return 0;
-	}
-
-  if (!s_ok)
-  {
-    deleteShader(shader);
-    return 0;
-  }
-
-  return shader;
-}
-
 GLuint Gl::createProgram()
 {
   if (!s_ok || s_glCreateProgram == NULL) return 0;
@@ -407,44 +378,6 @@ void Gl::uniform2f(GLint location, GLfloat v0, GLfloat v1)
   if (!s_ok || s_glUniform2f == NULL) return;
   s_glUniform2f(location, v0, v1);
   check(__FUNCTION__);
-}
-
-GLuint Gl::createProgram(const char* vertexShader, const char* fragmentShader)
-{
-  if (!s_ok) return 0;
-
-  GLuint vs = createShader(GL_VERTEX_SHADER, vertexShader);
-  GLuint fs = createShader(GL_FRAGMENT_SHADER, fragmentShader);
-  GLuint program = createProgram();
-
-  attachShader(program, vs);
-  attachShader(program, fs);
-  linkProgram(program);
-
-  deleteShader(vs);
-  deleteShader(fs);
-
-  validateProgram(program);
-
-  GLint status;
-  getProgramiv(program, GL_LINK_STATUS, &status);
-
-  if (status == GL_FALSE)
-  {
-		char buffer[4096];
-		getProgramInfoLog(program, sizeof(buffer), NULL, buffer);
-    s_logger->printf(RETRO_LOG_ERROR, "Error in shader program: %s", buffer);
-    deleteProgram(program);
-    return 0;
-  }
-
-  if (!s_ok)
-  {
-    deleteProgram(program);
-    return 0;
-  }
-
-  return program;
 }
 
 void Gl::genFramebuffers(GLsizei n, GLuint* ids)
