@@ -93,9 +93,11 @@ protected:
   std::string getConfigPath();
   std::string getCoreConfigPath(Emulator emulator);
   std::string getScreenshotPath();
+  void        saveState(const std::string& path);
   void        saveState(unsigned ndx);
-  void        loadState(unsigned ndx);
   void        saveState();
+  void        loadState(const std::string& path);
+  void        loadState(unsigned ndx);
   void        loadState();
   void        screenshot();
   void        aboutDialog();

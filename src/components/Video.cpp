@@ -124,7 +124,7 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
     default:                          textureWidth /= 2; break;
     }
 
-    if (textureWidth > _textureWidth || height > _textureHeight)
+    if (textureWidth != _textureWidth || height != _textureHeight)
     {
       if (_texture != 0)
       {
@@ -153,7 +153,7 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
       
     case RETRO_PIXEL_FORMAT_0RGB1555:
     default:
-      Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureWidth, height, GL_RGB, GL_UNSIGNED_SHORT_1_5_5_5_REV, data);
+      Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureWidth, height, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, data);
       break;
     }
 
@@ -212,7 +212,7 @@ void Video::windowResized(unsigned width, unsigned height)
   _logger->printf(RETRO_LOG_INFO, "Window resized to %u x %u", width, height);
 }
 
-void Video::getFramebufferSize(unsigned* width, unsigned* height)
+void Video::getFramebufferSize(unsigned* width, unsigned* height, enum retro_pixel_format* format)
 {
   unsigned w, h;
 
@@ -235,6 +235,7 @@ void Video::getFramebufferSize(unsigned* width, unsigned* height)
 
   *width = w;
   *height = h;
+  *format = _pixelFormat;
 }
 
 const void* Video::getFramebuffer(unsigned* width, unsigned* height, unsigned* pitch, enum retro_pixel_format* format)
@@ -271,6 +272,40 @@ const void* Video::getFramebuffer(unsigned* width, unsigned* height, unsigned* p
   *format = _pixelFormat;
 
   return pixels;
+}
+
+void Video::setFramebuffer(const void* pixels, unsigned width, unsigned height, unsigned pitch)
+{
+  auto p = (const uint8_t*)pixels;
+  Gl::bindTexture(GL_TEXTURE_2D, _texture);
+
+  switch (_pixelFormat)
+  {
+  case RETRO_PIXEL_FORMAT_XRGB8888:
+    for (unsigned y = 0; y < height; y++, p += pitch)
+    {
+      Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, y, width, 1, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, p);
+    }
+
+    break;
+    
+  case RETRO_PIXEL_FORMAT_RGB565:
+    for (unsigned y = 0; y < height; y++, p += pitch)
+    {
+      Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, y, width, 1, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, p);
+    }
+
+    break;
+    
+  case RETRO_PIXEL_FORMAT_0RGB1555:
+  default:
+    for (unsigned y = 0; y < height; y++, p += pitch)
+    {
+      Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, y, width, 1, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, p);
+    }
+
+    break;
+  }
 }
 
 std::string Video::serialize()

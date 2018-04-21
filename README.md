@@ -31,7 +31,7 @@ $ git clone --recursive --depth 1 https://github.com/RetroAchievements/RALibretr
 ### Build
 
 ```
-$ cd /path/to/RASuite/RALibretro
+$ cd RALibretro
 $ make
 ```
 
