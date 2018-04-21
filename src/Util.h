@@ -38,4 +38,8 @@ namespace util
   std::string extension(const std::string& path);
   std::string openFileDialog(HWND hWnd, const char* extensionsFilter);
   std::string saveFileDialog(HWND hWnd, const char* extensionsFilter);
+  const void* toRgb(Logger* logger, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format);
+  void        saveImage(Logger* logger, const std::string& path, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format);
+  const void* fromRgb(Logger* logger, const void* data, unsigned width, unsigned height, unsigned* pitch, enum retro_pixel_format format);
+  const void* loadImage(Logger* logger, const std::string& path, unsigned* width, unsigned* height, unsigned* pitch);
 }

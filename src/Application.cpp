@@ -45,18 +45,14 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 HWND g_mainWindow;
 Application app;
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#define STBIW_ASSERT(x)
-#include "stb_image_write.h"
-
 static unsigned char memoryRead(unsigned int addr)
 {
-	return app.memoryRead(addr);
+  return app.memoryRead(addr);
 }
 
 static void memoryWrite(unsigned int addr, unsigned int value)
 {
-	app.memoryWrite(addr, value);
+  app.memoryWrite(addr, value);
 }
 
 Application::Application(): _fsm(*this)
@@ -169,7 +165,7 @@ bool Application::init(const char* title, int width, int height)
 
   if (!Gl::ok())
   {
-	  goto error;
+    goto error;
   }
 
   inited = kGlInited;
@@ -1131,7 +1127,7 @@ std::string Application::getScreenshotPath()
   return path;
 }
 
-void Application::saveState(unsigned ndx)
+void Application::saveState(const std::string& path)
 {
   if (hardcore())
   {
@@ -1139,6 +1135,8 @@ void Application::saveState(unsigned ndx)
     return;
   }
 
+  _logger.printf(RETRO_LOG_INFO, "Saving state to %s", path.c_str());
+  
   size_t size = _core.serializeSize();
   void* data = malloc(size);
 
@@ -1154,67 +1152,39 @@ void Application::saveState(unsigned ndx)
     return;
   }
 
-  std::string path = getStatePath(ndx);
-  _logger.printf(RETRO_LOG_INFO, "Saving state to %s", path.c_str());
-  
-  if (util::saveFile(&_logger, path.c_str(), data, size))
+  unsigned width, height, pitch;
+  enum retro_pixel_format format;
+  const void* pixels = _video.getFramebuffer(&width, &height, &pitch, &format);
+
+  if (pixels == NULL)
   {
-    _validSlots |= 1 << ndx;
-    enableSlots();
-
-    RA_OnSaveState(path.c_str());
-  }
-
-  free(data);
-}
-
-void Application::loadState(unsigned ndx)
-{
-  if (hardcore())
-  {
-    _logger.printf(RETRO_LOG_INFO, "Hardcore mode is active, can't load state");
+    free(data);
     return;
   }
 
-  if ((_validSlots & (1 << ndx)) != 0)
+  if (!util::saveFile(&_logger, path.c_str(), data, size))
   {
-    std::string path = getStatePath(ndx);
-    size_t size;
-    void* data = util::loadFile(&_logger, path.c_str(), &size);
-    
-    if (data != NULL)
-    {
-      _core.unserialize(data, size);
-      free(data);
-
-      RA_OnLoadState(path.c_str());
-    }
+    free((void*)pixels);
+    free(data);
+    return;
   }
+
+  util::saveImage(&_logger, path + ".png", pixels, width, height, pitch, format);
+  RA_OnSaveState(path.c_str());
+
+  free((void*)pixels);
+  free(data);
+}
+
+void Application::saveState(unsigned ndx)
+{
+  saveState(getStatePath(ndx));
+  _validSlots |= 1 << ndx;
+  enableSlots();
 }
 
 void Application::saveState()
 {
-  if (hardcore())
-  {
-    _logger.printf(RETRO_LOG_INFO, "Hardcore mode is active, can't save state");
-    return;
-  }
-
-  size_t size = _core.serializeSize();
-  void* data = malloc(size);
-
-  if (data == NULL)
-  {
-    _logger.printf(RETRO_LOG_ERROR, "Out of memory allocating %lu bytes for the game state", size);
-    return;
-  }
-
-  if (!_core.serialize(data, size))
-  {
-    free(data);
-    return;
-  }
-
   std::string path = util::saveFileDialog(g_mainWindow, "*.STATE\0");
 
   if (!path.empty())
@@ -1224,18 +1194,11 @@ void Application::saveState()
       path += ".state";
     }
 
-    _logger.printf(RETRO_LOG_INFO, "Saving state to %s", path.c_str());
-    
-    if (util::saveFile(&_logger, path, data, size))
-    {
-      RA_OnSaveState(path.c_str());
-    }
+    saveState(path);
   }
-
-  free(data);
 }
 
-void Application::loadState()
+void Application::loadState(const std::string& path)
 {
   if (hardcore())
   {
@@ -1243,21 +1206,64 @@ void Application::loadState()
     return;
   }
 
+  size_t size;
+  void* data = util::loadFile(&_logger, path.c_str(), &size);
+
+  if (data == NULL)
+  {
+    return;
+  }
+
+  unsigned width, height, pitch;
+  enum retro_pixel_format format;
+  _video.getFramebufferSize(&width, &height, &format);
+
+  const void* pixels = util::loadImage(&_logger, path + ".png", &width, &height, &pitch);
+
+  if (pixels == NULL)
+  {
+    free(data);
+    return;
+  }
+
+  const void* converted = util::fromRgb(&_logger, pixels, width, height, &pitch, format);
+
+  if (converted == NULL)
+  {
+    free((void*)pixels);
+    free(data);
+    return;
+  }
+
+  _core.unserialize(data, size);
+  _video.setFramebuffer(converted, width, height, pitch);
+  RA_OnLoadState(path.c_str());
+
+  free((void*)converted);
+  free((void*)pixels);
+  free(data);
+}
+
+void Application::loadState(unsigned ndx)
+{
+  if ((_validSlots & (1 << ndx)) == 0)
+  {
+    return;
+  }
+
+  loadState(getStatePath(ndx));
+}
+
+void Application::loadState()
+{
   std::string path = util::openFileDialog(g_mainWindow, "*.STATE\0");
 
-  if (!path.empty())
+  if (path.empty())
   {
-    size_t size;
-    void* data = util::loadFile(&_logger, path, &size);
-    
-    if (data != NULL)
-    {
-      _core.unserialize(data, size);
-      free(data);
-
-      RA_OnLoadState(path.c_str());
-    }
+    return;
   }
+
+  loadState(path);
 }
 
 void Application::screenshot()
@@ -1278,115 +1284,8 @@ void Application::screenshot()
     return;
   }
 
-  void* pixels = malloc(width * height * 3);
-
-  if (pixels == NULL)
-  {
-    _logger.printf(RETRO_LOG_ERROR, "Error allocating memory for the screenshot");
-	free((void*)data);
-    return;
-  }
-
-  if (format == RETRO_PIXEL_FORMAT_RGB565)
-  {
-    _logger.printf(RETRO_LOG_INFO, "Pixel format is RGB565, converting to 24-bits RGB");
-
-    uint16_t* source_rgba5650 = (uint16_t*)data;
-	uint8_t* target_rgba8880 = (uint8_t*)pixels;
-
-    if (target_rgba8880 == NULL)
-    {
-      free((void*)data);
-      return;
-    }
-
-    for (unsigned y = 0; y < height; y++)
-    {
-      uint8_t* row = (uint8_t*)source_rgba5650;
-
-      for (unsigned x = 0; x < width; x++)
-      {
-        uint16_t rgba5650 = *source_rgba5650++;
-
-        *target_rgba8880++ = (rgba5650 >> 11) * 255 / 31;
-        *target_rgba8880++ = ((rgba5650 >> 5) & 0x3f) * 255 / 63;
-        *target_rgba8880++ = (rgba5650 & 0x1f) * 255 / 31;
-      }
-
-      source_rgba5650 = (uint16_t*)(row + pitch);
-    }
-  }
-  else if (format == RETRO_PIXEL_FORMAT_0RGB1555)
-  {
-    _logger.printf(RETRO_LOG_INFO, "Pixel format is 0RGB1565, converting to 24-bits RGB");
-
-    uint16_t* source_argb1555 = (uint16_t*)data;
-	uint8_t* target_rgba8880 = (uint8_t*)pixels;
-
-    if (target_rgba8880 == NULL)
-    {
-      free((void*)data);
-      return;
-    }
-
-    for (unsigned y = 0; y < height; y++)
-    {
-      uint8_t* row = (uint8_t*)source_argb1555;
-
-      for (unsigned x = 0; x < width; x++)
-      {
-        uint16_t argb1555 = *source_argb1555++;
-
-        *target_rgba8880++ = (argb1555 >> 10) * 255 / 31;
-        *target_rgba8880++ = ((argb1555 >> 5) & 0x1f) * 255 / 31;
-        *target_rgba8880++ = (argb1555 & 0x1f) * 255 / 31;
-      }
-
-      source_argb1555 = (uint16_t*)(row + pitch);
-    }
-  }
-  else if (format == RETRO_PIXEL_FORMAT_XRGB8888)
-  {
-    _logger.printf(RETRO_LOG_INFO, "Pixel format is XRGB8888, converting to 24-bits RGB");
-
-    uint32_t* source_argb8888 = (uint32_t*)data;
-	uint8_t* target_rgba8880 = (uint8_t*)pixels;
-
-    if (target_rgba8880 == NULL)
-    {
-      free((void*)data);
-      return;
-    }
-
-    for (unsigned y = 0; y < height; y++)
-    {
-      uint8_t* row = (uint8_t*)source_argb8888;
-
-      for (unsigned x = 0; x < width; x++)
-      {
-        uint32_t argb8888 = *source_argb8888++;
-
-        *target_rgba8880++ = argb8888 >> 16;
-        *target_rgba8880++ = argb8888 >> 8;
-        *target_rgba8880++ = argb8888;
-      }
-
-      source_argb8888 = (uint32_t*)(row + pitch);
-    }
-  }
-  else
-  {
-    _logger.printf(RETRO_LOG_ERROR, "Unknown pixel format");
-    free((void*)data);
-    return;
-  }
-
   std::string path = getScreenshotPath();
-  stbi_write_png(path.c_str(), width, height, 3, pixels, 0);
-
-  _logger.printf(RETRO_LOG_INFO, "Wrote screenshot to \"%s\"", path.c_str());
-
-  free(pixels);
+  util::saveImage(&_logger, path, data, width, height, pitch, format);
   free((void*)data);
 }
 
@@ -1497,7 +1396,8 @@ std::string Application::serializeRecentList()
 void Application::resizeWindow(unsigned multiplier)
 {
   unsigned width, height;
-  _video.getFramebufferSize(&width, &height);
+  enum retro_pixel_format format;
+  _video.getFramebufferSize(&width, &height, &format);
   SDL_SetWindowSize(_window, width * multiplier, height * multiplier);
 }
 
