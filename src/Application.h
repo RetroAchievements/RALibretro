@@ -127,6 +127,7 @@ protected:
 
   KeyBinds _keybinds;
   std::vector<RecentItem> _recentList;
+  bool _recentListLoaded;
 
   Allocator<256 * 1024> _allocator;
 

@@ -89,6 +89,7 @@ bool Application::init(const char* title, int width, int height)
   inited = kNothingInited;
 
   _emulator = Emulator::kNone;
+  _recentListLoaded = false;
 
   if (!_logger.init())
   {
@@ -413,11 +414,14 @@ void Application::run()
 
 void Application::destroy()
 {
-  std::string json = "{\"recent\":";
-  json += serializeRecentList();
-  json += "}";
+  if (_recentListLoaded)
+  {
+    std::string json = "{\"recent\":";
+    json += serializeRecentList();
+    json += "}";
 
-  util::saveFile(&_logger, getConfigPath(), json.c_str(), json.length());
+    util::saveFile(&_logger, getConfigPath(), json.c_str(), json.length());
+  }
 
   RA_Shutdown();
 
@@ -1318,7 +1322,7 @@ void Application::loadRecentList()
     Deserialize ud;
     ud.self = this;
 
-    jsonsax_parse((char*)data, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+    jsonsax_result_t res = jsonsax_parse((char*)data, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
     {
       auto ud = (Deserialize*)udata;
 
@@ -1328,7 +1332,7 @@ void Application::loadRecentList()
       }
       else if (ud->key == "recent" && event == JSONSAX_ARRAY && num == 1)
       {
-        jsonsax_parse((char*)str, ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+        jsonsax_result_t res2 = jsonsax_parse((char*)str, ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
         {
           auto ud = (Deserialize*)udata;
 
@@ -1356,12 +1360,18 @@ void Application::loadRecentList()
 
           return 0;
         });
+
+        if (res2 != JSONSAX_OK)
+        {
+          return -1;
+        }
       }
 
       return 0;
     });
 
     free(data);
+    _recentListLoaded = res == JSONSAX_OK;
   }
 }
 
