@@ -38,6 +38,7 @@ OBJS=\
 	src/Fsm.o \
 	src/Git.o \
 	src/Gl.o \
+	src/GlUtil.o \
 	src/KeyBinds.o \
 	src/main.o \
 	src/menu.res \
