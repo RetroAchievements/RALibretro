@@ -28,6 +28,14 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <commdlg.h>
 #include <shlobj.h>
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#define STBIW_ASSERT(x)
+#include "stb_image_write.h"
+
+#define STBI_ASSERT(x)
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 size_t util::nextPow2(size_t v)
 {
   v--;
@@ -284,4 +292,233 @@ std::string util::saveFileDialog(HWND hWnd, const char* extensionsFilter)
   {
     return "";
   }
+}
+
+const void* util::toRgb(Logger* logger, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format)
+{
+  void* pixels = malloc(width * height * 3);
+
+  if (pixels == NULL)
+  {
+    logger->printf(RETRO_LOG_ERROR, "Error allocating memory for the screenshot");
+    return NULL;
+  }
+
+  if (format == RETRO_PIXEL_FORMAT_RGB565)
+  {
+    logger->printf(RETRO_LOG_INFO, "Pixel format is RGB565, converting to 24-bits RGB");
+
+    uint16_t* source_rgba5650 = (uint16_t*)data;
+    uint8_t* target_rgba8880 = (uint8_t*)pixels;
+
+    for (unsigned y = 0; y < height; y++)
+    {
+      uint8_t* row = (uint8_t*)source_rgba5650;
+
+      for (unsigned x = 0; x < width; x++)
+      {
+        uint16_t rgba5650 = *source_rgba5650++;
+
+        *target_rgba8880++ = (rgba5650 >> 11) * 255 / 31;
+        *target_rgba8880++ = ((rgba5650 >> 5) & 0x3f) * 255 / 63;
+        *target_rgba8880++ = (rgba5650 & 0x1f) * 255 / 31;
+      }
+
+      source_rgba5650 = (uint16_t*)(row + pitch);
+    }
+  }
+  else if (format == RETRO_PIXEL_FORMAT_0RGB1555)
+  {
+    logger->printf(RETRO_LOG_INFO, "Pixel format is 0RGB1565, converting to 24-bits RGB");
+
+    uint16_t* source_argb1555 = (uint16_t*)data;
+    uint8_t* target_rgba8880 = (uint8_t*)pixels;
+
+    for (unsigned y = 0; y < height; y++)
+    {
+      uint8_t* row = (uint8_t*)source_argb1555;
+
+      for (unsigned x = 0; x < width; x++)
+      {
+        uint16_t argb1555 = *source_argb1555++;
+
+        *target_rgba8880++ = (argb1555 >> 10) * 255 / 31;
+        *target_rgba8880++ = ((argb1555 >> 5) & 0x1f) * 255 / 31;
+        *target_rgba8880++ = (argb1555 & 0x1f) * 255 / 31;
+      }
+
+      source_argb1555 = (uint16_t*)(row + pitch);
+    }
+  }
+  else if (format == RETRO_PIXEL_FORMAT_XRGB8888)
+  {
+    logger->printf(RETRO_LOG_INFO, "Pixel format is XRGB8888, converting to 24-bits RGB");
+
+    uint32_t* source_argb8888 = (uint32_t*)data;
+    uint8_t* target_rgba8880 = (uint8_t*)pixels;
+
+    for (unsigned y = 0; y < height; y++)
+    {
+      uint8_t* row = (uint8_t*)source_argb8888;
+
+      for (unsigned x = 0; x < width; x++)
+      {
+        uint32_t argb8888 = *source_argb8888++;
+
+        *target_rgba8880++ = argb8888 >> 16;
+        *target_rgba8880++ = argb8888 >> 8;
+        *target_rgba8880++ = argb8888;
+      }
+
+      source_argb8888 = (uint32_t*)(row + pitch);
+    }
+  }
+  else
+  {
+    logger->printf(RETRO_LOG_ERROR, "Unknown pixel format");
+    free(pixels);
+    return NULL;
+  }
+
+  return pixels;
+}
+
+void util::saveImage(Logger* logger, const std::string& path, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format)
+{
+  const void* pixels = util::toRgb(logger, data, width, height, pitch, format);
+
+  if (pixels == NULL)
+  {
+    return;
+  }
+
+  stbi_write_png(path.c_str(), width, height, 3, pixels, 0);
+  free((void*)pixels);
+
+  logger->printf(RETRO_LOG_INFO, "Wrote image %u x %u to %s", width, height, path.c_str());
+}
+
+const void* util::fromRgb(Logger* logger, const void* data, unsigned width, unsigned height, unsigned* pitch, enum retro_pixel_format format)
+{
+  void* pixels;
+
+  if (format == RETRO_PIXEL_FORMAT_RGB565)
+  {
+    logger->printf(RETRO_LOG_INFO, "Converting from 24-bits RGB to RGB565");
+
+    pixels = malloc(width * height * 2);
+
+    if (pixels == NULL)
+    {
+      logger->printf(RETRO_LOG_ERROR, "Error allocating memory for the screenshot");
+      return NULL;
+    }
+
+    uint8_t* source_rgb888 = (uint8_t*)data;
+    uint16_t* target_rgba5650 = (uint16_t*)pixels;
+
+    for (unsigned y = 0; y < height; y++)
+    {
+      uint8_t* row = source_rgb888;
+
+      for (unsigned x = 0; x < width; x++)
+      {
+        uint8_t r = *source_rgb888++ >> 3;
+        uint8_t g = *source_rgb888++ >> 2;
+        uint8_t b = *source_rgb888++ >> 3;
+
+        *target_rgba5650++ = r << 11 | g << 5 | b;
+      }
+
+      source_rgb888 = row + *pitch;
+    }
+
+    *pitch = width * 2;
+  }
+  else if (format == RETRO_PIXEL_FORMAT_0RGB1555)
+  {
+    logger->printf(RETRO_LOG_INFO, "Converting from 24-bits RGB to 0RGB1565");
+
+    pixels = malloc(width * height * 2);
+
+    if (pixels == NULL)
+    {
+      logger->printf(RETRO_LOG_ERROR, "Error allocating memory for the screenshot");
+      return NULL;
+    }
+
+    uint8_t* source_rgb888 = (uint8_t*)data;
+    uint16_t* target_argb1555 = (uint16_t*)pixels;
+
+    for (unsigned y = 0; y < height; y++)
+    {
+      uint8_t* row = source_rgb888;
+
+      for (unsigned x = 0; x < width; x++)
+      {
+        uint8_t r = *source_rgb888++ >> 3;
+        uint8_t g = *source_rgb888++ >> 3;
+        uint8_t b = *source_rgb888++ >> 3;
+
+        *target_argb1555++ = r << 10 | g << 5 | b;
+      }
+
+      source_rgb888 = row + *pitch;
+    }
+
+    *pitch = width * 2;
+  }
+  else if (format == RETRO_PIXEL_FORMAT_XRGB8888)
+  {
+    logger->printf(RETRO_LOG_INFO, "Converting from 24-bits RGB to XRGB8888");
+
+    pixels = malloc(width * height * 4);
+
+    if (pixels == NULL)
+    {
+      logger->printf(RETRO_LOG_ERROR, "Error allocating memory for the screenshot");
+      return NULL;
+    }
+
+    uint8_t* source_rgb888 = (uint8_t*)data;
+    uint8_t* target_rgba8880 = (uint8_t*)pixels;
+
+    for (unsigned y = 0; y < height; y++)
+    {
+      uint8_t* row = source_rgb888;
+
+      for (unsigned x = 0; x < width; x++)
+      {
+        *target_rgba8880++ = *source_rgb888++;
+        *target_rgba8880++ = *source_rgb888++;
+        *target_rgba8880++ = *source_rgb888++;
+        *target_rgba8880++ = 255;
+      }
+
+      source_rgb888 = row + *pitch;
+    }
+
+    *pitch = width * 4;
+  }
+  else
+  {
+    logger->printf(RETRO_LOG_ERROR, "Unknown pixel format");
+    return NULL;
+  }
+
+  return pixels;
+}
+
+const void* util::loadImage(Logger* logger, const std::string& path, unsigned* width, unsigned* height, unsigned* pitch)
+{
+  int w, h;
+  void* rgb888 = stbi_load(path.c_str(), &w, &h, NULL, STBI_rgb);
+
+  logger->printf(RETRO_LOG_INFO, "Read image %u x %u from %s", w, h, path.c_str());
+
+  *width = w;
+  *height = h;
+  *pitch = w * 3;
+
+  return rgb888;
 }
