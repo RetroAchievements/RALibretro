@@ -31,7 +31,6 @@ namespace Gl
 	void compileShader(GLuint shader);
 	void getShaderiv(GLuint shader, GLenum pname, GLint* params);
 	void getShaderInfoLog(GLuint shader, GLsizei maxLength, GLsizei* length, GLchar* infoLog);
-	GLuint createShader(GLenum shaderType, const char* source); // helper
 
 	GLuint createProgram();
 	void deleteProgram(GLuint program);
@@ -45,7 +44,6 @@ namespace Gl
 	GLint getUniformLocation(GLuint program, const GLchar* name);
   void uniform1i(GLint location, GLint v0);
 	void uniform2f(GLint location, GLfloat v0, GLfloat v1);
-	GLuint createProgram(const char* vertexShader, const char* fragmentShader); // helper
 
 	void genFramebuffers(GLsizei n, GLuint* ids);
 	void deleteFramebuffers(GLsizei n, GLuint* ids);

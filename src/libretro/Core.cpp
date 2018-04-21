@@ -1383,6 +1383,9 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
   case RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS:
     return setSupportAchievements(*(bool*)data);
 
+  case RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE:
+    return false;
+
   default:
     error("Invalid env call: %u", cmd);
     return false;

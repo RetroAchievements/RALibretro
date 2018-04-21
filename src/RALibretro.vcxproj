@@ -55,13 +55,15 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\bin\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\$(Configuration)\</IntDir>
+    <OutDir>$(ProjectDir)..\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)..\$(Configuration)\</IntDir>
+    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)..\bin\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)..\obj\$(Configuration)\</IntDir>
+    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -82,6 +84,11 @@
     <PreBuildEvent>
       <Command>$(ProjectDir)..\etc\MakeGitCpp.bat</Command>
     </PreBuildEvent>
+    <CustomBuildStep>
+      <Command>copy /b/y $(ProjectDir)..\$(Configuration)\RALibretro.exe $(ProjectDir)..\bin</Command>
+      <Outputs>$(ProjectDir)..\bin\RALibretro.exe</Outputs>
+      <Inputs>$(ProjectDir)..\$(Configuration)\RALibretro.exe</Inputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -100,6 +107,11 @@
       <AdditionalLibraryDirectories>$(ProjectDir)SDL2\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2main.lib;SDL2.lib;dinput8.lib;dxguid.lib;winmm.lib;imm32.lib;version.lib;winhttp.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CustomBuildStep>
+      <Command>copy /b/y $(ProjectDir)..\$(Configuration)\RALibretro.exe $(ProjectDir)..\bin</Command>
+      <Outputs>$(ProjectDir)..\bin\RALibretro.exe</Outputs>
+      <Inputs>$(ProjectDir)..\$(Configuration)\RALibretro.exe</Inputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="About.cpp" />
@@ -115,6 +127,7 @@
     <ClCompile Include="Fsm.cpp" />
     <ClCompile Include="Git.cpp" />
     <ClCompile Include="Gl.cpp" />
+    <ClCompile Include="GlUtil.cpp" />
     <ClCompile Include="jsonsax\jsonsax.c" />
     <ClCompile Include="KeyBinds.cpp" />
     <ClCompile Include="libretro\BareCore.cpp" />
@@ -140,6 +153,7 @@
     <ClInclude Include="Fsm.h" />
     <ClInclude Include="Git.h" />
     <ClInclude Include="Gl.h" />
+    <ClInclude Include="GlUtil.h" />
     <ClInclude Include="KeyBinds.h" />
     <ClInclude Include="libretro\BareCore.h" />
     <ClInclude Include="libretro\Components.h" />

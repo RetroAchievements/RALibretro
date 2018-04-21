@@ -5,7 +5,8 @@
 *.o
 .vs
 /bin
-/obj
+/Debug
+/Release
 /ipch
 /src/Git.cpp
 /*.db

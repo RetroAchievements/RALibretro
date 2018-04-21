@@ -81,6 +81,9 @@
     <ClCompile Include="Git.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GlUtil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="About.h">
@@ -141,6 +144,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Gl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GlUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

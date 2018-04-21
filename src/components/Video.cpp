@@ -19,6 +19,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Video.h"
 #include "Gl.h"
+#include "GlUtil.h"
 
 #include "Dialog.h"
 #include "jsonsax/jsonsax.h"
@@ -423,7 +424,7 @@ GLuint Video::createProgram(GLint* pos, GLint* uv, GLint* tex)
     "  gl_FragColor = texture2D(u_tex, v_uv);\n"
     "}";
   
-  GLuint program = Gl::createProgram(vertexShader, fragmentShader);
+  GLuint program = GlUtil::createProgram(vertexShader, fragmentShader);
 
   *pos = Gl::getAttribLocation(program, "a_pos");
   *uv = Gl::getAttribLocation(program, "a_uv");
@@ -483,31 +484,25 @@ GLuint Video::createVertexBuffer(unsigned windowWidth, unsigned windowHeight, fl
 GLuint Video::createTexture(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linear)
 {
   GLuint texture;
-  Gl::genTextures(1, &texture);
-
-  Gl::bindTexture(GL_TEXTURE_2D, texture);
+  const char* format;
 
   GLint filter = linear ? GL_LINEAR : GL_NEAREST;
-  Gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
-  Gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
-
-  const char* format;
 
   switch (pixelFormat)
   {
   case RETRO_PIXEL_FORMAT_XRGB8888:
-    Gl::texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
+    texture = GlUtil::createTexture(width, height, GL_RGBA, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, filter);
     format = "RGBA8888";
     break;
 
   case RETRO_PIXEL_FORMAT_RGB565:
-    Gl::texImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, NULL);
+    texture = GlUtil::createTexture(width, height, GL_RGB, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, filter);
     format = "RGB565";
     break;
 
   case RETRO_PIXEL_FORMAT_0RGB1555:
   default:
-    Gl::texImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, NULL);
+    texture = GlUtil::createTexture(width, height, GL_RGB, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, filter);
     format = "RGBA5551";
     break;
   }
@@ -515,4 +510,3 @@ GLuint Video::createTexture(unsigned width, unsigned height, retro_pixel_format 
   _logger->printf(RETRO_LOG_DEBUG, "Texture created with dimensions %u x %u (%s, %s)", width, height, format, linear ? "linear" : "nearest");
   return texture;
 }
-
