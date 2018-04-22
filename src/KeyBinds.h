@@ -54,6 +54,7 @@ public:
     kSetWindowSize2,
     kSetWindowSize3,
     kSetWindowSize4,
+    kToggleFullscreen,
     // Emulation speed
     kPauseToggle,
     kPauseToggleNoOvl,

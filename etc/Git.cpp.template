@@ -19,12 +19,17 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Git.h"
 
-const char* git::getMiniHash(void)
+const char* git::getMiniHash()
 {
     return "GITMINIHASH";
 }
 
-const char* git::getFullHash(void)
+const char* git::getFullHash()
 {
     return "GITFULLHASH";
+}
+
+const char* git::getReleaseVersion()
+{
+    return "GITRELEASE";
 }

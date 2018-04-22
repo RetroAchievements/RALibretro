@@ -60,7 +60,7 @@ bin/RALibretro: $(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LIBS)
 
 src/Git.cpp: etc/Git.cpp.template FORCE
-	cat $< | sed s/GITFULLHASH/`git rev-parse HEAD | tr -d "\n"`/g | sed s/GITMINIHASH/`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`/g > $@
+	cat $< | sed s/GITFULLHASH/`git rev-parse HEAD | tr -d "\n"`/g | sed s/GITMINIHASH/`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`/g | sed s/GITRELEASE/`git branch | grep release | sed "s@* release/@@g" | tr -d "\n"`/g > $@
 
 zip:
 	rm -f bin/RALibretro-*.zip
