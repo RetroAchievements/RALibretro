@@ -1471,7 +1471,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
         {
           Emulator::kStella, Emulator::kSnes9x, Emulator::kPicoDrive, Emulator::kGenesisPlusGx, Emulator::kFceumm,
           Emulator::kHandy, Emulator::kBeetleSgx, Emulator::kGambatte, Emulator::kMGBA, Emulator::kMednafenPsx,
-          Emulator::kMednafenNgp, Emulator::kMednafenVb, Emulator::kFBAlpha, Emulator::kMupen64Plus
+          Emulator::kMednafenNgp, Emulator::kMednafenVb, Emulator::kFBAlpha
         };
 
         _fsm.loadCore(emulators[cmd - IDM_SYSTEM_STELLA]);

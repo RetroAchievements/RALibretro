@@ -42,8 +42,7 @@ enum class Emulator
   kMednafenPsx,
   kMednafenNgp,
   kMednafenVb,
-  kFBAlpha,
-  kMupen64Plus
+  kFBAlpha
 };
 
 enum class System
@@ -63,8 +62,7 @@ enum class System
   kNeoGeoPocket   = NeoGeo,
   kVirtualBoy     = VirtualBoy,
   kGameGear       = GameGear,
-  kArcade         = Arcade,
-  kNintendo64     = N64
+  kArcade         = Arcade
 };
 
 const char* getEmulatorName(Emulator emulator);
