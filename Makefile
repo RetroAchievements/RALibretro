@@ -64,7 +64,7 @@ src/Git.cpp: etc/Git.cpp.template FORCE
 
 zip:
 	rm -f bin/RALibretro-*.zip
-	zip -9 bin/RALibretro-`echo "* release/2.2.2" | grep release | sed "s@* release/@@g" | tr -d "\n"`.zip bin/RALibretro.exe
+	zip -9 bin/RALibretro-`git branch | grep release | sed "s@* release/@@g" | tr -d "\n"`.zip bin/RALibretro.exe
 
 clean:
 	rm -f bin/RALibretro $(OBJS) bin/RALibretro-*.zip
