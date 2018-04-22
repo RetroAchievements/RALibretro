@@ -1409,16 +1409,32 @@ std::string Application::serializeRecentList()
 
 void Application::resizeWindow(unsigned multiplier)
 {
-  unsigned width, height;
-  enum retro_pixel_format format;
-  _video.getFramebufferSize(&width, &height, &format);
-  SDL_SetWindowSize(_window, width * multiplier, height * multiplier);
+  Uint32 active = SDL_GetWindowFlags(_window) & SDL_WINDOW_FULLSCREEN_DESKTOP;
+  
+  if (!active)
+  {
+    unsigned width, height;
+    enum retro_pixel_format format;
+    _video.getFramebufferSize(&width, &height, &format);
+    SDL_SetWindowSize(_window, width * multiplier, height * multiplier);
+  }
 }
 
 void Application::toggleFullscreen()
 {
   Uint32 active = SDL_GetWindowFlags(_window) & SDL_WINDOW_FULLSCREEN_DESKTOP;
   SDL_SetWindowFullscreen(_window, active ^ SDL_WINDOW_FULLSCREEN_DESKTOP);
+  
+  if (active)
+  {
+    SetMenu(g_mainWindow, _menu);
+    SDL_ShowCursor(SDL_ENABLE);
+  }
+  else
+  {
+    SetMenu(g_mainWindow, NULL);
+    SDL_ShowCursor(SDL_DISABLE);
+  }
 }
 
 void Application::handle(const SDL_SysWMEvent* syswm)
