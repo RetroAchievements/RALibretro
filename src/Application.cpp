@@ -98,7 +98,8 @@ bool Application::init(const char* title, int width, int height)
 
   inited = kLoggerInited;
 
-  _logger.printf(RETRO_LOG_INFO, "RALibretro version %s starting", git::getFullHash());
+  _logger.printf(RETRO_LOG_INFO, "RALibretro version %s starting", git::getReleaseVersion());
+  _logger.printf(RETRO_LOG_INFO, "RALibretro commit hash is %s", git::getFullHash());
 
   if (!_config.init(&_logger))
   {
@@ -250,7 +251,7 @@ bool Application::init(const char* title, int width, int height)
     _menu = LoadMenu(NULL, "MAIN");
     SetMenu(g_mainWindow, _menu);
 
-    RA_Init(g_mainWindow, RA_Libretro, git::getMiniHash());
+    RA_Init(g_mainWindow, RA_Libretro, git::getReleaseVersion());
     RA_InitShared();
     RA_InitDirectX();
     RA_AttemptLogin(true);

@@ -23,4 +23,5 @@ namespace git
 {
     const char* getMiniHash();
     const char* getFullHash();
+    const char* getReleaseVersion();
 }
