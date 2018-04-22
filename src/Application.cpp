@@ -568,6 +568,7 @@ void Application::updateMenu()
     enableItems(game_running_items, sizeof(game_running_items) / sizeof(game_running_items[0]), MF_ENABLED);
     break;
   case Fsm::State::GamePaused:
+  case Fsm::State::GamePausedNoOvl:
     enableItems(game_paused_items, sizeof(game_paused_items) / sizeof(game_paused_items[0]), MF_ENABLED);
     break;
   case Fsm::State::GameTurbo:
@@ -926,6 +927,7 @@ bool Application::isGameActive()
   {
   case Fsm::State::GameRunning:
   case Fsm::State::GamePaused:
+  case Fsm::State::GamePausedNoOvl:
   case Fsm::State::GameTurbo:
   case Fsm::State::FrameStep:
     return true;
