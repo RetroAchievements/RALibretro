@@ -1409,10 +1409,32 @@ std::string Application::serializeRecentList()
 
 void Application::resizeWindow(unsigned multiplier)
 {
-  unsigned width, height;
-  enum retro_pixel_format format;
-  _video.getFramebufferSize(&width, &height, &format);
-  SDL_SetWindowSize(_window, width * multiplier, height * multiplier);
+  Uint32 active = SDL_GetWindowFlags(_window) & SDL_WINDOW_FULLSCREEN_DESKTOP;
+  
+  if (!active)
+  {
+    unsigned width, height;
+    enum retro_pixel_format format;
+    _video.getFramebufferSize(&width, &height, &format);
+    SDL_SetWindowSize(_window, width * multiplier, height * multiplier);
+  }
+}
+
+void Application::toggleFullscreen()
+{
+  Uint32 active = SDL_GetWindowFlags(_window) & SDL_WINDOW_FULLSCREEN_DESKTOP;
+  SDL_SetWindowFullscreen(_window, active ^ SDL_WINDOW_FULLSCREEN_DESKTOP);
+  
+  if (active)
+  {
+    SetMenu(g_mainWindow, _menu);
+    SDL_ShowCursor(SDL_ENABLE);
+  }
+  else
+  {
+    SetMenu(g_mainWindow, NULL);
+    SDL_ShowCursor(SDL_DISABLE);
+  }
 }
 
 void Application::handle(const SDL_SysWMEvent* syswm)
@@ -1573,32 +1595,33 @@ void Application::handle(const SDL_KeyboardEvent* key)
 
   switch (_keybinds.translate(key, &extra))
   {
-  case KeyBinds::Action::kNothing:      break;
+  case KeyBinds::Action::kNothing:          break;
   // Joypad buttons
-  case KeyBinds::Action::kButtonUp:       _input.buttonEvent(Input::Button::kUp, extra != 0); break;
-  case KeyBinds::Action::kButtonDown:     _input.buttonEvent(Input::Button::kDown, extra != 0); break;
-  case KeyBinds::Action::kButtonLeft:     _input.buttonEvent(Input::Button::kLeft, extra != 0); break;
-  case KeyBinds::Action::kButtonRight:    _input.buttonEvent(Input::Button::kRight, extra != 0); break;
-  case KeyBinds::Action::kButtonX:        _input.buttonEvent(Input::Button::kX, extra != 0); break;
-  case KeyBinds::Action::kButtonY:        _input.buttonEvent(Input::Button::kY, extra != 0); break;
-  case KeyBinds::Action::kButtonA:        _input.buttonEvent(Input::Button::kA, extra != 0); break;
-  case KeyBinds::Action::kButtonB:        _input.buttonEvent(Input::Button::kB, extra != 0); break;
-  case KeyBinds::Action::kButtonL:        _input.buttonEvent(Input::Button::kL, extra != 0); break;
-  case KeyBinds::Action::kButtonR:        _input.buttonEvent(Input::Button::kR, extra != 0); break;
-  case KeyBinds::Action::kButtonL2:       _input.buttonEvent(Input::Button::kL2, extra != 0); break;
-  case KeyBinds::Action::kButtonR2:       _input.buttonEvent(Input::Button::kR2, extra != 0); break;
-  case KeyBinds::Action::kButtonL3:       _input.buttonEvent(Input::Button::kL3, extra != 0); break;
-  case KeyBinds::Action::kButtonR3:       _input.buttonEvent(Input::Button::kR3, extra != 0); break;
-  case KeyBinds::Action::kButtonSelect:   _input.buttonEvent(Input::Button::kSelect, extra != 0); break;
-  case KeyBinds::Action::kButtonStart:    _input.buttonEvent(Input::Button::kStart, extra != 0); break;
+  case KeyBinds::Action::kButtonUp:         _input.buttonEvent(Input::Button::kUp, extra != 0); break;
+  case KeyBinds::Action::kButtonDown:       _input.buttonEvent(Input::Button::kDown, extra != 0); break;
+  case KeyBinds::Action::kButtonLeft:       _input.buttonEvent(Input::Button::kLeft, extra != 0); break;
+  case KeyBinds::Action::kButtonRight:      _input.buttonEvent(Input::Button::kRight, extra != 0); break;
+  case KeyBinds::Action::kButtonX:          _input.buttonEvent(Input::Button::kX, extra != 0); break;
+  case KeyBinds::Action::kButtonY:          _input.buttonEvent(Input::Button::kY, extra != 0); break;
+  case KeyBinds::Action::kButtonA:          _input.buttonEvent(Input::Button::kA, extra != 0); break;
+  case KeyBinds::Action::kButtonB:          _input.buttonEvent(Input::Button::kB, extra != 0); break;
+  case KeyBinds::Action::kButtonL:          _input.buttonEvent(Input::Button::kL, extra != 0); break;
+  case KeyBinds::Action::kButtonR:          _input.buttonEvent(Input::Button::kR, extra != 0); break;
+  case KeyBinds::Action::kButtonL2:         _input.buttonEvent(Input::Button::kL2, extra != 0); break;
+  case KeyBinds::Action::kButtonR2:         _input.buttonEvent(Input::Button::kR2, extra != 0); break;
+  case KeyBinds::Action::kButtonL3:         _input.buttonEvent(Input::Button::kL3, extra != 0); break;
+  case KeyBinds::Action::kButtonR3:         _input.buttonEvent(Input::Button::kR3, extra != 0); break;
+  case KeyBinds::Action::kButtonSelect:     _input.buttonEvent(Input::Button::kSelect, extra != 0); break;
+  case KeyBinds::Action::kButtonStart:      _input.buttonEvent(Input::Button::kStart, extra != 0); break;
   // State management
-  case KeyBinds::Action::kSaveState:      saveState(extra); break;
-  case KeyBinds::Action::kLoadState:      loadState(extra); break;
+  case KeyBinds::Action::kSaveState:        saveState(extra); break;
+  case KeyBinds::Action::kLoadState:        loadState(extra); break;
   // Window size
-  case KeyBinds::Action::kSetWindowSize1: resizeWindow(1); break;
-  case KeyBinds::Action::kSetWindowSize2: resizeWindow(2); break;
-  case KeyBinds::Action::kSetWindowSize3: resizeWindow(3); break;
-  case KeyBinds::Action::kSetWindowSize4: resizeWindow(4); break;
+  case KeyBinds::Action::kSetWindowSize1:   resizeWindow(1); break;
+  case KeyBinds::Action::kSetWindowSize2:   resizeWindow(2); break;
+  case KeyBinds::Action::kSetWindowSize3:   resizeWindow(3); break;
+  case KeyBinds::Action::kSetWindowSize4:   resizeWindow(4); break;
+  case KeyBinds::Action::kToggleFullscreen: toggleFullscreen(); break;
   // Emulation speed
   case KeyBinds::Action::kStep:
     _fsm.step();
