@@ -1225,6 +1225,10 @@ void Application::loadState(const std::string& path)
     return;
   }
 
+  _core.unserialize(data, size);
+  free(data);
+  RA_OnLoadState(path.c_str());
+
   unsigned width, height, pitch;
   enum retro_pixel_format format;
   _video.getFramebufferSize(&width, &height, &format);
@@ -1233,7 +1237,7 @@ void Application::loadState(const std::string& path)
 
   if (pixels == NULL)
   {
-    free(data);
+    _logger.printf(RETRO_LOG_ERROR, "Error loading savestate screenshot");
     return;
   }
 
@@ -1242,17 +1246,13 @@ void Application::loadState(const std::string& path)
   if (converted == NULL)
   {
     free((void*)pixels);
-    free(data);
+    _logger.printf(RETRO_LOG_ERROR, "Error converting savestate screenshot to the framebuffer format");
     return;
   }
 
-  _core.unserialize(data, size);
   _video.setFramebuffer(converted, width, height, pitch);
-  RA_OnLoadState(path.c_str());
-
   free((void*)converted);
   free((void*)pixels);
-  free(data);
 }
 
 void Application::loadState(unsigned ndx)
