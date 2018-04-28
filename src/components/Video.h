@@ -25,6 +25,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <SDL_opengl.h>
 
+#include <vector>
+
 class Video: public libretro::VideoComponent
 {
 public:
@@ -52,8 +54,17 @@ public:
   void showDialog();
 
 protected:
+  struct OsdMessage
+  {
+    float x, y, t;
+    GLuint vertexBuffer;
+    GLsizei count;
+  };
+
   GLuint createProgram(GLint* pos, GLint* uv, GLint* tex);
+  GLuint createOsdProgram(GLint* pos, GLint* uv, GLint* tex, GLint* time);
   GLuint createVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv);
+  void createOsd(OsdMessage* osd, const char* msg);
   GLuint createTexture(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linear);
 
   libretro::LoggerComponent* _logger;
@@ -66,6 +77,13 @@ protected:
   GLuint                  _vertexBuffer;
   GLuint                  _texture;
 
+  GLuint                  _osdProgram;
+  GLint                   _osdPosAttribute;
+  GLint                   _osdUvAttribute;
+  GLint                   _osdTexUniform;
+  GLint                   _osdTimeUniform;
+  GLuint                  _osdTexture;
+
   unsigned                _windowWidth;
   unsigned                _windowHeight;
   unsigned                _textureWidth;
@@ -77,5 +95,7 @@ protected:
 
   bool                    _preserveAspect;
   bool                    _linearFilter;
+
+  std::vector<OsdMessage> _messages;
 };
 

@@ -33,9 +33,7 @@ end
 file:close()
 
 for i = 32, 126 do
-  local k = string.char(i):upper():byte(1)
-  local g = glyphs[k]
-
+  local g = glyphs[i]
   io.write(string.format('  {%3d, %2d, %2d, %d, %d, %d, %d}, /* %3d %c */\n', g.x, g.y, g.w, g.h, g.ox, g.oy, g.dx, i, i))
 end
 

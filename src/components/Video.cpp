@@ -23,6 +23,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Dialog.h"
 #include "jsonsax/jsonsax.h"
+#include "BoxyBold.h"
 
 #include <SDL_render.h>
 
@@ -45,6 +46,7 @@ bool Video::init(libretro::LoggerComponent* logger, Config* config)
   _linearFilter = false;
 
   _program = createProgram(&_posAttribute, &_uvAttribute, &_texUniform);
+  _osdProgram = createOsdProgram(&_osdPosAttribute, &_osdUvAttribute, &_osdTexUniform, &_osdTimeUniform);
 
   if (!Gl::ok())
   {
@@ -433,6 +435,41 @@ GLuint Video::createProgram(GLint* pos, GLint* uv, GLint* tex)
   return program;
 }
 
+GLuint Video::createOsdProgram(GLint* pos, GLint* uv, GLint* tex, GLint* time)
+{
+  // Easing tan: f(t) = (tan(t * 3.0 - 1.5) + 14.101419947172) * 0.035457422151326
+  // Easing sin: f(t) = sin(t * 3.1415926535898)
+  static const char* vertexShader =
+    "attribute vec2 a_pos;\n"
+    "attribute vec2 a_uv;\n"
+    "varying vec2 v_uv;\n"
+    "uniform float u_ease;\n"
+    "void main() {\n"
+    "  float y = tan(u_time * 3.0 - 1.5);\n"
+    "  a_pos.y += u_ease * 0.2;\n"
+    "  v_uv = a_uv;\n"
+    "  gl_Position = vec4(a_pos, 0.0, 1.0);\n"
+    "}";
+  
+  static const char* fragmentShader =
+    "varying vec2 v_uv;\n"
+    "uniform sampler2D u_tex;\n"
+    "uniform float u_time;\n"
+    "void main() {\n"
+    "  vec4 color = texture2D(u_tex, v_uv);\n"
+    "  color.a *="
+    "  gl_FragColor = texture2D(u_tex, v_uv);\n"
+    "}";
+  
+  GLuint program = GlUtil::createProgram(vertexShader, fragmentShader);
+
+  *pos = Gl::getAttribLocation(program, "a_pos");
+  *uv = Gl::getAttribLocation(program, "a_uv");
+  *tex = Gl::getUniformLocation(program, "u_tex");
+
+  return program;
+}
+
 GLuint Video::createVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv)
 {
   struct VertexData
@@ -479,6 +516,60 @@ GLuint Video::createVertexBuffer(unsigned windowWidth, unsigned windowHeight, fl
 
   _logger->printf(RETRO_LOG_DEBUG, "Vertices updated with window scale %f x %f and texture scale %f x %f", winScaleX, winScaleY, texScaleX, texScaleY);
   return vertexBuffer;
+}
+
+void Video::createOsd(OsdMessage* osd, const char* msg, GLint pos, GLint uv)
+{
+  static constexpr float scale = 2.0f / 320.0f;
+
+  osd->x = osd->y = osd->t = 0.0f;
+
+  struct VertexData
+  {
+    float x, y, u, v;
+  };
+
+  size_t length = strlen(msg);
+  size_t size = sizeof(VertexData) * length * 6;
+  VertexData* vd = (VertexData*)malloc(size);
+  VertexData* aux = vd;
+  unsigned x0i = 0;
+
+  for (size_t i = 0; i < length; i++, msg++)
+  {
+    int k = *msg;
+
+    if (k >= 32 and k <= 126)
+    {
+      glyph_t* glyph = g_boxybold + k;
+
+      float x0 = (float)x0i * scale;
+      float x1 = ((float)x0i + glyph->w) * scale;
+      float y1 = glyph->h * scale;
+
+      float u0 = glyph->x / 128.0f;
+      float v0 = glyph->y / 128.0f;
+      float u1 = (glyph->x + glyph->w) / 128.0f;
+      float v1 = (glyph->t + glyph->h) / 128.0f;
+
+      aux->x = x0; aux->y = y0; aux->u = u0; aux->v = v0; aux++;
+      aux->x = x1; aux->y = y1; aux->u = u1; aux->v = v1; aux++;
+      aux->x = x0; aux->y = y1; aux->u = u0; aux->v = v1; aux++;
+      aux->x = x0; aux->y = y0; aux->u = u0; aux->v = v0; aux++;
+      aux->x = x1; aux->y = y0; aux->u = u1; aux->v = v0; aux++;
+      aux->x = x1; aux->y = y1; aux->u = u1; aux->v = v1; aux++;
+
+      x0i += aux->dx;
+    }
+  }
+
+  Gl::genBuffers(1, &osd->vertexBuffer);
+
+  Gl::bindBuffer(GL_ARRAY_BUFFER, osd->vertexBuffer);
+  Gl::bufferData(GL_ARRAY_BUFFER, size, vd, GL_STATIC_DRAW);
+  
+  Gl::vertexAttribPointer(pos, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, x));
+  Gl::vertexAttribPointer(uv, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, u));
 }
 
 GLuint Video::createTexture(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linear)
