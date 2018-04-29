@@ -148,7 +148,7 @@ GLuint GlUtil::createFramebuffer(GLuint* renderbuffer, GLsizei width, GLsizei he
 
 bool GlUtil::Texture::init(GLsizei width, GLsizei height, GLint internalFormat, bool linearFilter)
 {
-  _texture = GlUtil::createTexture(width, height, internalFormat, 0, 0, linearFilter ? GL_LINEAR : GL_NEAREST);
+  _texture = GlUtil::createTexture(width, height, internalFormat, GL_RED, GL_UNSIGNED_BYTE, linearFilter ? GL_LINEAR : GL_NEAREST);
 
   _width = width;
   _height = height;
