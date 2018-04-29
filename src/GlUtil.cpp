@@ -275,7 +275,10 @@ bool GlUtil::VertexBuffer::init(size_t vertexSize)
 
 void GlUtil::VertexBuffer::destroy()
 {
-  Gl::deleteBuffers(1, &_vbo);
+  if (_vbo != 0)
+  {
+    Gl::deleteBuffers(1, &_vbo);
+  }
 }
 
 bool GlUtil::VertexBuffer::setData(const void* data, size_t dataSize)

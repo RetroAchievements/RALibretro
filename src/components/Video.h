@@ -71,7 +71,7 @@ protected:
 
   GLuint createProgram(GLint* pos, GLint* uv, GLint* tex);
   //GLuint createOsdProgram(GLint* pos, GLint* uv, GLint* tex, GLint* time);
-  GLuint createVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv);
+  void createVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv);
   //void createOsd(OsdMessage* osd, const char* msg);
 
   libretro::LoggerComponent* _logger;
@@ -81,7 +81,7 @@ protected:
   GLint                   _posAttribute;
   GLint                   _uvAttribute;
   GLint                   _texUniform;
-  GLuint                  _vertexBuffer;
+  GlUtil::VertexBuffer    _vertexBuffer;
   GlUtil::Texture         _texture;
 
   GLuint                  _osdProgram;

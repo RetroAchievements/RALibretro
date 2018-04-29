@@ -43,6 +43,8 @@ namespace GlUtil
   class VertexBuffer
   {
   public:
+    VertexBuffer(): _vbo(0) {}
+
     bool init(size_t vertexSize);
     void destroy();
 
