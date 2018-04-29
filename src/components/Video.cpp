@@ -40,7 +40,7 @@ bool Video::init(libretro::LoggerComponent* logger, Config* config)
   _preserveAspect = false;
   _linearFilter = false;
 
-  _program = createProgram(&_posAttribute, &_uvAttribute, &_texUniform);
+  createProgram(&_posAttribute, &_uvAttribute, &_texUniform);
   //_osdProgram = createOsdProgram(&_osdPosAttribute, &_osdUvAttribute, &_osdTexUniform, &_osdTimeUniform);
 
   if (!Gl::ok())
@@ -56,12 +56,7 @@ void Video::destroy()
 {
   _texture.destroy();
   _vertexBuffer.destroy();
-
-  if (_program != 0)
-  {
-    Gl::deleteProgram(_program);
-    _program = 0;
-  }
+  _program.destroy();
 }
 
 void Video::draw()
@@ -71,7 +66,7 @@ void Video::draw()
   pos.init(GL_FLOAT, 2, 0);
   uv.init(GL_FLOAT, 2, 8);
 
-  Gl::useProgram(_program);
+  _program.use();
 
   pos.enable(&_vertexBuffer, _posAttribute);
   uv.enable(&_vertexBuffer, _uvAttribute);
@@ -338,7 +333,7 @@ void Video::showDialog()
   }
 }
 
-GLuint Video::createProgram(GLint* pos, GLint* uv, GLint* tex)
+void Video::createProgram(GLint* pos, GLint* uv, GLint* tex)
 {
   static const char* vertexShader =
     "attribute vec2 a_pos;\n"
@@ -356,13 +351,11 @@ GLuint Video::createProgram(GLint* pos, GLint* uv, GLint* tex)
     "  gl_FragColor = texture2D(u_tex, v_uv);\n"
     "}";
   
-  GLuint program = GlUtil::createProgram(vertexShader, fragmentShader);
+  _program.init(vertexShader, fragmentShader);
 
-  *pos = Gl::getAttribLocation(program, "a_pos");
-  *uv = Gl::getAttribLocation(program, "a_uv");
-  *tex = Gl::getUniformLocation(program, "u_tex");
-
-  return program;
+  *pos = _program.getAttribute("a_pos");
+  *uv = _program.getAttribute("a_uv");
+  *tex = _program.getUniform("u_tex");
 }
 
 /*GLuint Video::createOsdProgram(GLint* pos, GLint* uv, GLint* tex, GLint* time)
