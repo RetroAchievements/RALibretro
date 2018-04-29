@@ -22,6 +22,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 
 #include "libretro/Core.h"
+#include "libretro/Components.h"
 
 #include <RA_Interface.h>
 
@@ -71,4 +72,4 @@ const char* getEmulatorExtensions(Emulator emulator);
 const char* getSystemName(System system);
 
 System getSystem(Emulator emulator, const std::string game_path, libretro::Core* core);
-bool   romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size);
+bool   romLoaded(libretro::LoggerComponent* logger, System system, const std::string& path, void* rom, size_t size);

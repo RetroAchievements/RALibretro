@@ -47,7 +47,7 @@ size_t util::nextPow2(size_t v)
   return v + 1;
 }
 
-void* util::loadFile(Logger* logger, const std::string& path, size_t* size)
+void* util::loadFile(libretro::LoggerComponent* logger, const std::string& path, size_t* size)
 {
   void* data;
   struct stat statbuf;
@@ -92,7 +92,7 @@ void* util::loadFile(Logger* logger, const std::string& path, size_t* size)
   return data;
 }
 
-bool util::saveFile(Logger* logger, const std::string& path, const void* data, size_t size)
+bool util::saveFile(libretro::LoggerComponent* logger, const std::string& path, const void* data, size_t size)
 {
   FILE* file = fopen(path.c_str(), "wb");
 
@@ -294,7 +294,7 @@ std::string util::saveFileDialog(HWND hWnd, const char* extensionsFilter)
   }
 }
 
-const void* util::toRgb(Logger* logger, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format)
+const void* util::toRgb(libretro::LoggerComponent* logger, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format)
 {
   void* pixels = malloc(width * height * 3);
 
@@ -383,7 +383,7 @@ const void* util::toRgb(Logger* logger, const void* data, unsigned width, unsign
   return pixels;
 }
 
-void util::saveImage(Logger* logger, const std::string& path, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format)
+void util::saveImage(libretro::LoggerComponent* logger, const std::string& path, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format)
 {
   const void* pixels = util::toRgb(logger, data, width, height, pitch, format);
 
@@ -398,7 +398,7 @@ void util::saveImage(Logger* logger, const std::string& path, const void* data, 
   logger->printf(RETRO_LOG_INFO, "Wrote image %u x %u to %s", width, height, path.c_str());
 }
 
-const void* util::fromRgb(Logger* logger, const void* data, unsigned width, unsigned height, unsigned* pitch, enum retro_pixel_format format)
+const void* util::fromRgb(libretro::LoggerComponent* logger, const void* data, unsigned width, unsigned height, unsigned* pitch, enum retro_pixel_format format)
 {
   void* pixels;
 
@@ -509,7 +509,7 @@ const void* util::fromRgb(Logger* logger, const void* data, unsigned width, unsi
   return pixels;
 }
 
-const void* util::loadImage(Logger* logger, const std::string& path, unsigned* width, unsigned* height, unsigned* pitch)
+const void* util::loadImage(libretro::LoggerComponent* logger, const std::string& path, unsigned* width, unsigned* height, unsigned* pitch)
 {
   int w, h;
   void* rgb888 = stbi_load(path.c_str(), &w, &h, NULL, STBI_rgb);

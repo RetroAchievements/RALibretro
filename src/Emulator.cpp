@@ -275,7 +275,7 @@ static bool romLoadArcade(const std::string& path)
   return true;
 }
 
-bool romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size)
+bool romLoaded(libretro::LoggerComponent* logger, System system, const std::string& path, void* rom, size_t size)
 {
   bool ok = false;
 

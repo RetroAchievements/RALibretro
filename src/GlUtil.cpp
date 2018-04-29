@@ -145,3 +145,205 @@ GLuint GlUtil::createFramebuffer(GLuint* renderbuffer, GLsizei width, GLsizei he
   Gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
   return framebuffer;
 }
+
+bool GlUtil::Texture::init(GLsizei width, GLsizei height, GLint internalFormat, bool linearFilter)
+{
+  _texture = GlUtil::createTexture(width, height, internalFormat, 0, 0, linearFilter ? GL_LINEAR : GL_NEAREST);
+
+  _width = width;
+  _height = height;
+  _internalFormat = internalFormat;
+
+  return true;
+}
+
+void GlUtil::Texture::destroy()
+{
+  if (_texture != 0)
+  {
+    Gl::deleteTextures(1, &_texture);
+    _texture = 0;
+  }
+}
+
+void GlUtil::Texture::setData(GLsizei width, GLsizei height, GLsizei pitch, GLenum format, GLenum type, const GLvoid* pixels)
+{
+  bind();
+
+  GLsizei w = pitch / bpp(type);
+
+  if (w == _width && height <= _height)
+  {
+    Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, height, format, type, pixels);
+    return;
+  }
+
+  auto p = (const uint8_t*)pixels;
+
+  if (height > _height)
+  {
+    height = _height;
+  }
+
+  for (GLsizei y = 0; y < height; y++, p += pitch)
+  {
+    Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, y, width, 1, format, type, p);
+  }
+}
+
+void* GlUtil::Texture::getData(GLenum format, GLenum type) const
+{
+  void* pixels = malloc(_width * _height * bpp(type));
+
+  if (pixels == NULL)
+  {
+    return NULL;
+  }
+
+  bind();
+  Gl::getTexImage(GL_TEXTURE_2D, 0, format, type, pixels);
+  return pixels;
+}
+
+void GlUtil::Texture::bind() const
+{
+  Gl::bindTexture(GL_TEXTURE_2D, _texture);
+}
+
+GLsizei GlUtil::Texture::getWidth() const
+{
+  return _width;
+}
+
+GLsizei GlUtil::Texture::getHeight() const
+{
+  return _height;
+}
+
+void GlUtil::Texture::setUniform(GLint uniformLocation, int unit) const
+{
+  Gl::activeTexture(GL_TEXTURE0 + unit);
+  bind();
+  Gl::uniform1i(uniformLocation, unit);
+}
+
+GLsizei GlUtil::Texture::bpp(GLenum type)
+{
+  switch (type)
+  {
+  case GL_UNSIGNED_BYTE:
+  case GL_BYTE:
+  case GL_UNSIGNED_BYTE_3_3_2:
+  case GL_UNSIGNED_BYTE_2_3_3_REV:
+    return 1;
+
+  case GL_UNSIGNED_SHORT:
+  case GL_SHORT:
+  case GL_HALF_FLOAT:
+  case GL_UNSIGNED_SHORT_5_6_5:
+  case GL_UNSIGNED_SHORT_5_6_5_REV:
+  case GL_UNSIGNED_SHORT_4_4_4_4:
+  case GL_UNSIGNED_SHORT_4_4_4_4_REV:
+  case GL_UNSIGNED_SHORT_5_5_5_1:
+  case GL_UNSIGNED_SHORT_1_5_5_5_REV:
+    return 2;
+
+  case GL_UNSIGNED_INT:
+  case GL_INT:
+  case GL_FLOAT:
+  case GL_UNSIGNED_INT_8_8_8_8:
+  case GL_UNSIGNED_INT_8_8_8_8_REV:
+  case GL_UNSIGNED_INT_10_10_10_2:
+  case GL_UNSIGNED_INT_2_10_10_10_REV:
+  case GL_UNSIGNED_INT_24_8:
+  case GL_UNSIGNED_INT_10F_11F_11F_REV:
+  case GL_UNSIGNED_INT_5_9_9_9_REV:
+  case GL_FLOAT_32_UNSIGNED_INT_24_8_REV:
+    return 4;
+  
+  default:
+    return 0;
+  }
+}
+
+bool GlUtil::VertexBuffer::init(size_t vertexSize)
+{
+  _vertexSize = vertexSize;
+  Gl::genBuffers(1, &_vbo);
+  return Gl::ok();
+}
+
+void GlUtil::VertexBuffer::destroy()
+{
+  Gl::deleteBuffers(1, &_vbo);
+}
+
+bool GlUtil::VertexBuffer::setData(const void* data, size_t dataSize)
+{
+  Gl::bindBuffer(GL_ARRAY_BUFFER, _vbo);
+  Gl::bufferData(GL_ARRAY_BUFFER, dataSize, data, GL_STATIC_DRAW);
+
+  return Gl::ok();
+}
+
+void GlUtil::VertexBuffer::bind() const
+{
+  Gl::bindBuffer(GL_ARRAY_BUFFER, _vbo);
+}
+
+size_t GlUtil::VertexBuffer::getVertexSize() const
+{
+  return _vertexSize;
+}
+
+bool GlUtil::VertexAttribute::init(GLenum type, GLint numElements, size_t offset)
+{
+  _type = type;
+  _numElements = numElements;
+  _offset = offset;
+  return true;
+}
+
+void GlUtil::VertexAttribute::destroy() const
+{
+}
+
+void GlUtil::VertexAttribute::enable(const VertexBuffer* vertexBuffer, GLint attributeLocation) const
+{
+  Gl::vertexAttribPointer(attributeLocation, _numElements, _type, GL_FALSE, vertexBuffer->getVertexSize(), (const GLvoid*)_offset);
+}
+
+bool GlUtil::Program::init(const char* vertexShader, const char* fragmentShader)
+{
+  _program = GlUtil::createProgram(vertexShader, fragmentShader);
+  return Gl::ok();
+}
+
+void GlUtil::Program::destroy() const
+{
+  Gl::deleteProgram(_program);
+}
+
+GLint GlUtil::Program::getAttribute(const char* name) const
+{
+  return Gl::getAttribLocation(_program, name);
+}
+
+GLint GlUtil::Program::getUniform(const char* name) const
+{
+  return Gl::getUniformLocation(_program, name);
+}
+
+void GlUtil::Program::setVertexAttribute(GLuint attributeLocation, const VertexAttribute* vertexAttribute, const VertexBuffer* vertexBuffer)
+{
+  vertexBuffer->bind();
+  vertexAttribute->enable(vertexBuffer, attributeLocation);
+  Gl::enableVertexAttribArray(attributeLocation);
+}
+
+void GlUtil::Program::setTextureUniform(GLint uniformLocation, GLint texture, int unit)
+{
+  Gl::activeTexture(GL_TEXTURE0 + unit);
+  Gl::bindTexture(GL_TEXTURE_2D, texture);
+  Gl::uniform1i(uniformLocation, unit);
+}

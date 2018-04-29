@@ -22,6 +22,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "libretro/Components.h"
 #include "Config.h"
 #include "Gl.h"
+#include "GlUtil.h"
 
 #include <SDL_opengl.h>
 
@@ -46,26 +47,32 @@ public:
 
   void windowResized(unsigned width, unsigned height);
   void getFramebufferSize(unsigned* width, unsigned* height, enum retro_pixel_format* format);
-  const void* getFramebuffer(unsigned* width, unsigned* height, unsigned* pitch, enum retro_pixel_format* format);
-  void setFramebuffer(const void* pixels, unsigned width, unsigned height, unsigned pitch);
+  const void* getFramebufferRgba(unsigned* width, unsigned* height, unsigned* pitch);
+  void setFramebufferRgb(const void* pixels, unsigned width, unsigned height, unsigned pitch);
 
   std::string serialize();
   void deserialize(const char* json);
   void showDialog();
 
 protected:
+  /*class Blitter: protected GlUtil::Program
+  {
+  public:
+    bool init();
+    void destroy() const;
+  };
+
   struct OsdMessage
   {
     float x, y, t;
     GLuint vertexBuffer;
     GLsizei count;
-  };
+  };*/
 
   GLuint createProgram(GLint* pos, GLint* uv, GLint* tex);
-  GLuint createOsdProgram(GLint* pos, GLint* uv, GLint* tex, GLint* time);
+  //GLuint createOsdProgram(GLint* pos, GLint* uv, GLint* tex, GLint* time);
   GLuint createVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv);
-  void createOsd(OsdMessage* osd, const char* msg);
-  GLuint createTexture(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linear);
+  //void createOsd(OsdMessage* osd, const char* msg);
 
   libretro::LoggerComponent* _logger;
   Config* _config;
@@ -75,7 +82,7 @@ protected:
   GLint                   _uvAttribute;
   GLint                   _texUniform;
   GLuint                  _vertexBuffer;
-  GLuint                  _texture;
+  GlUtil::Texture         _texture;
 
   GLuint                  _osdProgram;
   GLint                   _osdPosAttribute;
@@ -86,16 +93,13 @@ protected:
 
   unsigned                _windowWidth;
   unsigned                _windowHeight;
-  unsigned                _textureWidth;
-  unsigned                _textureHeight;
   unsigned                _viewWidth;
-  unsigned                _viewHeight;
   enum retro_pixel_format _pixelFormat;
   float                   _aspect;
 
   bool                    _preserveAspect;
   bool                    _linearFilter;
 
-  std::vector<OsdMessage> _messages;
+  //std::vector<OsdMessage> _messages;
 };
 

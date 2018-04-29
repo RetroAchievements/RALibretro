@@ -18,10 +18,9 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "Video.h"
-#include "Gl.h"
-#include "GlUtil.h"
 
 #include "Dialog.h"
+#include "Util.h"
 #include "jsonsax/jsonsax.h"
 #include "BoxyBold.h"
 
@@ -36,17 +35,15 @@ bool Video::init(libretro::LoggerComponent* logger, Config* config)
 
   _pixelFormat = RETRO_PIXEL_FORMAT_UNKNOWN;
   _windowWidth = _windowHeight = 0;
-  _textureWidth = _textureHeight = 0;
-  _viewWidth = _viewHeight = 0;
+  _viewWidth = 0;
 
   _vertexBuffer = 0;
-  _texture = 0;
 
   _preserveAspect = false;
   _linearFilter = false;
 
   _program = createProgram(&_posAttribute, &_uvAttribute, &_texUniform);
-  _osdProgram = createOsdProgram(&_osdPosAttribute, &_osdUvAttribute, &_osdTexUniform, &_osdTimeUniform);
+  //_osdProgram = createOsdProgram(&_osdPosAttribute, &_osdUvAttribute, &_osdTexUniform, &_osdTimeUniform);
 
   if (!Gl::ok())
   {
@@ -59,11 +56,7 @@ bool Video::init(libretro::LoggerComponent* logger, Config* config)
 
 void Video::destroy()
 {
-  if (_texture != 0)
-  {
-    Gl::deleteTextures(1, &_texture);
-    _texture = 0;
-  }
+  _texture.destroy();
 
   if (_vertexBuffer != 0)
   {
@@ -80,34 +73,35 @@ void Video::destroy()
 
 void Video::draw()
 {
-  if (_texture != 0)
-  {
-    Gl::useProgram(_program);
+  Gl::useProgram(_program);
 
-    Gl::enableVertexAttribArray(_posAttribute);
-    Gl::enableVertexAttribArray(_uvAttribute);
+  Gl::enableVertexAttribArray(_posAttribute);
+  Gl::enableVertexAttribArray(_uvAttribute);
 
-    Gl::activeTexture(GL_TEXTURE0);
-    Gl::bindTexture(GL_TEXTURE_2D, _texture);
-    Gl::uniform1i(_texUniform, 0);
+  _texture.setUniform(_texUniform, 0);
 
-    Gl::drawArrays(GL_TRIANGLE_STRIP, 0, 4);
-  }
+  Gl::drawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
 bool Video::setGeometry(unsigned width, unsigned height, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback)
 {
   (void)hwRenderCallback;
 
-  if (pixelFormat != _pixelFormat && _texture != 0)
+  const char* format = "?";
+
+  switch (pixelFormat)
   {
-    _textureWidth = _textureHeight = 0;
+  case RETRO_PIXEL_FORMAT_XRGB8888: format = "XRGB8888"; break;
+  case RETRO_PIXEL_FORMAT_RGB565:   format = "RGB565"; break;
+  case RETRO_PIXEL_FORMAT_0RGB1555: format = "0RGB1555"; break;
+  case RETRO_PIXEL_FORMAT_UNKNOWN:  format = "unknown"; break;
   }
+
+  _logger->printf(RETRO_LOG_DEBUG, "Geometry set to %u x %u, %s, 1:%f", width, height, format, aspect);
 
   _aspect = aspect;
   _pixelFormat = pixelFormat;
 
-  _logger->printf(RETRO_LOG_DEBUG, "Geometry set to %u x %u (1:%f)", width, height, aspect);
   return true;
 }
 
@@ -117,60 +111,47 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
   {
     bool updateVertexBuffer = false;
     unsigned textureWidth = pitch;
-
-    switch (_pixelFormat)
-    {
-    case RETRO_PIXEL_FORMAT_XRGB8888: textureWidth /= 4; break;
-    case RETRO_PIXEL_FORMAT_RGB565:   // fallthrough
-    case RETRO_PIXEL_FORMAT_0RGB1555: // fallthrough
-    default:                          textureWidth /= 2; break;
-    }
-
-    if (textureWidth != _textureWidth || height != _textureHeight)
-    {
-      if (_texture != 0)
-      {
-        Gl::deleteTextures(1, &_texture);
-      }
-
-      _texture = createTexture(textureWidth, height, _pixelFormat, _linearFilter);
-
-      _textureWidth = textureWidth;
-      _textureHeight = height;
-
-      updateVertexBuffer = true;
-    }
-
-    Gl::bindTexture(GL_TEXTURE_2D, _texture);
+    GLenum format, type;
 
     switch (_pixelFormat)
     {
     case RETRO_PIXEL_FORMAT_XRGB8888:
-      Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureWidth, height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, data);
+      textureWidth /= 4;
+      format = GL_BGRA;
+      type = GL_UNSIGNED_INT_8_8_8_8_REV;
       break;
-      
+    
     case RETRO_PIXEL_FORMAT_RGB565:
-      Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureWidth, height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, data);
+      textureWidth /= 2;
+      format = GL_RGB;
+      type = GL_UNSIGNED_SHORT_5_6_5;
       break;
-      
-    case RETRO_PIXEL_FORMAT_0RGB1555:
+    
+    case RETRO_PIXEL_FORMAT_0RGB1555: // fallthrough
     default:
-      Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureWidth, height, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, data);
+      textureWidth /= 2;
+      format = GL_RGBA;
+      type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
       break;
     }
 
-    if (width != _viewWidth || height != _viewHeight)
+    if (textureWidth != (unsigned)_texture.getWidth() || height != (unsigned)_texture.getHeight() || width != _viewWidth)
     {
-      _viewWidth = width;
-      _viewHeight = height;
+      _texture.destroy();
+      _texture.init(textureWidth, height, GL_RGB, _linearFilter);
 
+      _logger->printf(RETRO_LOG_DEBUG, "Texture set to %d x %d, %s", _texture.getWidth(), _texture.getHeight(), _linearFilter ? "linear" : "nearest");
+
+      _viewWidth = width;
       updateVertexBuffer = true;
     }
 
+    _texture.setData(textureWidth, height, pitch, format, type, data);
+
     if (updateVertexBuffer)
     {
-      float texScaleX = (float)_viewWidth / (float)_textureWidth;
-      float texScaleY = (float)_viewHeight / (float)_textureHeight;
+      float texScaleX = (float)_viewWidth / (float)_texture.getWidth();
+      float texScaleY = 1.0f;
 
       Gl::deleteBuffers(1, &_vertexBuffer);
       _vertexBuffer = createVertexBuffer(_windowWidth, _windowHeight, texScaleX, texScaleY, _posAttribute, _uvAttribute);
@@ -207,8 +188,8 @@ void Video::windowResized(unsigned width, unsigned height)
   _windowHeight = height;
   Gl::viewport(0, 0, width, height);
 
-  float texScaleX = (float)_viewWidth / (float)_textureWidth;
-  float texScaleY = (float)_viewHeight / (float)_textureHeight;
+  float texScaleX = (float)_viewWidth / (float)_texture.getWidth();
+  float texScaleY = 1.0f;
 
   createVertexBuffer(width, height, texScaleX, texScaleY, _posAttribute, _uvAttribute);
   _logger->printf(RETRO_LOG_INFO, "Window resized to %u x %u", width, height);
@@ -220,8 +201,8 @@ void Video::getFramebufferSize(unsigned* width, unsigned* height, enum retro_pix
 
   if (_preserveAspect)
   {
-    h = _viewHeight;
-    w = (unsigned)(_viewHeight * _aspect);
+    h = _texture.getHeight();
+    w = (unsigned)(_texture.getHeight() * _aspect);
 
     if (w < _viewWidth)
     {
@@ -232,7 +213,7 @@ void Video::getFramebufferSize(unsigned* width, unsigned* height, enum retro_pix
   else
   {
     w = _viewWidth;
-    h = _viewHeight;
+    h = _texture.getHeight();
   }
 
   *width = w;
@@ -240,74 +221,36 @@ void Video::getFramebufferSize(unsigned* width, unsigned* height, enum retro_pix
   *format = _pixelFormat;
 }
 
-const void* Video::getFramebuffer(unsigned* width, unsigned* height, unsigned* pitch, enum retro_pixel_format* format)
+const void* Video::getFramebufferRgba(unsigned* width, unsigned* height, unsigned* pitch)
 {
-  unsigned bpp = _pixelFormat == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 2;
-  void* pixels = malloc(_textureWidth * _textureHeight * bpp);
-
-  if (pixels == NULL)
-  {
-    return NULL;
-  }
-
-  Gl::bindTexture(GL_TEXTURE_2D, _texture);
-
-  switch (_pixelFormat)
-  {
-  case RETRO_PIXEL_FORMAT_XRGB8888:
-    Gl::getTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, pixels);
-    break;
-    
-  case RETRO_PIXEL_FORMAT_RGB565:
-    Gl::getTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, pixels);
-    break;
-    
-  case RETRO_PIXEL_FORMAT_0RGB1555:
-  default:
-    Gl::getTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, pixels);
-    break;
-  }
-
   *width = _viewWidth;
-  *height = _viewHeight;
-  *pitch = _textureWidth * bpp;
-  *format = _pixelFormat;
+  *height = _texture.getHeight();
+  *pitch = _texture.getWidth() * 4;
 
-  return pixels;
+  return _texture.getData(GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV);
 }
 
-void Video::setFramebuffer(const void* pixels, unsigned width, unsigned height, unsigned pitch)
+void Video::setFramebufferRgb(const void* pixels, unsigned width, unsigned height, unsigned pitch)
 {
-  auto p = (const uint8_t*)pixels;
-  Gl::bindTexture(GL_TEXTURE_2D, _texture);
+  const void* converted = util::fromRgb(_logger, pixels, width, height, &pitch, _pixelFormat);
 
   switch (_pixelFormat)
   {
   case RETRO_PIXEL_FORMAT_XRGB8888:
-    for (unsigned y = 0; y < height; y++, p += pitch)
-    {
-      Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, y, width, 1, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, p);
-    }
-
+    _texture.setData(width, height, pitch, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, pixels);
     break;
-    
+
   case RETRO_PIXEL_FORMAT_RGB565:
-    for (unsigned y = 0; y < height; y++, p += pitch)
-    {
-      Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, y, width, 1, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, p);
-    }
-
+    _texture.setData(width, height, pitch, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, pixels);
     break;
-    
+
   case RETRO_PIXEL_FORMAT_0RGB1555:
   default:
-    for (unsigned y = 0; y < height; y++, p += pitch)
-    {
-      Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, y, width, 1, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, p);
-    }
-
+    _texture.setData(width, height, pitch, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, pixels);
     break;
   }
+
+  free((void*)converted);
 }
 
 std::string Video::serialize()
@@ -384,12 +327,10 @@ void Video::showDialog()
   {
     if (linearFilter != _linearFilter)
     {
-      if (_texture != 0)
-      {
-        Gl::deleteTextures(1, &_texture);
-      }
+      _texture.destroy();
+      _texture.init(_texture.getWidth(), _texture.getHeight(), GL_RGB, _linearFilter);
 
-      _texture = createTexture(_textureWidth, _textureHeight, _pixelFormat, _linearFilter);
+      _logger->printf(RETRO_LOG_DEBUG, "Texture set to %d x %d, %s", _texture.getWidth(), _texture.getHeight(), _linearFilter ? "linear" : "nearest");
     }
 
     if (preserveAspect != _preserveAspect)
@@ -399,8 +340,8 @@ void Video::showDialog()
         Gl::deleteBuffers(1, &_vertexBuffer);
       }
 
-      float texScaleX = (float)_viewWidth / (float)_textureWidth;
-      float texScaleY = (float)_viewHeight / (float)_textureHeight;
+      float texScaleX = (float)_viewWidth / (float)_texture.getWidth();
+      float texScaleY = 1.0f;
 
       Gl::deleteBuffers(1, &_vertexBuffer);
       _vertexBuffer = createVertexBuffer(_windowWidth, _windowHeight, texScaleX, texScaleY, _posAttribute, _uvAttribute);
@@ -435,7 +376,7 @@ GLuint Video::createProgram(GLint* pos, GLint* uv, GLint* tex)
   return program;
 }
 
-GLuint Video::createOsdProgram(GLint* pos, GLint* uv, GLint* tex, GLint* time)
+/*GLuint Video::createOsdProgram(GLint* pos, GLint* uv, GLint* tex, GLint* time)
 {
   // Easing tan: f(t) = (tan(t * 3.0 - 1.5) + 14.101419947172) * 0.035457422151326
   // Easing sin: f(t) = sin(t * 3.1415926535898)
@@ -468,7 +409,7 @@ GLuint Video::createOsdProgram(GLint* pos, GLint* uv, GLint* tex, GLint* time)
   *tex = Gl::getUniformLocation(program, "u_tex");
 
   return program;
-}
+}*/
 
 GLuint Video::createVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv)
 {
@@ -518,7 +459,7 @@ GLuint Video::createVertexBuffer(unsigned windowWidth, unsigned windowHeight, fl
   return vertexBuffer;
 }
 
-void Video::createOsd(OsdMessage* osd, const char* msg, GLint pos, GLint uv)
+/*void Video::createOsd(OsdMessage* osd, const char* msg, GLint pos, GLint uv)
 {
   static constexpr float scale = 2.0f / 320.0f;
 
@@ -570,34 +511,4 @@ void Video::createOsd(OsdMessage* osd, const char* msg, GLint pos, GLint uv)
   
   Gl::vertexAttribPointer(pos, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, x));
   Gl::vertexAttribPointer(uv, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, u));
-}
-
-GLuint Video::createTexture(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linear)
-{
-  GLuint texture;
-  const char* format;
-
-  GLint filter = linear ? GL_LINEAR : GL_NEAREST;
-
-  switch (pixelFormat)
-  {
-  case RETRO_PIXEL_FORMAT_XRGB8888:
-    texture = GlUtil::createTexture(width, height, GL_RGBA, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, filter);
-    format = "RGBA8888";
-    break;
-
-  case RETRO_PIXEL_FORMAT_RGB565:
-    texture = GlUtil::createTexture(width, height, GL_RGB, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, filter);
-    format = "RGB565";
-    break;
-
-  case RETRO_PIXEL_FORMAT_0RGB1555:
-  default:
-    texture = GlUtil::createTexture(width, height, GL_RGB, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, filter);
-    format = "RGBA5551";
-    break;
-  }
-
-  _logger->printf(RETRO_LOG_DEBUG, "Texture created with dimensions %u x %u (%s, %s)", width, height, format, linear ? "linear" : "nearest");
-  return texture;
-}
+}*/

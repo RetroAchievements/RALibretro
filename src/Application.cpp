@@ -1164,8 +1164,7 @@ void Application::saveState(const std::string& path)
   }
 
   unsigned width, height, pitch;
-  enum retro_pixel_format format;
-  const void* pixels = _video.getFramebuffer(&width, &height, &pitch, &format);
+  const void* pixels = _video.getFramebufferRgba(&width, &height, &pitch);
 
   if (pixels == NULL)
   {
@@ -1180,7 +1179,7 @@ void Application::saveState(const std::string& path)
     return;
   }
 
-  util::saveImage(&_logger, path + ".png", pixels, width, height, pitch, format);
+  util::saveImage(&_logger, path + ".png", pixels, width, height, pitch, RETRO_PIXEL_FORMAT_XRGB8888);
   RA_OnSaveState(path.c_str());
 
   free((void*)pixels);
@@ -1237,20 +1236,10 @@ void Application::loadState(const std::string& path)
     return;
   }
 
-  const void* converted = util::fromRgb(&_logger, pixels, width, height, &pitch, format);
-
-  if (converted == NULL)
-  {
-    free((void*)pixels);
-    free(data);
-    return;
-  }
-
   _core.unserialize(data, size);
-  _video.setFramebuffer(converted, width, height, pitch);
+  _video.setFramebufferRgb(pixels, width, height, pitch);
   RA_OnLoadState(path.c_str());
 
-  free((void*)converted);
   free((void*)pixels);
   free(data);
 }
@@ -1286,8 +1275,7 @@ void Application::screenshot()
   }
 
   unsigned width, height, pitch;
-  enum retro_pixel_format format;
-  const void* data = _video.getFramebuffer(&width, &height, &pitch, &format);
+  const void* data = _video.getFramebufferRgba(&width, &height, &pitch);
 
   if (data == NULL)
   {
@@ -1296,7 +1284,7 @@ void Application::screenshot()
   }
 
   std::string path = getScreenshotPath();
-  util::saveImage(&_logger, path, data, width, height, pitch, format);
+  util::saveImage(&_logger, path, data, width, height, pitch, RETRO_PIXEL_FORMAT_XRGB8888);
   free((void*)data);
 }
 
