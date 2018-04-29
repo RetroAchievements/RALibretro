@@ -266,9 +266,8 @@ GLsizei GlUtil::Texture::bpp(GLenum type)
   }
 }
 
-bool GlUtil::VertexBuffer::init(size_t vertexSize)
+bool GlUtil::VertexBuffer::init()
 {
-  _vertexSize = vertexSize;
   Gl::genBuffers(1, &_vbo);
   return Gl::ok();
 }
@@ -286,7 +285,6 @@ bool GlUtil::VertexBuffer::setData(const void* data, size_t dataSize)
 {
   Gl::bindBuffer(GL_ARRAY_BUFFER, _vbo);
   Gl::bufferData(GL_ARRAY_BUFFER, dataSize, data, GL_STATIC_DRAW);
-
   return Gl::ok();
 }
 
@@ -295,27 +293,63 @@ void GlUtil::VertexBuffer::bind() const
   Gl::bindBuffer(GL_ARRAY_BUFFER, _vbo);
 }
 
-size_t GlUtil::VertexBuffer::getVertexSize() const
+void GlUtil::VertexBuffer::enable(GLuint attributeLocation, GLint size, GLenum type, GLsizei stride, GLsizei offset) const
 {
-  return _vertexSize;
+  Gl::vertexAttribPointer(attributeLocation, size, type, GL_FALSE, stride, (const GLvoid*)offset);
+  Gl::enableVertexAttribArray(attributeLocation);
 }
 
-bool GlUtil::VertexAttribute::init(GLenum type, GLint numElements, size_t offset)
+void GlUtil::VertexBuffer::draw(GLenum mode, GLsizei count) const
 {
-  _type = type;
-  _numElements = numElements;
-  _offset = offset;
+  Gl::drawArrays(mode, 0, count);
+}
+
+bool GlUtil::TexturedQuad2D::init()
+{
+  return init(-1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+}
+
+bool GlUtil::TexturedQuad2D::init(float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1)
+{
+  if (!VertexBuffer::init())
+  {
+    return false;
+  }
+
+  const Vertex vertices[4] = {
+    {x0, y0, u0, v1},
+    {x0, y1, u0, v0},
+    {x1, y0, u1, v1},
+    {x1, y1, u1, v0}
+  };
+
+  setData(vertices, sizeof(vertices));
   return true;
 }
 
-void GlUtil::VertexAttribute::destroy() const
+void GlUtil::TexturedQuad2D::destroy()
 {
+  VertexBuffer::destroy();
 }
 
-void GlUtil::VertexAttribute::enable(const VertexBuffer* vertexBuffer, GLint attributeLocation) const
+void GlUtil::TexturedQuad2D::bind() const
 {
-  Gl::vertexAttribPointer(attributeLocation, _numElements, _type, GL_FALSE, vertexBuffer->getVertexSize(), (const GLvoid*)_offset);
-  Gl::enableVertexAttribArray(attributeLocation);
+  VertexBuffer::bind();
+}
+
+void GlUtil::TexturedQuad2D::enablePos(GLint attributeLocation) const
+{
+  enable(attributeLocation, 2, GL_FLOAT,sizeof(Vertex), offsetof(Vertex, x));
+}
+
+void GlUtil::TexturedQuad2D::enableUV(GLint attributeLocation) const
+{
+  enable(attributeLocation, 2, GL_FLOAT, sizeof(Vertex), offsetof(Vertex, u));
+}
+
+void GlUtil::TexturedQuad2D::draw() const
+{
+  VertexBuffer::draw(GL_TRIANGLE_STRIP, 4);
 }
 
 bool GlUtil::Program::init(const char* vertexShader, const char* fragmentShader)
@@ -346,18 +380,4 @@ GLint GlUtil::Program::getUniform(const char* name) const
 void GlUtil::Program::use() const
 {
   Gl::useProgram(_program);
-}
-
-void GlUtil::Program::setVertexAttribute(GLuint attributeLocation, const VertexAttribute* vertexAttribute, const VertexBuffer* vertexBuffer)
-{
-  vertexBuffer->bind();
-  vertexAttribute->enable(vertexBuffer, attributeLocation);
-  Gl::enableVertexAttribArray(attributeLocation);
-}
-
-void GlUtil::Program::setTextureUniform(GLint uniformLocation, GLint texture, int unit)
-{
-  Gl::activeTexture(GL_TEXTURE0 + unit);
-  Gl::bindTexture(GL_TEXTURE_2D, texture);
-  Gl::uniform1i(uniformLocation, unit);
 }

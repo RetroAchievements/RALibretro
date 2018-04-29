@@ -45,31 +45,39 @@ namespace GlUtil
   public:
     VertexBuffer(): _vbo(0) {}
 
-    bool init(size_t vertexSize);
+    bool init();
     void destroy();
 
     bool setData(const void* data, size_t dataSize);
     void bind() const;
 
-    size_t getVertexSize() const;
+    void enable(GLuint attributeLocation, GLint size, GLenum type, GLsizei stride, GLsizei offset) const;
+
+    void draw(GLenum mode, GLsizei count) const;
 
   protected:
     GLuint _vbo;
-    size_t _vertexSize;
   };
 
-  class VertexAttribute
+  class TexturedQuad2D: protected VertexBuffer
   {
   public:
-    bool init(GLenum type, GLint numElements, size_t offset);
-    void destroy() const;
+    bool init();
+    bool init(float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1);
+    void destroy();
 
-    void enable(const VertexBuffer* vertexBuffer, GLint attributeLocation) const;
+    void bind() const;
+
+    void enablePos(GLint attributeLocation) const;
+    void enableUV(GLint attributeLocation) const;
+
+    void draw() const;
   
   protected:
-    GLenum _type;
-    GLint  _numElements;
-    size_t _offset;
+    struct Vertex
+    {
+      float x, y, u, v;
+    };
   };
 
   class Program
@@ -85,9 +93,6 @@ namespace GlUtil
 
     void use() const;
 
-    void setVertexAttribute(GLuint attributeLocation, const VertexAttribute* vertexAttribute, const VertexBuffer* vertexBuffer);
-    void setTextureUniform(GLint uniformLocation, GLint texture, int unit);
-  
   protected:
     GLuint _program;
   };
