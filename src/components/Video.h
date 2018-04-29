@@ -55,39 +55,39 @@ public:
   void showDialog();
 
 protected:
-  /*class Blitter: protected GlUtil::Program
+  class Blitter: protected GlUtil::Program
   {
   public:
     bool init();
-    void destroy() const;
+    void destroy();
+
+    void run(const GlUtil::TexturedQuad2D* quad, const GlUtil::Texture* texture);
+  
+  protected:
+    GLint _posLocation;
+    GLint _uvLocation;
+    GLint _textureLocation;
   };
 
-  struct OsdMessage
+  /*struct OsdMessage
   {
     float x, y, t;
     GLuint vertexBuffer;
     GLsizei count;
   };*/
 
-  void createProgram(GLint* pos, GLint* uv, GLint* tex);
   //GLuint createOsdProgram(GLint* pos, GLint* uv, GLint* tex, GLint* time);
-  void createVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv);
+  void updateVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX);
   //void createOsd(OsdMessage* osd, const char* msg);
 
   libretro::LoggerComponent* _logger;
   Config* _config;
 
-  GlUtil::Program         _program;
-  GLint                   _posAttribute;
-  GLint                   _uvAttribute;
-  GLint                   _texUniform;
-  GlUtil::VertexBuffer    _vertexBuffer;
+  Blitter                 _blitter;
+  GlUtil::TexturedQuad2D  _quad;
   GlUtil::Texture         _texture;
 
   GLuint                  _osdProgram;
-  GLint                   _osdPosAttribute;
-  GLint                   _osdUvAttribute;
-  GLint                   _osdTexUniform;
   GLint                   _osdTimeUniform;
   GLuint                  _osdTexture;
 

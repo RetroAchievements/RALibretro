@@ -40,7 +40,8 @@ bool Video::init(libretro::LoggerComponent* logger, Config* config)
   _preserveAspect = false;
   _linearFilter = false;
 
-  createProgram(&_posAttribute, &_uvAttribute, &_texUniform);
+  _blitter.init();
+  _quad.init();
   //_osdProgram = createOsdProgram(&_osdPosAttribute, &_osdUvAttribute, &_osdTexUniform, &_osdTimeUniform);
 
   if (!Gl::ok())
@@ -55,25 +56,13 @@ bool Video::init(libretro::LoggerComponent* logger, Config* config)
 void Video::destroy()
 {
   _texture.destroy();
-  _vertexBuffer.destroy();
-  _program.destroy();
+  _quad.destroy();
+  _blitter.destroy();
 }
 
 void Video::draw()
 {
-  GlUtil::VertexAttribute pos, uv;
-
-  pos.init(GL_FLOAT, 2, 0);
-  uv.init(GL_FLOAT, 2, 8);
-
-  _program.use();
-
-  pos.enable(&_vertexBuffer, _posAttribute);
-  uv.enable(&_vertexBuffer, _uvAttribute);
-
-  _texture.setUniform(_texUniform, 0);
-
-  Gl::drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+  _blitter.run(&_quad, &_texture);
 }
 
 bool Video::setGeometry(unsigned width, unsigned height, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback)
@@ -102,7 +91,7 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
 {
   if (data != NULL && data != RETRO_HW_FRAME_BUFFER_VALID)
   {
-    bool updateVertexBuffer = false;
+    bool updateVb = false;
     unsigned textureWidth = pitch;
     GLenum format, type;
 
@@ -136,16 +125,14 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
       _logger->printf(RETRO_LOG_DEBUG, "Texture set to %d x %d, %s", _texture.getWidth(), _texture.getHeight(), _linearFilter ? "linear" : "nearest");
 
       _viewWidth = width;
-      updateVertexBuffer = true;
+      updateVb = true;
     }
 
     _texture.setData(textureWidth, height, pitch, format, type, data);
 
-    if (updateVertexBuffer)
+    if (updateVb)
     {
-      float texScaleX = (float)_viewWidth / (float)_texture.getWidth();
-      float texScaleY = 1.0f;
-      createVertexBuffer(_windowWidth, _windowHeight, texScaleX, texScaleY, _posAttribute, _uvAttribute);
+      updateVertexBuffer(_windowWidth, _windowHeight, (float)_viewWidth / (float)_texture.getWidth());
     }
   }
 }
@@ -179,10 +166,7 @@ void Video::windowResized(unsigned width, unsigned height)
   _windowHeight = height;
   Gl::viewport(0, 0, width, height);
 
-  float texScaleX = (float)_viewWidth / (float)_texture.getWidth();
-  float texScaleY = 1.0f;
-
-  createVertexBuffer(width, height, texScaleX, texScaleY, _posAttribute, _uvAttribute);
+  updateVertexBuffer(width, height, (float)_viewWidth / (float)_texture.getWidth());
   _logger->printf(RETRO_LOG_INFO, "Window resized to %u x %u", width, height);
 }
 
@@ -326,36 +310,9 @@ void Video::showDialog()
 
     if (preserveAspect != _preserveAspect)
     {
-      float texScaleX = (float)_viewWidth / (float)_texture.getWidth();
-      float texScaleY = 1.0f;
-      createVertexBuffer(_windowWidth, _windowHeight, texScaleX, texScaleY, _posAttribute, _uvAttribute);
+      updateVertexBuffer(_windowWidth, _windowHeight, (float)_viewWidth / (float)_texture.getWidth());
     }
   }
-}
-
-void Video::createProgram(GLint* pos, GLint* uv, GLint* tex)
-{
-  static const char* vertexShader =
-    "attribute vec2 a_pos;\n"
-    "attribute vec2 a_uv;\n"
-    "varying vec2 v_uv;\n"
-    "void main() {\n"
-    "  v_uv = a_uv;\n"
-    "  gl_Position = vec4(a_pos, 0.0, 1.0);\n"
-    "}";
-  
-  static const char* fragmentShader =
-    "varying vec2 v_uv;\n"
-    "uniform sampler2D u_tex;\n"
-    "void main() {\n"
-    "  gl_FragColor = texture2D(u_tex, v_uv);\n"
-    "}";
-  
-  _program.init(vertexShader, fragmentShader);
-
-  *pos = _program.getAttribute("a_pos");
-  *uv = _program.getAttribute("a_uv");
-  *tex = _program.getUniform("u_tex");
 }
 
 /*GLuint Video::createOsdProgram(GLint* pos, GLint* uv, GLint* tex, GLint* time)
@@ -393,13 +350,8 @@ void Video::createProgram(GLint* pos, GLint* uv, GLint* tex)
   return program;
 }*/
 
-void Video::createVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv)
+void Video::updateVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX)
 {
-  struct VertexData
-  {
-    float x, y, u, v;
-  };
-
   float winScaleX, winScaleY;
 
   if (_preserveAspect)
@@ -421,18 +373,10 @@ void Video::createVertexBuffer(unsigned windowWidth, unsigned windowHeight, floa
     winScaleX = winScaleY = 1.0f;
   }
 
-  const VertexData vertexData[] = {
-    {-winScaleX, -winScaleY,      0.0f, texScaleY},
-    {-winScaleX,  winScaleY,      0.0f,      0.0f},
-    { winScaleX, -winScaleY, texScaleX, texScaleY},
-    { winScaleX,  winScaleY, texScaleX,      0.0f}
-  };
-
-  _vertexBuffer.destroy();
-  _vertexBuffer.init(sizeof(VertexData));
-  _vertexBuffer.setData(vertexData, sizeof(vertexData));
+  _quad.destroy();
+  _quad.init(-winScaleX, -winScaleY, winScaleX, winScaleY, 0.0f, 0.0f, texScaleX, 1.0f);
   
-  _logger->printf(RETRO_LOG_DEBUG, "Vertices updated with window scale %f x %f and texture scale %f x %f", winScaleX, winScaleY, texScaleX, texScaleY);
+  _logger->printf(RETRO_LOG_DEBUG, "Vertices updated with window scale %f x %f and texture scale %f x %f", winScaleX, winScaleY, texScaleX, 1.0f);
 }
 
 /*void Video::createOsd(OsdMessage* osd, const char* msg, GLint pos, GLint uv)
@@ -488,3 +432,49 @@ void Video::createVertexBuffer(unsigned windowWidth, unsigned windowHeight, floa
   Gl::vertexAttribPointer(pos, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, x));
   Gl::vertexAttribPointer(uv, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, u));
 }*/
+
+bool Video::Blitter::init()
+{
+  static const char* vertexShader =
+    "attribute vec2 a_pos;\n"
+    "attribute vec2 a_uv;\n"
+    "varying vec2 v_uv;\n"
+    "void main() {\n"
+    "  v_uv = a_uv;\n"
+    "  gl_Position = vec4(a_pos, 0.0, 1.0);\n"
+    "}";
+  
+  static const char* fragmentShader =
+    "varying vec2 v_uv;\n"
+    "uniform sampler2D u_tex;\n"
+    "void main() {\n"
+    "  gl_FragColor = texture2D(u_tex, v_uv);\n"
+    "}";
+  
+  if (!Program::init(vertexShader, fragmentShader))
+  {
+    return false;
+  }
+
+  _posLocation = getAttribute("a_pos");
+  _uvLocation = getAttribute("a_uv");
+  _textureLocation = getUniform("u_tex");
+  return true;
+}
+
+void Video::Blitter::destroy()
+{
+  Program::destroy();
+}
+
+void Video::Blitter::run(const GlUtil::TexturedQuad2D* quad, const GlUtil::Texture* texture)
+{
+  use();
+
+  texture->setUniform(_textureLocation, 0);
+
+  quad->bind();
+  quad->enablePos(_posLocation);
+  quad->enableUV(_uvLocation);
+  quad->draw();
+}
