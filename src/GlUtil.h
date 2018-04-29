@@ -75,11 +75,15 @@ namespace GlUtil
   class Program
   {
   public:
+    Program(): _program(0) {}
+
     bool init(const char* vertexShader, const char* fragmentShader);
-    void destroy() const;
+    void destroy();
 
     GLint getAttribute(const char* name) const;
     GLint getUniform(const char* name) const;
+
+    void use() const;
 
     void setVertexAttribute(GLuint attributeLocation, const VertexAttribute* vertexAttribute, const VertexBuffer* vertexBuffer);
     void setTextureUniform(GLint uniformLocation, GLint texture, int unit);

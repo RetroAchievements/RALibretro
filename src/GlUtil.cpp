@@ -324,9 +324,13 @@ bool GlUtil::Program::init(const char* vertexShader, const char* fragmentShader)
   return Gl::ok();
 }
 
-void GlUtil::Program::destroy() const
+void GlUtil::Program::destroy()
 {
-  Gl::deleteProgram(_program);
+  if (_program != 0)
+  {
+    Gl::deleteProgram(_program);
+    _program = 0;
+  }
 }
 
 GLint GlUtil::Program::getAttribute(const char* name) const
@@ -337,6 +341,11 @@ GLint GlUtil::Program::getAttribute(const char* name) const
 GLint GlUtil::Program::getUniform(const char* name) const
 {
   return Gl::getUniformLocation(_program, name);
+}
+
+void GlUtil::Program::use() const
+{
+  Gl::useProgram(_program);
 }
 
 void GlUtil::Program::setVertexAttribute(GLuint attributeLocation, const VertexAttribute* vertexAttribute, const VertexBuffer* vertexBuffer)
