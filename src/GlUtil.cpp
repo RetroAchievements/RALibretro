@@ -278,6 +278,7 @@ void GlUtil::VertexBuffer::destroy()
   if (_vbo != 0)
   {
     Gl::deleteBuffers(1, &_vbo);
+    _vbo = 0;
   }
 }
 
@@ -314,6 +315,7 @@ void GlUtil::VertexAttribute::destroy() const
 void GlUtil::VertexAttribute::enable(const VertexBuffer* vertexBuffer, GLint attributeLocation) const
 {
   Gl::vertexAttribPointer(attributeLocation, _numElements, _type, GL_FALSE, vertexBuffer->getVertexSize(), (const GLvoid*)_offset);
+  Gl::enableVertexAttribArray(attributeLocation);
 }
 
 bool GlUtil::Program::init(const char* vertexShader, const char* fragmentShader)
