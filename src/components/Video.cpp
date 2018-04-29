@@ -237,16 +237,16 @@ void Video::setFramebufferRgb(const void* pixels, unsigned width, unsigned heigh
   switch (_pixelFormat)
   {
   case RETRO_PIXEL_FORMAT_XRGB8888:
-    _texture.setData(width, height, pitch, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, pixels);
+    _texture.setData(width, height, pitch, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV, converted);
     break;
 
   case RETRO_PIXEL_FORMAT_RGB565:
-    _texture.setData(width, height, pitch, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, pixels);
+    _texture.setData(width, height, pitch, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, converted);
     break;
 
   case RETRO_PIXEL_FORMAT_0RGB1555:
   default:
-    _texture.setData(width, height, pitch, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, pixels);
+    _texture.setData(width, height, pitch, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, converted);
     break;
   }
 
