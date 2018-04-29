@@ -436,7 +436,7 @@ void Video::createVertexBuffer(unsigned windowWidth, unsigned windowHeight, floa
   };
 
   _vertexBuffer.destroy();
-  _vertexBuffer.init(sizeof(vertexData));
+  _vertexBuffer.init(sizeof(VertexData));
   _vertexBuffer.setData(vertexData, sizeof(vertexData));
   
   _logger->printf(RETRO_LOG_DEBUG, "Vertices updated with window scale %f x %f and texture scale %f x %f", winScaleX, winScaleY, texScaleX, texScaleY);
