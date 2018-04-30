@@ -146,6 +146,36 @@ GLuint GlUtil::createFramebuffer(GLuint* renderbuffer, GLsizei width, GLsizei he
   return framebuffer;
 }
 
+bool GlUtil::Program::init(const char* vertexShader, const char* fragmentShader)
+{
+  _program = GlUtil::createProgram(vertexShader, fragmentShader);
+  return Gl::ok();
+}
+
+void GlUtil::Program::destroy()
+{
+  if (_program != 0)
+  {
+    Gl::deleteProgram(_program);
+    _program = 0;
+  }
+}
+
+GlUtil::Attribute GlUtil::Program::getAttribute(const char* name) const
+{
+  return {Gl::getAttribLocation(_program, name)};
+}
+
+GlUtil::Uniform GlUtil::Program::getUniform(const char* name) const
+{
+  return {Gl::getUniformLocation(_program, name)};
+}
+
+void GlUtil::Program::use() const
+{
+  Gl::useProgram(_program);
+}
+
 bool GlUtil::Texture::init(GLsizei width, GLsizei height, GLint internalFormat, bool linearFilter)
 {
   _texture = GlUtil::createTexture(width, height, internalFormat, GL_RED, GL_UNSIGNED_BYTE, linearFilter ? GL_LINEAR : GL_NEAREST);
@@ -220,11 +250,11 @@ GLsizei GlUtil::Texture::getHeight() const
   return _height;
 }
 
-void GlUtil::Texture::setUniform(GLint uniformLocation, int unit) const
+void GlUtil::Texture::setUniform(Uniform uniform, int unit) const
 {
   Gl::activeTexture(GL_TEXTURE0 + unit);
   bind();
-  Gl::uniform1i(uniformLocation, unit);
+  Gl::uniform1i(uniform.location, unit);
 }
 
 GLsizei GlUtil::Texture::bpp(GLenum type)
@@ -293,10 +323,10 @@ void GlUtil::VertexBuffer::bind() const
   Gl::bindBuffer(GL_ARRAY_BUFFER, _vbo);
 }
 
-void GlUtil::VertexBuffer::enable(GLuint attributeLocation, GLint size, GLenum type, GLsizei stride, GLsizei offset) const
+void GlUtil::VertexBuffer::enable(Attribute attribute, GLint size, GLenum type, GLsizei stride, GLsizei offset) const
 {
-  Gl::vertexAttribPointer(attributeLocation, size, type, GL_FALSE, stride, (const GLvoid*)offset);
-  Gl::enableVertexAttribArray(attributeLocation);
+  Gl::vertexAttribPointer(attribute.location, size, type, GL_FALSE, stride, (const GLvoid*)offset);
+  Gl::enableVertexAttribArray(attribute.location);
 }
 
 void GlUtil::VertexBuffer::draw(GLenum mode, GLsizei count) const
@@ -304,12 +334,12 @@ void GlUtil::VertexBuffer::draw(GLenum mode, GLsizei count) const
   Gl::drawArrays(mode, 0, count);
 }
 
-bool GlUtil::TexturedQuad2D::init()
+bool GlUtil::TexturedQuad::init()
 {
   return init(-1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
 }
 
-bool GlUtil::TexturedQuad2D::init(float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1)
+bool GlUtil::TexturedQuad::init(float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1)
 {
   if (!VertexBuffer::init())
   {
@@ -327,57 +357,64 @@ bool GlUtil::TexturedQuad2D::init(float x0, float y0, float x1, float y1, float 
   return true;
 }
 
-void GlUtil::TexturedQuad2D::destroy()
+void GlUtil::TexturedQuad::destroy()
 {
   VertexBuffer::destroy();
 }
 
-void GlUtil::TexturedQuad2D::bind() const
+void GlUtil::TexturedQuad::bind() const
 {
   VertexBuffer::bind();
 }
 
-void GlUtil::TexturedQuad2D::enablePos(GLint attributeLocation) const
+void GlUtil::TexturedQuad::enablePos(Attribute attribute) const
 {
-  enable(attributeLocation, 2, GL_FLOAT,sizeof(Vertex), offsetof(Vertex, x));
+  enable(attribute, 2, GL_FLOAT,sizeof(Vertex), offsetof(Vertex, x));
 }
 
-void GlUtil::TexturedQuad2D::enableUV(GLint attributeLocation) const
+void GlUtil::TexturedQuad::enableUV(Attribute attribute) const
 {
-  enable(attributeLocation, 2, GL_FLOAT, sizeof(Vertex), offsetof(Vertex, u));
+  enable(attribute, 2, GL_FLOAT, sizeof(Vertex), offsetof(Vertex, u));
 }
 
-void GlUtil::TexturedQuad2D::draw() const
+void GlUtil::TexturedQuad::draw() const
 {
   VertexBuffer::draw(GL_TRIANGLE_STRIP, 4);
 }
 
-bool GlUtil::Program::init(const char* vertexShader, const char* fragmentShader)
+bool GlUtil::TexturedTriangleBatch::init(const Vertex* vertices, size_t count)
 {
-  _program = GlUtil::createProgram(vertexShader, fragmentShader);
-  return Gl::ok();
-}
-
-void GlUtil::Program::destroy()
-{
-  if (_program != 0)
+  if (!VertexBuffer::init())
   {
-    Gl::deleteProgram(_program);
-    _program = 0;
+    return false;
   }
+
+  setData(vertices, count * sizeof(Vertex));
+  _count = count;
+  return true;
 }
 
-GLint GlUtil::Program::getAttribute(const char* name) const
+void GlUtil::TexturedTriangleBatch::destroy()
 {
-  return Gl::getAttribLocation(_program, name);
+  VertexBuffer::destroy();
 }
 
-GLint GlUtil::Program::getUniform(const char* name) const
+void GlUtil::TexturedTriangleBatch::bind() const
 {
-  return Gl::getUniformLocation(_program, name);
+  VertexBuffer::bind();
 }
 
-void GlUtil::Program::use() const
+void GlUtil::TexturedTriangleBatch::enablePos(Attribute attribute) const
 {
-  Gl::useProgram(_program);
+  enable(attribute, 2, GL_FLOAT,sizeof(Vertex), offsetof(Vertex, x));
+}
+
+void GlUtil::TexturedTriangleBatch::enableUV(Attribute attribute) const
+{
+  enable(attribute, 2, GL_FLOAT, sizeof(Vertex), offsetof(Vertex, u));
+}
+
+void GlUtil::TexturedTriangleBatch::draw() const
+{
+  VertexBuffer::draw(GL_TRIANGLES, _count);
 }

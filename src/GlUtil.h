@@ -13,6 +13,33 @@ namespace GlUtil
   GLuint createProgram(const char* vertexShader, const char* fragmentShader);
   GLuint createFramebuffer(GLuint *renderbuffer, GLsizei width, GLsizei height, GLuint texture, bool depth, bool stencil);
 
+  struct Attribute
+  {
+    GLint location;
+  };
+
+  struct Uniform
+  {
+    GLint location;
+  };
+
+  class Program
+  {
+  public:
+    Program(): _program(0) {}
+
+    bool init(const char* vertexShader, const char* fragmentShader);
+    void destroy();
+
+    Attribute getAttribute(const char* name) const;
+    Uniform getUniform(const char* name) const;
+
+    void use() const;
+
+  protected:
+    GLuint _program;
+  };
+
   class Texture
   {
   public:
@@ -29,7 +56,7 @@ namespace GlUtil
     GLsizei getWidth() const;
     GLsizei getHeight() const;
 
-    void setUniform(GLint uniformLocation, int unit) const;
+    void setUniform(Uniform uniform, int unit) const;
   
   protected:
     static GLsizei bpp(GLenum type);
@@ -51,7 +78,7 @@ namespace GlUtil
     bool setData(const void* data, size_t dataSize);
     void bind() const;
 
-    void enable(GLuint attributeLocation, GLint size, GLenum type, GLsizei stride, GLsizei offset) const;
+    void enable(Attribute attribute, GLint size, GLenum type, GLsizei stride, GLsizei offset) const;
 
     void draw(GLenum mode, GLsizei count) const;
 
@@ -59,7 +86,7 @@ namespace GlUtil
     GLuint _vbo;
   };
 
-  class TexturedQuad2D: protected VertexBuffer
+  class TexturedQuad: protected VertexBuffer
   {
   public:
     bool init();
@@ -68,8 +95,8 @@ namespace GlUtil
 
     void bind() const;
 
-    void enablePos(GLint attributeLocation) const;
-    void enableUV(GLint attributeLocation) const;
+    void enablePos(Attribute attribute) const;
+    void enableUV(Attribute attribute) const;
 
     void draw() const;
   
@@ -80,20 +107,25 @@ namespace GlUtil
     };
   };
 
-  class Program
+  class TexturedTriangleBatch: protected VertexBuffer
   {
   public:
-    Program(): _program(0) {}
+    struct Vertex
+    {
+      float x, y, u, v;
+    };
 
-    bool init(const char* vertexShader, const char* fragmentShader);
+    bool init(const Vertex* vertices, size_t count);
     void destroy();
 
-    GLint getAttribute(const char* name) const;
-    GLint getUniform(const char* name) const;
+    void bind() const;
 
-    void use() const;
+    void enablePos(Attribute attribute) const;
+    void enableUV(Attribute attribute) const;
 
+    void draw() const;
+  
   protected:
-    GLuint _program;
+    GLsizei _count;
   };
 }

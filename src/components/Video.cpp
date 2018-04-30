@@ -456,9 +456,9 @@ bool Video::Blitter::init()
     return false;
   }
 
-  _posLocation = getAttribute("a_pos");
-  _uvLocation = getAttribute("a_uv");
-  _textureLocation = getUniform("u_tex");
+  _pos = getAttribute("a_pos");
+  _uv = getAttribute("a_uv");
+  _texture = getUniform("u_tex");
   return true;
 }
 
@@ -467,14 +467,14 @@ void Video::Blitter::destroy()
   Program::destroy();
 }
 
-void Video::Blitter::run(const GlUtil::TexturedQuad2D* quad, const GlUtil::Texture* texture)
+void Video::Blitter::run(const GlUtil::TexturedQuad* quad, const GlUtil::Texture* texture) const
 {
   use();
 
-  texture->setUniform(_textureLocation, 0);
+  texture->setUniform(_texture, 0);
 
   quad->bind();
-  quad->enablePos(_posLocation);
-  quad->enableUV(_uvLocation);
+  quad->enablePos(_pos);
+  quad->enableUV(_uv);
   quad->draw();
 }

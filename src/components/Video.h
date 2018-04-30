@@ -61,12 +61,25 @@ protected:
     bool init();
     void destroy();
 
-    void run(const GlUtil::TexturedQuad2D* quad, const GlUtil::Texture* texture);
+    void run(const GlUtil::TexturedQuad* quad, const GlUtil::Texture* texture) const;
   
   protected:
-    GLint _posLocation;
-    GLint _uvLocation;
-    GLint _textureLocation;
+    GlUtil::Attribute _pos;
+    GlUtil::Attribute _uv;
+    GlUtil::Uniform   _texture;
+  };
+
+  class Typewriter: protected GlUtil::Program
+  {
+  public:
+    bool init();
+    void destroy();
+
+    void run() const;
+  
+  protected:
+    GlUtil::TexturedTriangleBatch _vertexBuffer;
+    GlUtil::Texture _font;
   };
 
   /*struct OsdMessage
@@ -84,8 +97,10 @@ protected:
   Config* _config;
 
   Blitter                 _blitter;
-  GlUtil::TexturedQuad2D  _quad;
+  GlUtil::TexturedQuad  _quad;
   GlUtil::Texture         _texture;
+
+  Typewriter              _typewriter;
 
   GLuint                  _osdProgram;
   GLint                   _osdTimeUniform;
