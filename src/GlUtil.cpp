@@ -9,29 +9,66 @@ void GlUtil::init(libretro::LoggerComponent* logger)
   s_logger = logger;
 }
 
-GLuint GlUtil::createTexture(GLsizei width, GLsizei height, GLint internalFormat, GLenum format, GLenum type, GLenum filter)
+bool GlUtil::Program::init(const char* vertexShader, const char* fragmentShader)
 {
-  if (!Gl::ok()) return 0;
+  GLuint vs = createShader(GL_VERTEX_SHADER, vertexShader);
+  GLuint fs = createShader(GL_FRAGMENT_SHADER, fragmentShader);
+  _program = Gl::createProgram();
 
-  GLuint texture;
-  Gl::genTextures(1, &texture);
-  Gl::bindTexture(GL_TEXTURE_2D, texture);
+  Gl::attachShader(_program, vs);
+  Gl::attachShader(_program, fs);
+  Gl::linkProgram(_program);
 
-  Gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
-  Gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+  Gl::deleteShader(vs);
+  Gl::deleteShader(fs);
 
-  Gl::texImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, NULL);
+  Gl::validateProgram(_program);
+
+  GLint status;
+  Gl::getProgramiv(_program, GL_LINK_STATUS, &status);
+
+  if (status == GL_FALSE)
+  {
+    char buffer[4096];
+    Gl::getProgramInfoLog(_program, sizeof(buffer), NULL, buffer);
+    s_logger->printf(RETRO_LOG_ERROR, "Error in shader program: %s", buffer);
+    Gl::deleteProgram(_program);
+    return false;
+  }
 
   if (!Gl::ok())
   {
-    Gl::deleteTextures(1, &texture);
-    return 0;
+    Gl::deleteProgram(_program);
   }
 
-  return texture;
+  return Gl::ok();
 }
 
-GLuint GlUtil::createShader(GLenum shaderType, const char* source)
+void GlUtil::Program::destroy()
+{
+  if (_program != 0)
+  {
+    Gl::deleteProgram(_program);
+    _program = 0;
+  }
+}
+
+GlUtil::Attribute GlUtil::Program::getAttribute(const char* name) const
+{
+  return {Gl::getAttribLocation(_program, name)};
+}
+
+GlUtil::Uniform GlUtil::Program::getUniform(const char* name) const
+{
+  return {Gl::getUniformLocation(_program, name)};
+}
+
+void GlUtil::Program::use() const
+{
+  Gl::useProgram(_program);
+}
+
+GLuint GlUtil::Program::createShader(GLenum shaderType, const char* source)
 {
   if (!Gl::ok()) return 0;
 
@@ -60,131 +97,26 @@ GLuint GlUtil::createShader(GLenum shaderType, const char* source)
   return shader;
 }
 
-GLuint GlUtil::createProgram(const char* vertexShader, const char* fragmentShader)
-{
-  if (!Gl::ok()) return 0;
-
-  GLuint vs = createShader(GL_VERTEX_SHADER, vertexShader);
-  GLuint fs = createShader(GL_FRAGMENT_SHADER, fragmentShader);
-  GLuint program = Gl::createProgram();
-
-  Gl::attachShader(program, vs);
-  Gl::attachShader(program, fs);
-  Gl::linkProgram(program);
-
-  Gl::deleteShader(vs);
-  Gl::deleteShader(fs);
-
-  Gl::validateProgram(program);
-
-  GLint status;
-  Gl::getProgramiv(program, GL_LINK_STATUS, &status);
-
-  if (status == GL_FALSE)
-  {
-    char buffer[4096];
-    Gl::getProgramInfoLog(program, sizeof(buffer), NULL, buffer);
-    s_logger->printf(RETRO_LOG_ERROR, "Error in shader program: %s", buffer);
-    Gl::deleteProgram(program);
-    return 0;
-  }
-
-  if (!Gl::ok())
-  {
-    Gl::deleteProgram(program);
-    return 0;
-  }
-
-  return program;
-}
-
-GLuint GlUtil::createFramebuffer(GLuint* renderbuffer, GLsizei width, GLsizei height, GLuint texture, bool depth, bool stencil)
-{
-  if (!Gl::ok()) return 0;
-
-  GLuint framebuffer;
-  Gl::genFramebuffers(1, &framebuffer);
-  Gl::bindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-
-  Gl::framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
-
-  *renderbuffer = 0;
-
-  if (depth && stencil)
-  {
-    Gl::genRenderbuffers(1, renderbuffer);
-    Gl::bindRenderbuffer(GL_RENDERBUFFER, *renderbuffer);
-    Gl::renderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-    Gl::framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, *renderbuffer);
-    Gl::bindRenderbuffer(GL_RENDERBUFFER, 0);
-  }
-  else if (depth)
-  {
-    Gl::genRenderbuffers(1, renderbuffer);
-    Gl::bindRenderbuffer(GL_RENDERBUFFER, *renderbuffer);
-    Gl::renderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
-    Gl::framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, *renderbuffer);
-    Gl::bindRenderbuffer(GL_RENDERBUFFER, 0);
-  }
-
-  if (Gl::checkFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-  {
-    if (renderbuffer != 0)
-    {
-      Gl::deleteRenderbuffers(1, renderbuffer);
-    }
-
-    Gl::deleteFramebuffers(1, &framebuffer);
-    *renderbuffer = 0;
-    return 0;
-  }
-
-  Gl::clearColor(0, 0, 0, 1);
-  Gl::clear(GL_COLOR_BUFFER_BIT);
-
-  Gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
-  return framebuffer;
-}
-
-bool GlUtil::Program::init(const char* vertexShader, const char* fragmentShader)
-{
-  _program = GlUtil::createProgram(vertexShader, fragmentShader);
-  return Gl::ok();
-}
-
-void GlUtil::Program::destroy()
-{
-  if (_program != 0)
-  {
-    Gl::deleteProgram(_program);
-    _program = 0;
-  }
-}
-
-GlUtil::Attribute GlUtil::Program::getAttribute(const char* name) const
-{
-  return {Gl::getAttribLocation(_program, name)};
-}
-
-GlUtil::Uniform GlUtil::Program::getUniform(const char* name) const
-{
-  return {Gl::getUniformLocation(_program, name)};
-}
-
-void GlUtil::Program::use() const
-{
-  Gl::useProgram(_program);
-}
-
 bool GlUtil::Texture::init(GLsizei width, GLsizei height, GLint internalFormat, bool linearFilter)
 {
-  _texture = GlUtil::createTexture(width, height, internalFormat, GL_RED, GL_UNSIGNED_BYTE, linearFilter ? GL_LINEAR : GL_NEAREST);
+  Gl::genTextures(1, &_texture);
+  Gl::bindTexture(GL_TEXTURE_2D, _texture);
+
+  Gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, linearFilter ? GL_LINEAR : GL_NEAREST);
+  Gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, linearFilter ? GL_LINEAR : GL_NEAREST);
+
+  Gl::texImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, NULL);
 
   _width = width;
   _height = height;
   _internalFormat = internalFormat;
 
-  return true;
+  if (!Gl::ok())
+  {
+    Gl::deleteTextures(1, &_texture);
+  }
+
+  return Gl::ok();
 }
 
 void GlUtil::Texture::destroy()
@@ -417,4 +349,49 @@ void GlUtil::TexturedTriangleBatch::enableUV(Attribute attribute) const
 void GlUtil::TexturedTriangleBatch::draw() const
 {
   VertexBuffer::draw(GL_TRIANGLES, _count);
+}
+
+bool GlUtil::Framebuffer::init(GLsizei width, GLsizei height, GLint internalFormat, bool depth, bool stencil)
+{
+  Gl::genFramebuffers(1, &_framebuffer);
+  Gl::bindFramebuffer(GL_FRAMEBUFFER, _framebuffer);
+
+  _texture.init(width, height, internalFormat, false);
+
+  Gl::framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _texture._texture, 0);
+
+  _renderbuffer = 0;
+
+  if (depth && stencil)
+  {
+    Gl::genRenderbuffers(1, &_renderbuffer);
+    Gl::bindRenderbuffer(GL_RENDERBUFFER, _renderbuffer);
+    Gl::renderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+    Gl::framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, _renderbuffer);
+    Gl::bindRenderbuffer(GL_RENDERBUFFER, 0);
+  }
+  else if (depth)
+  {
+    Gl::genRenderbuffers(1, &_renderbuffer);
+    Gl::bindRenderbuffer(GL_RENDERBUFFER, _renderbuffer);
+    Gl::renderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
+    Gl::framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _renderbuffer);
+    Gl::bindRenderbuffer(GL_RENDERBUFFER, 0);
+  }
+
+  if (Gl::checkFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+  {
+    if (_renderbuffer != 0)
+    {
+      Gl::deleteRenderbuffers(1, &_renderbuffer);
+    }
+
+    Gl::deleteFramebuffers(1, &_framebuffer);
+    _framebuffer = 0;
+    _renderbuffer = 0;
+    return false;
+  }
+
+  Gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
+  return Gl::ok();
 }

@@ -8,19 +8,14 @@ namespace GlUtil
 {
   void init(libretro::LoggerComponent* logger);
 
-  GLuint createTexture(GLsizei width, GLsizei height, GLint internalFormat, GLenum format, GLenum type, GLenum filter);
-  GLuint createShader(GLenum shaderType, const char* source);
-  GLuint createProgram(const char* vertexShader, const char* fragmentShader);
-  GLuint createFramebuffer(GLuint *renderbuffer, GLsizei width, GLsizei height, GLuint texture, bool depth, bool stencil);
-
   struct Attribute
   {
-    GLint location;
+    const GLint location;
   };
 
   struct Uniform
   {
-    GLint location;
+    const GLint location;
   };
 
   class Program
@@ -37,6 +32,8 @@ namespace GlUtil
     void use() const;
 
   protected:
+    static GLuint createShader(GLenum shaderType, const char* source);
+
     GLuint _program;
   };
 
@@ -65,6 +62,8 @@ namespace GlUtil
     GLsizei _width;
     GLsizei _height;
     GLint   _internalFormat;
+
+    friend class Framebuffer;
   };
 
   class VertexBuffer
@@ -127,5 +126,16 @@ namespace GlUtil
   
   protected:
     GLsizei _count;
+  };
+
+  class Framebuffer
+  {
+  public:
+    bool init(GLsizei width, GLsizei height, GLint internalFormat, bool depth, bool stencil);
+
+  protected:
+    GLuint  _framebuffer;
+    Texture _texture;
+    GLuint  _renderbuffer;
   };
 }
