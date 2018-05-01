@@ -890,7 +890,7 @@ unsigned char Application::memoryRead(unsigned int addr)
   MemoryRegion* region = _memoryRegions;
   unsigned count = 0;
 
-  while (count < _memoryRegionCount && addr > region->size)
+  while (count < _memoryRegionCount && addr >= region->size)
   {
     addr -= region->size;
     region++;
