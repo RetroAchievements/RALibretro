@@ -776,6 +776,7 @@ moved_recent_item:
       {
         if (mmap->descriptors[i].start == 0x03000000U)
         {
+          // IRAM: Internal RAM (on-chip work RAM)
           data = mmap->descriptors[i].ptr;
           size = mmap->descriptors[i].len;
           registerMemoryRegion(data, size);
@@ -784,10 +785,11 @@ moved_recent_item:
         }
         else if (mmap->descriptors[i].start == 0x02000000U)
         {
+          // WRAM: On-board Work RAM
           data = mmap->descriptors[i].ptr;
           size = mmap->descriptors[i].len;
           registerMemoryRegion(data, size);
-          RA_InstallMemoryBank(0, (void*)::memoryRead, (void*)::memoryWrite, size);
+          RA_InstallMemoryBank(1, (void*)::memoryRead, (void*)::memoryWrite, size);
           _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
         }
       }
