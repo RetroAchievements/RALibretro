@@ -61,8 +61,8 @@ public:
   void printf(const char* fmt, ...);
 
   // RA_Integration
-  unsigned char memoryRead(unsigned int addr);
-  void memoryWrite(unsigned int addr, unsigned int value);
+  unsigned char memoryRead(unsigned bank, unsigned addr);
+  void memoryWrite(unsigned bank, unsigned addr, unsigned value);
   bool isGameActive();
 
 protected:
@@ -70,6 +70,12 @@ protected:
   {
     uint8_t* data;
     size_t size;
+  };
+
+  struct MemoryBank
+  {
+    MemoryRegion regions[64];
+    size_t count;
   };
 
   struct RecentItem
@@ -87,7 +93,7 @@ protected:
   void        enableItems(const UINT* items, size_t count, UINT enable);
   void        enableSlots();
   void        enableRecent();
-  void        registerMemoryRegion(void* data, size_t size);
+  void        registerMemoryRegion(unsigned bank, void* data, size_t size);
   std::string getSRamPath();
   std::string getStatePath(unsigned ndx);
   std::string getConfigPath();
@@ -138,8 +144,7 @@ protected:
   std::string _gamePath;
   unsigned    _validSlots;
 
-  MemoryRegion _memoryRegions[64];
-  unsigned     _memoryRegionCount;
+  MemoryBank _memoryBanks[2];
 
   HMENU _menu;
 };
