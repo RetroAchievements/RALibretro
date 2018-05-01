@@ -1,4 +1,5 @@
 #include "BoxyBold.h"
+#include "BoxyBoldPng.h"
 
 glyph_t g_boxybold[95] =
 {

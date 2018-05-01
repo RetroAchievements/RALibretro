@@ -9,3 +9,5 @@ typedef struct
 glyph_t;
 
 extern glyph_t g_boxybold[95];
+extern const unsigned char g_boxyboldData[];
+extern const unsigned int g_boxyboldSize;

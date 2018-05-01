@@ -26,6 +26,7 @@ OBJS=\
 	src/RA_Implementation.o \
 	src/RA_Integration/src/RA_Interface.o \
 	src/components/Audio.o \
+	src/components/BoxyBold.o \
 	src/components/Config.o \
 	src/components/Dialog.o \
 	src/components/Input.o \
@@ -58,6 +59,9 @@ all: bin/RALibretro
 bin/RALibretro: $(OBJS)
 	mkdir -p bin
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LIBS)
+
+src/components/BoxyBoldPng.h: etc/boxy_bold_font.png
+	xxd -i $< | sed "s/unsigned/const unsigned/g" | sed "s/etc_boxy_bold_font_png_len/g_boxyboldSize/g" | sed "s/etc_boxy_bold_font_png/g_boxyboldData/g" > $@
 
 src/Git.cpp: etc/Git.cpp.template FORCE
 	cat $< | sed s/GITFULLHASH/`git rev-parse HEAD | tr -d "\n"`/g | sed s/GITMINIHASH/`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`/g | sed s/GITRELEASE/`git describe | tr -d "\n"`/g > $@
