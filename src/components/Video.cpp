@@ -315,41 +315,6 @@ void Video::showDialog()
   }
 }
 
-/*GLuint Video::createOsdProgram(GLint* pos, GLint* uv, GLint* tex, GLint* time)
-{
-  // Easing tan: f(t) = (tan(t * 3.0 - 1.5) + 14.101419947172) * 0.035457422151326
-  // Easing sin: f(t) = sin(t * 3.1415926535898)
-  static const char* vertexShader =
-    "attribute vec2 a_pos;\n"
-    "attribute vec2 a_uv;\n"
-    "varying vec2 v_uv;\n"
-    "uniform float u_ease;\n"
-    "void main() {\n"
-    "  float y = tan(u_time * 3.0 - 1.5);\n"
-    "  a_pos.y += u_ease * 0.2;\n"
-    "  v_uv = a_uv;\n"
-    "  gl_Position = vec4(a_pos, 0.0, 1.0);\n"
-    "}";
-  
-  static const char* fragmentShader =
-    "varying vec2 v_uv;\n"
-    "uniform sampler2D u_tex;\n"
-    "uniform float u_time;\n"
-    "void main() {\n"
-    "  vec4 color = texture2D(u_tex, v_uv);\n"
-    "  color.a *="
-    "  gl_FragColor = texture2D(u_tex, v_uv);\n"
-    "}";
-  
-  GLuint program = GlUtil::createProgram(vertexShader, fragmentShader);
-
-  *pos = Gl::getAttribLocation(program, "a_pos");
-  *uv = Gl::getAttribLocation(program, "a_uv");
-  *tex = Gl::getUniformLocation(program, "u_tex");
-
-  return program;
-}*/
-
 void Video::updateVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX)
 {
   float winScaleX, winScaleY;
@@ -478,3 +443,49 @@ void Video::Blitter::run(const GlUtil::TexturedQuad* quad, const GlUtil::Texture
   quad->enableUV(_uv);
   quad->draw();
 }
+
+bool Video::Osd::init()
+{
+  // Easing tan: f(t) = (tan(t * 3.0 - 1.5) + 14.101419947172) * 0.035457422151326
+  // Easing sin: f(t) = sin(t * 3.1415926535898)
+  static const char* vertexShader =
+    "attribute vec2 a_pos;\n"
+    "attribute vec2 a_uv;\n"
+    "varying vec2 v_uv;\n"
+    "uniform float u_ease;\n"
+    "void main() {\n"
+    "  float y = tan(u_time * 3.0 - 1.5);\n"
+    "  a_pos.y += u_ease * 0.2;\n"
+    "  v_uv = a_uv;\n"
+    "  gl_Position = vec4(a_pos, 0.0, 1.0);\n"
+    "}";
+  
+  static const char* fragmentShader =
+    "varying vec2 v_uv;\n"
+    "uniform sampler2D u_tex;\n"
+    "uniform float u_time;\n"
+    "void main() {\n"
+    "  vec4 color = texture2D(u_tex, v_uv);\n"
+    "  color.a *="
+    "  gl_FragColor = texture2D(u_tex, v_uv);\n"
+    "}";
+  
+  if (!Program::init(vertexShader, fragmentShader))
+  {
+    return false;
+  }
+
+  _pos = getAttribute("a_pos");
+  _uv = getAttribute("a_uv");
+  _texture = getUniform("u_tex");
+
+  _font.init();
+  
+  return true;
+}
+
+void Video::Osd::destroy();
+
+void Video::Osd::run(float dt) const;
+
+void Video::Osd::queue(bool urgent, const char* fmt, ...);

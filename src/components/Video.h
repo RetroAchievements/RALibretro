@@ -69,25 +69,31 @@ protected:
     GlUtil::Uniform   _texture;
   };
 
-  class Typewriter: protected GlUtil::Program
+  class Osd: protected GlUtil::Program
   {
   public:
     bool init();
     void destroy();
 
-    void run() const;
+    void run(float dt) const;
+
+    void queue(bool urgent, const char* fmt, ...);
   
   protected:
-    GlUtil::TexturedTriangleBatch _vertexBuffer;
-    GlUtil::Texture _font;
-  };
+    struct Message
+    {
+      float time;
+      bool urgent;
+      GlUtil::TexturedTriangleBatch vertexBuffer;
+    };
 
-  /*struct OsdMessage
-  {
-    float x, y, t;
-    GLuint vertexBuffer;
-    GLsizei count;
-  };*/
+    GlUtil::Attribute _pos;
+    GlUtil::Attribute _uv;
+    GlUtil::Uniform   _texture;
+
+    GlUtil::Texture _font;
+    std::vector<Message> _messageQueue;
+  };
 
   //GLuint createOsdProgram(GLint* pos, GLint* uv, GLint* tex, GLint* time);
   void updateVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX);
@@ -96,15 +102,11 @@ protected:
   libretro::LoggerComponent* _logger;
   Config* _config;
 
-  Blitter                 _blitter;
-  GlUtil::TexturedQuad  _quad;
-  GlUtil::Texture         _texture;
+  Blitter              _blitter;
+  GlUtil::TexturedQuad _quad;
+  GlUtil::Texture      _texture;
 
-  Typewriter              _typewriter;
-
-  GLuint                  _osdProgram;
-  GLint                   _osdTimeUniform;
-  GLuint                  _osdTexture;
+  Osd                  _osd;
 
   unsigned                _windowWidth;
   unsigned                _windowHeight;
@@ -114,7 +116,5 @@ protected:
 
   bool                    _preserveAspect;
   bool                    _linearFilter;
-
-  //std::vector<OsdMessage> _messages;
 };
 
