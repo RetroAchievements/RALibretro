@@ -522,3 +522,17 @@ const void* util::loadImage(libretro::LoggerComponent* logger, const std::string
 
   return rgb888;
 }
+
+const void* util::loadImage(libretro::LoggerComponent* logger, const void* data, size_t size, unsigned* width, unsigned* height, unsigned* pitch)
+{
+  int w, h;
+  void* rgb888 = stbi_load_from_memory(data, size, &w, &h, NULL, STBI_rgb);
+
+  logger->printf(RETRO_LOG_INFO, "Read image %u x %u from %p (%zu bytes)", w, h, data, size);
+
+  *width = w;
+  *height = h;
+  *pitch = w * 3;
+
+  return rgb888;
+}

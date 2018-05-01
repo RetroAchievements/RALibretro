@@ -42,4 +42,5 @@ namespace util
   void        saveImage(libretro::LoggerComponent* logger, const std::string& path, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format);
   const void* fromRgb(libretro::LoggerComponent* logger, const void* data, unsigned width, unsigned height, unsigned* pitch, enum retro_pixel_format format);
   const void* loadImage(libretro::LoggerComponent* logger, const std::string& path, unsigned* width, unsigned* height, unsigned* pitch);
+  const void* loadImage(libretro::LoggerComponent* logger, const void* data, unsigned* width, unsigned* height, unsigned* pitch);
 }
