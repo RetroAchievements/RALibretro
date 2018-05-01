@@ -4,7 +4,8 @@
 *.user
 *.o
 .vs
-/bin
+/bin/RALibretro.exe
+/bin/RALibretro*.zip
 /Debug
 /Release
 /ipch
