@@ -4,8 +4,10 @@
 *.user
 *.o
 .vs
-/bin/RALibretro.exe
-/bin/RALibretro*.zip
+/bin
+!/bin/*.dll
+!/bin/Cores
+!/bin/Overlay
 /Debug
 /Release
 /ipch
