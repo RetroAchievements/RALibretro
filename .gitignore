@@ -3,11 +3,13 @@
 *.suo
 *.user
 *.o
+*.swp
 .vs
 /bin
 !/bin/*.dll
 !/bin/Cores
 !/bin/Overlay
+/RALibretro*.zip
 /Debug
 /Release
 /ipch

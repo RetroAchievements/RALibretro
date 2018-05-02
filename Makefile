@@ -69,4 +69,12 @@ zip:
 clean:
 	rm -f bin/RALibretro $(OBJS) bin/RALibretro-*.zip
 
+pack:
+ifeq ("", "$(wildcard bin/RALibretro.exe)")
+	echo '"bin/RALibretro.exe" not found!'
+else
+	rm -f bin/RALibretro-*.zip RALibretro-*.zip
+	zip -9r RALibretro-pack-`git describe | tr -d "\n"`.zip bin
+endif
+
 .PHONY: clean FORCE
