@@ -21,6 +21,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "libretro/Components.h"
 
+#include <unordered_map>
+
 class Config: public libretro::ConfigComponent
 {
 public:
@@ -71,6 +73,7 @@ protected:
   std::string _screenshotsFolder;
 
   std::vector<Variable> _variables;
+  std::unordered_map<std::string, std::string> _selections;
 
   bool _updated;
 

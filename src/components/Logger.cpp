@@ -89,11 +89,22 @@ void Logger::vprintf(enum retro_log_level level, const char* fmt, va_list args)
   write(meta, 3);
   write(line, length);
 
-  ::printf("%s\n", line);
+  const char* desc = "?";
+
+  switch (level)
+  {
+  case RETRO_LOG_DEBUG: desc = "DEBUG"; break;
+  case RETRO_LOG_INFO:  desc = "INFO "; break;
+  case RETRO_LOG_WARN:  desc = "WARN "; break;
+  case RETRO_LOG_ERROR: desc = "ERROR"; break;
+  case RETRO_LOG_DUMMY: desc = "DUMMY"; break;
+  }
+
+  ::printf("[%s] %s\n", desc, line);
   fflush(stdout);
 
 #ifdef LOG_TO_FILE
-  fprintf(_file, "%s\n", line);
+  fprintf(_file, "[%s] %s\n", desc, line);
 #endif
 }
 

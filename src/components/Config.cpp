@@ -27,6 +27,9 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string.h>
 #include <sys/stat.h>
+#include <unordered_map>
+
+#define TAG "[CFG] "
 
 bool Config::init(libretro::LoggerComponent* logger)
 {
@@ -62,11 +65,11 @@ bool Config::init(libretro::LoggerComponent* logger)
   mkdir(_systemFolder.c_str());
   mkdir(_screenshotsFolder.c_str());
 
-  _logger->printf(RETRO_LOG_INFO, "Root folder:        %s", _rootFolder.c_str());
-  _logger->printf(RETRO_LOG_INFO, "Assets folder:      %s", _assetsFolder.c_str());
-  _logger->printf(RETRO_LOG_INFO, "Save folder:        %s", _saveFolder.c_str());
-  _logger->printf(RETRO_LOG_INFO, "System folder:      %s", _systemFolder.c_str());
-  _logger->printf(RETRO_LOG_INFO, "Screenshots folder: %s", _screenshotsFolder.c_str());
+  _logger->info(TAG "Root folder:        %s", _rootFolder.c_str());
+  _logger->info(TAG "Assets folder:      %s", _assetsFolder.c_str());
+  _logger->info(TAG "Save folder:        %s", _saveFolder.c_str());
+  _logger->info(TAG "System folder:      %s", _systemFolder.c_str());
+  _logger->info(TAG "Screenshots folder: %s", _screenshotsFolder.c_str());
 
   // TODO This should be done in main.cpp as soon as possible
   SetCurrentDirectory(_rootFolder.c_str());
@@ -78,6 +81,7 @@ bool Config::init(libretro::LoggerComponent* logger)
 void Config::reset()
 {
   _variables.clear();
+  _selections.clear();
   _updated = false;
 }
 
@@ -98,6 +102,8 @@ const char* Config::getSystemPath()
 
 void Config::setVariables(const struct retro_variable* variables, unsigned count)
 {
+  _variables.clear();
+
   for (unsigned i = 0; i < count; variables++, i++)
   {
     Variable var;
@@ -128,8 +134,25 @@ void Config::setVariables(const struct retro_variable* variables, unsigned count
       var._options.push_back(option);
     }
 
+    const auto& found = _selections.find(var._key);
+    
+    if (found != _selections.cend())
+    {
+      for (size_t i = 0; i < var._options.size(); i++)
+      {
+        if (var._options[i] == found->second)
+        {
+          var._selected = i;
+          _logger->info(TAG "Variable %s found in selections, set to \"%s\"", var._key.c_str(), found->second.c_str());
+          break;
+        }
+      }
+    }
+
     _variables.push_back(var);
   }
+
+  _updated = true;
 }
 
 bool Config::varUpdated()
@@ -141,19 +164,16 @@ bool Config::varUpdated()
 
 const char* Config::getVariable(const char* variable)
 {
-  for (auto it = _variables.begin(); it != _variables.end(); ++it)
-  {
-    const Variable& var = *it;
+  const auto& found = _selections.find(variable);
 
-    if (var._key == variable)
-    {
-      const char* value = var._options[var._selected].c_str();
-      _logger->printf(RETRO_LOG_INFO, "Variable %s is \"%s\"", variable, value);
-      return value;
-    }
+  if (found != _selections.cend())
+  {
+    const char* value = found->second.c_str();
+    _logger->info(TAG "Variable %s is \"%s\"", variable, value);
+    return value;
   }
 
-  _logger->printf(RETRO_LOG_INFO, "Variable %s is not set", variable);
+  _logger->error(TAG "Variable %s not found", variable);
   return NULL;
 }
 
@@ -162,15 +182,15 @@ std::string Config::serialize()
   std::string json("{");
   const char* comma = "";
 
-  for (auto& var: _variables)
+  for (const auto& pair : _selections)
   {
     json.append(comma);
     comma = ",";
 
     json.append("\"");
-    json.append(var._key);
+    json.append(pair.first);
     json.append("\":\"");
-    json.append(var._options[var._selected]);
+    json.append(pair.second);
     json.append("\"");
   }
 
@@ -198,38 +218,32 @@ void Config::deserialize(const char* json)
     }
     else if (event == JSONSAX_STRING)
     {
-      std::string opt = std::string(str, num);
-
-      for (auto& var: ud->self->_variables)
-      {
-        if (var._key == ud->key)
-        {
-          int selected = 0;
-
-          for (const auto& option: var._options)
-          {
-            if (option == opt)
-            {
-              break;
-            }
-
-            selected++;
-          }
-
-          if ((size_t)selected >= var._options.size())
-          {
-            selected = 0;
-          }
-
-          ud->self->_updated = ud->self->_updated || selected != var._selected;
-          var._selected = selected;
-          break;
-        }
-      }
+      std::string option = std::string(str, num);
+      ud->self->_selections[ud->key] = option;
+      ud->self->_logger->info(TAG "Selection %s deserialized as \"%s\"", ud->key.c_str(), option.c_str());
     }
 
     return 0;
   });
+
+  for (auto& var : _variables)
+  {
+    const auto& found = _selections.find(var._key);
+
+    if (found != _selections.cend())
+    {
+      for (size_t i = 0; i < var._options.size(); i++)
+      {
+        if (var._options[i] == found->second)
+        {
+          var._selected = i;
+          break;
+        }
+      }
+    }
+  }
+
+  _updated = true;
 }
 
 void Config::showDialog()
@@ -256,6 +270,14 @@ void Config::showDialog()
   db.addButton("Cancel", IDCANCEL, WIDTH - 50, y, 50, 14, false);
 
   _updated = db.show();
+
+  if (_updated)
+  {
+    for (auto& var : _variables)
+    {
+      _selections[var._key] = var._options[var._selected];
+    }
+  }
 }
 
 const char* Config::s_getOption(int index, void* udata)
