@@ -1080,7 +1080,7 @@ bool libretro::Core::setControllerInfo(const struct retro_controller_info* data)
     struct retro_controller_description* type = types;
     const struct retro_controller_description* end = type + info->num_types;
 
-    for (; type < end; type++)
+    for (; type < end && type->desc != NULL; type++)
     {
       type->desc = strdup(type->desc);
 
@@ -1090,6 +1090,7 @@ bool libretro::Core::setControllerInfo(const struct retro_controller_info* data)
       }
     }
 
+    info->num_types = type - types;
     _ports[i] = RETRO_DEVICE_NONE;
   }
 

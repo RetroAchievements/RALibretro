@@ -1482,7 +1482,6 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     case IDM_SYSTEM_MEDNAFENNGP:
     case IDM_SYSTEM_MEDNAFENVB:
     case IDM_SYSTEM_FBALPHA:
-    case IDM_SYSTEM_MUPEN64PLUS:
       {
         static Emulator emulators[] =
         {
