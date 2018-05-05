@@ -22,6 +22,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <SDL_timer.h>
 #include <string.h>
 
+#define TAG "[AUD] "
+
 bool Fifo::init(size_t size)
 {
   _mutex = SDL_CreateMutex();
@@ -163,12 +165,12 @@ bool Audio::setRate(double rate)
 
   if (_resampler == NULL)
   {
-    _logger->printf(RETRO_LOG_ERROR, "speex_resampler_init: %s", speex_resampler_strerror(error));
+    _logger->error(TAG "speex_resampler_init: %s", speex_resampler_strerror(error));
     return false;
   }
   else
   {
-    _logger->printf(RETRO_LOG_INFO, "Resampler initialized to convert from %f to %f", _coreRate, _sampleRate);
+    _logger->info(TAG "Resampler initialized to convert from %f to %f", _coreRate, _sampleRate);
   }
 
   return true;
@@ -193,7 +195,7 @@ void Audio::mix(const int16_t* samples, size_t frames)
 
   if (output == NULL)
   {
-    _logger->printf(RETRO_LOG_ERROR, "Error allocating output buffer");
+    _logger->error(TAG "Error allocating output buffer");
     return;
   }
 
@@ -202,7 +204,7 @@ void Audio::mix(const int16_t* samples, size_t frames)
   if (error != RESAMPLER_ERR_SUCCESS)
   {
     memset(output, 0, out_len * 2);
-    _logger->printf(RETRO_LOG_ERROR, "speex_resampler_process_int: %s", speex_resampler_strerror(error));
+    _logger->error(TAG "speex_resampler_process_int: %s", speex_resampler_strerror(error));
   }
 
   size_t size = out_len * 2;
