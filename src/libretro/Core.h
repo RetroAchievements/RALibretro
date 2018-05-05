@@ -112,13 +112,6 @@ namespace libretro
     bool initAV();
     void reset();
     
-    // Logging functions
-    void log(enum retro_log_level level, const char*, va_list) const;
-    void debug(const char*, ...) const;
-    void info(const char*, ...) const;
-    void warn(const char*, ...) const;
-    void error(const char*, ...) const;
-
     // Configuration
     const char* getLibretroPath() const;
 

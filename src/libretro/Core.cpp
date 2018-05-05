@@ -280,13 +280,13 @@ bool libretro::Core::loadGame(const char* game_path, void* data, size_t size)
 
   if (game_path == NULL)
   {
-    error("Can't load game data without a ROM path");
+    _logger->error("[CRE] Can't load game data without a ROM path");
     goto error;
   }
 
   if (_supportsNoGame)
   {
-    error("Core doesn't take a content to run");
+    _logger->error("[CRE] Core doesn't take a content to run");
     goto error;
   }
   
@@ -298,11 +298,11 @@ bool libretro::Core::loadGame(const char* game_path, void* data, size_t size)
 
   if (!_core.loadGame(&game))
   {
-    error("Error loading content");
+    _logger->error("[CRE] Error loading content");
     goto error;
   }
 
-  info("Content \"%s\" loaded", game_path);
+  _logger->info("[CRE] Content \"%s\" loaded", game_path);
 
   if (!initAV())
   {
@@ -443,12 +443,12 @@ bool libretro::Core::initCore()
     return false;
   }
 
-  debug("retro_system_info");
-  debug("  library_name:     %s", _systemInfo.library_name);
-  debug("  library_version:  %s", _systemInfo.library_version);
-  debug("  valid_extensions: %s", _systemInfo.valid_extensions);
-  debug("  need_fullpath:    %s", _systemInfo.need_fullpath ? "true" : "false");
-  debug("  block_extract:    %s", _systemInfo.block_extract ? "true" : "false");
+  _logger->debug("[CRE] retro_system_info");
+  _logger->debug("[CRE]   library_name:     %s", _systemInfo.library_name);
+  _logger->debug("[CRE]   library_version:  %s", _systemInfo.library_version);
+  _logger->debug("[CRE]   valid_extensions: %s", _systemInfo.valid_extensions);
+  _logger->debug("[CRE]   need_fullpath:    %s", _systemInfo.need_fullpath ? "true" : "false");
+  _logger->debug("[CRE]   block_extract:    %s", _systemInfo.block_extract ? "true" : "false");
 
   _core.setEnvironment(s_environmentCallback);
   _core.init();
@@ -472,14 +472,14 @@ bool libretro::Core::initAV()
   
   _core.getSystemAVInfo(&_systemAVInfo);
 
-  debug("retro_system_av_info");
-  debug("  base_width   = %u", _systemAVInfo.geometry.base_width);
-  debug("  base_height  = %u", _systemAVInfo.geometry.base_height);
-  debug("  max_width    = %u", _systemAVInfo.geometry.max_width);
-  debug("  max_height   = %u", _systemAVInfo.geometry.max_height);
-  debug("  aspect_ratio = %f", _systemAVInfo.geometry.aspect_ratio);
-  debug("  fps          = %f", _systemAVInfo.timing.fps);
-  debug("  sample_rate  = %f", _systemAVInfo.timing.sample_rate);
+  _logger->debug("[CRE] retro_system_av_info");
+  _logger->debug("[CRE]   base_width   = %u", _systemAVInfo.geometry.base_width);
+  _logger->debug("[CRE]   base_height  = %u", _systemAVInfo.geometry.base_height);
+  _logger->debug("[CRE]   max_width    = %u", _systemAVInfo.geometry.max_width);
+  _logger->debug("[CRE]   max_height   = %u", _systemAVInfo.geometry.max_height);
+  _logger->debug("[CRE]   aspect_ratio = %f", _systemAVInfo.geometry.aspect_ratio);
+  _logger->debug("[CRE]   fps          = %f", _systemAVInfo.timing.fps);
+  _logger->debug("[CRE]   sample_rate  = %f", _systemAVInfo.timing.sample_rate);
 
   if (_systemAVInfo.geometry.aspect_ratio <= 0.0f)
   {
@@ -535,43 +535,6 @@ void libretro::Core::reset()
   memset(&_calls, 0, sizeof(_calls));
 }
 
-void libretro::Core::log(enum retro_log_level level, const char* fmt, va_list args) const
-{
-  _logger->vprintf(level, fmt, args);
-}
-
-void libretro::Core::debug(const char* fmt, ...) const
-{
-  va_list args;
-  va_start(args, fmt);
-  log(RETRO_LOG_DEBUG, fmt, args);
-  va_end(args);
-}
-
-void libretro::Core::info(const char* fmt, ...) const
-{
-  va_list args;
-  va_start(args, fmt);
-  log(RETRO_LOG_INFO, fmt, args);
-  va_end(args);
-}
-
-void libretro::Core::warn(const char* fmt, ...) const
-{
-  va_list args;
-  va_start(args, fmt);
-  log(RETRO_LOG_WARN, fmt, args);
-  va_end(args);
-}
-
-void libretro::Core::error(const char* fmt, ...) const
-{
-  va_list args;
-  va_start(args, fmt);
-  log(RETRO_LOG_ERROR, fmt, args);
-  va_end(args);
-}
-
 const char* libretro::Core::getLibretroPath() const
 {
   return _libretroPath;
@@ -616,7 +579,7 @@ bool libretro::Core::setMessage(const struct retro_message* data)
 
 bool libretro::Core::shutdown()
 {
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error("[CRE] %s isn't implemented", __FUNCTION__);
   return false;
 }
 
@@ -637,7 +600,7 @@ bool libretro::Core::setPixelFormat(enum retro_pixel_format data)
   switch (data)
   {
   case RETRO_PIXEL_FORMAT_0RGB1555:
-    warn("Pixel format 0RGB1555 is deprecated");
+    _logger->warn("[CRE] Pixel format 0RGB1555 is deprecated");
     // fallthrough
   case RETRO_PIXEL_FORMAT_XRGB8888:
   case RETRO_PIXEL_FORMAT_RGB565:
@@ -646,7 +609,7 @@ bool libretro::Core::setPixelFormat(enum retro_pixel_format data)
   
   case RETRO_PIXEL_FORMAT_UNKNOWN:
   default:
-    error("Unsupported pixel format %u", data);
+    _logger->error("[CRE] Unsupported pixel format %u", data);
     return false;
   }
 }
@@ -681,14 +644,14 @@ bool libretro::Core::setInputDescriptors(const struct retro_input_descriptor* da
     }
   }
 
-  debug("retro_input_descriptor");
-  debug("  port device index id description");
+  _logger->debug("[CRE] retro_input_descriptor");
+  _logger->debug("[CRE]   port device index id description");
 
   desc = _inputDescriptors;
 
   for (unsigned i = 0; i < _inputDescriptorsCount; i++, desc++)
   {
-    debug("  %4u %6u %5u %2u %s", desc->port, desc->device, desc->index, desc->id, desc->description);
+    _logger->debug("[CRE]   %4u %6u %5u %2u %s", desc->port, desc->device, desc->index, desc->id, desc->description);
   }
 
   _input->setInputDescriptors(_inputDescriptors, _inputDescriptorsCount);
@@ -698,14 +661,14 @@ bool libretro::Core::setInputDescriptors(const struct retro_input_descriptor* da
 bool libretro::Core::setKeyboardCallback(const struct retro_keyboard_callback* data)
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error("[CRE] %s isn't implemented", __FUNCTION__);
   return true;
 }
 
 bool libretro::Core::setDiskControlInterface(const struct retro_disk_control_callback* data)
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error("[CRE] %s isn't implemented", __FUNCTION__);
   return false;
 }
 
@@ -731,26 +694,26 @@ bool libretro::Core::setHWRender(struct retro_hw_render_callback* data)
   
   if (!_video->supportsContext(data->context_type))
   {
-    error("Context type not supported: %s", context_type);
+    _logger->error("[CRE] Context type not supported: %s", context_type);
     return false;
   }
 
   data->get_current_framebuffer = s_getCurrentFramebuffer;
   data->get_proc_address = s_getProcAddress;
   
-  debug("retro_hw_render_callback");
-  debug("  context_type:            %s", context_type);
-  debug("  context_reset:           %p", data->context_reset);
-  debug("  get_current_framebuffer: %p", data->get_current_framebuffer);
-  debug("  get_proc_address:        %p", data->get_proc_address);
-  debug("  depth:                   %s", data->depth ? "true" : "false");
-  debug("  stencil:                 %s", data->stencil ? "true" : "false");
-  debug("  bottom_left_origin:      %s", data->bottom_left_origin ? "true" : "false");
-  debug("  version_major:           %u", data->version_major);
-  debug("  version_minor:           %u", data->version_minor);
-  debug("  cache_context:           %s", data->cache_context ? "true" : "false");
-  debug("  context_destroy:         %p", data->context_destroy);
-  debug("  debug_context:           %s", data->debug_context ? "true" : "false");
+  _logger->debug("[CRE] retro_hw_render_callback");
+  _logger->debug("[CRE]   context_type:            %s", context_type);
+  _logger->debug("[CRE]   context_reset:           %p", data->context_reset);
+  _logger->debug("[CRE]   get_current_framebuffer: %p", data->get_current_framebuffer);
+  _logger->debug("[CRE]   get_proc_address:        %p", data->get_proc_address);
+  _logger->debug("[CRE]   depth:                   %s", data->depth ? "true" : "false");
+  _logger->debug("[CRE]   stencil:                 %s", data->stencil ? "true" : "false");
+  _logger->debug("[CRE]   bottom_left_origin:      %s", data->bottom_left_origin ? "true" : "false");
+  _logger->debug("[CRE]   version_major:           %u", data->version_major);
+  _logger->debug("[CRE]   version_minor:           %u", data->version_minor);
+  _logger->debug("[CRE]   cache_context:           %s", data->cache_context ? "true" : "false");
+  _logger->debug("[CRE]   context_destroy:         %p", data->context_destroy);
+  _logger->debug("[CRE]   debug_context:           %s", data->debug_context ? "true" : "false");
   
   _hardwareRenderCallback = *data;
   _needsHardwareRender = true;
@@ -794,13 +757,13 @@ bool libretro::Core::setVariables(const struct retro_variable* data)
     }
   }
 
-  debug("retro_variable");
+  _logger->debug("[CRE] retro_variable");
   
   var = _variables;
 
   for (unsigned i = 0; i < _variablesCount; i++, var++)
   {
-    debug("  %s: %s", var->key, var->value);
+    _logger->debug("[CRE]   %s: %s", var->key, var->value);
   }
 
   _config->setVariables(_variables, _variablesCount);
@@ -828,42 +791,42 @@ bool libretro::Core::getLibretroPath(const char** data) const
 bool libretro::Core::setFrameTimeCallback(const struct retro_frame_time_callback* data)
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error("[CRE] %s isn't implemented", __FUNCTION__);
   return false;
 }
 
 bool libretro::Core::setAudioCallback(const struct retro_audio_callback* data)
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error("[CRE] %s isn't implemented", __FUNCTION__);
   return false;
 }
 
 bool libretro::Core::getRumbleInterface(struct retro_rumble_interface* data) const
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error("[CRE] %s isn't implemented", __FUNCTION__);
   return false;
 }
 
 bool libretro::Core::getInputDeviceCapabilities(uint64_t* data) const
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error("[CRE] %s isn't implemented", __FUNCTION__);
   return false;
 }
 
 bool libretro::Core::getSensorInterface(struct retro_sensor_interface* data) const
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error("[CRE] %s isn't implemented", __FUNCTION__);
   return false;
 }
 
 bool libretro::Core::getCameraInterface(struct retro_camera_callback* data) const
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error("[CRE] %s isn't implemented", __FUNCTION__);
   return false;
 }
 
@@ -876,14 +839,14 @@ bool libretro::Core::getLogInterface(struct retro_log_callback* data) const
 bool libretro::Core::getPerfInterface(struct retro_perf_callback* data) const
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error("[CRE] %s isn't implemented", __FUNCTION__);
   return false;
 }
 
 bool libretro::Core::getLocationInterface(struct retro_location_callback* data) const
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error("[CRE] %s isn't implemented", __FUNCTION__);
   return false;
 }
 
@@ -903,15 +866,15 @@ bool libretro::Core::setSystemAVInfo(const struct retro_system_av_info* data)
 {
   _systemAVInfo = *data;
 
-  debug("retro_system_av_info");
+  _logger->debug("[CRE] retro_system_av_info");
 
-  debug("  base_width   = %u", _systemAVInfo.geometry.base_width);
-  debug("  base_height  = %u", _systemAVInfo.geometry.base_height);
-  debug("  max_width    = %u", _systemAVInfo.geometry.max_width);
-  debug("  max_height   = %u", _systemAVInfo.geometry.max_height);
-  debug("  aspect_ratio = %f", _systemAVInfo.geometry.aspect_ratio);
-  debug("  fps          = %f", _systemAVInfo.timing.fps);
-  debug("  sample_rate  = %f", _systemAVInfo.timing.sample_rate);
+  _logger->debug("[CRE]   base_width   = %u", _systemAVInfo.geometry.base_width);
+  _logger->debug("[CRE]   base_height  = %u", _systemAVInfo.geometry.base_height);
+  _logger->debug("[CRE]   max_width    = %u", _systemAVInfo.geometry.max_width);
+  _logger->debug("[CRE]   max_height   = %u", _systemAVInfo.geometry.max_height);
+  _logger->debug("[CRE]   aspect_ratio = %f", _systemAVInfo.geometry.aspect_ratio);
+  _logger->debug("[CRE]   fps          = %f", _systemAVInfo.timing.fps);
+  _logger->debug("[CRE]   sample_rate  = %f", _systemAVInfo.timing.sample_rate);
 
   if (_systemAVInfo.geometry.aspect_ratio <= 0.0f)
   {
@@ -931,7 +894,7 @@ bool libretro::Core::setSystemAVInfo(const struct retro_system_av_info* data)
 bool libretro::Core::setProcAddressCallback(const struct retro_get_proc_address_interface* data)
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error("[CRE] %s isn't implemented", __FUNCTION__);
   return false;
 }
 
@@ -1007,32 +970,32 @@ bool libretro::Core::setSubsystemInfo(const struct retro_subsystem_info* data)
     }
   }
 
-  debug("retro_subsystem_info");
+  _logger->debug("[CRE] retro_subsystem_info");
 
   info = (struct retro_subsystem_info*)data;
 
   for (unsigned i = 0; i < _subsystemInfoCount; i++, info++)
   {
-    debug("  desc  = %s", info->desc);
-    debug("  ident = %s", info->ident);
-    debug("  id    = %u", info->id);
+    _logger->debug("[CRE]   desc  = %s", info->desc);
+    _logger->debug("[CRE]   ident = %s", info->ident);
+    _logger->debug("[CRE]   id    = %u", info->id);
     
     const struct retro_subsystem_rom_info* roms = info->roms;
 
     for (unsigned j = 0; j < info->num_roms; j++, roms++)
     {
-      debug("    roms[%u].desc             = %s", j, roms->desc);
-      debug("    roms[%u].valid_extensions = %s", j, roms->valid_extensions);
-      debug("    roms[%u].need_fullpath    = %d", j, roms->need_fullpath);
-      debug("    roms[%u].block_extract    = %d", j, roms->block_extract);
-      debug("    roms[%u].required         = %d", j, roms->required);
+      _logger->debug("[CRE]     roms[%u].desc             = %s", j, roms->desc);
+      _logger->debug("[CRE]     roms[%u].valid_extensions = %s", j, roms->valid_extensions);
+      _logger->debug("[CRE]     roms[%u].need_fullpath    = %d", j, roms->need_fullpath);
+      _logger->debug("[CRE]     roms[%u].block_extract    = %d", j, roms->block_extract);
+      _logger->debug("[CRE]     roms[%u].required         = %d", j, roms->required);
       
       const struct retro_subsystem_memory_info* memory = roms->memory;
 
       for (unsigned k = 0; k < info->roms[j].num_memory; k++, memory++)
       {
-        debug("      memory[%u].type         = %u", k, memory->type);
-        debug("      memory[%u].extension    = %s", k, memory->extension);
+        _logger->debug("[CRE]       memory[%u].type         = %u", k, memory->type);
+        _logger->debug("[CRE]       memory[%u].extension    = %s", k, memory->extension);
       }
     }
   }
@@ -1089,8 +1052,8 @@ bool libretro::Core::setControllerInfo(const struct retro_controller_info* data)
     _ports[i] = RETRO_DEVICE_NONE;
   }
 
-  debug("retro_controller_info");
-  debug("  port id   desc");
+  _logger->debug("[CRE] retro_controller_info");
+  _logger->debug("[CRE]   port id   desc");
 
   info = _controllerInfo;
 
@@ -1101,7 +1064,7 @@ bool libretro::Core::setControllerInfo(const struct retro_controller_info* data)
 
     for (; type < end; type++)
     {
-      debug("  %4u %04x %s", i, type->id, type->desc);
+      _logger->debug("[CRE]   %4u %04x %s", i, type->id, type->desc);
     }
   }
 
@@ -1142,8 +1105,8 @@ bool libretro::Core::setMemoryMaps(const struct retro_memory_map* data)
 
   preprocessMemoryDescriptors(descriptors, _memoryMap.num_descriptors);
 
-  debug("retro_memory_map");
-  debug("  ndx flags  ptr      offset   start    select   disconn  len      addrspace");
+  _logger->debug("[CRE] retro_memory_map");
+  _logger->debug("[CRE]   ndx flags  ptr      offset   start    select   disconn  len      addrspace");
 
   const struct retro_memory_descriptor* end = descriptors + _memoryMap.num_descriptors;
 
@@ -1193,7 +1156,7 @@ bool libretro::Core::setMemoryMaps(const struct retro_memory_map* data)
     flags[5] = (descriptors->flags & RETRO_MEMDESC_CONST) ? 'C' : 'c';
     flags[6] = 0;
 
-    debug("  %3u %s %p %08X %08X %08X %08X %08X %s", i, flags, descriptors->ptr, descriptors->offset, descriptors->start, descriptors->select, descriptors->disconnect, descriptors->len, descriptors->addrspace ? descriptors->addrspace : "");
+    _logger->debug("[CRE]   %3u %s %p %08X %08X %08X %08X %08X %s", i, flags, descriptors->ptr, descriptors->offset, descriptors->start, descriptors->select, descriptors->disconnect, descriptors->len, descriptors->addrspace ? descriptors->addrspace : "");
   }
 
   return true;
@@ -1205,10 +1168,10 @@ bool libretro::Core::setGeometry(const struct retro_game_geometry* data)
   _systemAVInfo.geometry.base_height = data->base_height;
   _systemAVInfo.geometry.aspect_ratio = data->aspect_ratio;
 
-  debug("retro_game_geometry");
-  debug("  base_width   = %u", data->base_width);
-  debug("  base_height  = %u", data->base_height);
-  debug("  aspect_ratio = %f", data->aspect_ratio);
+  _logger->debug("[CRE] retro_game_geometry");
+  _logger->debug("[CRE]   base_width   = %u", data->base_width);
+  _logger->debug("[CRE]   base_height  = %u", data->base_height);
+  _logger->debug("[CRE]   aspect_ratio = %f", data->aspect_ratio);
 
   if (_systemAVInfo.geometry.aspect_ratio <= 0.0f)
   {
@@ -1228,7 +1191,7 @@ bool libretro::Core::setGeometry(const struct retro_game_geometry* data)
 bool libretro::Core::getUsername(const char** data) const
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error("[CRE] %s isn't implemented", __FUNCTION__);
   return false;
 }
 
@@ -1241,14 +1204,14 @@ bool libretro::Core::getLanguage(unsigned* data) const
 bool libretro::Core::getCurrentSoftwareFramebuffer(struct retro_framebuffer* data) const
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error("[CRE] %s isn't implemented", __FUNCTION__);
   return false;
 }
 
 bool libretro::Core::getHWRenderInterface(const struct retro_hw_render_interface** data) const
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error("[CRE] %s isn't implemented", __FUNCTION__);
   return false;
 }
 
@@ -1330,7 +1293,7 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
   char name[128];
 
   getEnvName(name, sizeof(name), cmd);
-  debug("Calling %s", name);
+  _logger->debug("[CRE] Calling %s", name);
 
   switch (cmd)
   {
@@ -1495,7 +1458,7 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
 
     if ((_calls[cmd / 8] & (1 << (cmd & 7))) == 0)
     {
-      error("Unimplemented env call: %s (%u)", name, cmd);
+      _logger->error("[CRE] Unimplemented env call: %s (%u)", name, cmd);
       _calls[cmd / 8] |= 1 << (cmd & 7);
     }
 
@@ -1504,11 +1467,11 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
 
   if (ret)
   {
-    debug("Called  %s -> %d", name, ret);
+    _logger->debug("[CRE] Called  %s -> %d", name, ret);
   }
   else
   {
-    error("Called  %s -> %d", name, ret);
+    _logger->error("[CRE] Called  %s -> %d", name, ret);
   }
 
   return ret;
@@ -1608,7 +1571,7 @@ void libretro::Core::s_logCallback(enum retro_log_level level, const char *fmt, 
 {
   va_list args;
   va_start(args, fmt);
-  s_instance->log(level, fmt, args);
+  s_instance->_logger->vprintf(level, fmt, args);
   va_end(args);
 }
 
