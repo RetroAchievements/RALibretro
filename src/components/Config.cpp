@@ -63,11 +63,11 @@ bool Config::init(libretro::LoggerComponent* logger)
   mkdir(_systemFolder.c_str());
   mkdir(_screenshotsFolder.c_str());
 
-  _logger->printf(RETRO_LOG_INFO, "[CFG] Root folder:        %s", _rootFolder.c_str());
-  _logger->printf(RETRO_LOG_INFO, "[CFG] Assets folder:      %s", _assetsFolder.c_str());
-  _logger->printf(RETRO_LOG_INFO, "[CFG] Save folder:        %s", _saveFolder.c_str());
-  _logger->printf(RETRO_LOG_INFO, "[CFG] System folder:      %s", _systemFolder.c_str());
-  _logger->printf(RETRO_LOG_INFO, "[CFG] Screenshots folder: %s", _screenshotsFolder.c_str());
+  _logger->info("[CFG] Root folder:        %s", _rootFolder.c_str());
+  _logger->info("[CFG] Assets folder:      %s", _assetsFolder.c_str());
+  _logger->info("[CFG] Save folder:        %s", _saveFolder.c_str());
+  _logger->info("[CFG] System folder:      %s", _systemFolder.c_str());
+  _logger->info("[CFG] Screenshots folder: %s", _screenshotsFolder.c_str());
 
   // TODO This should be done in main.cpp as soon as possible
   SetCurrentDirectory(_rootFolder.c_str());
@@ -141,7 +141,7 @@ void Config::setVariables(const struct retro_variable* variables, unsigned count
         if (var._options[i] == found->second)
         {
           var._selected = i;
-          _logger->printf(RETRO_LOG_INFO, "[CFG] Variable %s found in selections, set to \"%s\"", var._key.c_str(), found->second.c_str());
+          _logger->info("[CFG] Variable %s found in selections, set to \"%s\"", var._key.c_str(), found->second.c_str());
           break;
         }
       }
@@ -167,11 +167,11 @@ const char* Config::getVariable(const char* variable)
   if (found != _selections.cend())
   {
     const char* value = found->second.c_str();
-    _logger->printf(RETRO_LOG_INFO, "[CFG] Variable %s is \"%s\"", variable, value);
+    _logger->info("[CFG] Variable %s is \"%s\"", variable, value);
     return value;
   }
 
-  _logger->printf(RETRO_LOG_ERROR, "[CFG] Variable %s not found", variable);
+  _logger->error("[CFG] Variable %s not found", variable);
   return NULL;
 }
 
@@ -218,7 +218,7 @@ void Config::deserialize(const char* json)
     {
       std::string option = std::string(str, num);
       ud->self->_selections[ud->key] = option;
-      ud->self->_logger->printf(RETRO_LOG_INFO, "[CFG] Selection %s deserialized as \"%s\"", ud->key.c_str(), option.c_str());
+      ud->self->_logger->info("[CFG] Selection %s deserialized as \"%s\"", ud->key.c_str(), option.c_str());
     }
 
     return 0;
