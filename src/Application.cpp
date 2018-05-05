@@ -704,6 +704,7 @@ moved_recent_item:
 
   _memoryBanks[0].count = 0;
   _memoryBanks[1].count = 0;
+  unsigned numBanks = 0;
 
   switch (_emulator)
   {
@@ -721,24 +722,18 @@ moved_recent_item:
   case Emulator::kFBAlpha:
     data = _core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
     size = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
-    registerMemoryRegion(0, data, size);
-    RA_InstallMemoryBank(0, (void*)::memoryRead0, (void*)::memoryWrite0, size);
-    _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
+    registerMemoryRegion(&numBanks, 0, data, size);
     break;
 
   case Emulator::kSnes9x:
   case Emulator::kMednafenVb:
     data = _core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
     size = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
-    registerMemoryRegion(0, data, size);
-    RA_InstallMemoryBank(0, (void*)::memoryRead0, (void*)::memoryWrite0, size);
-    _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
+    registerMemoryRegion(&numBanks, 0, data, size);
 
     data = _core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
     size = _core.getMemorySize(RETRO_MEMORY_SAVE_RAM);
-    registerMemoryRegion(1, data, size);
-    RA_InstallMemoryBank(1, (void*)::memoryRead1, (void*)::memoryWrite1, size);
-    _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
+    registerMemoryRegion(&numBanks, 1, data, size);
 
     break;
   
@@ -769,11 +764,8 @@ moved_recent_item:
 
       for (unsigned i = 0; i < 64; i++)
       {
-        registerMemoryRegion(0, pointer[i], 1024);
+        registerMemoryRegion(&numBanks, 0, pointer[i], 1024);
       }
-
-      RA_InstallMemoryBank(0, (void*)::memoryRead0, (void*)::memoryWrite0, 65536);
-      _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
     }
 
     break;
@@ -790,18 +782,14 @@ moved_recent_item:
           // IRAM: Internal RAM (on-chip work RAM)
           data = mmap->descriptors[i].ptr;
           size = mmap->descriptors[i].len;
-          registerMemoryRegion(0, data, size);
-          RA_InstallMemoryBank(0, (void*)::memoryRead0, (void*)::memoryWrite0, size);
-          _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
+          registerMemoryRegion(&numBanks, 0, data, size);
         }
         else if (mmap->descriptors[i].start == 0x02000000U)
         {
           // WRAM: On-board Work RAM
           data = mmap->descriptors[i].ptr;
           size = mmap->descriptors[i].len;
-          registerMemoryRegion(1, data, size);
-          RA_InstallMemoryBank(1, (void*)::memoryRead1, (void*)::memoryWrite1, size);
-          _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
+          registerMemoryRegion(&numBanks, 1, data, size);
         }
       }
     }
@@ -809,12 +797,39 @@ moved_recent_item:
     {
       data = _core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
       size = 32768;
-      registerMemoryRegion(0, data, size);
-      RA_InstallMemoryBank(0, (void*)::memoryRead0, (void*)::memoryWrite0, size);
-      _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
+      registerMemoryRegion(&numBanks, 0, data, size);
     }
 
     break;
+  }
+
+  for (unsigned bank = 0; bank < numBanks; bank++)
+  {
+    MemoryBank* mb = _memoryBanks + bank;
+    size_t size = 0;
+
+    for (size_t i = 0; i < mb->count; i++)
+    {
+      size += mb->regions[i].size;
+    }
+
+    if (size == 0)
+    {
+      break;
+    }
+
+    switch (bank)
+    {
+    case 0:
+      RA_InstallMemoryBank(0, (void*)::memoryRead0, (void*)::memoryWrite0, size);
+      break;
+
+    case 1:
+      RA_InstallMemoryBank(1, (void*)::memoryRead1, (void*)::memoryWrite1, size);
+      break;
+    }
+
+    _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes on bank %u", size, bank);
   }
 
   _validSlots = 0;
@@ -1058,14 +1073,22 @@ void Application::enableRecent()
   }
 }
 
-void Application::registerMemoryRegion(unsigned bank, void* data, size_t size)
+void Application::registerMemoryRegion(unsigned* max, unsigned bank, void* data, size_t size)
 {
-  MemoryBank* mb = _memoryBanks + bank;
-  mb->regions[mb->count].data = (uint8_t*)data;
-  mb->regions[mb->count].size = size;
-  mb->count++;
+  if (data != NULL && size != 0)
+  {
+    MemoryBank* mb = _memoryBanks + bank;
+    mb->regions[mb->count].data = (uint8_t*)data;
+    mb->regions[mb->count].size = size;
+    mb->count++;
 
-  _logger.printf(RETRO_LOG_INFO, "Registered %7zu bytes at 0x%08x on bank %u", size, data, bank);
+    if ((bank + 1) > *max)
+    {
+      *max = bank + 1;
+    }
+
+    _logger.printf(RETRO_LOG_INFO, "Registered %7zu bytes at 0x%08x on bank %u", size, data, bank);
+  }
 }
 
 std::string Application::getSRamPath()
