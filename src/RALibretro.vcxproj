@@ -61,8 +61,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\bin\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\$(Configuration)\</IntDir>
+    <OutDir>$(ProjectDir)..\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)..\$(Configuration)\</IntDir>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
