@@ -234,5 +234,7 @@ namespace libretro
     unsigned*                       _ports;
 
     struct retro_memory_map         _memoryMap;
+
+    uint8_t                         _calls[256 / 8];
   };
 }

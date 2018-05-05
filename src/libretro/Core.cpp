@@ -266,17 +266,11 @@ bool libretro::Core::loadCore(const char* core_path)
     return false;
   }
   
-  info("Opening core \"%s\"", core_path);
-
-  char message[512];
-  
-  if (!_core.load(core_path, message, sizeof(message)))
+  if (!_core.load(_logger, core_path))
   {
-    error("Error opening core \"%s\": %s", core_path, message);
     return false;
   }
 
-  info("Core \"%s\" loaded", core_path);
   return initCore();
 }
 
@@ -538,6 +532,7 @@ void libretro::Core::reset()
   _controllerInfo = NULL;
   _ports = NULL;
   memset(&_memoryMap, 0, sizeof(_memoryMap));
+  memset(&_calls, 0, sizeof(_calls));
 }
 
 void libretro::Core::log(enum retro_log_level level, const char* fmt, va_list args) const
@@ -1263,134 +1258,260 @@ bool libretro::Core::setSupportAchievements(bool data)
   return true;
 }
 
+static void getEnvName(char* name, size_t size, unsigned cmd)
+{
+  static const char* names[] =
+  {
+    "0",
+    "SET_ROTATION",
+    "GET_OVERSCAN",
+    "GET_CAN_DUPE",
+    "4",
+    "5",
+    "SET_MESSAGE",
+    "SHUTDOWN",
+    "SET_PERFORMANCE_LEVEL",
+    "GET_SYSTEM_DIRECTORY",
+    "SET_PIXEL_FORMAT",
+    "SET_INPUT_DESCRIPTORS",
+    "SET_KEYBOARD_CALLBACK",
+    "SET_DISK_CONTROL_INTERFACE",
+    "SET_HW_RENDER",
+    "GET_VARIABLE",
+    "SET_VARIABLES",
+    "GET_VARIABLE_UPDATE",
+    "SET_SUPPORT_NO_GAME",
+    "GET_LIBRETRO_PATH",
+    "20",
+    "SET_FRAME_TIME_CALLBACK",
+    "SET_AUDIO_CALLBACK",
+    "GET_RUMBLE_INTERFACE",
+    "GET_INPUT_DEVICE_CAPABILITIES",
+    "GET_SENSOR_INTERFACE",
+    "GET_CAMERA_INTERFACE",
+    "GET_LOG_INTERFACE",
+    "GET_PERF_INTERFACE",
+    "GET_LOCATION_INTERFACE",
+    "GET_CORE_ASSETS_DIRECTORY",
+    "GET_SAVE_DIRECTORY",
+    "SET_SYSTEM_AV_INFO",
+    "SET_PROC_ADDRESS_CALLBACK",
+    "SET_SUBSYSTEM_INFO",
+    "SET_CONTROLLER_INFO",
+    "SET_MEMORY_MAPS",
+    "SET_GEOMETRY",
+    "GET_USERNAME",
+    "GET_LANGUAGE",
+    "GET_CURRENT_SOFTWARE_FRAMEBUFFER",
+    "GET_HW_RENDER_INTERFACE",
+    "SET_SUPPORT_ACHIEVEMENTS",
+    "SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE",
+    "SET_SERIALIZATION_QUIRKS",
+    "GET_VFS_INTERFACE",
+    "GET_LED_INTERFACE",
+    "GET_AUDIO_VIDEO_ENABLE"
+  };
+
+  cmd &= ~(RETRO_ENVIRONMENT_EXPERIMENTAL | RETRO_ENVIRONMENT_PRIVATE);
+
+  if (cmd < sizeof(names) / sizeof(names[0]))
+  {
+    snprintf(name, size, "%s (%u)", names[cmd], cmd);
+  }
+  else
+  {
+    snprintf(name, size, "%u", cmd);
+  }
+}
+
 bool libretro::Core::environmentCallback(unsigned cmd, void* data)
 {
+  bool ret;
+  char name[128];
+
+  getEnvName(name, sizeof(name), cmd);
+  debug("Calling %s", name);
+
   switch (cmd)
   {
   case RETRO_ENVIRONMENT_SET_ROTATION:
-    return setRotation(*(const unsigned*)data);
+    ret = setRotation(*(const unsigned*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_OVERSCAN:
-    return getOverscan((bool*)data);
+    ret = getOverscan((bool*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_CAN_DUPE:
-    return getCanDupe((bool*)data);
+    ret = getCanDupe((bool*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_MESSAGE:
-    return setMessage((const struct retro_message*)data);
+    ret = setMessage((const struct retro_message*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SHUTDOWN:
-    return shutdown();
+    ret = shutdown();
+    break;
 
   case RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL:
-    return setPerformanceLevel(*(unsigned*)data);
+    ret = setPerformanceLevel(*(unsigned*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY:
-    return getSystemDirectory((const char**)data);
+    ret = getSystemDirectory((const char**)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT:
-    return setPixelFormat(*(enum retro_pixel_format*)data);
+    ret = setPixelFormat(*(enum retro_pixel_format*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS:
-    return setInputDescriptors((const struct retro_input_descriptor*)data);
+    ret = setInputDescriptors((const struct retro_input_descriptor*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK:
-    return setKeyboardCallback((const struct retro_keyboard_callback*)data);
+    ret = setKeyboardCallback((const struct retro_keyboard_callback*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE:
-    return setDiskControlInterface((const struct retro_disk_control_callback*)data);
+    ret = setDiskControlInterface((const struct retro_disk_control_callback*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_HW_RENDER:
-    return setHWRender((struct retro_hw_render_callback*)data);
+    ret = setHWRender((struct retro_hw_render_callback*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_VARIABLE:
-    return getVariable((struct retro_variable*)data);
+    ret = getVariable((struct retro_variable*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_VARIABLES:
-    return setVariables((const struct retro_variable*)data);
+    ret = setVariables((const struct retro_variable*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE:
-    return getVariableUpdate((bool*)data);
+    ret = getVariableUpdate((bool*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME:
-    return setSupportNoGame(*(bool*)data);
+    ret = setSupportNoGame(*(bool*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_LIBRETRO_PATH:
-    return getLibretroPath((const char**)data);
+    ret = getLibretroPath((const char**)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK:
-    return setFrameTimeCallback((const struct retro_frame_time_callback*)data);
+    ret = setFrameTimeCallback((const struct retro_frame_time_callback*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK:
-    return setAudioCallback((const struct retro_audio_callback*)data);
+    ret = setAudioCallback((const struct retro_audio_callback*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE:
-    return getRumbleInterface((struct retro_rumble_interface*)data);
+    ret = getRumbleInterface((struct retro_rumble_interface*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES:
-    return getInputDeviceCapabilities((uint64_t*)data);
+    ret = getInputDeviceCapabilities((uint64_t*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE:
-    return getSensorInterface((struct retro_sensor_interface*)data);
+    ret = getSensorInterface((struct retro_sensor_interface*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE:
-    return getCameraInterface((struct retro_camera_callback*)data);
+    ret = getCameraInterface((struct retro_camera_callback*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_LOG_INTERFACE:
-    return getLogInterface((struct retro_log_callback*)data);
+    ret = getLogInterface((struct retro_log_callback*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_PERF_INTERFACE:
-    return getPerfInterface((struct retro_perf_callback*)data);
+    ret = getPerfInterface((struct retro_perf_callback*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE:
-    return getLocationInterface((struct retro_location_callback*)data);
+    ret = getLocationInterface((struct retro_location_callback*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY:
-    return getCoreAssetsDirectory((const char**)data);
+    ret = getCoreAssetsDirectory((const char**)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY:
-    return getSaveDirectory((const char**)data);
+    ret = getSaveDirectory((const char**)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO:
-    return setSystemAVInfo((const struct retro_system_av_info*)data);
+    ret = setSystemAVInfo((const struct retro_system_av_info*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK:
-    return setProcAddressCallback((const struct retro_get_proc_address_interface*)data);
+    ret = setProcAddressCallback((const struct retro_get_proc_address_interface*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO:
-    return setSubsystemInfo((const struct retro_subsystem_info*)data);
+    ret = setSubsystemInfo((const struct retro_subsystem_info*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_CONTROLLER_INFO:
-    return setControllerInfo((const struct retro_controller_info*)data);
+    ret = setControllerInfo((const struct retro_controller_info*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_MEMORY_MAPS:
-    return setMemoryMaps((const struct retro_memory_map*)data);
+    ret = setMemoryMaps((const struct retro_memory_map*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_GEOMETRY:
-    return setGeometry((const struct retro_game_geometry*)data);
+    ret = setGeometry((const struct retro_game_geometry*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_USERNAME:
-    return getUsername((const char**)data);
+    ret = getUsername((const char**)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_LANGUAGE:
-    return getLanguage((unsigned*)data);
+    ret = getLanguage((unsigned*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER:
-    return getCurrentSoftwareFramebuffer((struct retro_framebuffer*)data);
+    ret = getCurrentSoftwareFramebuffer((struct retro_framebuffer*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE:
-    return getHWRenderInterface((const struct retro_hw_render_interface**)data);
+    ret = getHWRenderInterface((const struct retro_hw_render_interface**)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS:
-    return setSupportAchievements(*(bool*)data);
-
-  case RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE:
-    return false;
+    ret = setSupportAchievements(*(bool*)data);
+    break;
 
   default:
-    error("Invalid env call: %u", cmd);
-    return false;
+    cmd &= ~(RETRO_ENVIRONMENT_EXPERIMENTAL | RETRO_ENVIRONMENT_PRIVATE);
+
+    if ((_calls[cmd / 8] & (1 << (cmd & 7))) == 0)
+    {
+      error("Unimplemented env call: %s (%u)", name, cmd);
+      _calls[cmd / 8] |= 1 << (cmd & 7);
+    }
+
+    ret = false;
   }
+
+  if (ret)
+  {
+    debug("Called  %s -> %d", name, ret);
+  }
+  else
+  {
+    error("Called  %s -> %d", name, ret);
+  }
+
+  return ret;
 }
 
 void libretro::Core::videoRefreshCallback(const void* data, unsigned width, unsigned height, size_t pitch)
