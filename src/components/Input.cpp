@@ -24,6 +24,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #define KEYBOARD_ID -1
 
+#define TAG "[INP] "
+
 static const char* s_gameControllerDB[] =
 {
   // Updated on 2017-06-15
@@ -60,7 +62,7 @@ bool Input::init(libretro::LoggerComponent* logger)
   memset(keyb._state, 0, sizeof(keyb._state));
 
   _pads.insert(std::make_pair(keyb._id, keyb));
-  _logger->printf(RETRO_LOG_INFO, "Controller %s (%s) added", keyb._controllerName, keyb._joystickName);
+  _logger->info(TAG "Controller %s (%s) added", keyb._controllerName, keyb._joystickName);
 
   // Add controllers already connected
   int max = SDL_NumJoysticks();
@@ -114,7 +116,7 @@ void Input::addController(int which)
 
     if (pad._controller == NULL)
     {
-      _logger->printf(RETRO_LOG_ERROR, "Error opening the controller: %s", SDL_GetError());
+      _logger->error(TAG "Error opening the controller: %s", SDL_GetError());
       return;
     }
 
@@ -122,7 +124,7 @@ void Input::addController(int which)
 
     if (pad._joystick == NULL)
     {
-      _logger->printf(RETRO_LOG_ERROR, "Error getting the joystick: %s", SDL_GetError());
+      _logger->error(TAG "Error getting the joystick: %s", SDL_GetError());
       SDL_GameControllerClose(pad._controller);
       return;
     }
@@ -144,7 +146,7 @@ void Input::addController(int which)
     memset(pad._state, 0, sizeof(pad._state));
 
     _pads.insert(std::make_pair(pad._id, pad));
-    _logger->printf(RETRO_LOG_INFO, "Controller %s (%s) added", pad._controllerName, pad._joystickName);
+    _logger->info(TAG "Controller %s (%s) added", pad._controllerName, pad._joystickName);
   }
 }
 
@@ -279,7 +281,7 @@ void Input::setInputDescriptors(const struct retro_input_descriptor* descs, unsi
     }
     else
     {
-      _logger->printf(RETRO_LOG_WARN, "Port %u above %d limit", desc._port + 1, kMaxPorts);
+      _logger->warn(TAG "Port %u above %d limit", desc._port + 1, kMaxPorts);
     }
   }
 }
@@ -303,7 +305,7 @@ void Input::setControllerInfo(const struct retro_controller_info* rinfo, unsigne
         }
         else
         {
-          _logger->printf(RETRO_LOG_WARN, "Port %u above %d limit", port + 1, kMaxPorts);
+          _logger->warn(TAG "Port %u above %d limit", port + 1, kMaxPorts);
         }
       }
     }
@@ -375,7 +377,7 @@ void Input::removeController(const SDL_Event* event)
     SDL_GameControllerClose(pad->_controller);
     _pads.erase(it);
 
-    _logger->printf(RETRO_LOG_INFO, "Controller %s (%s) removed", pad->_controllerName, pad->_joystickName);
+    _logger->info(TAG "Controller %s (%s) removed", pad->_controllerName, pad->_joystickName);
 
     // Flag a pending update so the core will receive an event for this removal
     _updated = true;

@@ -36,6 +36,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#define TAG "[UTL] "
+
 size_t util::nextPow2(size_t v)
 {
   v--;
@@ -54,7 +56,7 @@ void* util::loadFile(Logger* logger, const std::string& path, size_t* size)
 
   if (stat(path.c_str(), &statbuf) != 0)
   {
-    logger->printf(RETRO_LOG_ERROR, "Error getting info from \"%s\": %s", path.c_str(), strerror(errno));
+    logger->error(TAG "Error getting info from \"%s\": %s", path.c_str(), strerror(errno));
     return NULL;
   }
 
@@ -63,7 +65,7 @@ void* util::loadFile(Logger* logger, const std::string& path, size_t* size)
 
   if (data == NULL)
   {
-    logger->printf(RETRO_LOG_ERROR, "Out of memory allocating %lu bytes to load \"%s\"", *size, path.c_str());
+    logger->error(TAG "Out of memory allocating %lu bytes to load \"%s\"", *size, path.c_str());
     return NULL;
   }
 
@@ -71,7 +73,7 @@ void* util::loadFile(Logger* logger, const std::string& path, size_t* size)
 
   if (file == NULL)
   {
-    logger->printf(RETRO_LOG_ERROR, "Error opening \"%s\": %s", path.c_str(), strerror(errno));
+    logger->error(TAG "Error opening \"%s\": %s", path.c_str(), strerror(errno));
     free(data);
     return NULL;
   }
@@ -80,7 +82,7 @@ void* util::loadFile(Logger* logger, const std::string& path, size_t* size)
 
   if (numread < 0 || numread != *size)
   {
-    logger->printf(RETRO_LOG_ERROR, "Error reading \"%s\": %s", path.c_str(), strerror(errno));
+    logger->error(TAG "Error reading \"%s\": %s", path.c_str(), strerror(errno));
     fclose(file);
     free(data);
     return NULL;
@@ -88,7 +90,7 @@ void* util::loadFile(Logger* logger, const std::string& path, size_t* size)
 
   fclose(file);
   *((uint8_t*)data + *size) = 0;
-  logger->printf(RETRO_LOG_INFO, "Read %zu bytes from \"%s\"", *size, path.c_str());
+  logger->info(TAG "Read %zu bytes from \"%s\"", *size, path.c_str());
   return data;
 }
 
@@ -98,19 +100,19 @@ bool util::saveFile(Logger* logger, const std::string& path, const void* data, s
 
   if (file == NULL)
   {
-    logger->printf(RETRO_LOG_ERROR, "Error opening file \"%s\": %s", path.c_str(), strerror(errno));
+    logger->error(TAG "Error opening file \"%s\": %s", path.c_str(), strerror(errno));
     return false;
   }
 
   if (fwrite(data, 1, size, file) != size)
   {
-    logger->printf(RETRO_LOG_ERROR, "Error writing file \"%s\": %s", path.c_str(), strerror(errno));
+    logger->error(TAG "Error writing file \"%s\": %s", path.c_str(), strerror(errno));
     fclose(file);
     return false;
   }
 
   fclose(file);
-  logger->printf(RETRO_LOG_INFO, "Wrote %zu bytes to \"%s\"", size, path.c_str());
+  logger->error(TAG "Wrote %zu bytes to \"%s\"", size, path.c_str());
   return true;
 }
 
@@ -300,13 +302,13 @@ const void* util::toRgb(Logger* logger, const void* data, unsigned width, unsign
 
   if (pixels == NULL)
   {
-    logger->printf(RETRO_LOG_ERROR, "Error allocating memory for the screenshot");
+    logger->error(TAG "Error allocating memory for the screenshot");
     return NULL;
   }
 
   if (format == RETRO_PIXEL_FORMAT_RGB565)
   {
-    logger->printf(RETRO_LOG_INFO, "Pixel format is RGB565, converting to 24-bits RGB");
+    logger->info(TAG "Pixel format is RGB565, converting to 24-bits RGB");
 
     uint16_t* source_rgba5650 = (uint16_t*)data;
     uint8_t* target_rgba8880 = (uint8_t*)pixels;
@@ -329,7 +331,7 @@ const void* util::toRgb(Logger* logger, const void* data, unsigned width, unsign
   }
   else if (format == RETRO_PIXEL_FORMAT_0RGB1555)
   {
-    logger->printf(RETRO_LOG_INFO, "Pixel format is 0RGB1565, converting to 24-bits RGB");
+    logger->info(TAG "Pixel format is 0RGB1565, converting to 24-bits RGB");
 
     uint16_t* source_argb1555 = (uint16_t*)data;
     uint8_t* target_rgba8880 = (uint8_t*)pixels;
@@ -352,7 +354,7 @@ const void* util::toRgb(Logger* logger, const void* data, unsigned width, unsign
   }
   else if (format == RETRO_PIXEL_FORMAT_XRGB8888)
   {
-    logger->printf(RETRO_LOG_INFO, "Pixel format is XRGB8888, converting to 24-bits RGB");
+    logger->info(TAG "Pixel format is XRGB8888, converting to 24-bits RGB");
 
     uint32_t* source_argb8888 = (uint32_t*)data;
     uint8_t* target_rgba8880 = (uint8_t*)pixels;
@@ -375,7 +377,7 @@ const void* util::toRgb(Logger* logger, const void* data, unsigned width, unsign
   }
   else
   {
-    logger->printf(RETRO_LOG_ERROR, "Unknown pixel format");
+    logger->error(TAG "Unknown pixel format");
     free(pixels);
     return NULL;
   }
@@ -395,7 +397,7 @@ void util::saveImage(Logger* logger, const std::string& path, const void* data, 
   stbi_write_png(path.c_str(), width, height, 3, pixels, 0);
   free((void*)pixels);
 
-  logger->printf(RETRO_LOG_INFO, "Wrote image %u x %u to %s", width, height, path.c_str());
+  logger->info(TAG "Wrote image %u x %u to %s", width, height, path.c_str());
 }
 
 const void* util::fromRgb(Logger* logger, const void* data, unsigned width, unsigned height, unsigned* pitch, enum retro_pixel_format format)
@@ -404,13 +406,13 @@ const void* util::fromRgb(Logger* logger, const void* data, unsigned width, unsi
 
   if (format == RETRO_PIXEL_FORMAT_RGB565)
   {
-    logger->printf(RETRO_LOG_INFO, "Converting from 24-bits RGB to RGB565");
+    logger->info(TAG "Converting from 24-bits RGB to RGB565");
 
     pixels = malloc(width * height * 2);
 
     if (pixels == NULL)
     {
-      logger->printf(RETRO_LOG_ERROR, "Error allocating memory for the screenshot");
+      logger->error(TAG "Error allocating memory for the screenshot");
       return NULL;
     }
 
@@ -437,13 +439,13 @@ const void* util::fromRgb(Logger* logger, const void* data, unsigned width, unsi
   }
   else if (format == RETRO_PIXEL_FORMAT_0RGB1555)
   {
-    logger->printf(RETRO_LOG_INFO, "Converting from 24-bits RGB to 0RGB1565");
+    logger->info(TAG "Converting from 24-bits RGB to 0RGB1565");
 
     pixels = malloc(width * height * 2);
 
     if (pixels == NULL)
     {
-      logger->printf(RETRO_LOG_ERROR, "Error allocating memory for the screenshot");
+      logger->error(TAG "Error allocating memory for the screenshot");
       return NULL;
     }
 
@@ -470,13 +472,13 @@ const void* util::fromRgb(Logger* logger, const void* data, unsigned width, unsi
   }
   else if (format == RETRO_PIXEL_FORMAT_XRGB8888)
   {
-    logger->printf(RETRO_LOG_INFO, "Converting from 24-bits RGB to XRGB8888");
+    logger->info(TAG "Converting from 24-bits RGB to XRGB8888");
 
     pixels = malloc(width * height * 4);
 
     if (pixels == NULL)
     {
-      logger->printf(RETRO_LOG_ERROR, "Error allocating memory for the screenshot");
+      logger->error(TAG "Error allocating memory for the screenshot");
       return NULL;
     }
 
@@ -502,7 +504,7 @@ const void* util::fromRgb(Logger* logger, const void* data, unsigned width, unsi
   }
   else
   {
-    logger->printf(RETRO_LOG_ERROR, "Unknown pixel format");
+    logger->error(TAG "Unknown pixel format");
     return NULL;
   }
 
@@ -514,7 +516,7 @@ const void* util::loadImage(Logger* logger, const std::string& path, unsigned* w
   int w, h;
   void* rgb888 = stbi_load(path.c_str(), &w, &h, NULL, STBI_rgb);
 
-  logger->printf(RETRO_LOG_INFO, "Read image %u x %u from %s", w, h, path.c_str());
+  logger->info(TAG "Read image %u x %u from %s", w, h, path.c_str());
 
   *width = w;
   *height = h;
