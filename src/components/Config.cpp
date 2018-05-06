@@ -173,12 +173,32 @@ const char* Config::getVariable(const char* variable)
     return value;
   }
 
+  for (const auto& var : _variables)
+  {
+    if (var._key == variable)
+    {
+      const char* value = var._options[var._selected].c_str();
+      _logger->warn(TAG "Variable %s not found in the selections, returning \"%s\"", variable, value);
+      return value;
+    }
+  }
+
   _logger->error(TAG "Variable %s not found", variable);
   return NULL;
 }
 
 std::string Config::serialize()
 {
+  for (const auto& var : _variables)
+  {
+    const auto found = _selections.find(var._key);
+
+    if (found == _selections.cend())
+    {
+      _selections[var._key] = var._options[var._selected];
+    }
+  }
+
   std::string json("{");
   const char* comma = "";
 
