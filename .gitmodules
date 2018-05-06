@@ -1,6 +1,3 @@
-[submodule "src/RA_Integration"]
-	path = src/RA_Integration
-	url = https://github.com/RetroAchievements/RAIntegration.git
 [submodule "src/SDL2"]
 	path = src/SDL2
 	url = https://github.com/RetroAchievements/SDL2
