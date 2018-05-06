@@ -56,7 +56,8 @@ public:
   void destroy();
 
   virtual bool setRate(double rate) override;
-  virtual void mix(const int16_t* samples, size_t frames) override;
+  virtual void consume(const int16_t* samples, size_t frames) override;
+  virtual void produce(int16_t* samples, size_t frames) override;
 
 protected:
   libretro::LoggerComponent* _logger;

@@ -974,19 +974,17 @@ void Application::s_audioCallback(void* udata, Uint8* stream, int len)
 
   if (app->_fsm.currentState() == Fsm::State::GameRunning)
   {
-    size_t avail = app->_fifo.occupied();
+    int frames = len / (2 * sizeof(int16_t));
+    int bytes = frames * 2 * sizeof(int16_t);
+    int rest = bytes - len;
 
-    if (avail < (size_t)len)
+    if (rest != 0)
     {
-      app->_fifo.read((void*)stream, avail);
-      memset((void*)(stream + avail), 0, len - avail);
-      app->_logger.debug("[AUD] Audio hardware requested %d bytes, only %zu available, padding with zeroes", len, avail);
+      app->_logger.debug("[AUD] Requested a number of bytes that is not a whole number of frames, padding with silence");
     }
-    else
-    {
-      app->_fifo.read((void*)stream, len);
-      app->_logger.debug("[AUD] Audio hardware requested %d bytes", len);
-    }
+
+    app->_audio.produce((int16_t*)stream, frames);
+    memset(stream + bytes, 0, rest);
   }
   else
   {

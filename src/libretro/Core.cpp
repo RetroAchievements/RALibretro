@@ -159,7 +159,13 @@ namespace
       return false;
     }
 
-    virtual void mix(const int16_t* samples, size_t frames) override
+    virtual void consume(const int16_t* samples, size_t frames) override
+    {
+      (void)samples;
+      (void)frames;
+    }
+
+    virtual void produce(int16_t* samples, size_t frames) override
     {
       (void)samples;
       (void)frames;
@@ -374,7 +380,7 @@ void libretro::Core::step(bool generate_audio)
   
   if (generate_audio)
   {
-    _audio->mix(_samples, _samplesCount / 2);
+    _audio->consume(_samples, _samplesCount / 2);
   }
 }
 

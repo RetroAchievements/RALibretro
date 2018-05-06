@@ -119,7 +119,8 @@ namespace libretro
   {
   public:
     virtual bool setRate(double rate) = 0;
-    virtual void mix(const int16_t* samples, size_t frames) = 0;
+    virtual void consume(const int16_t* samples, size_t frames) = 0;
+    virtual void produce(int16_t* samples, size_t frames) = 0;
   };
 
   /**
