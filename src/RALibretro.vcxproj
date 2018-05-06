@@ -72,7 +72,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)miniz;$(ProjectDir)RA_Integration\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)miniz;$(ProjectDir)RA_Integration\src;$(ProjectDir)libsamplerate\Win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -96,7 +96,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)miniz;$(ProjectDir)RA_Integration\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)miniz;$(ProjectDir)RA_Integration\src;$(ProjectDir)libsamplerate\Win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -132,10 +132,13 @@
     <ClCompile Include="KeyBinds.cpp" />
     <ClCompile Include="libretro\BareCore.cpp" />
     <ClCompile Include="libretro\Core.cpp" />
+    <ClCompile Include="libsamplerate\src\samplerate.c" />
+    <ClCompile Include="libsamplerate\src\src_linear.c" />
+    <ClCompile Include="libsamplerate\src\src_sinc.c" />
+    <ClCompile Include="libsamplerate\src\src_zoh.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RA_Implementation.cpp" />
     <ClCompile Include="RA_Integration\src\RA_Interface.cpp" />
-    <ClCompile Include="speex\resample.c" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -159,6 +162,7 @@
     <ClInclude Include="libretro\Components.h" />
     <ClInclude Include="libretro\Core.h" />
     <ClInclude Include="libretro\libretro.h" />
+    <ClInclude Include="libsamplerate\src\samplerate.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
   <ItemGroup>
