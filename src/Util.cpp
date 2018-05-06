@@ -112,7 +112,7 @@ bool util::saveFile(Logger* logger, const std::string& path, const void* data, s
   }
 
   fclose(file);
-  logger->error(TAG "Wrote %zu bytes to \"%s\"", size, path.c_str());
+  logger->info(TAG "Wrote %zu bytes to \"%s\"", size, path.c_str());
   return true;
 }
 
