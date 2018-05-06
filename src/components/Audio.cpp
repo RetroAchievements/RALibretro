@@ -188,6 +188,8 @@ void Audio::mix(const int16_t* samples, size_t frames)
 
   _currentRatio = _originalRatio * adjust;
 
+  _logger->debug(TAG "Original ratio %f adjusted by %f to %f", _originalRatio, adjust, _currentRatio);
+
   spx_uint32_t in_len = frames * 2;
   spx_uint32_t out_len = (spx_uint32_t)(in_len * _currentRatio);
   out_len += out_len & 1;
@@ -211,6 +213,7 @@ void Audio::mix(const int16_t* samples, size_t frames)
   
   while (size > avail)
   {
+    _logger->debug(TAG "Requested %zu bytes but only %zu available, sleeping", size, avail);
     SDL_Delay(1);
     avail = _fifo->free();
   }
