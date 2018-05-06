@@ -980,14 +980,17 @@ void Application::s_audioCallback(void* udata, Uint8* stream, int len)
     {
       app->_fifo.read((void*)stream, avail);
       memset((void*)(stream + avail), 0, len - avail);
+      app->_logger.debug("[AUD] Audio hardware requested %d bytes, only %zu available, padding with zeroes", len, avail);
     }
     else
     {
       app->_fifo.read((void*)stream, len);
+      app->_logger.debug("[AUD] Audio hardware requested %d bytes", len);
     }
   }
   else
   {
+    app->_logger.debug("[AUD] Audio hardware requested %d bytes, game is not running, sending silence", len);
     memset((void*)stream, 0, len);
   }
 }
