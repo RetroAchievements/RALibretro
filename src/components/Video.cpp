@@ -159,6 +159,8 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
       break;
     }
 
+    _logger->debug(TAG "Texture refreshed with %u x %u pixels", textureWidth, height);
+
     if (width != _viewWidth || height != _viewHeight)
     {
       _viewWidth = width;
@@ -174,6 +176,21 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
 
       Gl::deleteBuffers(1, &_vertexBuffer);
       _vertexBuffer = createVertexBuffer(_windowWidth, _windowHeight, texScaleX, texScaleY, _posAttribute, _uvAttribute);
+    }
+  }
+  else
+  {
+    if (data == NULL)
+    {
+      _logger->debug(TAG "Refresh not performed, data is NULL");
+    }
+    else if (data == RETRO_HW_FRAME_BUFFER_VALID)
+    {
+      _logger->debug(TAG "Refresh not performed, data is RETRO_HW_FRAME_BUFFER_VALID");
+    }
+    else
+    {
+      _logger->debug(TAG "Refresh not performed, unknown reason");
     }
   }
 }
@@ -211,7 +228,7 @@ void Video::windowResized(unsigned width, unsigned height)
   float texScaleY = (float)_viewHeight / (float)_textureHeight;
 
   createVertexBuffer(width, height, texScaleX, texScaleY, _posAttribute, _uvAttribute);
-  _logger->info(TAG "Window resized to %u x %u", width, height);
+  _logger->debug(TAG "Window resized to %u x %u", width, height);
 }
 
 void Video::getFramebufferSize(unsigned* width, unsigned* height, enum retro_pixel_format* format)
