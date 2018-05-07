@@ -99,7 +99,6 @@ bool Application::init(const char* title, int width, int height)
   inited = kNothingInited;
 
   _emulator = Emulator::kNone;
-  _recentListLoaded = false;
 
   if (!_logger.init())
   {
@@ -425,14 +424,11 @@ void Application::run()
 
 void Application::destroy()
 {
-  if (_recentListLoaded)
-  {
-    std::string json = "{\"recent\":";
-    json += serializeRecentList();
-    json += "}";
+  std::string json = "{\"recent\":";
+  json += serializeRecentList();
+  json += "}";
 
-    util::saveFile(&_logger, getConfigPath(), json.c_str(), json.length());
-  }
+  util::saveFile(&_logger, getConfigPath(), json.c_str(), json.length());
 
   RA_Shutdown();
 
@@ -1391,7 +1387,6 @@ void Application::loadRecentList()
     });
 
     free(data);
-    _recentListLoaded = res == JSONSAX_OK;
   }
 }
 
