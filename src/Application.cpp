@@ -262,7 +262,6 @@ bool Application::init(const char* title, int width, int height)
 
     RA_Init(g_mainWindow, RA_Libretro, git::getReleaseVersion());
     RA_InitShared();
-    RA_InitDirectX();
     RA_AttemptLogin(true);
     RebuildMenu();
   }
@@ -851,6 +850,7 @@ void Application::resetGame()
   if (isGameActive())
   {
     _core.resetGame();
+    RA_OnReset();
   }
 }
 
@@ -1454,11 +1454,7 @@ void Application::toggleFullscreen()
 
 void Application::handle(const SDL_SysWMEvent* syswm)
 {
-  if (syswm->msg->msg.win.msg == WM_PAINT)
-  {
-    RA_OnPaint(g_mainWindow);
-  }
-  else if (syswm->msg->msg.win.msg == WM_COMMAND)
+  if (syswm->msg->msg.win.msg == WM_COMMAND)
   {
     WORD cmd = LOWORD(syswm->msg->msg.win.wParam);
 
