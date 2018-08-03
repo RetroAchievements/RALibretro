@@ -13,13 +13,13 @@
 /bin/Assets
 /bin/Cores/*.json
 /bin/RACache
+/bin/Release
 /bin/Saves
 /bin/Screenshots
 /bin/System
 /RALibretro*.zip
 /obj
 /Debug
-/Release
 /ipch
 /src/Git.cpp
 /*.db
