@@ -22,6 +22,7 @@
 /Debug
 /ipch
 /src/Git.cpp
+/src/menu.res
+/src/log.txt
 /*.db
 /RetroAchievementsKey
-/src/menu.res
