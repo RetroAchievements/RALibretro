@@ -299,10 +299,11 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
   case System::kNintendo:
     ok = romLoadedNes(rom, size);
 
-    if (!ok) // Assume FDS
+    if (!ok)
     {
-        RA_OnLoadNewRom((BYTE*)rom, size);
-        ok = true;
+      // Fall back to the default strategy, assuming FDS file
+      RA_OnLoadNewRom((BYTE*)rom, size);
+      ok = true;
     }
 
     free(rom);
