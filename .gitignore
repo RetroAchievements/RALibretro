@@ -17,6 +17,7 @@
 /bin/Screenshots
 /bin/System
 /RALibretro*.zip
+/obj
 /Debug
 /Release
 /ipch
