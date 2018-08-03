@@ -18,6 +18,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "Application.h"
+#include "components/Dialog.h"
 #include "Git.h"
 
 #include <SDL_syswm.h>
@@ -630,14 +631,29 @@ bool Application::loadGame(const std::string& path)
       return false;
     }
   }
+
+  _system = getSystem(_emulator, path, &_core);
     
   if (!_core.loadGame(path.c_str(), data, size))
   {
-    free(data);
+    if (_system == System::kNintendo)
+    {
+      // Assume that the FDS system is missing
+      _logger.debug(TAG "Game load failure (Nintendo)");
+
+      Dialog::ShowMessage("Core Error", "Game load error. Are you missing a system file?");
+    }
+
+    if (data)
+    {
+      free(data);
+    }
+
+    // Forcefully exit the application to avoid memory/access violation errors
+    exit(1);
+
     return false;
   }
-
-  _system = getSystem(_emulator, path, &_core);
   
   RA_SetConsoleID((unsigned)_system);
   RA_ClearMemoryBanks();
@@ -645,11 +661,20 @@ bool Application::loadGame(const std::string& path)
   if (!romLoaded(&_logger, _system, path, data, size))
   {
     _core.unloadGame();
-    free(data);
+
+    if (data)
+    {
+      free(data);
+    }
+
     return false;
   }
 
-  free(data);
+  if (data)
+  {
+    free(data);
+  }
+
   _gamePath = path;
 
   for (size_t i = 0; i < _recentList.size(); i++)

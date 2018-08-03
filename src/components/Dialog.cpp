@@ -207,6 +207,23 @@ bool Dialog::show()
   return _updated;
 }
 
+void Dialog::ShowMessage(const char* title, const char* message)
+{
+  const WORD WIDTH = 200;
+  const WORD LINE = 6;
+
+  Dialog db;
+  db.init(title);
+
+  WORD y = 0;
+
+  db.addLabel(message, 0, y, WIDTH, 8);
+  y += LINE * 4;
+
+  db.addButton("OK", IDOK, WIDTH - 50, y, 50, 14, true);
+  db.show();
+}
+
 void Dialog::align(size_t alignment)
 {
   alignment--;
