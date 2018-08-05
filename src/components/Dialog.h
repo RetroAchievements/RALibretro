@@ -39,8 +39,6 @@ public:
 
   bool show();
 
-  static void Dialog::ShowMessage(const char* title, const char* message);
-
 protected:
   enum Type
   {
