@@ -4,6 +4,7 @@
 *.user
 *.o
 *.swp
+*.log
 .vs
 /bin/*.exe
 /bin/*.cfg
