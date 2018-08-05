@@ -28,6 +28,11 @@ $ pacman -S make git zip mingw-w64-i686-gcc mingw-w64-i686-SDL2 mingw-w64-i686-g
 $ git clone --recursive --depth 1 https://github.com/RetroAchievements/RALibretro.git
 ```
 
+### Fetch dependencies
+```
+$ ./dl-cores.sh all
+```
+
 ### Build
 
 ```
@@ -42,8 +47,17 @@ $ make
 ### Clone the repo
 
 ```
-$ git clone --recursive --depth 1 https://github.com/RetroAchievements/RALibretro.git
+> git clone --recursive --depth 1 https://github.com/RetroAchievements/RALibretro.git
 ```
+
+### Fetch dependencies
+The core fetch script requires the GNU `wget` and `unzip` utilities (e.g. [GnuWin32](http://gnuwin32.sourceforge.net/)) to be accessible through the command line.
+
+```
+> .\dl-cores.bat all
+```
+
+Other dependencies: `SDL2.dll`, `libgcc_s_dw2-1.dll`, `libgcc_s_sjlj-1.dll`, `libstdc++-6.dll`, `libwinpthread-1.dll`
 
 ### Build
 
