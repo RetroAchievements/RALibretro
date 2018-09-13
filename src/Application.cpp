@@ -1019,11 +1019,6 @@ void Application::enableSlots()
   
   for (unsigned ndx = 1; ndx <= 10; ndx++)
   {
-    EnableMenuItem(_menu, IDM_SAVE_STATE_1 + ndx - 1, enabled);
-  }
-  
-  for (unsigned ndx = 1; ndx <= 10; ndx++)
-  {
     if ((_validSlots & (1 << ndx)) != 0)
     {
       EnableMenuItem(_menu, IDM_LOAD_STATE_1 + ndx - 1, enabled);
@@ -1184,12 +1179,6 @@ std::string Application::getScreenshotPath()
 
 void Application::saveState(const std::string& path)
 {
-  if (hardcore())
-  {
-    _logger.info(TAG "Hardcore mode is active, can't save state");
-    return;
-  }
-
   _logger.info(TAG "Saving state to %s", path.c_str());
   
   size_t size = _core.serializeSize();
@@ -1255,7 +1244,7 @@ void Application::saveState()
 
 void Application::loadState(const std::string& path)
 {
-  if (hardcore())
+  if (!RA_WarnDisableHardcore("load a state"))
   {
     _logger.warn(TAG "Hardcore mode is active, can't load state");
     return;
