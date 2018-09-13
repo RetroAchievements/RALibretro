@@ -2,6 +2,8 @@
 
 #include "Gl.h"
 
+#define TAG "[GLU] "
+
 static libretro::LoggerComponent* s_logger;
 
 void GlUtil::init(libretro::LoggerComponent* logger)
@@ -46,7 +48,7 @@ GLuint GlUtil::createShader(GLenum shaderType, const char* source)
   {
     char buffer[4096];
     Gl::getShaderInfoLog(shader, sizeof(buffer), NULL, buffer);
-    s_logger->printf(RETRO_LOG_ERROR, "Error in shader: %s", buffer);
+    s_logger->error(TAG "Error in shader: %s", buffer);
     Gl::deleteShader(shader);
     return 0;
   }
@@ -84,7 +86,7 @@ GLuint GlUtil::createProgram(const char* vertexShader, const char* fragmentShade
   {
     char buffer[4096];
     Gl::getProgramInfoLog(program, sizeof(buffer), NULL, buffer);
-    s_logger->printf(RETRO_LOG_ERROR, "Error in shader program: %s", buffer);
+    s_logger->error(TAG "Error in shader program: %s", buffer);
     Gl::deleteProgram(program);
     return 0;
   }

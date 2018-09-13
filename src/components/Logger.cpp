@@ -59,74 +59,61 @@ void Logger::vprintf(enum retro_log_level level, const char* fmt, va_list args)
   {
     line[--length] = 0;
   }
-  
-  if (length > sizeof(line))
-  {
-    // Line size too small, truncated. Consider increasing the array size.
-    length = sizeof(line);
-  }
-  
-  length += 3; // Add one byte for the level and two bytes for the length.
-  unsigned char meta[3];
-  
-  if (length > _avail)
-  {
-    do
-    {
-      // Remove content until we have enough space.
-      read(meta, 3);
-      skip(meta[1] | meta[2] << 8); // Little endian.
-    }
-    while (length > _avail);
-  }
-  
-  length -= 3;
-  
-  meta[0] = level;
-  meta[1] = length & 0xff;
-  meta[2] = length >> 8;
-  
-  write(meta, 3);
-  write(line, length);
 
-  ::printf("%s\n", line);
-  fflush(stdout);
+  const char* desc = "?";
+
+  switch (level)
+  {
+  case RETRO_LOG_DEBUG: desc = "DEBUG"; break;
+  case RETRO_LOG_INFO:  desc = "INFO "; break;
+  case RETRO_LOG_WARN:  desc = "WARN "; break;
+  case RETRO_LOG_ERROR: desc = "ERROR"; break;
+  case RETRO_LOG_DUMMY: desc = "DUMMY"; break;
+  }
+
+  // Do not log debug messages to the internal buffer and the console.
+  if (level != RETRO_LOG_DEBUG)
+  {
+    // Log to the internal buffer.
+
+    if (length > sizeof(line))
+    {
+      // Line size too small, truncated. Consider increasing the array size.
+      length = sizeof(line);
+    }
+
+    length += 3; // Add one byte for the level and two bytes for the length.
+    unsigned char meta[3];
+
+    if (length > _avail)
+    {
+      do
+      {
+        // Remove content until we have enough space.
+        read(meta, 3);
+        skip(meta[1] | meta[2] << 8); // Little endian.
+      } while (length > _avail);
+    }
+
+    length -= 3;
+
+    meta[0] = level;
+    meta[1] = length & 0xff;
+    meta[2] = length >> 8;
+
+    write(meta, 3);
+    write(line, length);
+
+    // Log to the console.
+
+    ::printf("[%s] %s\n", desc, line);
+    fflush(stdout);
+  }
 
 #ifdef LOG_TO_FILE
-  fprintf(_file, "%s\n", line);
+  // Log to the log file.
+  fprintf(_file, "[%s] %s\n", desc, line);
 #endif
-}
-
-void Logger::debug(const char* format, ...)
-{
-  va_list args;
-  va_start(args, format);
-  vprintf(RETRO_LOG_DEBUG, format, args);
-  va_end(args);
-}
-
-void Logger::info(const char* format, ...)
-{
-  va_list args;
-  va_start(args, format);
-  vprintf(RETRO_LOG_INFO, format, args);
-  va_end(args);
-}
-
-void Logger::warn(const char* format, ...)
-{
-  va_list args;
-  va_start(args, format);
-  vprintf(RETRO_LOG_WARN, format, args);
-  va_end(args);
-}
-
-void Logger::error(const char* format, ...)
-{
-  va_list args;
-  va_start(args, format);
-  vprintf(RETRO_LOG_ERROR, format, args);
-  va_end(args);
 }
 
 std::string Logger::contents() const

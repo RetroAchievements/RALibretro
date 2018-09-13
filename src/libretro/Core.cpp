@@ -29,6 +29,8 @@ SOFTWARE.
 
 #define SAMPLE_COUNT 8192
 
+#define TAG "[CRE] "
+
 /**
  * Unavoidable because the libretro API don't have an userdata pointer to
  * allow us pass and receive back the core instance :/
@@ -266,17 +268,11 @@ bool libretro::Core::loadCore(const char* core_path)
     return false;
   }
   
-  info("Opening core \"%s\"", core_path);
-
-  char message[512];
-  
-  if (!_core.load(core_path, message, sizeof(message)))
+  if (!_core.load(_logger, core_path))
   {
-    error("Error opening core \"%s\": %s", core_path, message);
     return false;
   }
 
-  info("Core \"%s\" loaded", core_path);
   return initCore();
 }
 
@@ -286,13 +282,13 @@ bool libretro::Core::loadGame(const char* game_path, void* data, size_t size)
 
   if (game_path == NULL)
   {
-    error("Can't load game data without a ROM path");
+    _logger->error(TAG "Can't load game data without a ROM path");
     goto error;
   }
 
   if (_supportsNoGame)
   {
-    error("Core doesn't take a content to run");
+    _logger->error(TAG "Core doesn't take a content to run");
     goto error;
   }
   
@@ -304,11 +300,11 @@ bool libretro::Core::loadGame(const char* game_path, void* data, size_t size)
 
   if (!_core.loadGame(&game))
   {
-    error("Error loading content");
+    _logger->error(TAG "Error loading content");
     goto error;
   }
 
-  info("Content \"%s\" loaded", game_path);
+  _logger->info(TAG "Content \"%s\" loaded", game_path);
 
   if (!initAV())
   {
@@ -449,12 +445,12 @@ bool libretro::Core::initCore()
     return false;
   }
 
-  debug("retro_system_info");
-  debug("  library_name:     %s", _systemInfo.library_name);
-  debug("  library_version:  %s", _systemInfo.library_version);
-  debug("  valid_extensions: %s", _systemInfo.valid_extensions);
-  debug("  need_fullpath:    %s", _systemInfo.need_fullpath ? "true" : "false");
-  debug("  block_extract:    %s", _systemInfo.block_extract ? "true" : "false");
+  _logger->debug(TAG "retro_system_info");
+  _logger->debug(TAG "  library_name:     %s", _systemInfo.library_name);
+  _logger->debug(TAG "  library_version:  %s", _systemInfo.library_version);
+  _logger->debug(TAG "  valid_extensions: %s", _systemInfo.valid_extensions);
+  _logger->debug(TAG "  need_fullpath:    %s", _systemInfo.need_fullpath ? "true" : "false");
+  _logger->debug(TAG "  block_extract:    %s", _systemInfo.block_extract ? "true" : "false");
 
   _core.setEnvironment(s_environmentCallback);
   _core.init();
@@ -478,14 +474,14 @@ bool libretro::Core::initAV()
   
   _core.getSystemAVInfo(&_systemAVInfo);
 
-  debug("retro_system_av_info");
-  debug("  base_width   = %u", _systemAVInfo.geometry.base_width);
-  debug("  base_height  = %u", _systemAVInfo.geometry.base_height);
-  debug("  max_width    = %u", _systemAVInfo.geometry.max_width);
-  debug("  max_height   = %u", _systemAVInfo.geometry.max_height);
-  debug("  aspect_ratio = %f", _systemAVInfo.geometry.aspect_ratio);
-  debug("  fps          = %f", _systemAVInfo.timing.fps);
-  debug("  sample_rate  = %f", _systemAVInfo.timing.sample_rate);
+  _logger->debug(TAG "retro_system_av_info");
+  _logger->debug(TAG "  base_width   = %u", _systemAVInfo.geometry.base_width);
+  _logger->debug(TAG "  base_height  = %u", _systemAVInfo.geometry.base_height);
+  _logger->debug(TAG "  max_width    = %u", _systemAVInfo.geometry.max_width);
+  _logger->debug(TAG "  max_height   = %u", _systemAVInfo.geometry.max_height);
+  _logger->debug(TAG "  aspect_ratio = %f", _systemAVInfo.geometry.aspect_ratio);
+  _logger->debug(TAG "  fps          = %f", _systemAVInfo.timing.fps);
+  _logger->debug(TAG "  sample_rate  = %f", _systemAVInfo.timing.sample_rate);
 
   if (_systemAVInfo.geometry.aspect_ratio <= 0.0f)
   {
@@ -538,43 +534,7 @@ void libretro::Core::reset()
   _controllerInfo = NULL;
   _ports = NULL;
   memset(&_memoryMap, 0, sizeof(_memoryMap));
-}
-
-void libretro::Core::log(enum retro_log_level level, const char* fmt, va_list args) const
-{
-  _logger->vprintf(level, fmt, args);
-}
-
-void libretro::Core::debug(const char* fmt, ...) const
-{
-  va_list args;
-  va_start(args, fmt);
-  log(RETRO_LOG_DEBUG, fmt, args);
-  va_end(args);
-}
-
-void libretro::Core::info(const char* fmt, ...) const
-{
-  va_list args;
-  va_start(args, fmt);
-  log(RETRO_LOG_INFO, fmt, args);
-  va_end(args);
-}
-
-void libretro::Core::warn(const char* fmt, ...) const
-{
-  va_list args;
-  va_start(args, fmt);
-  log(RETRO_LOG_WARN, fmt, args);
-  va_end(args);
-}
-
-void libretro::Core::error(const char* fmt, ...) const
-{
-  va_list args;
-  va_start(args, fmt);
-  log(RETRO_LOG_ERROR, fmt, args);
-  va_end(args);
+  memset(&_calls, 0, sizeof(_calls));
 }
 
 const char* libretro::Core::getLibretroPath() const
@@ -621,7 +581,7 @@ bool libretro::Core::setMessage(const struct retro_message* data)
 
 bool libretro::Core::shutdown()
 {
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
   return false;
 }
 
@@ -642,7 +602,7 @@ bool libretro::Core::setPixelFormat(enum retro_pixel_format data)
   switch (data)
   {
   case RETRO_PIXEL_FORMAT_0RGB1555:
-    warn("Pixel format 0RGB1555 is deprecated");
+    _logger->warn(TAG "Pixel format 0RGB1555 is deprecated");
     // fallthrough
   case RETRO_PIXEL_FORMAT_XRGB8888:
   case RETRO_PIXEL_FORMAT_RGB565:
@@ -651,7 +611,7 @@ bool libretro::Core::setPixelFormat(enum retro_pixel_format data)
   
   case RETRO_PIXEL_FORMAT_UNKNOWN:
   default:
-    error("Unsupported pixel format %u", data);
+    _logger->error(TAG "Unsupported pixel format %u", data);
     return false;
   }
 }
@@ -686,14 +646,14 @@ bool libretro::Core::setInputDescriptors(const struct retro_input_descriptor* da
     }
   }
 
-  debug("retro_input_descriptor");
-  debug("  port device index id description");
+  _logger->debug(TAG "retro_input_descriptor");
+  _logger->debug(TAG "  port device index id description");
 
   desc = _inputDescriptors;
 
   for (unsigned i = 0; i < _inputDescriptorsCount; i++, desc++)
   {
-    debug("  %4u %6u %5u %2u %s", desc->port, desc->device, desc->index, desc->id, desc->description);
+    _logger->debug(TAG "  %4u %6u %5u %2u %s", desc->port, desc->device, desc->index, desc->id, desc->description);
   }
 
   _input->setInputDescriptors(_inputDescriptors, _inputDescriptorsCount);
@@ -703,14 +663,14 @@ bool libretro::Core::setInputDescriptors(const struct retro_input_descriptor* da
 bool libretro::Core::setKeyboardCallback(const struct retro_keyboard_callback* data)
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
   return true;
 }
 
 bool libretro::Core::setDiskControlInterface(const struct retro_disk_control_callback* data)
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
   return false;
 }
 
@@ -736,26 +696,26 @@ bool libretro::Core::setHWRender(struct retro_hw_render_callback* data)
   
   if (!_video->supportsContext(data->context_type))
   {
-    error("Context type not supported: %s", context_type);
+    _logger->error(TAG "Context type not supported: %s", context_type);
     return false;
   }
 
   data->get_current_framebuffer = s_getCurrentFramebuffer;
   data->get_proc_address = s_getProcAddress;
   
-  debug("retro_hw_render_callback");
-  debug("  context_type:            %s", context_type);
-  debug("  context_reset:           %p", data->context_reset);
-  debug("  get_current_framebuffer: %p", data->get_current_framebuffer);
-  debug("  get_proc_address:        %p", data->get_proc_address);
-  debug("  depth:                   %s", data->depth ? "true" : "false");
-  debug("  stencil:                 %s", data->stencil ? "true" : "false");
-  debug("  bottom_left_origin:      %s", data->bottom_left_origin ? "true" : "false");
-  debug("  version_major:           %u", data->version_major);
-  debug("  version_minor:           %u", data->version_minor);
-  debug("  cache_context:           %s", data->cache_context ? "true" : "false");
-  debug("  context_destroy:         %p", data->context_destroy);
-  debug("  debug_context:           %s", data->debug_context ? "true" : "false");
+  _logger->debug(TAG "retro_hw_render_callback");
+  _logger->debug(TAG "  context_type:            %s", context_type);
+  _logger->debug(TAG "  context_reset:           %p", data->context_reset);
+  _logger->debug(TAG "  get_current_framebuffer: %p", data->get_current_framebuffer);
+  _logger->debug(TAG "  get_proc_address:        %p", data->get_proc_address);
+  _logger->debug(TAG "  depth:                   %s", data->depth ? "true" : "false");
+  _logger->debug(TAG "  stencil:                 %s", data->stencil ? "true" : "false");
+  _logger->debug(TAG "  bottom_left_origin:      %s", data->bottom_left_origin ? "true" : "false");
+  _logger->debug(TAG "  version_major:           %u", data->version_major);
+  _logger->debug(TAG "  version_minor:           %u", data->version_minor);
+  _logger->debug(TAG "  cache_context:           %s", data->cache_context ? "true" : "false");
+  _logger->debug(TAG "  context_destroy:         %p", data->context_destroy);
+  _logger->debug(TAG "  debug_context:           %s", data->debug_context ? "true" : "false");
   
   _hardwareRenderCallback = *data;
   _needsHardwareRender = true;
@@ -799,13 +759,13 @@ bool libretro::Core::setVariables(const struct retro_variable* data)
     }
   }
 
-  debug("retro_variable");
+  _logger->debug(TAG "retro_variable");
   
   var = _variables;
 
   for (unsigned i = 0; i < _variablesCount; i++, var++)
   {
-    debug("  %s: %s", var->key, var->value);
+    _logger->debug(TAG "  %s: %s", var->key, var->value);
   }
 
   _config->setVariables(_variables, _variablesCount);
@@ -833,42 +793,42 @@ bool libretro::Core::getLibretroPath(const char** data) const
 bool libretro::Core::setFrameTimeCallback(const struct retro_frame_time_callback* data)
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
   return false;
 }
 
 bool libretro::Core::setAudioCallback(const struct retro_audio_callback* data)
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
   return false;
 }
 
 bool libretro::Core::getRumbleInterface(struct retro_rumble_interface* data) const
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
   return false;
 }
 
 bool libretro::Core::getInputDeviceCapabilities(uint64_t* data) const
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
   return false;
 }
 
 bool libretro::Core::getSensorInterface(struct retro_sensor_interface* data) const
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
   return false;
 }
 
 bool libretro::Core::getCameraInterface(struct retro_camera_callback* data) const
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
   return false;
 }
 
@@ -881,14 +841,14 @@ bool libretro::Core::getLogInterface(struct retro_log_callback* data) const
 bool libretro::Core::getPerfInterface(struct retro_perf_callback* data) const
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
   return false;
 }
 
 bool libretro::Core::getLocationInterface(struct retro_location_callback* data) const
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
   return false;
 }
 
@@ -908,15 +868,15 @@ bool libretro::Core::setSystemAVInfo(const struct retro_system_av_info* data)
 {
   _systemAVInfo = *data;
 
-  debug("retro_system_av_info");
+  _logger->debug(TAG "retro_system_av_info");
 
-  debug("  base_width   = %u", _systemAVInfo.geometry.base_width);
-  debug("  base_height  = %u", _systemAVInfo.geometry.base_height);
-  debug("  max_width    = %u", _systemAVInfo.geometry.max_width);
-  debug("  max_height   = %u", _systemAVInfo.geometry.max_height);
-  debug("  aspect_ratio = %f", _systemAVInfo.geometry.aspect_ratio);
-  debug("  fps          = %f", _systemAVInfo.timing.fps);
-  debug("  sample_rate  = %f", _systemAVInfo.timing.sample_rate);
+  _logger->debug(TAG "  base_width   = %u", _systemAVInfo.geometry.base_width);
+  _logger->debug(TAG "  base_height  = %u", _systemAVInfo.geometry.base_height);
+  _logger->debug(TAG "  max_width    = %u", _systemAVInfo.geometry.max_width);
+  _logger->debug(TAG "  max_height   = %u", _systemAVInfo.geometry.max_height);
+  _logger->debug(TAG "  aspect_ratio = %f", _systemAVInfo.geometry.aspect_ratio);
+  _logger->debug(TAG "  fps          = %f", _systemAVInfo.timing.fps);
+  _logger->debug(TAG "  sample_rate  = %f", _systemAVInfo.timing.sample_rate);
 
   if (_systemAVInfo.geometry.aspect_ratio <= 0.0f)
   {
@@ -936,7 +896,7 @@ bool libretro::Core::setSystemAVInfo(const struct retro_system_av_info* data)
 bool libretro::Core::setProcAddressCallback(const struct retro_get_proc_address_interface* data)
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
   return false;
 }
 
@@ -1012,32 +972,32 @@ bool libretro::Core::setSubsystemInfo(const struct retro_subsystem_info* data)
     }
   }
 
-  debug("retro_subsystem_info");
+  _logger->debug(TAG "retro_subsystem_info");
 
   info = (struct retro_subsystem_info*)data;
 
   for (unsigned i = 0; i < _subsystemInfoCount; i++, info++)
   {
-    debug("  desc  = %s", info->desc);
-    debug("  ident = %s", info->ident);
-    debug("  id    = %u", info->id);
+    _logger->debug(TAG "  desc  = %s", info->desc);
+    _logger->debug(TAG "  ident = %s", info->ident);
+    _logger->debug(TAG "  id    = %u", info->id);
     
     const struct retro_subsystem_rom_info* roms = info->roms;
 
     for (unsigned j = 0; j < info->num_roms; j++, roms++)
     {
-      debug("    roms[%u].desc             = %s", j, roms->desc);
-      debug("    roms[%u].valid_extensions = %s", j, roms->valid_extensions);
-      debug("    roms[%u].need_fullpath    = %d", j, roms->need_fullpath);
-      debug("    roms[%u].block_extract    = %d", j, roms->block_extract);
-      debug("    roms[%u].required         = %d", j, roms->required);
+      _logger->debug(TAG "    roms[%u].desc             = %s", j, roms->desc);
+      _logger->debug(TAG "    roms[%u].valid_extensions = %s", j, roms->valid_extensions);
+      _logger->debug(TAG "    roms[%u].need_fullpath    = %d", j, roms->need_fullpath);
+      _logger->debug(TAG "    roms[%u].block_extract    = %d", j, roms->block_extract);
+      _logger->debug(TAG "    roms[%u].required         = %d", j, roms->required);
       
       const struct retro_subsystem_memory_info* memory = roms->memory;
 
       for (unsigned k = 0; k < info->roms[j].num_memory; k++, memory++)
       {
-        debug("      memory[%u].type         = %u", k, memory->type);
-        debug("      memory[%u].extension    = %s", k, memory->extension);
+        _logger->debug(TAG "      memory[%u].type         = %u", k, memory->type);
+        _logger->debug(TAG "      memory[%u].extension    = %s", k, memory->extension);
       }
     }
   }
@@ -1080,7 +1040,7 @@ bool libretro::Core::setControllerInfo(const struct retro_controller_info* data)
     struct retro_controller_description* type = types;
     const struct retro_controller_description* end = type + info->num_types;
 
-    for (; type < end; type++)
+    for (; type < end && type->desc != NULL; type++)
     {
       type->desc = strdup(type->desc);
 
@@ -1090,11 +1050,12 @@ bool libretro::Core::setControllerInfo(const struct retro_controller_info* data)
       }
     }
 
+    info->num_types = type - types;
     _ports[i] = RETRO_DEVICE_NONE;
   }
 
-  debug("retro_controller_info");
-  debug("  port id   desc");
+  _logger->debug(TAG "retro_controller_info");
+  _logger->debug(TAG "  port id   desc");
 
   info = _controllerInfo;
 
@@ -1105,7 +1066,7 @@ bool libretro::Core::setControllerInfo(const struct retro_controller_info* data)
 
     for (; type < end; type++)
     {
-      debug("  %4u %04x %s", i, type->id, type->desc);
+      _logger->debug(TAG "  %4u %04x %s", i, type->id, type->desc);
     }
   }
 
@@ -1146,8 +1107,8 @@ bool libretro::Core::setMemoryMaps(const struct retro_memory_map* data)
 
   preprocessMemoryDescriptors(descriptors, _memoryMap.num_descriptors);
 
-  debug("retro_memory_map");
-  debug("  ndx flags  ptr      offset   start    select   disconn  len      addrspace");
+  _logger->debug(TAG "retro_memory_map");
+  _logger->debug(TAG "  ndx flags  ptr      offset   start    select   disconn  len      addrspace");
 
   const struct retro_memory_descriptor* end = descriptors + _memoryMap.num_descriptors;
 
@@ -1197,7 +1158,7 @@ bool libretro::Core::setMemoryMaps(const struct retro_memory_map* data)
     flags[5] = (descriptors->flags & RETRO_MEMDESC_CONST) ? 'C' : 'c';
     flags[6] = 0;
 
-    debug("  %3u %s %p %08X %08X %08X %08X %08X %s", i, flags, descriptors->ptr, descriptors->offset, descriptors->start, descriptors->select, descriptors->disconnect, descriptors->len, descriptors->addrspace ? descriptors->addrspace : "");
+    _logger->debug(TAG "  %3u %s %p %08X %08X %08X %08X %08X %s", i, flags, descriptors->ptr, descriptors->offset, descriptors->start, descriptors->select, descriptors->disconnect, descriptors->len, descriptors->addrspace ? descriptors->addrspace : "");
   }
 
   return true;
@@ -1209,10 +1170,10 @@ bool libretro::Core::setGeometry(const struct retro_game_geometry* data)
   _systemAVInfo.geometry.base_height = data->base_height;
   _systemAVInfo.geometry.aspect_ratio = data->aspect_ratio;
 
-  debug("retro_game_geometry");
-  debug("  base_width   = %u", data->base_width);
-  debug("  base_height  = %u", data->base_height);
-  debug("  aspect_ratio = %f", data->aspect_ratio);
+  _logger->debug(TAG "retro_game_geometry");
+  _logger->debug(TAG "  base_width   = %u", data->base_width);
+  _logger->debug(TAG "  base_height  = %u", data->base_height);
+  _logger->debug(TAG "  aspect_ratio = %f", data->aspect_ratio);
 
   if (_systemAVInfo.geometry.aspect_ratio <= 0.0f)
   {
@@ -1232,7 +1193,7 @@ bool libretro::Core::setGeometry(const struct retro_game_geometry* data)
 bool libretro::Core::getUsername(const char** data) const
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
   return false;
 }
 
@@ -1245,14 +1206,14 @@ bool libretro::Core::getLanguage(unsigned* data) const
 bool libretro::Core::getCurrentSoftwareFramebuffer(struct retro_framebuffer* data) const
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
   return false;
 }
 
 bool libretro::Core::getHWRenderInterface(const struct retro_hw_render_interface** data) const
 {
   (void)data;
-  error("%s isn't implemented", __FUNCTION__);
+  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
   return false;
 }
 
@@ -1262,134 +1223,260 @@ bool libretro::Core::setSupportAchievements(bool data)
   return true;
 }
 
+static void getEnvName(char* name, size_t size, unsigned cmd)
+{
+  static const char* names[] =
+  {
+    "0",
+    "SET_ROTATION",
+    "GET_OVERSCAN",
+    "GET_CAN_DUPE",
+    "4",
+    "5",
+    "SET_MESSAGE",
+    "SHUTDOWN",
+    "SET_PERFORMANCE_LEVEL",
+    "GET_SYSTEM_DIRECTORY",
+    "SET_PIXEL_FORMAT",
+    "SET_INPUT_DESCRIPTORS",
+    "SET_KEYBOARD_CALLBACK",
+    "SET_DISK_CONTROL_INTERFACE",
+    "SET_HW_RENDER",
+    "GET_VARIABLE",
+    "SET_VARIABLES",
+    "GET_VARIABLE_UPDATE",
+    "SET_SUPPORT_NO_GAME",
+    "GET_LIBRETRO_PATH",
+    "20",
+    "SET_FRAME_TIME_CALLBACK",
+    "SET_AUDIO_CALLBACK",
+    "GET_RUMBLE_INTERFACE",
+    "GET_INPUT_DEVICE_CAPABILITIES",
+    "GET_SENSOR_INTERFACE",
+    "GET_CAMERA_INTERFACE",
+    "GET_LOG_INTERFACE",
+    "GET_PERF_INTERFACE",
+    "GET_LOCATION_INTERFACE",
+    "GET_CORE_ASSETS_DIRECTORY",
+    "GET_SAVE_DIRECTORY",
+    "SET_SYSTEM_AV_INFO",
+    "SET_PROC_ADDRESS_CALLBACK",
+    "SET_SUBSYSTEM_INFO",
+    "SET_CONTROLLER_INFO",
+    "SET_MEMORY_MAPS",
+    "SET_GEOMETRY",
+    "GET_USERNAME",
+    "GET_LANGUAGE",
+    "GET_CURRENT_SOFTWARE_FRAMEBUFFER",
+    "GET_HW_RENDER_INTERFACE",
+    "SET_SUPPORT_ACHIEVEMENTS",
+    "SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE",
+    "SET_SERIALIZATION_QUIRKS",
+    "GET_VFS_INTERFACE",
+    "GET_LED_INTERFACE",
+    "GET_AUDIO_VIDEO_ENABLE"
+  };
+
+  cmd &= ~(RETRO_ENVIRONMENT_EXPERIMENTAL | RETRO_ENVIRONMENT_PRIVATE);
+
+  if (cmd < sizeof(names) / sizeof(names[0]))
+  {
+    snprintf(name, size, "%s (%u)", names[cmd], cmd);
+  }
+  else
+  {
+    snprintf(name, size, "%u", cmd);
+  }
+}
+
 bool libretro::Core::environmentCallback(unsigned cmd, void* data)
 {
+  bool ret;
+  char name[128];
+
+  getEnvName(name, sizeof(name), cmd);
+  _logger->debug(TAG "Calling %s", name);
+
   switch (cmd)
   {
   case RETRO_ENVIRONMENT_SET_ROTATION:
-    return setRotation(*(const unsigned*)data);
+    ret = setRotation(*(const unsigned*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_OVERSCAN:
-    return getOverscan((bool*)data);
+    ret = getOverscan((bool*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_CAN_DUPE:
-    return getCanDupe((bool*)data);
+    ret = getCanDupe((bool*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_MESSAGE:
-    return setMessage((const struct retro_message*)data);
+    ret = setMessage((const struct retro_message*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SHUTDOWN:
-    return shutdown();
+    ret = shutdown();
+    break;
 
   case RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL:
-    return setPerformanceLevel(*(unsigned*)data);
+    ret = setPerformanceLevel(*(unsigned*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY:
-    return getSystemDirectory((const char**)data);
+    ret = getSystemDirectory((const char**)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT:
-    return setPixelFormat(*(enum retro_pixel_format*)data);
+    ret = setPixelFormat(*(enum retro_pixel_format*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS:
-    return setInputDescriptors((const struct retro_input_descriptor*)data);
+    ret = setInputDescriptors((const struct retro_input_descriptor*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK:
-    return setKeyboardCallback((const struct retro_keyboard_callback*)data);
+    ret = setKeyboardCallback((const struct retro_keyboard_callback*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE:
-    return setDiskControlInterface((const struct retro_disk_control_callback*)data);
+    ret = setDiskControlInterface((const struct retro_disk_control_callback*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_HW_RENDER:
-    return setHWRender((struct retro_hw_render_callback*)data);
+    ret = setHWRender((struct retro_hw_render_callback*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_VARIABLE:
-    return getVariable((struct retro_variable*)data);
+    ret = getVariable((struct retro_variable*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_VARIABLES:
-    return setVariables((const struct retro_variable*)data);
+    ret = setVariables((const struct retro_variable*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE:
-    return getVariableUpdate((bool*)data);
+    ret = getVariableUpdate((bool*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME:
-    return setSupportNoGame(*(bool*)data);
+    ret = setSupportNoGame(*(bool*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_LIBRETRO_PATH:
-    return getLibretroPath((const char**)data);
+    ret = getLibretroPath((const char**)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK:
-    return setFrameTimeCallback((const struct retro_frame_time_callback*)data);
+    ret = setFrameTimeCallback((const struct retro_frame_time_callback*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK:
-    return setAudioCallback((const struct retro_audio_callback*)data);
+    ret = setAudioCallback((const struct retro_audio_callback*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE:
-    return getRumbleInterface((struct retro_rumble_interface*)data);
+    ret = getRumbleInterface((struct retro_rumble_interface*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES:
-    return getInputDeviceCapabilities((uint64_t*)data);
+    ret = getInputDeviceCapabilities((uint64_t*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE:
-    return getSensorInterface((struct retro_sensor_interface*)data);
+    ret = getSensorInterface((struct retro_sensor_interface*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE:
-    return getCameraInterface((struct retro_camera_callback*)data);
+    ret = getCameraInterface((struct retro_camera_callback*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_LOG_INTERFACE:
-    return getLogInterface((struct retro_log_callback*)data);
+    ret = getLogInterface((struct retro_log_callback*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_PERF_INTERFACE:
-    return getPerfInterface((struct retro_perf_callback*)data);
+    ret = getPerfInterface((struct retro_perf_callback*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE:
-    return getLocationInterface((struct retro_location_callback*)data);
+    ret = getLocationInterface((struct retro_location_callback*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY:
-    return getCoreAssetsDirectory((const char**)data);
+    ret = getCoreAssetsDirectory((const char**)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY:
-    return getSaveDirectory((const char**)data);
+    ret = getSaveDirectory((const char**)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO:
-    return setSystemAVInfo((const struct retro_system_av_info*)data);
+    ret = setSystemAVInfo((const struct retro_system_av_info*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK:
-    return setProcAddressCallback((const struct retro_get_proc_address_interface*)data);
+    ret = setProcAddressCallback((const struct retro_get_proc_address_interface*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO:
-    return setSubsystemInfo((const struct retro_subsystem_info*)data);
+    ret = setSubsystemInfo((const struct retro_subsystem_info*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_CONTROLLER_INFO:
-    return setControllerInfo((const struct retro_controller_info*)data);
+    ret = setControllerInfo((const struct retro_controller_info*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_MEMORY_MAPS:
-    return setMemoryMaps((const struct retro_memory_map*)data);
+    ret = setMemoryMaps((const struct retro_memory_map*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_GEOMETRY:
-    return setGeometry((const struct retro_game_geometry*)data);
+    ret = setGeometry((const struct retro_game_geometry*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_USERNAME:
-    return getUsername((const char**)data);
+    ret = getUsername((const char**)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_LANGUAGE:
-    return getLanguage((unsigned*)data);
+    ret = getLanguage((unsigned*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER:
-    return getCurrentSoftwareFramebuffer((struct retro_framebuffer*)data);
+    ret = getCurrentSoftwareFramebuffer((struct retro_framebuffer*)data);
+    break;
 
   case RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE:
-    return getHWRenderInterface((const struct retro_hw_render_interface**)data);
+    ret = getHWRenderInterface((const struct retro_hw_render_interface**)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS:
-    return setSupportAchievements(*(bool*)data);
-
-  case RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE:
-    return false;
+    ret = setSupportAchievements(*(bool*)data);
+    break;
 
   default:
-    error("Invalid env call: %u", cmd);
-    return false;
+    cmd &= ~(RETRO_ENVIRONMENT_EXPERIMENTAL | RETRO_ENVIRONMENT_PRIVATE);
+
+    if ((_calls[cmd / 8] & (1 << (cmd & 7))) == 0)
+    {
+      _logger->error(TAG "Unimplemented env call: %s (%u)", name, cmd);
+      _calls[cmd / 8] |= 1 << (cmd & 7);
+    }
+
+    ret = false;
   }
+
+  if (ret)
+  {
+    _logger->debug(TAG "Called  %s -> %d", name, ret);
+  }
+  else
+  {
+    _logger->error(TAG "Called  %s -> %d", name, ret);
+  }
+
+  return ret;
 }
 
 void libretro::Core::videoRefreshCallback(const void* data, unsigned width, unsigned height, size_t pitch)
@@ -1486,7 +1573,7 @@ void libretro::Core::s_logCallback(enum retro_log_level level, const char *fmt, 
 {
   va_list args;
   va_start(args, fmt);
-  s_instance->log(level, fmt, args);
+  s_instance->_logger->vprintf(level, fmt, args);
   va_end(args);
 }
 

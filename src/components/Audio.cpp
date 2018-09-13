@@ -22,6 +22,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <SDL_timer.h>
 #include <string.h>
 
+#define TAG "[AUD] "
+
 bool Fifo::init(size_t size)
 {
   _mutex = SDL_CreateMutex();
@@ -163,12 +165,12 @@ bool Audio::setRate(double rate)
 
   if (_resampler == NULL)
   {
-    _logger->printf(RETRO_LOG_ERROR, "speex_resampler_init: %s", speex_resampler_strerror(error));
+    _logger->error(TAG "speex_resampler_init: %s", speex_resampler_strerror(error));
     return false;
   }
   else
   {
-    _logger->printf(RETRO_LOG_INFO, "Resampler initialized to convert from %f to %f", _coreRate, _sampleRate);
+    _logger->info(TAG "Resampler initialized to convert from %f to %f", _coreRate, _sampleRate);
   }
 
   return true;
@@ -176,6 +178,8 @@ bool Audio::setRate(double rate)
 
 void Audio::mix(const int16_t* samples, size_t frames)
 {
+  _logger->debug(TAG "Requested %zu audio frames", frames);
+
   size_t avail = _fifo->free();
 
   /* Readjust the audio input rate. */
@@ -186,32 +190,39 @@ void Audio::mix(const int16_t* samples, size_t frames)
 
   _currentRatio = _originalRatio * adjust;
 
+  _logger->debug(TAG "Original ratio %f adjusted by %f to %f", _originalRatio, adjust, _currentRatio);
+
   spx_uint32_t in_len = frames * 2;
   spx_uint32_t out_len = (spx_uint32_t)(in_len * _currentRatio);
-  out_len += out_len & 1;
+  out_len += out_len & 1; // request an even number of samples (stereo)
   int16_t* output = (int16_t*)alloca(out_len * 2);
 
   if (output == NULL)
   {
-    _logger->printf(RETRO_LOG_ERROR, "Error allocating output buffer");
+    _logger->error(TAG "Error allocating output buffer");
     return;
   }
 
+  _logger->debug(TAG "Resampling %u samples to %u", in_len, out_len);
   int error = speex_resampler_process_int(_resampler, 0, samples, &in_len, output, &out_len);
+  _logger->debug(TAG "Resampled  %u samples to %u", in_len, out_len);
 
   if (error != RESAMPLER_ERR_SUCCESS)
   {
     memset(output, 0, out_len * 2);
-    _logger->printf(RETRO_LOG_ERROR, "speex_resampler_process_int: %s", speex_resampler_strerror(error));
+    _logger->error(TAG "speex_resampler_process_int: %s", speex_resampler_strerror(error));
   }
 
+  out_len &= ~1; // don't send incomplete audio frames
   size_t size = out_len * 2;
   
   while (size > avail)
   {
+    _logger->debug(TAG "Requested %zu bytes but only %zu available, sleeping", size, avail);
     SDL_Delay(1);
     avail = _fifo->free();
   }
 
   _fifo->write(output, size);
+  _logger->debug(TAG "Wrote %zu bytes to the FIFO", size);
 }

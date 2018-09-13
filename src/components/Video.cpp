@@ -28,6 +28,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <math.h>
 
+#define TAG "[VID] "
+
 bool Video::init(libretro::LoggerComponent* logger, Config* config)
 {
   _logger = logger;
@@ -105,7 +107,7 @@ bool Video::setGeometry(unsigned width, unsigned height, float aspect, enum retr
   _aspect = aspect;
   _pixelFormat = pixelFormat;
 
-  _logger->printf(RETRO_LOG_DEBUG, "Geometry set to %u x %u (1:%f)", width, height, aspect);
+  _logger->debug(TAG "Geometry set to %u x %u (1:%f)", width, height, aspect);
   return true;
 }
 
@@ -157,6 +159,8 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
       break;
     }
 
+    _logger->debug(TAG "Texture refreshed with %u x %u pixels", textureWidth, height);
+
     if (width != _viewWidth || height != _viewHeight)
     {
       _viewWidth = width;
@@ -172,6 +176,21 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
 
       Gl::deleteBuffers(1, &_vertexBuffer);
       _vertexBuffer = createVertexBuffer(_windowWidth, _windowHeight, texScaleX, texScaleY, _posAttribute, _uvAttribute);
+    }
+  }
+  else
+  {
+    if (data == NULL)
+    {
+      _logger->debug(TAG "Refresh not performed, data is NULL");
+    }
+    else if (data == RETRO_HW_FRAME_BUFFER_VALID)
+    {
+      _logger->debug(TAG "Refresh not performed, data is RETRO_HW_FRAME_BUFFER_VALID");
+    }
+    else
+    {
+      _logger->debug(TAG "Refresh not performed, unknown reason");
     }
   }
 }
@@ -190,13 +209,13 @@ uintptr_t Video::getCurrentFramebuffer()
 retro_proc_address_t Video::getProcAddress(const char* symbol)
 {
   void* address = SDL_GL_GetProcAddress(symbol);
-  _logger->printf(RETRO_LOG_DEBUG, "OpenGL symbol: %p resolved for %s", address, symbol);
+  _logger->debug(TAG "OpenGL symbol: %p resolved for %s", address, symbol);
   return (retro_proc_address_t)address;
 }
 
 void Video::showMessage(const char* msg, unsigned frames)
 {
-  _logger->printf(RETRO_LOG_INFO, "OSD message (%u): %s", frames, msg);
+  _logger->info(TAG "OSD message (%u): %s", frames, msg);
 }
 
 void Video::windowResized(unsigned width, unsigned height)
@@ -209,7 +228,7 @@ void Video::windowResized(unsigned width, unsigned height)
   float texScaleY = (float)_viewHeight / (float)_textureHeight;
 
   createVertexBuffer(width, height, texScaleX, texScaleY, _posAttribute, _uvAttribute);
-  _logger->printf(RETRO_LOG_INFO, "Window resized to %u x %u", width, height);
+  _logger->debug(TAG "Window resized to %u x %u", width, height);
 }
 
 void Video::getFramebufferSize(unsigned* width, unsigned* height, enum retro_pixel_format* format)
@@ -477,7 +496,7 @@ GLuint Video::createVertexBuffer(unsigned windowWidth, unsigned windowHeight, fl
   Gl::vertexAttribPointer(pos, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, x));
   Gl::vertexAttribPointer(uv, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, u));
 
-  _logger->printf(RETRO_LOG_DEBUG, "Vertices updated with window scale %f x %f and texture scale %f x %f", winScaleX, winScaleY, texScaleX, texScaleY);
+  _logger->debug(TAG "Vertices updated with window scale %f x %f and texture scale %f x %f", winScaleX, winScaleY, texScaleX, texScaleY);
   return vertexBuffer;
 }
 
@@ -507,6 +526,6 @@ GLuint Video::createTexture(unsigned width, unsigned height, retro_pixel_format 
     break;
   }
 
-  _logger->printf(RETRO_LOG_DEBUG, "Texture created with dimensions %u x %u (%s, %s)", width, height, format, linear ? "linear" : "nearest");
+  _logger->debug(TAG "Texture created with dimensions %u x %u (%s, %s)", width, height, format, linear ? "linear" : "nearest");
   return texture;
 }

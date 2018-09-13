@@ -25,6 +25,7 @@ SOFTWARE.
 #pragma once
 
 #include "libretro.h"
+#include "Components.h"
 #include "dynlib/dynlib.h"
 
 namespace libretro
@@ -42,138 +43,40 @@ namespace libretro
   {
   public:
     // Loads a core specified by its file path.
-    bool load(const char* path, char* error, size_t error_size);
+    bool load(libretro::LoggerComponent* logger, const char* path);
     
     // Unloads the core from memory.
     void destroy();
 
     // All the remaining methods map 1:1 to the libretro API.
-    inline void init() const
-    {
-      _init();
-    }
-
-    inline void deinit() const
-    {
-      _deinit();
-    }
-
-    inline unsigned apiVersion() const
-    {
-      return _apiVersion();
-    }
-
-    inline void getSystemInfo(struct retro_system_info* info) const
-    {
-      _getSystemInfo(info);
-    }
-
-    inline void getSystemAVInfo(struct retro_system_av_info* info) const
-    {
-      _getSystemAVInfo(info);
-    }
-
-    inline void setEnvironment(retro_environment_t cb) const
-    {
-      _setEnvironment(cb);
-    }
-
-    inline void setVideoRefresh(retro_video_refresh_t cb) const
-    {
-      _setVideoRefresh(cb);
-    }
-
-    inline void setAudioSample(retro_audio_sample_t cb) const
-    {
-      _setAudioSample(cb);
-    }
-
-    inline void setAudioSampleBatch(retro_audio_sample_batch_t cb) const
-    {
-      _setAudioSampleBatch(cb);
-    }
-
-    inline void setInputPoll(retro_input_poll_t cb) const
-    {
-      _setInputPoll(cb);
-    }
-
-    inline void setInputState(retro_input_state_t cb) const
-    {
-      _setInputState(cb);
-    }
-
-    inline void setControllerPortDevice(unsigned port, unsigned device) const
-    {
-      _setControllerPortDevice(port, device);
-    }
-
-    inline void reset() const
-    {
-      _reset();
-    }
-
-    inline void run() const
-    {
-      _run();
-    }
-
-    inline size_t serializeSize() const
-    {
-      return _serializeSize();
-    }
-
-    inline bool serialize(void* data, size_t size) const
-    {
-      return _serialize(data, size);
-    }
-
-    inline bool unserialize(const void* data, size_t size) const
-    {
-      return _unserialize(data, size);
-    }
-
-    inline void cheatReset() const
-    {
-      return _cheatReset();
-    }
-
-    inline void cheatSet(unsigned index, bool enabled, const char* code) const
-    {
-      _cheatSet(index, enabled, code);
-    }
-
-    inline bool loadGame(const struct retro_game_info* game) const
-    {
-      return _loadGame(game);
-    }
-
-    inline bool loadGameSpecial(unsigned game_type, const struct retro_game_info* info, size_t num_info) const
-    {
-      return _loadGameSpecial(game_type, info, num_info);
-    }
-
-    inline void unloadGame() const
-    {
-      _unloadGame();
-    }
-
-    inline unsigned getRegion() const
-    {
-      return _getRegion();
-    }
-
-    inline void* getMemoryData(unsigned id) const
-    {
-      return _getMemoryData(id);
-    }
-
-    inline size_t getMemorySize(unsigned id) const
-    {
-      return _getMemorySize(id);
-    }
+    void     init() const;
+    void     deinit() const;
+    unsigned apiVersion() const;
+    void     getSystemInfo(struct retro_system_info* info) const;
+    void     getSystemAVInfo(struct retro_system_av_info* info) const;
+    void     setEnvironment(retro_environment_t cb) const;
+    void     setVideoRefresh(retro_video_refresh_t cb) const;
+    void     setAudioSample(retro_audio_sample_t cb) const;
+    void     setAudioSampleBatch(retro_audio_sample_batch_t cb) const;
+    void     setInputPoll(retro_input_poll_t cb) const;
+    void     setInputState(retro_input_state_t cb) const;
+    void     setControllerPortDevice(unsigned port, unsigned device) const;
+    void     reset() const;
+    void     run() const;
+    size_t   serializeSize() const;
+    bool     serialize(void* data, size_t size) const;
+    bool     unserialize(const void* data, size_t size) const;
+    void     cheatReset() const;
+    void     cheatSet(unsigned index, bool enabled, const char* code) const;
+    bool     loadGame(const struct retro_game_info* game) const;
+    bool     loadGameSpecial(unsigned game_type, const struct retro_game_info* info, size_t num_info) const;
+    void     unloadGame() const;
+    unsigned getRegion() const;
+    void*    getMemoryData(unsigned id) const;
+    size_t   getMemorySize(unsigned id) const;
 
   protected:
+    libretro::LoggerComponent* _logger;
     dynlib_t _handle;
 
     void     (*_init)();
