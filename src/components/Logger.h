@@ -43,11 +43,6 @@ public:
 
   virtual void vprintf(enum retro_log_level level, const char* fmt, va_list args) override;
 
-  void debug(const char* format, ...);
-  void info(const char* format, ...);
-  void warn(const char* format, ...);
-  void error(const char* format, ...);
-
   std::string contents() const;
   
   typedef bool (*Iterator)(enum retro_log_level level, const char* line, void* ud);

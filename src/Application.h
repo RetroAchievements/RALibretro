@@ -93,7 +93,7 @@ protected:
   void        enableItems(const UINT* items, size_t count, UINT enable);
   void        enableSlots();
   void        enableRecent();
-  void        registerMemoryRegion(unsigned bank, void* data, size_t size);
+  void        registerMemoryRegion(unsigned* max, unsigned bank, void* data, size_t size);
   std::string getSRamPath();
   std::string getStatePath(unsigned ndx);
   std::string getConfigPath();

@@ -3,6 +3,8 @@
 #include <SDL_video.h>
 #include <SDL_opengl_glext.h>
 
+#define TAG "[OGL] "
+
 static libretro::LoggerComponent* s_logger;
 static bool s_ok;
 
@@ -54,7 +56,7 @@ static void* getProcAddress(const char* symbol)
 
   if (address == NULL)
   {
-    s_logger->printf(RETRO_LOG_ERROR, "Error in %s: symbol %s not found", __FUNCTION__, symbol);
+    s_logger->error(TAG "Error in %s: symbol %s not found", __FUNCTION__, symbol);
   }
 
   return address;
@@ -67,30 +69,30 @@ static void check(const char* function, bool ok = true)
   if (err != GL_NO_ERROR || !ok)
   {
     s_ok = false;
-    s_logger->printf(RETRO_LOG_ERROR, "Error in %s:", function);
+    s_logger->error(TAG "Error in %s:", function);
 
     do
     {
       switch (err)
       {
       case GL_INVALID_OPERATION:
-        s_logger->printf(RETRO_LOG_ERROR, "  INVALID_OPERATION");
+        s_logger->error(TAG "  INVALID_OPERATION");
         break;
 
       case GL_INVALID_ENUM:
-        s_logger->printf(RETRO_LOG_ERROR, "  INVALID_ENUM");
+        s_logger->error(TAG "  INVALID_ENUM");
         break;
 
       case GL_INVALID_VALUE:
-        s_logger->printf(RETRO_LOG_ERROR, "  INVALID_VALUE");
+        s_logger->error(TAG "  INVALID_VALUE");
         break;
 
       case GL_OUT_OF_MEMORY:
-        s_logger->printf(RETRO_LOG_ERROR, "  OUT_OF_MEMORY");
+        s_logger->error(TAG "  OUT_OF_MEMORY");
         break;
 
       case GL_INVALID_FRAMEBUFFER_OPERATION:
-        s_logger->printf(RETRO_LOG_ERROR, "  INVALID_FRAMEBUFFER_OPERATION");
+        s_logger->error(TAG "  INVALID_FRAMEBUFFER_OPERATION");
         break;
       }
 

@@ -45,6 +45,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <commdlg.h>
 #include <shlobj.h>
 
+#define TAG "[APP] "
+
 HWND g_mainWindow;
 Application app;
 
@@ -107,8 +109,8 @@ bool Application::init(const char* title, int width, int height)
 
   inited = kLoggerInited;
 
-  _logger.printf(RETRO_LOG_INFO, "RALibretro version %s starting", git::getReleaseVersion());
-  _logger.printf(RETRO_LOG_INFO, "RALibretro commit hash is %s", git::getFullHash());
+  _logger.info(TAG "RALibretro version %s starting", git::getReleaseVersion());
+  _logger.info(TAG "RALibretro commit hash is %s", git::getFullHash());
 
   if (!_config.init(&_logger))
   {
@@ -119,7 +121,7 @@ bool Application::init(const char* title, int width, int height)
 
   if (!_allocator.init(&_logger))
   {
-    _logger.printf(RETRO_LOG_ERROR, "Failed to initialize the allocator");
+    _logger.error(TAG "Failed to initialize the allocator");
     goto error;
   }
 
@@ -128,7 +130,7 @@ bool Application::init(const char* title, int width, int height)
   // Setup SDL
   if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
   {
-    _logger.printf(RETRO_LOG_ERROR, "SDL_Init: %s", SDL_GetError());
+    _logger.error(TAG "SDL_Init: %s", SDL_GetError());
     goto error;
   }
 
@@ -137,7 +139,7 @@ bool Application::init(const char* title, int width, int height)
   // Setup window
   if (SDL_GL_LoadLibrary(NULL) != 0)
   {
-    _logger.printf(RETRO_LOG_ERROR, "SDL_GL_LoadLibrary: %s", SDL_GetError());
+    _logger.error(TAG "SDL_GL_LoadLibrary: %s", SDL_GetError());
     goto error;
   }
 
@@ -152,7 +154,7 @@ bool Application::init(const char* title, int width, int height)
 
   if (_window == NULL)
   {
-    _logger.printf(RETRO_LOG_ERROR, "SDL_CreateWindow: %s", SDL_GetError());
+    _logger.error(TAG "SDL_CreateWindow: %s", SDL_GetError());
     goto error;
   }
 
@@ -161,7 +163,7 @@ bool Application::init(const char* title, int width, int height)
 
     if (SDL_GL_MakeCurrent(_window, context) != 0)
     {
-      _logger.printf(RETRO_LOG_ERROR, "SDL_GL_MakeCurrent: %s", SDL_GetError());
+      _logger.error(TAG "SDL_GL_MakeCurrent: %s", SDL_GetError());
       goto error;
     }
   }
@@ -171,7 +173,7 @@ bool Application::init(const char* title, int width, int height)
   int major, minor;
   SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &major);
   SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minor);
-  _logger.printf(RETRO_LOG_ERROR, "Got OpenGL %d.%d", major, minor);
+  _logger.info(TAG "Got OpenGL %d.%d", major, minor);
 
   inited = kWindowInited;
 
@@ -200,7 +202,7 @@ bool Application::init(const char* title, int width, int height)
 
   if (_audioDev == 0)
   {
-    _logger.printf(RETRO_LOG_ERROR, "SDL_OpenAudioDevice: %s", SDL_GetError());
+    _logger.error(TAG "SDL_OpenAudioDevice: %s", SDL_GetError());
     goto error;
   }
 
@@ -208,7 +210,7 @@ bool Application::init(const char* title, int width, int height)
 
   if (!_fifo.init(_audioSpec.size * 4))
   {
-    _logger.printf(RETRO_LOG_ERROR, "Error initializing the audio FIFO");
+    _logger.error(TAG "Error initializing the audio FIFO");
     goto error;
   }
 
@@ -251,7 +253,7 @@ bool Application::init(const char* title, int width, int height)
 
     if (SDL_GetWindowWMInfo(_window, &wminfo) != SDL_TRUE)
     {
-      _logger.printf(RETRO_LOG_ERROR, "SDL_GetWindowWMInfo: %s", SDL_GetError());
+      _logger.error(TAG "SDL_GetWindowWMInfo: %s", SDL_GetError());
       goto error;
     }
 
@@ -375,9 +377,12 @@ void Application::run()
       RA_DoAchievementsFrame();
     }
 
-    Gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    _video.draw();
-    SDL_GL_SwapWindow(_window);
+    if (!RA_IsOverlayFullyVisible())
+    {
+      Gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      _video.draw();
+      SDL_GL_SwapWindow(_window);
+    }
 
     RA_HandleHTTPResults();
 
@@ -411,7 +416,7 @@ void Application::run()
       }
       else
       {
-        _logger.printf(RETRO_LOG_ERROR, "GetDC(g_mainWindow) returned NULL");
+        _logger.error(TAG "GetDC(g_mainWindow) returned NULL");
       }
 
       t0 = t1;
@@ -655,7 +660,7 @@ bool Application::loadGame(const std::string& path)
     {
       _recentList.erase(_recentList.begin() + i);
       _recentList.insert(_recentList.begin(), item);
-      _logger.printf(RETRO_LOG_DEBUG, "Moved recent file %zu to front \"%s\" - %u - %u", i, util::fileName(item.path).c_str(), (unsigned)item.emulator, (unsigned)item.system);
+      _logger.debug(TAG "Moved recent file %zu to front \"%s\" - %u - %u", i, util::fileName(item.path).c_str(), (unsigned)item.emulator, (unsigned)item.system);
       goto moved_recent_item;
     }
   }
@@ -663,7 +668,7 @@ bool Application::loadGame(const std::string& path)
   if (_recentList.size() == 10)
   {
     _recentList.pop_back();
-    _logger.printf(RETRO_LOG_DEBUG, "Removed last entry in the recent list");
+    _logger.debug(TAG "Removed last entry in the recent list");
   }
 
   {
@@ -673,7 +678,7 @@ bool Application::loadGame(const std::string& path)
     item.system = _system;
 
     _recentList.insert(_recentList.begin(), item);
-    _logger.printf(RETRO_LOG_DEBUG, "Added recent file \"%s\" - %u - %u", util::fileName(item.path).c_str(), (unsigned)item.emulator, (unsigned)item.system);
+    _logger.debug(TAG "Added recent file \"%s\" - %u - %u", util::fileName(item.path).c_str(), (unsigned)item.emulator, (unsigned)item.system);
   }
 
 moved_recent_item:
@@ -691,15 +696,18 @@ moved_recent_item:
       }
       else
       {
-        _logger.printf(RETRO_LOG_ERROR, "Save RAM size mismatch, wanted %lu, got %lu from disk", _core.getMemorySize(RETRO_MEMORY_SAVE_RAM), size);
+        _logger.error(TAG "Save RAM size mismatch, wanted %lu, got %lu from disk", _core.getMemorySize(RETRO_MEMORY_SAVE_RAM), size);
       }
 
       free(data);
     }
   }
 
+  static uint8_t _1k[1024] = {0};
+
   _memoryBanks[0].count = 0;
   _memoryBanks[1].count = 0;
+  unsigned numBanks = 0;
 
   switch (_emulator)
   {
@@ -711,42 +719,115 @@ moved_recent_item:
   case Emulator::kGenesisPlusGx:
   case Emulator::kHandy:
   case Emulator::kBeetleSgx:
-  case Emulator::kGambatte:
   case Emulator::kMednafenPsx:
   case Emulator::kMednafenNgp:
   case Emulator::kFBAlpha:
     data = _core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
     size = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
-    registerMemoryRegion(0, data, size);
-    RA_InstallMemoryBank(0, (void*)::memoryRead0, (void*)::memoryWrite0, size);
-    _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
+    registerMemoryRegion(&numBanks, 0, data, size);
     break;
 
   case Emulator::kSnes9x:
   case Emulator::kMednafenVb:
     data = _core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
     size = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
-    registerMemoryRegion(0, data, size);
-    RA_InstallMemoryBank(0, (void*)::memoryRead0, (void*)::memoryWrite0, size);
-    _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
+    registerMemoryRegion(&numBanks, 0, data, size);
 
     data = _core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
     size = _core.getMemorySize(RETRO_MEMORY_SAVE_RAM);
-    registerMemoryRegion(1, data, size);
-    RA_InstallMemoryBank(1, (void*)::memoryRead1, (void*)::memoryWrite1, size);
-    _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
+    registerMemoryRegion(&numBanks, 1, data, size);
 
     break;
   
+  case Emulator::kGambatte:
+    {
+      const struct retro_memory_map* mmap = _core.getMemoryMap();
+      struct retro_memory_descriptor* layout = new struct retro_memory_descriptor[mmap->num_descriptors + 2];
+      memcpy(layout, mmap->descriptors, mmap->num_descriptors * sizeof(struct retro_memory_descriptor));
+
+      layout[mmap->num_descriptors + 1] = {0, NULL, 0, 0x10000, 0, 0, 0, NULL};
+
+      for (unsigned i = 0; i < mmap->num_descriptors; i++)
+      {
+        if (layout[i].start == 0xc000)
+        {
+          layout[mmap->num_descriptors] = layout[i];
+          layout[mmap->num_descriptors].start = 0xe000;
+          layout[mmap->num_descriptors].len = 0x1e00;
+        }
+        else if (mmap->descriptors[i].start == 0xa000)
+        {
+          if (layout[i].len > 0x2000)
+          {
+            layout[i].len = 0x2000;
+          }
+        }
+      }
+
+      struct Comparator {
+        static int compare(const void* e1, const void* e2)
+        {
+          auto d1 = (const struct retro_memory_descriptor*)e1;
+          auto d2 = (const struct retro_memory_descriptor*)e2;
+
+          if (d1->start < d2->start)
+          {
+            return -1;
+          }
+          else if (d1->start > d2->start)
+          {
+            return 1;
+          }
+          else
+          {
+            return 0;
+          }
+        }
+      };
+
+      qsort(layout, mmap->num_descriptors + 2, sizeof(struct retro_memory_descriptor), Comparator::compare);
+
+      size_t address = 0;
+
+      for (unsigned i = 0; i < mmap->num_descriptors + 2; i++)
+      {
+        if (layout[i].start > address)
+        {
+          size_t fill = layout[i].start - address;
+
+          while (fill > 1024)
+          {
+            registerMemoryRegion(&numBanks, 0, _1k, 1024);
+            fill -= 1024;
+          }
+
+          if (fill != 0)
+          {
+            registerMemoryRegion(&numBanks, 0, _1k, fill);
+          }
+        }
+
+        if (layout[i].len != 0)
+        {
+          registerMemoryRegion(&numBanks, 0, layout[i].ptr, layout[i].len);
+        }
+
+        address = layout[i].start + layout[i].len;
+      }
+
+      delete[] layout;
+    }
+
+    break;
+
   case Emulator::kFceumm:
     {
-      static const uint8_t _1k[1024] = {0};
       const struct retro_memory_map* mmap = _core.getMemoryMap();
       void* pointer[64];
 
       for (unsigned i = 0; i < 64; i++)
       {
-        pointer[i] = (void*)_1k;
+        pointer[i] = _1k;
       }
 
       for (unsigned i = 0; i < mmap->num_descriptors; i++)
@@ -765,11 +846,8 @@ moved_recent_item:
 
       for (unsigned i = 0; i < 64; i++)
       {
-        registerMemoryRegion(0, pointer[i], 1024);
+        registerMemoryRegion(&numBanks, 0, pointer[i], 1024);
       }
-
-      RA_InstallMemoryBank(0, (void*)::memoryRead0, (void*)::memoryWrite0, 65536);
-      _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
     }
 
     break;
@@ -786,18 +864,14 @@ moved_recent_item:
           // IRAM: Internal RAM (on-chip work RAM)
           data = mmap->descriptors[i].ptr;
           size = mmap->descriptors[i].len;
-          registerMemoryRegion(0, data, size);
-          RA_InstallMemoryBank(0, (void*)::memoryRead0, (void*)::memoryWrite0, size);
-          _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
+          registerMemoryRegion(&numBanks, 0, data, size);
         }
         else if (mmap->descriptors[i].start == 0x02000000U)
         {
           // WRAM: On-board Work RAM
           data = mmap->descriptors[i].ptr;
           size = mmap->descriptors[i].len;
-          registerMemoryRegion(1, data, size);
-          RA_InstallMemoryBank(1, (void*)::memoryRead1, (void*)::memoryWrite1, size);
-          _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
+          registerMemoryRegion(&numBanks, 1, data, size);
         }
       }
     }
@@ -805,12 +879,39 @@ moved_recent_item:
     {
       data = _core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
       size = 32768;
-      registerMemoryRegion(0, data, size);
-      RA_InstallMemoryBank(0, (void*)::memoryRead0, (void*)::memoryWrite0, size);
-      _logger.printf(RETRO_LOG_INFO, "Installed  %7zu bytes at 0x%08x", size, data);
+      registerMemoryRegion(&numBanks, 0, data, size);
     }
 
     break;
+  }
+
+  for (unsigned bank = 0; bank < numBanks; bank++)
+  {
+    MemoryBank* mb = _memoryBanks + bank;
+    size_t size = 0;
+
+    for (size_t i = 0; i < mb->count; i++)
+    {
+      size += mb->regions[i].size;
+    }
+
+    if (size == 0)
+    {
+      break;
+    }
+
+    switch (bank)
+    {
+    case 0:
+      RA_InstallMemoryBank(0, (void*)::memoryRead0, (void*)::memoryWrite0, size);
+      break;
+
+    case 1:
+      RA_InstallMemoryBank(1, (void*)::memoryRead1, (void*)::memoryWrite1, size);
+      break;
+    }
+
+    _logger.info(TAG "Installed  %7zu bytes on bank %u", size, bank);
   }
 
   _validSlots = 0;
@@ -960,14 +1061,17 @@ void Application::s_audioCallback(void* udata, Uint8* stream, int len)
     {
       app->_fifo.read((void*)stream, avail);
       memset((void*)(stream + avail), 0, len - avail);
+      app->_logger.debug("[AUD] Audio hardware requested %d bytes, only %zu available, padding with zeroes", len, avail);
     }
     else
     {
       app->_fifo.read((void*)stream, len);
+      app->_logger.debug("[AUD] Audio hardware requested %d bytes", len);
     }
   }
   else
   {
+    app->_logger.debug("[AUD] Audio hardware requested %d bytes, game is not running, sending silence", len);
     memset((void*)stream, 0, len);
   }
 }
@@ -1054,14 +1158,22 @@ void Application::enableRecent()
   }
 }
 
-void Application::registerMemoryRegion(unsigned bank, void* data, size_t size)
+void Application::registerMemoryRegion(unsigned* max, unsigned bank, void* data, size_t size)
 {
-  MemoryBank* mb = _memoryBanks + bank;
-  mb->regions[mb->count].data = (uint8_t*)data;
-  mb->regions[mb->count].size = size;
-  mb->count++;
+  if (data != NULL && size != 0)
+  {
+    MemoryBank* mb = _memoryBanks + bank;
+    mb->regions[mb->count].data = (uint8_t*)data;
+    mb->regions[mb->count].size = size;
+    mb->count++;
 
-  _logger.printf(RETRO_LOG_INFO, "Registered %7zu bytes at 0x%08x on bank %u", size, data, bank);
+    if ((bank + 1) > *max)
+    {
+      *max = bank + 1;
+    }
+
+    _logger.info(TAG "Registered %7zu bytes at 0x%08x on bank %u", size, data, bank);
+  }
 }
 
 std::string Application::getSRamPath()
@@ -1155,18 +1267,18 @@ void Application::saveState(const std::string& path)
 {
   if (hardcore())
   {
-    _logger.printf(RETRO_LOG_INFO, "Hardcore mode is active, can't save state");
+    _logger.info(TAG "Hardcore mode is active, can't save state");
     return;
   }
 
-  _logger.printf(RETRO_LOG_INFO, "Saving state to %s", path.c_str());
+  _logger.info(TAG "Saving state to %s", path.c_str());
   
   size_t size = _core.serializeSize();
   void* data = malloc(size);
 
   if (data == NULL)
   {
-    _logger.printf(RETRO_LOG_ERROR, "Out of memory allocating %lu bytes for the game state", size);
+    _logger.error(TAG "Out of memory allocating %lu bytes for the game state", size);
     return;
   }
 
@@ -1226,7 +1338,7 @@ void Application::loadState(const std::string& path)
 {
   if (hardcore())
   {
-    _logger.printf(RETRO_LOG_INFO, "Hardcore mode is active, can't load state");
+    _logger.warn(TAG "Hardcore mode is active, can't load state");
     return;
   }
 
@@ -1250,7 +1362,7 @@ void Application::loadState(const std::string& path)
 
   if (pixels == NULL)
   {
-    _logger.printf(RETRO_LOG_ERROR, "Error loading savestate screenshot");
+    _logger.error(TAG "Error loading savestate screenshot");
     return;
   }
 
@@ -1259,7 +1371,7 @@ void Application::loadState(const std::string& path)
   if (converted == NULL)
   {
     free((void*)pixels);
-    _logger.printf(RETRO_LOG_ERROR, "Error converting savestate screenshot to the framebuffer format");
+    _logger.error(TAG "Error converting savestate screenshot to the framebuffer format");
     return;
   }
 
@@ -1294,7 +1406,7 @@ void Application::screenshot()
 {
   if (!isGameActive())
   {
-    _logger.printf(RETRO_LOG_WARN, "No active game, screenshot not taken");
+    _logger.warn(TAG "No active game, screenshot not taken");
     return;
   }
 
@@ -1304,7 +1416,7 @@ void Application::screenshot()
 
   if (data == NULL)
   {
-    _logger.printf(RETRO_LOG_ERROR, "Error getting framebuffer from the video component");
+    _logger.error(TAG "Error getting framebuffer from the video component");
     return;
   }
 
@@ -1321,7 +1433,7 @@ void Application::aboutDialog()
 void Application::loadRecentList()
 {
   _recentList.clear();
-  _logger.printf(RETRO_LOG_DEBUG, "Recent file list cleared");
+  _logger.debug(TAG "Recent file list cleared");
 
   size_t size;
   void* data = util::loadFile(&_logger, getConfigPath(), &size);
@@ -1338,7 +1450,7 @@ void Application::loadRecentList()
     Deserialize ud;
     ud.self = this;
 
-    jsonsax_result_t res = jsonsax_parse((char*)data, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+    jsonsax_parse((char*)data, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
     {
       auto ud = (Deserialize*)udata;
 
@@ -1371,7 +1483,7 @@ void Application::loadRecentList()
           else if (event == JSONSAX_OBJECT && num == 0)
           {
             ud->self->_recentList.push_back(ud->item);
-            ud->self->_logger.printf(RETRO_LOG_DEBUG, "Added recent file \"%s\" - %u - %u", util::fileName(ud->item.path).c_str(), (unsigned)ud->item.emulator, (unsigned)ud->item.system);
+            ud->self->_logger.debug(TAG "Added recent file \"%s\" - %u - %u", util::fileName(ud->item.path).c_str(), (unsigned)ud->item.emulator, (unsigned)ud->item.system);
           }
 
           return 0;
@@ -1477,13 +1589,12 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     case IDM_SYSTEM_MEDNAFENNGP:
     case IDM_SYSTEM_MEDNAFENVB:
     case IDM_SYSTEM_FBALPHA:
-    case IDM_SYSTEM_MUPEN64PLUS:
       {
         static Emulator emulators[] =
         {
           Emulator::kStella, Emulator::kSnes9x, Emulator::kPicoDrive, Emulator::kGenesisPlusGx, Emulator::kFceumm,
           Emulator::kHandy, Emulator::kBeetleSgx, Emulator::kGambatte, Emulator::kMGBA, Emulator::kMednafenPsx,
-          Emulator::kMednafenNgp, Emulator::kMednafenVb, Emulator::kFBAlpha, Emulator::kMupen64Plus
+          Emulator::kMednafenNgp, Emulator::kMednafenVb, Emulator::kFBAlpha
         };
 
         _fsm.loadCore(emulators[cmd - IDM_SYSTEM_STELLA]);
