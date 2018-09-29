@@ -59,7 +59,7 @@ enum class System
   kGameBoyColor   = GBC,
   kGameBoyAdvance = GBA,
   kPlayStation1   = PlayStation,
-  kNeoGeoPocket   = NeoGeo,
+  kNeoGeoPocket   = NeoGeoPocket,
   kVirtualBoy     = VirtualBoy,
   kGameGear       = GameGear,
   kArcade         = Arcade

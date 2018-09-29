@@ -264,7 +264,6 @@ bool Application::init(const char* title, int width, int height)
 
     RA_Init(g_mainWindow, RA_Libretro, git::getReleaseVersion());
     RA_InitShared();
-    RA_InitDirectX();
     RA_AttemptLogin(true);
     RebuildMenu();
   }
@@ -952,6 +951,7 @@ void Application::resetGame()
   if (isGameActive())
   {
     _core.resetGame();
+    RA_OnReset();
   }
 }
 
@@ -1097,11 +1097,6 @@ void Application::enableItems(const UINT* items, size_t count, UINT enable)
 void Application::enableSlots()
 {
   UINT enabled = hardcore() ? MF_DISABLED : MF_ENABLED;
-  
-  for (unsigned ndx = 1; ndx <= 10; ndx++)
-  {
-    EnableMenuItem(_menu, IDM_SAVE_STATE_1 + ndx - 1, enabled);
-  }
   
   for (unsigned ndx = 1; ndx <= 10; ndx++)
   {
@@ -1265,12 +1260,6 @@ std::string Application::getScreenshotPath()
 
 void Application::saveState(const std::string& path)
 {
-  if (hardcore())
-  {
-    _logger.info(TAG "Hardcore mode is active, can't save state");
-    return;
-  }
-
   _logger.info(TAG "Saving state to %s", path.c_str());
   
   size_t size = _core.serializeSize();
@@ -1336,7 +1325,7 @@ void Application::saveState()
 
 void Application::loadState(const std::string& path)
 {
-  if (hardcore())
+  if (!RA_WarnDisableHardcore("load a state"))
   {
     _logger.warn(TAG "Hardcore mode is active, can't load state");
     return;
@@ -1566,11 +1555,7 @@ void Application::toggleFullscreen()
 
 void Application::handle(const SDL_SysWMEvent* syswm)
 {
-  if (syswm->msg->msg.win.msg == WM_PAINT)
-  {
-    RA_OnPaint(g_mainWindow);
-  }
-  else if (syswm->msg->msg.win.msg == WM_COMMAND)
+  if (syswm->msg->msg.win.msg == WM_COMMAND)
   {
     WORD cmd = LOWORD(syswm->msg->msg.win.wParam);
 

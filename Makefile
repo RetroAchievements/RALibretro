@@ -72,7 +72,7 @@ bin/RALibretro.exe: $(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LIBS)
 
 src/Git.cpp: etc/Git.cpp.template FORCE
-	cat $< | sed s/GITFULLHASH/`git rev-parse HEAD | tr -d "\n"`/g | sed s/GITMINIHASH/`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`/g | sed s/GITRELEASE/`git describe | tr -d "\n"`/g > $@
+	cat $< | sed s/GITFULLHASH/`git rev-parse HEAD | tr -d "\n"`/g | sed s/GITMINIHASH/`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`/g | sed s/GITRELEASE/`git describe --tags | sed s/\-.*//g | tr -d "\n"`/g > $@
 
 zip:
 	rm -f bin/RALibretro-*.zip RALibretro-*.zip
