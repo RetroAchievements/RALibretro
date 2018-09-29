@@ -42,6 +42,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <WinUser.h>
 #include <commdlg.h>
 #include <shlobj.h>
 
@@ -629,14 +630,26 @@ bool Application::loadGame(const std::string& path)
       return false;
     }
   }
+
+  _system = getSystem(_emulator, path, &_core);
     
   if (!_core.loadGame(path.c_str(), data, size))
   {
-    free(data);
+    if (_system == System::kNintendo)
+    {
+      // Assume that the FDS system is missing
+      _logger.debug(TAG "Game load failure (Nintendo)");
+
+      MessageBox(g_mainWindow, "Game load error. Are you missing a system file?", "Core Error", MB_OK);
+    }
+
+    if (data)
+    {
+      free(data);
+    }
+
     return false;
   }
-
-  _system = getSystem(_emulator, path, &_core);
   
   RA_SetConsoleID((unsigned)_system);
   RA_ClearMemoryBanks();
@@ -644,11 +657,20 @@ bool Application::loadGame(const std::string& path)
   if (!romLoaded(&_logger, _system, path, data, size))
   {
     _core.unloadGame();
-    free(data);
+
+    if (data)
+    {
+      free(data);
+    }
+
     return false;
   }
 
-  free(data);
+  if (data)
+  {
+    free(data);
+  }
+
   _gamePath = path;
 
   for (size_t i = 0; i < _recentList.size(); i++)

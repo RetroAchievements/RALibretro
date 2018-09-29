@@ -298,6 +298,14 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
 
   case System::kNintendo:
     ok = romLoadedNes(rom, size);
+
+    if (!ok)
+    {
+      // Fall back to the default strategy, assuming FDS file
+      RA_OnLoadNewRom((BYTE*)rom, size);
+      ok = true;
+    }
+
     break;
   
   case System::kAtariLynx:
