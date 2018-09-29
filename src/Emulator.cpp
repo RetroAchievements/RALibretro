@@ -306,7 +306,6 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
       ok = true;
     }
 
-    free(rom);
     break;
   
   case System::kAtariLynx:
