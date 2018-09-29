@@ -742,7 +742,7 @@ moved_recent_item:
   case Emulator::kGambatte:
     {
       const struct retro_memory_map* mmap = _core.getMemoryMap();
-      struct retro_memory_descriptor layout[mmap->num_descriptors + 2];
+      struct retro_memory_descriptor* layout = new struct retro_memory_descriptor[mmap->num_descriptors + 2];
       memcpy(layout, mmap->descriptors, mmap->num_descriptors * sizeof(struct retro_memory_descriptor));
 
       layout[mmap->num_descriptors + 1] = {0, NULL, 0, 0x10000, 0, 0, 0, NULL};
@@ -814,6 +814,8 @@ moved_recent_item:
 
         address = layout[i].start + layout[i].len;
       }
+
+      delete[] layout;
     }
 
     break;
