@@ -42,7 +42,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <WinUser.h>
+#include <winuser.h>
 #include <commdlg.h>
 #include <shlobj.h>
 
