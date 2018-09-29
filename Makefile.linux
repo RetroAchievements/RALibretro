@@ -9,7 +9,7 @@ DEFINES=-DOUTSIDE_SPEEX -DRANDOM_PREFIX=speex -DEXPORT= -D_USE_SSE2 -DFIXED_POIN
 CFLAGS=-Wall -m32
 
 LDFLAGS=\
-	-m32 -Lsrc/SDL2/lib/x86 -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lwinhttp -lwinmm \
+	-m32 -Lsrc/SDL2/lib/x86 -lmingw32 -lSDL2main -lSDL2.dll -lopengl32 -lwinhttp -lwinmm \
 	-lgdi32 -lversion -limm32 -lole32 -loleaut32 -lcomdlg32 -static-libstdc++
 
 ifeq ($(DEBUG), 1)
