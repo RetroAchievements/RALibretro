@@ -703,6 +703,8 @@ moved_recent_item:
     }
   }
 
+  static uint8_t _1k[1024] = {0};
+
   _memoryBanks[0].count = 0;
   _memoryBanks[1].count = 0;
   unsigned numBanks = 0;
@@ -717,7 +719,6 @@ moved_recent_item:
   case Emulator::kGenesisPlusGx:
   case Emulator::kHandy:
   case Emulator::kBeetleSgx:
-  case Emulator::kGambatte:
   case Emulator::kMednafenPsx:
   case Emulator::kMednafenNgp:
   case Emulator::kFBAlpha:
@@ -738,15 +739,95 @@ moved_recent_item:
 
     break;
   
+  case Emulator::kGambatte:
+    {
+      const struct retro_memory_map* mmap = _core.getMemoryMap();
+      struct retro_memory_descriptor* layout = new struct retro_memory_descriptor[mmap->num_descriptors + 2];
+      memcpy(layout, mmap->descriptors, mmap->num_descriptors * sizeof(struct retro_memory_descriptor));
+
+      layout[mmap->num_descriptors + 1] = {0, NULL, 0, 0x10000, 0, 0, 0, NULL};
+
+      for (unsigned i = 0; i < mmap->num_descriptors; i++)
+      {
+        if (layout[i].start == 0xc000)
+        {
+          layout[mmap->num_descriptors] = layout[i];
+          layout[mmap->num_descriptors].start = 0xe000;
+          layout[mmap->num_descriptors].len = 0x1e00;
+        }
+        else if (mmap->descriptors[i].start == 0xa000)
+        {
+          if (layout[i].len > 0x2000)
+          {
+            layout[i].len = 0x2000;
+          }
+        }
+      }
+
+      struct Comparator {
+        static int compare(const void* e1, const void* e2)
+        {
+          auto d1 = (const struct retro_memory_descriptor*)e1;
+          auto d2 = (const struct retro_memory_descriptor*)e2;
+
+          if (d1->start < d2->start)
+          {
+            return -1;
+          }
+          else if (d1->start > d2->start)
+          {
+            return 1;
+          }
+          else
+          {
+            return 0;
+          }
+        }
+      };
+
+      qsort(layout, mmap->num_descriptors + 2, sizeof(struct retro_memory_descriptor), Comparator::compare);
+
+      size_t address = 0;
+
+      for (unsigned i = 0; i < mmap->num_descriptors + 2; i++)
+      {
+        if (layout[i].start > address)
+        {
+          size_t fill = layout[i].start - address;
+
+          while (fill > 1024)
+          {
+            registerMemoryRegion(&numBanks, 0, _1k, 1024);
+            fill -= 1024;
+          }
+
+          if (fill != 0)
+          {
+            registerMemoryRegion(&numBanks, 0, _1k, fill);
+          }
+        }
+
+        if (layout[i].len != 0)
+        {
+          registerMemoryRegion(&numBanks, 0, layout[i].ptr, layout[i].len);
+        }
+
+        address = layout[i].start + layout[i].len;
+      }
+
+      delete[] layout;
+    }
+
+    break;
+
   case Emulator::kFceumm:
     {
-      static const uint8_t _1k[1024] = {0};
       const struct retro_memory_map* mmap = _core.getMemoryMap();
       void* pointer[64];
 
       for (unsigned i = 0; i < 64; i++)
       {
-        pointer[i] = (void*)_1k;
+        pointer[i] = _1k;
       }
 
       for (unsigned i = 0; i < mmap->num_descriptors; i++)
@@ -1369,7 +1450,7 @@ void Application::loadRecentList()
     Deserialize ud;
     ud.self = this;
 
-    jsonsax_result_t res = jsonsax_parse((char*)data, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+    jsonsax_parse((char*)data, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
     {
       auto ud = (Deserialize*)udata;
 

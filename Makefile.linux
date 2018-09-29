@@ -1,0 +1,65 @@
+# sudo apt-get install mingw-w64
+
+CC=i686-w64-mingw32-gcc
+CXX=i686-w64-mingw32-g++
+RC=i686-w64-mingw32-windres
+
+INCLUDES=-Isrc -I./src/RA_Integration/src -I./src/RA_Integration/src/rapidjson/include -Isrc/SDL2/include
+DEFINES=-DOUTSIDE_SPEEX -DRANDOM_PREFIX=speex -DEXPORT= -D_USE_SSE2 -DFIXED_POINT
+CFLAGS=-Wall -m32
+
+LDFLAGS=\
+	-m32 -Lsrc/SDL2/lib/x86 -lmingw32 -lSDL2main -lSDL2.dll -lopengl32 -lwinhttp -lwinmm \
+	-lgdi32 -lversion -limm32 -lole32 -loleaut32 -lcomdlg32 -static-libstdc++
+
+ifeq ($(DEBUG), 1)
+  CFLAGS+=-O0 -g -DDEBUG_FSM -DLOG_TO_FILE
+else
+  CFLAGS+=-O3 -DNDEBUG -DLOG_TO_FILE
+endif
+
+CXXFLAGS=$(CFLAGS) -std=c++11
+
+# main
+OBJS=\
+	src/dynlib/dynlib.o src/jsonsax/jsonsax.o src/libretro/BareCore.o src/libretro/Core.o \
+	src/RA_Implementation.o src/RA_Integration/src/RA_Interface.o src/components/Audio.o \
+	src/components/Config.o src/components/Dialog.o src/components/Input.o \
+	src/components/Logger.o src/components/Video.o src/speex/resample.o src/About.o \
+	src/Application.o src/Emulator.o src/Fsm.o src/Git.o src/Gl.o src/GlUtil.o \
+	src/KeyBinds.o src/main.o src/menu.res src/Util.o
+
+%.o: %.cpp
+	$(CXX) $(INCLUDES) $(DEFINES) $(CXXFLAGS) -c $< -o $@
+
+%.o: %.c
+	$(CC) $(INCLUDES) $(DEFINES) $(CFLAGS) -c $< -o $@
+
+%.res: %.rc
+	$(RC) $< -O coff -o $@
+
+all: bin/RALibretro.exe
+
+bin/RALibretro.exe: $(OBJS)
+	mkdir -p bin
+	$(CXX) -o $@ $+ $(LDFLAGS)
+
+src/Git.cpp: etc/Git.cpp.template FORCE
+	cat $< | sed s/GITFULLHASH/`git rev-parse HEAD | tr -d "\n"`/g | sed s/GITMINIHASH/`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`/g | sed s/GITRELEASE/`git describe | tr -d "\n"`/g > $@
+
+zip:
+	rm -f bin/RALibretro-*.zip RALibretro-*.zip
+	zip -9 RALibretro-`git describe | tr -d "\n"`.zip bin/RALibretro.exe
+
+clean:
+	rm -f bin/RALibretro $(OBJS) bin/RALibretro-*.zip RALibretro-*.zip
+
+pack:
+ifeq ("", "$(wildcard bin/RALibretro.exe)")
+	echo '"bin/RALibretro.exe" not found!'
+else
+	rm -f bin/RALibretro-*.zip RALibretro-*.zip
+	zip -9r RALibretro-pack-`git describe | tr -d "\n"`.zip bin
+endif
+
+.PHONY: clean FORCE
