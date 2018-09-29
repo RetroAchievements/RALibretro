@@ -798,23 +798,21 @@ moved_recent_item:
           while (fill > 1024)
           {
             registerMemoryRegion(&numBanks, 0, _1k, 1024);
-            address += 1024;
             fill -= 1024;
           }
 
           if (fill != 0)
           {
             registerMemoryRegion(&numBanks, 0, _1k, fill);
-            address += fill;
           }
         }
 
         if (layout[i].len != 0)
         {
           registerMemoryRegion(&numBanks, 0, layout[i].ptr, layout[i].len);
-          address += layout[i].len;
         }
 
+        address = layout[i].start + layout[i].len;
       }
     }
 
