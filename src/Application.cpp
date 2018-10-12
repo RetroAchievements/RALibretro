@@ -612,23 +612,12 @@ void Application::updateMenu()
 
 bool Application::loadGame(const std::string& path)
 {
-  const struct retro_system_info* info = _core.getSystemInfo();
   size_t size;
-  void* data;
+  void* data = util::loadFile(&_logger, path, &size);
 
-  if (info->need_fullpath)
+  if (data == NULL)
   {
-    size = 0;
-    data = NULL;
-  }
-  else
-  {
-    data = util::loadFile(&_logger, path, &size);
-
-    if (data == NULL)
-    {
-      return false;
-    }
+    return false;
   }
 
   _system = getSystem(_emulator, path, &_core);
