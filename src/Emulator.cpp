@@ -292,7 +292,9 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
   case System::kMegaDrive:
   case System::kSuperNintendo:
   default:
+    rom = util::loadFile(logger, path, &size);
     RA_OnLoadNewRom((BYTE*)rom, size);
+    free(rom);
     ok = true;
     break;
 
@@ -302,14 +304,18 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
     if (!ok)
     {
       // Fall back to the default strategy, assuming FDS file
+      rom = util::loadFile(logger, path, &size);
       RA_OnLoadNewRom((BYTE*)rom, size);
+      free(rom);
       ok = true;
     }
 
     break;
   
   case System::kAtariLynx:
+    rom = util::loadFile(logger, path, &size);
     RA_OnLoadNewRom((BYTE*)rom + 0x0040, size > 0x0240 ? 0x0200 : size - 0x0040);
+    free(rom);
     ok = true;
     break;
   
