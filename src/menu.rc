@@ -52,6 +52,7 @@ main MENU
             MENUITEM "PicoDrive (Master System, Mega Drive)", IDM_SYSTEM_PICODRIVE
             MENUITEM "Snes9x (Super Nintendo)", IDM_SYSTEM_SNES9X
             MENUITEM "Stella (Atari 2600)", IDM_SYSTEM_STELLA
+            MENUITEM "ProSystem (Atari 7800)", IDM_SYSTEM_PROSYSTEM
         }
         MENUITEM SEPARATOR
         MENUITEM "Load Game...", IDM_LOAD_GAME
