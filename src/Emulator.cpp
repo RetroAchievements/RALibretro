@@ -37,6 +37,7 @@ const char* getEmulatorName(Emulator emulator)
   case Emulator::kMednafenNgp:   return "Mednafen NGP";
   case Emulator::kMednafenVb:    return "Mednafen VB";
   case Emulator::kFBAlpha:       return "Final Burn Alpha";
+  case Emulator::kProSystem:     return "ProSystem";
   default:                       break;
   }
   
@@ -61,6 +62,7 @@ const char* getEmulatorFileName(Emulator emulator)
   case Emulator::kMednafenNgp:   return "mednafen_ngp_libretro";
   case Emulator::kMednafenVb:    return "mednafen_vb_libretro";
   case Emulator::kFBAlpha:       return "fbalpha_libretro";
+  case Emulator::kProSystem:     return "prosystem_libretro";
   default:                       break;
   }
   
@@ -87,6 +89,7 @@ const char* getEmulatorExtensions(Emulator emulator)
   case Emulator::kMednafenNgp:   return EXTPREFIX "*.NGP;*.NGC;*.NGPC\0";                     // ngp|ngc|ngpc
   case Emulator::kMednafenVb:    return EXTPREFIX "*.VB;*.VBOY;*.BIN\0";                      // vb|vboy|bin
   case Emulator::kFBAlpha:       return EXTPREFIX "*.ZIP\0";                                  // iso|zip|7z
+  case Emulator::kProSystem:     return EXTPREFIX "*.A78\0";                                  // a78
   default:                       break;
   }
   
@@ -114,6 +117,7 @@ const char* getSystemName(System system)
   case System::kVirtualBoy:     return "Virtual Boy";
   case System::kGameGear:       return "Game Gear";
   case System::kArcade:         return "Arcade";
+  case System::kAtari7800:      return "Atari 7800";
   default:                      break;
   }
   
@@ -134,6 +138,7 @@ System getSystem(Emulator emulator, const std::string game_path, libretro::Core*
   case Emulator::kMednafenNgp: return System::kNeoGeoPocket;
   case Emulator::kMednafenVb:  return System::kVirtualBoy;
   case Emulator::kFBAlpha:     return System::kArcade;
+  case Emulator::kProSystem:   return System::kAtari7800;
 
   case Emulator::kPicoDrive:
   case Emulator::kGenesisPlusGx:
@@ -291,6 +296,7 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
   case System::kMasterSystem:
   case System::kMegaDrive:
   case System::kSuperNintendo:
+  case System::kAtari7800:
   default:
     rom = util::loadFile(logger, path, &size);
     RA_OnLoadNewRom((BYTE*)rom, size);

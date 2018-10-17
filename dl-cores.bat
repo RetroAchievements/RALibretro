@@ -12,7 +12,7 @@ FOR %%A IN (%1 %2 %3) DO (
 )
 
 SET SUPPORTED_CORES=fbalpha fceumm gambatte genesis_plus_gx handy mednafen_ngp ^
-mednafen_supergrafx mednafen_vb mgba picodrive snes9x stella
+mednafen_supergrafx mednafen_vb mgba picodrive snes9x stella prosystem
 SET NIGHTLY_URL="https://buildbot.libretro.com/nightly/windows/x86/latest"
 SET DEST_DIR=bin\Cores
 SET DEPS=wget unzip
