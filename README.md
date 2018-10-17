@@ -30,13 +30,13 @@ $ git clone --recursive --depth 1 https://github.com/RetroAchievements/RALibretr
 
 ### Fetch dependencies
 ```
+$ cd RALibretro
 $ ./dl-cores.sh all
 ```
 
 ### Build
 
 ```
-$ cd RALibretro
 $ make
 ```
 
