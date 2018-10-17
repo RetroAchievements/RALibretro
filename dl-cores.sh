@@ -12,6 +12,7 @@
 SUPPORTED_CORES=(
     fbalpha fceumm gambatte genesis_plus_gx handy mednafen_ngp
     mednafen_supergrafx mednafen_vb mgba picodrive snes9x stella
+    prosystem
 )
 NIGHTLY_URL="https://buildbot.libretro.com/nightly/windows/x86/latest"
 DEST_DIR="bin/Cores"
