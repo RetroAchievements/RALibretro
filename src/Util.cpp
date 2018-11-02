@@ -38,17 +38,6 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #define TAG "[UTL] "
 
-size_t util::nextPow2(size_t v)
-{
-  v--;
-  v |= v >> 1;
-  v |= v >> 2;
-  v |= v >> 4;
-  v |= v >> 8;
-  v |= v >> 16;
-  return v + 1;
-}
-
 void* util::loadFile(Logger* logger, const std::string& path, size_t* size)
 {
   void* data;
