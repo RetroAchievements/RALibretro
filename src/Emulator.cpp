@@ -208,63 +208,25 @@ static bool romLoadedWithPadding(void* rom, size_t size, size_t max_size, int fi
 
 static bool romLoadedNes(void* rom, size_t size)
 {
-  /* Note about the references to the FCEU emulator below. There is no
-   * core-specific code in this function, it's rather Retro Achievements
-   * specific code that must be followed to the letter so we compute
-   * the correct ROM hash. Retro Achievements does indeed use some
-   * FCEU related method to compute the hash, since its NES emulator
-   * is based on it. */
-
-  struct NesHeader
+  // if the file contains a header, ignore it
+  uint8_t* raw = (uint8_t*)rom;
+  if (raw[0] == 'N' && raw[1] == 'E' && raw[2] == 'S' && raw[3] == 0x1A)
   {
-    uint8_t id[4]; /* NES^Z */
-    uint8_t rom_size;
-    uint8_t vrom_size;
-    uint8_t rom_type;
-    uint8_t rom_type2;
-    uint8_t reserve[8];
-  };
+    if (raw[7] & 1) // PlayChoice-10 - 8KB of hint screen data after CHR data
+      size -= 8192;
 
-  if (size < sizeof(NesHeader))
-  {
-    return false;
+    if (raw[6] & 4) // 512-bytes of trainer data before PRG data
+    {
+      raw += 512;
+      size -= 512;
+    }
+
+    raw += 16;
+    size -= 16;
   }
 
-  NesHeader header;
-  memcpy(&header, rom, sizeof(header));
-
-  if (header.id[0] != 'N' || header.id[1] != 'E' || header.id[2] != 'S' || header.id[3] != 0x1a)
-  {
-    return false;
-  }
-
-  size_t rom_size;
-
-  if (header.rom_size != 0)
-  {
-    rom_size = util::nextPow2(header.rom_size);
-  }
-  else
-  {
-    rom_size = 256;
-  }
-
-  /* from FCEU core - compute size using the cart mapper */
-  int mapper = (header.rom_type >> 4) | (header.rom_type2 & 0xf0);
-
-  /* for games not to the power of 2, so we just read enough
-   * PRG rom from it, but we have to keep ROM_size to the power of 2
-   * since PRGCartMapping wants ROM_size to be to the power of 2
-   * so instead if not to power of 2, we just use head.ROM_size when
-   * we use FCEU_read. */
-  bool round = mapper != 53 && mapper != 198 && mapper != 228;
-  size_t bytes = round ? rom_size : header.rom_size;
-
-  /* from FCEU core - check if Trainer included in ROM data */
-  size_t offset = sizeof(header) + (header.rom_type & 4 ? sizeof(header) : 0);
-  size_t count = 0x4000 * bytes;
-
-  return romLoadedWithPadding((uint8_t*)rom + offset, size, count, 0xff);
+  RA_OnLoadNewRom(raw, size);
+  return true;
 }
 
 static bool romLoadPsx(const std::string& path)
@@ -306,16 +268,6 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
 
   case System::kNintendo:
     ok = romLoadedNes(rom, size);
-
-    if (!ok)
-    {
-      // Fall back to the default strategy, assuming FDS file
-      rom = util::loadFile(logger, path, &size);
-      RA_OnLoadNewRom((BYTE*)rom, size);
-      free(rom);
-      ok = true;
-    }
-
     break;
   
   case System::kAtariLynx:
