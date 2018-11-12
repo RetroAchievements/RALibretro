@@ -206,21 +206,27 @@ static bool romLoadedWithPadding(void* rom, size_t size, size_t max_size, int fi
   return false;
 }
 
-static bool romLoadedNes(void* rom, size_t size)
+static bool romLoadSnes(void* rom, size_t size)
+{
+  // if the file contains a header, ignore it
+  uint8_t* raw = (uint8_t*)rom;
+  uint32_t calc_size = (size / 0x2000) * 0x2000;
+  if (size - calc_size == 512)
+  {
+    raw += 512;
+    size -= 512;
+  }
+
+  RA_OnLoadNewRom(raw, size);
+  return true;
+}
+
+static bool romLoadNes(void* rom, size_t size)
 {
   // if the file contains a header, ignore it
   uint8_t* raw = (uint8_t*)rom;
   if (raw[0] == 'N' && raw[1] == 'E' && raw[2] == 'S' && raw[3] == 0x1A)
   {
-    if (raw[7] & 1) // PlayChoice-10 - 8KB of hint screen data after CHR data
-      size -= 8192;
-
-    if (raw[6] & 4) // 512-bytes of trainer data before PRG data
-    {
-      raw += 512;
-      size -= 512;
-    }
-
     raw += 16;
     size -= 16;
   }
@@ -257,7 +263,6 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
   case System::kNeoGeoPocket:
   case System::kMasterSystem:
   case System::kMegaDrive:
-  case System::kSuperNintendo:
   case System::kAtari7800:
   default:
     rom = util::loadFile(logger, path, &size);
@@ -266,8 +271,12 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
     ok = true;
     break;
 
+  case System::kSuperNintendo:
+    ok = romLoadSnes(rom, size);
+    break;
+
   case System::kNintendo:
-    ok = romLoadedNes(rom, size);
+    ok = romLoadNes(rom, size);
     break;
   
   case System::kAtariLynx:
