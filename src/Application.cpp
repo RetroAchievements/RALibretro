@@ -828,12 +828,11 @@ moved_recent_item:
           }
         }
 
-        if (layout[i].len != 0)
+        if (layout[i].len != 0 && layout[i].ptr)
         {
           registerMemoryRegion(&numBanks, 0, layout[i].ptr, layout[i].len);
+          address = layout[i].start + layout[i].len;
         }
-
-        address = layout[i].start + layout[i].len;
       }
 
       delete[] layout;
