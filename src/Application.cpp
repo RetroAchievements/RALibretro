@@ -635,13 +635,10 @@ bool Application::loadGame(const std::string& path)
     
   if (!_core.loadGame(path.c_str(), data, size))
   {
-    if (_system == System::kNintendo)
-    {
-      // Assume that the FDS system is missing
-      _logger.debug(TAG "Game load failure (Nintendo)");
+    // The most common cause of failure is missing system files.
+    _logger.debug(TAG "Game load failure (%s)", info ? info->library_name : "Unknown");
 
-      MessageBox(g_mainWindow, "Game load error. Are you missing a system file?", "Core Error", MB_OK);
-    }
+    MessageBox(g_mainWindow, "Game load error. Please ensure that requires system files are present and restart.", "Core Error", MB_OK);
 
     if (data)
     {
