@@ -58,12 +58,16 @@
     <OutDir>$(ProjectDir)..\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)..\$(Configuration)\</IntDir>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
+    <LocalDebuggerCommand>$(ProjectDir)..\bin\RALibRetro.exe</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>$(ProjectDir)..\bin</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)..\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)..\$(Configuration)\</IntDir>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
+    <LocalDebuggerCommand>$(ProjectDir)..\bin\RALibRetro.exe</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>$(ProjectDir)..\bin</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -112,6 +116,9 @@
       <Outputs>$(ProjectDir)..\bin\RALibretro.exe</Outputs>
       <Inputs>$(ProjectDir)..\$(Configuration)\RALibretro.exe</Inputs>
     </CustomBuildStep>
+    <PreBuildEvent>
+      <Command>$(ProjectDir)..\etc\MakeGitCpp.bat</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="About.cpp" />
