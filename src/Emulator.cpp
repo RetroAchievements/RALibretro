@@ -321,7 +321,7 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
   case System::kAtariLynx:
     rom = util::loadFile(logger, path, &size);
 
-    if (!strcmp("LYNX", (char *)rom))
+    if (!memcmp("LYNX", (void *)rom, 5))
     {
         RA_OnLoadNewRom((BYTE*)rom + 0x0040, size - 0x0040);
     }
