@@ -741,6 +741,7 @@ moved_recent_item:
   case Emulator::kMednafenNgp:
   case Emulator::kFBAlpha:
   case Emulator::kProSystem:
+  case Emulator::kblueMSX:
     data = _core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
     size = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
     registerMemoryRegion(&numBanks, 0, data, size);
@@ -1594,12 +1595,13 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     case IDM_SYSTEM_MEDNAFENVB:
     case IDM_SYSTEM_FBALPHA:
     case IDM_SYSTEM_PROSYSTEM:
+    case IDM_SYSTEM_BLUEMSX:
       {
         static Emulator emulators[] =
         {
           Emulator::kStella, Emulator::kSnes9x, Emulator::kPicoDrive, Emulator::kGenesisPlusGx, Emulator::kFceumm,
           Emulator::kHandy, Emulator::kBeetleSgx, Emulator::kGambatte, Emulator::kMGBA, Emulator::kMednafenPsx,
-          Emulator::kMednafenNgp, Emulator::kMednafenVb, Emulator::kFBAlpha, Emulator::kProSystem
+          Emulator::kMednafenNgp, Emulator::kMednafenVb, Emulator::kFBAlpha, Emulator::kProSystem, Emulator::kblueMSX
         };
 
         _fsm.loadCore(emulators[cmd - IDM_SYSTEM_STELLA]);

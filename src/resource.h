@@ -36,6 +36,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #define IDM_SYSTEM_MEDNAFENVB                   50011
 #define IDM_SYSTEM_FBALPHA                      50012
 #define IDM_SYSTEM_PROSYSTEM                    50013
+#define IDM_SYSTEM_BLUEMSX                      50014
 
 // Keep those in increasing order
 #define IDM_SAVE_STATE_1                        51000
