@@ -92,7 +92,7 @@ const char* getEmulatorExtensions(Emulator emulator)
   case Emulator::kMednafenVb:    return EXTPREFIX "*.VB;*.VBOY;*.BIN\0";                      // vb|vboy|bin
   case Emulator::kFBAlpha:       return EXTPREFIX "*.ZIP\0";                                  // iso|zip|7z
   case Emulator::kProSystem:     return EXTPREFIX "*.A78\0";                                  // a78
-  case Emulator::kblueMSX:       return EXTPREFIX "*.BIN\0";                                  // bin
+  case Emulator::kblueMSX:       return EXTPREFIX "*.BIN;*.COL;*.ROM\0";                      // bin|col|rom
   default:                       break;
   }
   
