@@ -142,16 +142,13 @@ System getSystem(Emulator emulator, const std::string game_path, libretro::Core*
 
   case Emulator::kPicoDrive:
   case Emulator::kGenesisPlusGx:
-    if (core->getMemorySize(RETRO_MEMORY_SYSTEM_RAM) == 0x2000)
+    if (game_path.substr(game_path.length() - 4) == ".sms")
     {
-      if (game_path.substr(game_path.length() - 3) == ".gg")
-      {
-        return System::kGameGear;
-      }
-      else
-      {
-        return System::kMasterSystem;
-      }
+      return System::kMasterSystem;
+    }
+    else if (game_path.substr(game_path.length() - 3) == ".gg")
+    {
+      return System::kGameGear;
     }
     else
     {
