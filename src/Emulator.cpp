@@ -69,6 +69,20 @@ const char* getEmulatorFileName(Emulator emulator)
   return "?";
 }
 
+const char* getEmulatorExtensions(Emulator emulator)
+{
+  /* provide filtered lists for cores that support filetypes that aren't fully RetroAchievement compatible */
+  switch (emulator)
+  {
+    case Emulator::kPicoDrive:     return "bin|gen|smd|md|sms";       // bin|gen|smd|md|32x|cue|iso|sms
+    case Emulator::kGenesisPlusGx: return "bin|gen|smd|md|sms|gg|sg"; // mdx|md|smd|gen|bin|cue|iso|chd|sms|gg|sg
+    case Emulator::kMGBA:          return "gba";                      // gba|gb|gbc
+    case Emulator::kFBAlpha:       return "zip";                      // iso|zip|7z
+    default:
+      return NULL;
+  }
+}
+
 const char* getSystemName(System system)
 {
   switch (system)

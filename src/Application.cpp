@@ -624,7 +624,10 @@ bool Application::loadGame(const std::string& path)
   /* if the core says it wants the full path, we have to see if it supports zip files */
   if (iszip && info->need_fullpath)
   {
-    ptr = info->valid_extensions;
+    ptr = getEmulatorExtensions(_emulator);
+    if (ptr == NULL)
+      ptr = info->valid_extensions;
+
     while (*ptr)
     {
       if (strnicmp(ptr, "zip", 3) == 0 && (ptr[3] == '\0' || ptr[3] == '|'))
@@ -1163,8 +1166,9 @@ void Application::loadGame()
   const struct retro_system_info* info = _core.getSystemInfo();
   std::string file_types;
   std::string supported_exts;
-  const char* ext = info->valid_extensions;
-  const char* ptr = ext;
+  const char* ptr = getEmulatorExtensions(_emulator);
+  if (ptr == NULL)
+    ptr = info->valid_extensions;
 
   while (*ptr)
   {
