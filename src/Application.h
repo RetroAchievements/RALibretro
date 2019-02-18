@@ -141,6 +141,7 @@ protected:
   libretro::Core       _core;
 
   std::string _gamePath;
+  std::string _gameFileName;
   unsigned    _validSlots;
 
   MemoryBank _memoryBanks[2];

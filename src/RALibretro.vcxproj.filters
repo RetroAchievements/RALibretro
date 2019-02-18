@@ -13,6 +13,24 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
+    <Filter Include="Source Files\jsonsax">
+      <UniqueIdentifier>{a6cdf81f-2031-4895-96cf-2fefe335ed43}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\dynlib">
+      <UniqueIdentifier>{321f2861-5b70-4141-a843-8a7d704a5624}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\miniz">
+      <UniqueIdentifier>{c6bd24ca-4aa5-4eed-8f4f-0dbd5fd5f845}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\libretro">
+      <UniqueIdentifier>{2e31befd-421f-451b-b48f-be36a52c02ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\speex">
+      <UniqueIdentifier>{d1aeaa60-23b8-4d0c-af9d-025f837827b9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\RA_Integration">
+      <UniqueIdentifier>{327760fa-a82f-4fc7-a522-359086500937}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="About.cpp">
@@ -39,40 +57,22 @@
     <ClCompile Include="components\Video.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dynlib\dynlib.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Emulator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Fsm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="jsonsax\jsonsax.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="KeyBinds.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="libretro\BareCore.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libretro\Core.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="speex\resample.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Gl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RA_Integration\src\RA_Interface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RA_Implementation.cpp">
@@ -83,6 +83,36 @@
     </ClCompile>
     <ClCompile Include="GlUtil.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jsonsax\jsonsax.c">
+      <Filter>Source Files\jsonsax</Filter>
+    </ClCompile>
+    <ClCompile Include="dynlib\dynlib.c">
+      <Filter>Source Files\dynlib</Filter>
+    </ClCompile>
+    <ClCompile Include="miniz\miniz_zip.c">
+      <Filter>Source Files\miniz</Filter>
+    </ClCompile>
+    <ClCompile Include="libretro\BareCore.cpp">
+      <Filter>Source Files\libretro</Filter>
+    </ClCompile>
+    <ClCompile Include="libretro\Core.cpp">
+      <Filter>Source Files\libretro</Filter>
+    </ClCompile>
+    <ClCompile Include="speex\resample.c">
+      <Filter>Source Files\speex</Filter>
+    </ClCompile>
+    <ClCompile Include="RA_Integration\src\RA_Interface.cpp">
+      <Filter>Source Files\RA_Integration</Filter>
+    </ClCompile>
+    <ClCompile Include="miniz\miniz.c">
+      <Filter>Source Files\miniz</Filter>
+    </ClCompile>
+    <ClCompile Include="miniz\miniz_tinfl.c">
+      <Filter>Source Files\miniz</Filter>
+    </ClCompile>
+    <ClCompile Include="miniz\miniz_tdef.c">
+      <Filter>Source Files\miniz</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

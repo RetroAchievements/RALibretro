@@ -69,7 +69,6 @@ enum class System
 
 const char* getEmulatorName(Emulator emulator);
 const char* getEmulatorFileName(Emulator emulator);
-const char* getEmulatorExtensions(Emulator emulator);
 const char* getSystemName(System system);
 
 System getSystem(Emulator emulator, const std::string game_path, libretro::Core* core);

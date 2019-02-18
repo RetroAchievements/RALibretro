@@ -140,6 +140,10 @@
     <ClCompile Include="libretro\BareCore.cpp" />
     <ClCompile Include="libretro\Core.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="miniz\miniz.c" />
+    <ClCompile Include="miniz\miniz_tdef.c" />
+    <ClCompile Include="miniz\miniz_tinfl.c" />
+    <ClCompile Include="miniz\miniz_zip.c" />
     <ClCompile Include="RA_Implementation.cpp" />
     <ClCompile Include="RA_Integration\src\RA_Interface.cpp" />
     <ClCompile Include="speex\resample.c" />
