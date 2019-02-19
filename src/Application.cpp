@@ -631,8 +631,6 @@ bool Application::loadGame(const std::string& path)
     }
   }
 
-  _system = getSystem(_emulator, path, &_core);
-    
   if (!_core.loadGame(path.c_str(), data, size))
   {
     // The most common cause of failure is missing system files.
@@ -647,7 +645,9 @@ bool Application::loadGame(const std::string& path)
 
     return false;
   }
-  
+
+  _system = getSystem(_emulator, path, &_core);
+
   RA_SetConsoleID((unsigned)_system);
   RA_ClearMemoryBanks();
 
