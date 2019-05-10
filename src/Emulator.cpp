@@ -71,31 +71,16 @@ const char* getEmulatorFileName(Emulator emulator)
 
 const char* getEmulatorExtensions(Emulator emulator)
 {
-#define EXTPREFIX "All Files\0*.*\0Supported Files\0"
-
+  /* provide filtered lists for cores that support filetypes that aren't fully RetroAchievement compatible */
   switch (emulator)
   {
-  case Emulator::kNone:          break;
-  case Emulator::kStella:        return EXTPREFIX "*.A26;*.BIN\0";                            // a26|bin
-  case Emulator::kSnes9x:        return EXTPREFIX "*.SMC;*.SFC;*.SWC;*.FIG\0";                // smc|sfc|swc|fig
-  case Emulator::kPicoDrive:     return EXTPREFIX "*.BIN;*.GEN;*.SMD;*.MD;*.SMS\0";           // bin|gen|smd|md|32x|cue|iso|sms
-  case Emulator::kGenesisPlusGx: return EXTPREFIX "*.BIN;*.GEN;*.SMD;*.MD;*.SMS;*.GG;*.SG\0"; // mdx|md|smd|gen|bin|cue|iso|chd|sms|gg|sg
-  case Emulator::kFceumm:        return EXTPREFIX "*.FDS;*.NES;*.UNF;*.UNIF\0";               // fds|nes|unf|unif
-  case Emulator::kHandy:         return EXTPREFIX "*.LYX;*.LNX\0";                            // lyx|lnx
-  case Emulator::kBeetleSgx:     return EXTPREFIX "*.PCE;*.SGX;*.CUE;*.CCD;*.CHD\0";          // pce|sgx|cue|ccd|chd
-  case Emulator::kGambatte:      return EXTPREFIX "*.GB;*.GBC;*.DMG\0";                       // gb|gbc|dmg
-  case Emulator::kMGBA:          return EXTPREFIX "*.GBA\0";                                  // gba|gb|gbc
-  case Emulator::kMednafenPsx:   return EXTPREFIX "*.*\0";
-  case Emulator::kMednafenNgp:   return EXTPREFIX "*.NGP;*.NGC;*.NGPC\0";                     // ngp|ngc|ngpc
-  case Emulator::kMednafenVb:    return EXTPREFIX "*.VB;*.VBOY;*.BIN\0";                      // vb|vboy|bin
-  case Emulator::kFBAlpha:       return EXTPREFIX "*.ZIP\0";                                  // iso|zip|7z
-  case Emulator::kProSystem:     return EXTPREFIX "*.A78\0";                                  // a78
-  default:                       break;
+    case Emulator::kPicoDrive:     return "bin|gen|smd|md|sms";       // bin|gen|smd|md|32x|cue|iso|sms
+    case Emulator::kGenesisPlusGx: return "bin|gen|smd|md|sms|gg|sg"; // mdx|md|smd|gen|bin|cue|iso|chd|sms|gg|sg
+    case Emulator::kMGBA:          return "gba";                      // gba|gb|gbc
+    case Emulator::kFBAlpha:       return "zip";                      // iso|zip|7z
+    default:
+      return NULL;
   }
-  
-  return "?";
-
-#undef EXTPREFIX
 }
 
 const char* getSystemName(System system)
@@ -265,9 +250,7 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
   case System::kMegaDrive:
   case System::kAtari7800:
   default:
-    rom = util::loadFile(logger, path, &size);
     RA_OnLoadNewRom((BYTE*)rom, size);
-    free(rom);
     ok = true;
     break;
 
@@ -280,18 +263,15 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
     break;
   
   case System::kAtariLynx:
-    rom = util::loadFile(logger, path, &size);
-
     if (!memcmp("LYNX", (void *)rom, 5))
     {
-        RA_OnLoadNewRom((BYTE*)rom + 0x0040, size - 0x0040);
+      RA_OnLoadNewRom((BYTE*)rom + 0x0040, size - 0x0040);
     }
     else
     {
-        RA_OnLoadNewRom((BYTE*)rom, size);
+      RA_OnLoadNewRom((BYTE*)rom, size);
     }
 
-    free(rom);
     ok = true;
     break;
   

@@ -613,17 +613,66 @@ void Application::updateMenu()
 bool Application::loadGame(const std::string& path)
 {
   const struct retro_system_info* info = _core.getSystemInfo();
+  std::string unzippedFileName;
+  const char* ptr;
   size_t size;
   void* data;
+  bool loaded;
+  bool iszip = (path.length() > 4 && stricmp(&path.at(path.length() - 4), ".zip") == 0);
+  bool issupportedzip = false;
 
-  if (info->need_fullpath)
+  /* if the core says it wants the full path, we have to see if it supports zip files */
+  if (iszip && info->need_fullpath)
+  {
+    ptr = getEmulatorExtensions(_emulator);
+    if (ptr == NULL)
+      ptr = info->valid_extensions;
+
+    while (*ptr)
+    {
+      if (strnicmp(ptr, "zip", 3) == 0 && (ptr[3] == '\0' || ptr[3] == '|'))
+      {
+        issupportedzip = true;
+        break;
+      }
+
+      while (*ptr && *ptr != '|')
+      {
+        ++ptr;
+      }
+      if (*ptr == '|')
+      {
+        ++ptr;
+      }
+    }
+
+    if (!issupportedzip)
+    {
+      _logger.debug(TAG "%s does not support zip files", info->library_name);
+
+      std::string error = info->library_name;
+      error += " does not support zip files";
+      MessageBox(g_mainWindow, error.c_str(), "Core Error", MB_OK);
+
+      return false;
+    }
+  }
+
+  if (issupportedzip)
   {
     size = 0;
     data = NULL;
   }
-  else
+  else 
   {
-    data = util::loadFile(&_logger, path, &size);
+    if (iszip)
+    {
+      data = util::loadZippedFile(&_logger, path, &size, unzippedFileName);
+    }
+    else
+    {
+      data = util::loadFile(&_logger, path, &size);
+    }
 
     if (data == NULL)
     {
@@ -631,7 +680,21 @@ bool Application::loadGame(const std::string& path)
     }
   }
 
-  if (!_core.loadGame(path.c_str(), data, size))
+  if (unzippedFileName.empty())
+  {
+    unzippedFileName = util::fileNameWithExtension(path);
+  }
+
+  if (info->need_fullpath)
+  {
+    loaded = _core.loadGame(path.c_str(), NULL, 0);
+  }
+  else
+  {
+    loaded = _core.loadGame(path.c_str(), data, size);
+  }
+
+  if (!loaded)
   {
     // The most common cause of failure is missing system files.
     _logger.debug(TAG "Game load failure (%s)", info ? info->library_name : "Unknown");
@@ -646,7 +709,7 @@ bool Application::loadGame(const std::string& path)
     return false;
   }
 
-  _system = getSystem(_emulator, path, &_core);
+  _system = getSystem(_emulator, unzippedFileName, &_core);
 
   RA_SetConsoleID((unsigned)_system);
   RA_ClearMemoryBanks();
@@ -669,6 +732,7 @@ bool Application::loadGame(const std::string& path)
   }
 
   _gamePath = path;
+  _gameFileName = unzippedFileName;
 
   for (size_t i = 0; i < _recentList.size(); i++)
   {
@@ -995,6 +1059,8 @@ bool Application::unloadGame()
     util::saveFile(&_logger, sram.c_str(), data, size);
   }
 
+  RA_OnLoadNewRom(NULL, 0);
+
   return true;
 }
 
@@ -1097,7 +1163,44 @@ void Application::s_audioCallback(void* udata, Uint8* stream, int len)
 
 void Application::loadGame()
 {
-  std::string path = util::openFileDialog(g_mainWindow, getEmulatorExtensions(_emulator));
+  const struct retro_system_info* info = _core.getSystemInfo();
+  std::string file_types;
+  std::string supported_exts;
+  const char* ptr = getEmulatorExtensions(_emulator);
+  if (ptr == NULL)
+    ptr = info->valid_extensions;
+
+  while (*ptr)
+  {
+    supported_exts += "*.";
+    while (*ptr && *ptr != '|')
+      supported_exts += *ptr++;
+
+    if (!*ptr)
+      break;
+
+    supported_exts += ';';
+    ++ptr;
+  }
+
+  if (!info->need_fullpath)
+  {
+    supported_exts += ";*.zip";
+  }
+
+  file_types.reserve(supported_exts.size() * 2 + 32);
+  file_types.append("All Files (*.*)");
+  file_types.append("\0", 1);
+  file_types.append("*.*");
+  file_types.append("\0", 1);
+  file_types.append("Supported Files (");
+  file_types.append(supported_exts);
+  file_types.append(")");
+  file_types.append("\0", 1);
+  file_types.append(supported_exts);
+  file_types.append("\0", 1);
+
+  std::string path = util::openFileDialog(g_mainWindow, file_types.c_str());
 
   if (!path.empty())
   {
@@ -1193,24 +1296,7 @@ void Application::registerMemoryRegion(unsigned* max, unsigned bank, void* data,
 std::string Application::getSRamPath()
 {
   std::string path = _config.getSaveDirectory();
-
-  size_t last_slash = _gamePath.find_last_of("/");
-  size_t last_bslash = _gamePath.find_last_of("\\");
-
-  if (last_bslash > last_slash || last_slash == std::string::npos)
-  {
-    last_slash = last_bslash;
-  }
-
-  if (last_slash == std::string::npos)
-  {
-    path += _gamePath;
-  }
-  else
-  {
-    path += _gamePath.substr(last_slash);
-  }
-  
+  path += _gameFileName;
   path += ".sram";
   return path;
 }
@@ -1218,23 +1304,7 @@ std::string Application::getSRamPath()
 std::string Application::getStatePath(unsigned ndx)
 {
   std::string path = _config.getSaveDirectory();
-
-  size_t last_slash = _gamePath.find_last_of("/");
-  size_t last_bslash = _gamePath.find_last_of("\\");
-
-  if (last_bslash > last_slash || last_slash == std::string::npos)
-  {
-    last_slash = last_bslash;
-  }
-
-  if (last_slash == std::string::npos)
-  {
-    path += _gamePath;
-  }
-  else
-  {
-    path += _gamePath.substr(last_slash);
-  }
+  path += _gameFileName;
 
   path += "-";
   path += getEmulatorFileName(_emulator);

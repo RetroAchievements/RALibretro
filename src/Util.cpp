@@ -24,6 +24,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <errno.h>
 #include <string.h>
 
+#include <miniz_zip.h>
+
 #define WIN32_LEAN_AND_MEAN
 #include <commdlg.h>
 #include <shlobj.h>
@@ -80,6 +82,71 @@ void* util::loadFile(Logger* logger, const std::string& path, size_t* size)
   fclose(file);
   *((uint8_t*)data + *size) = 0;
   logger->info(TAG "Read %zu bytes from \"%s\"", *size, path.c_str());
+  return data;
+}
+
+void* util::loadZippedFile(Logger* logger, const std::string& path, size_t* size, std::string& unzippedFileName)
+{
+  mz_bool status;
+  mz_zip_archive zip_archive;
+  mz_zip_archive_file_stat file_stat;
+  void* data;
+  int file_count;
+  int i;
+
+  memset(&zip_archive, 0, sizeof(zip_archive));
+
+  status = mz_zip_reader_init_file(&zip_archive, path.c_str(), 0);
+  if (!status)
+  {
+    logger->error(TAG "Error opening \"%s\": %s", path.c_str(), strerror(errno));
+    return NULL;
+  }
+
+  file_count = mz_zip_reader_get_num_files(&zip_archive);
+  if (file_count == 0)
+  {
+    mz_zip_reader_end(&zip_archive);
+    logger->error(TAG "Empty zip file \"%s\"", path.c_str());
+    return NULL;
+  }
+
+  if (file_count > 1)
+  {
+    mz_zip_reader_end(&zip_archive);
+    logger->error(TAG "Zip file \"%s\" contains %d files, determining which to open is not supported - returning entire zip file", path.c_str(), file_count);
+    return loadFile(logger, path, size);
+  }
+
+  if (mz_zip_reader_is_file_a_directory(&zip_archive, 0))
+  {
+    mz_zip_reader_end(&zip_archive);
+    logger->error(TAG "Zip file \"%s\" only contains a directory", path.c_str());
+    return NULL;
+  }
+
+  if (!mz_zip_reader_file_stat(&zip_archive, 0, &file_stat))
+  {
+    mz_zip_reader_end(&zip_archive);
+    logger->error(TAG "Error opening file in \"%s\"", path.c_str());
+    return NULL;
+  }
+
+  *size = file_stat.m_uncomp_size;
+  data = malloc(*size);
+
+  status = mz_zip_reader_extract_to_mem(&zip_archive, 0, data, *size, 0);
+  if (!status)
+  {
+    mz_zip_reader_end(&zip_archive);
+    logger->error(TAG "Error decompressing file in \"%s\": %s", path.c_str(), strerror(errno));
+    free(data);
+    return NULL;
+  }
+
+  unzippedFileName = file_stat.m_filename;
+  logger->error(TAG "Read %zu bytes from \"%s\":\"%s\"", *size, path.c_str(), file_stat.m_filename);
+  mz_zip_reader_end(&zip_archive);
   return data;
 }
 
@@ -159,7 +226,7 @@ std::string util::jsonUnescape(const std::string& str)
   return res;
 }
 
-std::string util::fileName(const std::string& path)
+std::string util::fileNameWithExtension(const std::string& path)
 {
   const char* str = path.c_str();
   const char* name = strrchr(str, '/');
@@ -181,17 +248,17 @@ std::string util::fileName(const std::string& path)
   }
 
   name++;
+  return std::string(name);
+}
 
-  const char* dot = strrchr(name, '.');
+std::string util::fileName(const std::string& path)
+{
+  std::string filename = fileNameWithExtension(path);
+  int ndx = filename.find_last_of('.');
+  if (ndx != std::string::npos);
+    filename.resize(ndx);
 
-  if (dot == NULL)
-  {
-    return std::string(name);
-  }
-  else
-  {
-    return std::string(name, dot - name);
-  }
+  return filename;
 }
 
 std::string util::extension(const std::string& path)
