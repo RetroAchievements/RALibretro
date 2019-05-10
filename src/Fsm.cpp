@@ -1305,6 +1305,10 @@ bool Fsm::step() {
         return false;
       }
 
+      if (ctx.hardcore()) {
+          return false;
+      }
+
       __state = State::FrameStep;
       after(__state);
       after();
@@ -1331,6 +1335,10 @@ bool Fsm::step() {
 #endif
 
         return false;
+      }
+
+      if (ctx.hardcore()) {
+          return false;
       }
 
       __state = State::FrameStep;
@@ -1394,6 +1402,10 @@ bool Fsm::step() {
         return false;
       }
 
+      if (ctx.hardcore()) {
+          return false;
+      }
+
       __state = State::FrameStep;
       after(__state);
       after();
@@ -1430,11 +1442,6 @@ bool Fsm::turbo() {
         return false;
       }
 
-
-      if (ctx.hardcore()) {
-        return false;
-      }
-    
       __state = State::GameTurbo;
       after(__state);
       after();
@@ -1462,12 +1469,7 @@ bool Fsm::turbo() {
 
         return false;
       }
-
-
-      if (ctx.hardcore()) {
-        return false;
-      }
-    
+   
       __state = State::GameTurbo;
       after(__state);
       after();
@@ -1493,11 +1495,6 @@ bool Fsm::turbo() {
         ctx.printf("FSM %s:%u Failed state precondition while switching to %s", __FUNCTION__, __LINE__, stateName(State::GameTurbo));
 #endif
 
-        return false;
-      }
-
-
-      if (ctx.hardcore()) {
         return false;
       }
     
