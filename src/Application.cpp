@@ -1069,7 +1069,20 @@ bool Application::unloadGame()
 
 void Application::pauseGame(bool pause)
 {
-  RA_SetPaused(pause);
+  if (!pause)
+  {
+    _fsm.resumeGame();
+    RA_SetPaused(false);
+  }
+  else if (hardcore())
+  {
+    _fsm.pauseGame();
+    RA_SetPaused(true);
+  }
+  else
+  {
+    _fsm.pauseGameNoOvl();
+  }
 }
 
 void Application::printf(const char* fmt, ...)
@@ -1835,10 +1848,16 @@ void Application::handle(const SDL_KeyboardEvent* key)
     if (_fsm.currentState() == Fsm::State::GamePaused)
     {
       _fsm.resumeGame();
+      RA_SetPaused(false);
+    }
+    else if (_fsm.currentState() == Fsm::State::GamePausedNoOvl)
+    {
+      _fsm.resumeGame();
     }
     else
     {
       _fsm.pauseGame();
+      RA_SetPaused(true);
     }
 
     break;

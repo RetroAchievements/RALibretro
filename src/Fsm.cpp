@@ -719,14 +719,7 @@ bool Fsm::pauseGame() {
 
         return false;
       }
-
-
-      if (ctx.hardcore()) {
-        return false;
-      }
-
-      ctx.pauseGame(true);
-    
+ 
       __state = State::GamePaused;
       after(__state);
       after();
@@ -754,14 +747,7 @@ bool Fsm::pauseGame() {
 
         return false;
       }
-
-
-      if (ctx.hardcore()) {
-        return false;
-      }
-
-      ctx.pauseGame(true);
-    
+   
       __state = State::GamePaused;
       after(__state);
       after();
@@ -1254,9 +1240,6 @@ bool Fsm::resumeGame() {
 
         return false;
       }
-
-
-      ctx.pauseGame(false);
     
       __state = State::GameRunning;
       after(__state);
