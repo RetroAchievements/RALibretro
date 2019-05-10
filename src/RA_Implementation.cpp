@@ -1,11 +1,13 @@
 #include "RA_Integration/RA_Implementation/RA_Implementation.h"
 #include "RA_Interface.h"
+
 #include <windows.h>
 
 
 extern HWND g_mainWindow;
 
 bool isGameActive();
+void getGameName(char name[], size_t len);
 void pause();
 void resume();
 void reset();
@@ -80,6 +82,7 @@ void RebuildMenu()
 //   for the ROM, if one can be inferred from the ROM.
 void GetEstimatedGameTitle(char* sNameOut)
 {
+    getGameName(sNameOut, 64);
 }
 
 

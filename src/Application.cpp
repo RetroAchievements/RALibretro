@@ -714,8 +714,12 @@ bool Application::loadGame(const std::string& path)
   RA_SetConsoleID((unsigned)_system);
   RA_ClearMemoryBanks();
 
+  _gameFileName = unzippedFileName; // store for GetEstimatedTitle callback
+
   if (!romLoaded(&_logger, _system, path, data, size))
   {
+    _gameFileName.clear();
+
     _core.unloadGame();
 
     if (data)
@@ -732,7 +736,6 @@ bool Application::loadGame(const std::string& path)
   }
 
   _gamePath = path;
-  _gameFileName = unzippedFileName;
 
   for (size_t i = 0; i < _recentList.size(); i++)
   {

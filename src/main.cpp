@@ -29,6 +29,13 @@ bool isGameActive()
   return app.isGameActive();
 }
 
+void getGameName(char name[], size_t len)
+{
+    std::string fileName = util::fileName(app.gameName());
+    strncpy(name, fileName.c_str(), len);
+    name[len - 1] = '\0';
+}
+
 void pause()
 {
   app.pauseGame(true);

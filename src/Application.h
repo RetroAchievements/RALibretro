@@ -64,6 +64,7 @@ public:
   unsigned char memoryRead(unsigned bank, unsigned addr);
   void memoryWrite(unsigned bank, unsigned addr, unsigned value);
   bool isGameActive();
+  const std::string& gameName() const { return _gameFileName; }
 
 protected:
   struct MemoryRegion
