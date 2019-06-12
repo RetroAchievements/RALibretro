@@ -108,13 +108,14 @@ protected:
   void        loadState();
   void        screenshot();
   void        aboutDialog();
-  void        loadRecentList();
-  std::string serializeRecentList();
   void        resizeWindow(unsigned multiplier);
   void        toggleFullscreen();
   void        handle(const SDL_SysWMEvent* syswm);
   void        handle(const SDL_WindowEvent* window);
   void        handle(const SDL_KeyboardEvent* key);
+  void        loadConfiguration();
+  void        saveConfiguration();
+  std::string serializeRecentList();
 
   Fsm _fsm;
   bool lastHardcore;

@@ -21,6 +21,7 @@
 /RALibretro*.zip
 /obj
 /Debug
+/Release
 /ipch
 /src/Git.cpp
 /src/menu.res
