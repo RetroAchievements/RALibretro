@@ -92,7 +92,6 @@ void* util::loadZippedFile(Logger* logger, const std::string& path, size_t* size
   mz_zip_archive_file_stat file_stat;
   void* data;
   int file_count;
-  int i;
 
   memset(&zip_archive, 0, sizeof(zip_archive));
 

@@ -714,8 +714,12 @@ bool Application::loadGame(const std::string& path)
   RA_SetConsoleID((unsigned)_system);
   RA_ClearMemoryBanks();
 
+  _gameFileName = unzippedFileName; // store for GetEstimatedTitle callback
+
   if (!romLoaded(&_logger, _system, path, data, size))
   {
+    _gameFileName.clear();
+
     _core.unloadGame();
 
     if (data)
@@ -732,7 +736,6 @@ bool Application::loadGame(const std::string& path)
   }
 
   _gamePath = path;
-  _gameFileName = unzippedFileName;
 
   for (size_t i = 0; i < _recentList.size(); i++)
   {
@@ -1066,7 +1069,20 @@ bool Application::unloadGame()
 
 void Application::pauseGame(bool pause)
 {
-  RA_SetPaused(pause);
+  if (!pause)
+  {
+    _fsm.resumeGame();
+    RA_SetPaused(false);
+  }
+  else if (hardcore())
+  {
+    _fsm.pauseGame();
+    RA_SetPaused(true);
+  }
+  else
+  {
+    _fsm.pauseGameNoOvl();
+  }
 }
 
 void Application::printf(const char* fmt, ...)
@@ -1832,10 +1848,16 @@ void Application::handle(const SDL_KeyboardEvent* key)
     if (_fsm.currentState() == Fsm::State::GamePaused)
     {
       _fsm.resumeGame();
+      RA_SetPaused(false);
+    }
+    else if (_fsm.currentState() == Fsm::State::GamePausedNoOvl)
+    {
+      _fsm.resumeGame();
     }
     else
     {
       _fsm.pauseGame();
+      RA_SetPaused(true);
     }
 
     break;

@@ -17,6 +17,41 @@ You should have received a copy of the GNU General Public License
 along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+
+To generate Fsm.h and Fsm.cpp from this file:
+
+[Windows]
+* install lua
+  - download lua-5.2.4.tar.gz (http://www.lua.org/ftp/) and extract somewhere [it must be a 5.2 version]
+  - open MinGW 64-bit and change to the folder where you extracted the tar.gz
+  - run `make clean`, `make mingw` and `make install TO_BIN="lua.exe luac.exe lua52.dll"`
+  - verify install:
+    $ lua -e "print('hello world')"
+    hello world
+  - remove extracted files; they're not needed anymore
+* install luarocks
+  - download the latest ".win32.zip" not the ".windows-32.zip" (http://luarocks.github.io/luarocks/releases/) and extract it
+  - open an elevated command prompt and change into the extracted folder
+  - run `install.bat /lv 5.2 /bin c:\msys64\usr\local\bin /lib c:\msys64\usr\local\bin /inc c:\msys64\usr\local\include`
+* install luasrcdiet
+  - open an elevated command promot and change into the luarocks install folder (C:\Program Files (x86)\LuaRocks)
+  - run `luarocks.bat install luasrcdiet`
+* build ddlt
+  - clone the https://github.com/leiradel/ddlt repository
+  - open MinGW 64-bit and change to the cloned repository folder
+  - manually run luasrcdiet as it was not installed under the MinGW context:
+    `$ /c/Program\ Files\ \(x86\)/LuaRocks/bin/luasrcdiet.bat --noopt-emptylines src/boot.lua -o src/boot_diet.lua`
+  - edit the Makefile to point to the correct lua locations:
+    `INCLUDES=-Isrc -I/usr/local/include`
+	`LUALIB=/usr/local/bin/lua52.dll`
+  - allow make to do the rest of the work: `make`
+* generate the FSM files:
+  - from MinGW 64-bit console (in the ddlt repository):
+    `lua examples/fsmc/fsmc.lua /e/source/RALibRetro/src/Fsm.fsm`
+  - this will generate the Fsm.h and Fsm.cpp files in the same directory as the Fsm.fsm file.
+*/
+
 header {
   #include "Emulator.h"
   #include <string>
@@ -64,13 +99,7 @@ fsm Fsm {
   }
 
   GameRunning {
-    pauseGame() => GamePaused {
-      if (ctx.hardcore()) {
-        forbid;
-      }
-
-      ctx.pauseGame(true);
-    }
+    pauseGame() => GamePaused;
 
     pauseGameNoOvl() => GamePausedNoOvl {
       if (ctx.hardcore()) {
@@ -88,11 +117,7 @@ fsm Fsm {
       }
     }
     
-    turbo() => GameTurbo {
-      if (ctx.hardcore()) {
-        forbid;
-      }
-    }
+    turbo() => GameTurbo;
 
     unloadGame() => CoreLoaded {
       if (!ctx.unloadGame()) {
@@ -110,19 +135,17 @@ fsm Fsm {
   }
 
   GamePaused {
-    resumeGame() => GameRunning {
-      ctx.pauseGame(false);
-    }
+    resumeGame() => GameRunning;
 
     resetGame() => resumeGame() => resetGame();
 
-    step() => FrameStep;
-    
-    turbo() => GameTurbo {
+    step() => FrameStep  {
       if (ctx.hardcore()) {
         forbid;
       }
     }
+
+    turbo() => GameTurbo;
 
     unloadGame() => CoreLoaded {
       if (!ctx.unloadGame()) {
@@ -144,13 +167,13 @@ fsm Fsm {
 
     resetGame() => resumeGame() => resetGame();
 
-    step() => FrameStep;
-    
-    turbo() => GameTurbo {
+    step() => FrameStep {
       if (ctx.hardcore()) {
         forbid;
       }
     }
+
+    turbo() => GameTurbo;
 
     unloadGame() => CoreLoaded {
       if (!ctx.unloadGame()) {
@@ -182,15 +205,13 @@ fsm Fsm {
       }
     }
 
-    step() => FrameStep;
-    
-    pauseGame() => GamePaused {
+    step() => FrameStep {
       if (ctx.hardcore()) {
         forbid;
       }
-
-      ctx.pauseGame(true);
     }
+
+    pauseGame() => GamePaused;
 
     pauseGameNoOvl() => GamePausedNoOvl {
       if (ctx.hardcore()) {
