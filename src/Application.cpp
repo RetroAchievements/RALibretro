@@ -263,6 +263,8 @@ bool Application::init(const char* title, int width, int height)
     _menu = LoadMenu(NULL, "MAIN");
     SetMenu(g_mainWindow, _menu);
 
+    loadConfiguration();
+
     RA_Init(g_mainWindow, RA_Libretro, git::getReleaseVersion());
     RA_InitShared();
     RA_AttemptLogin(true);
@@ -273,7 +275,6 @@ bool Application::init(const char* title, int width, int height)
   _emulator = Emulator::kNone;
   _validSlots = 0;
   lastHardcore = hardcore();
-  loadConfiguration();
   updateMenu();
   return true;
 

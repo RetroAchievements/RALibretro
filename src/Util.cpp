@@ -254,7 +254,7 @@ std::string util::fileName(const std::string& path)
 {
   std::string filename = fileNameWithExtension(path);
   int ndx = filename.find_last_of('.');
-  if (ndx != std::string::npos);
+  if (ndx != std::string::npos)
     filename.resize(ndx);
 
   return filename;
