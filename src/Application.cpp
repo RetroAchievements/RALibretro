@@ -263,6 +263,8 @@ bool Application::init(const char* title, int width, int height)
     _menu = LoadMenu(NULL, "MAIN");
     SetMenu(g_mainWindow, _menu);
 
+    loadConfiguration();
+
     RA_Init(g_mainWindow, RA_Libretro, git::getReleaseVersion());
     RA_InitShared();
     RA_AttemptLogin(true);
@@ -273,7 +275,6 @@ bool Application::init(const char* title, int width, int height)
   _emulator = Emulator::kNone;
   _validSlots = 0;
   lastHardcore = hardcore();
-  loadRecentList();
   updateMenu();
   return true;
 
@@ -427,13 +428,44 @@ void Application::run()
   while (_fsm.currentState() != Fsm::State::Quit);
 }
 
-void Application::destroy()
+void Application::saveConfiguration()
 {
-  std::string json = "{\"recent\":";
+  std::string json = "{";
+
+  // recent items
+  json += "\"recent\":";
   json += serializeRecentList();
+
+  // window position
+  const Uint32 flags = SDL_GetWindowFlags(_window);
+  if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
+  {
+    // it doesn't make sense to save fullscreen mode as the player must load a game when they restart
+    // the application, and the window position/size will be 0,0 and the desktop resolution
+  }
+  else
+  {
+    json += ",\"window\":{";
+
+    int x, y;
+    SDL_GetWindowPosition(_window, &x, &y);
+    json += "\"x\":" + std::to_string(x) + ",\"y\":" + std::to_string(y);
+
+    SDL_GetWindowSize(_window, &x, &y);
+    json += ",\"w\":" + std::to_string(x) + ",\"h\":" + std::to_string(y);
+
+    json += "}";
+  }
+
+  // complete and save
   json += "}";
 
   util::saveFile(&_logger, getConfigPath(), json.c_str(), json.length());
+}
+
+void Application::destroy()
+{
+  saveConfiguration();
 
   RA_Shutdown();
 
@@ -1524,7 +1556,7 @@ void Application::aboutDialog()
   ::aboutDialog(_logger.contents().c_str());
 }
 
-void Application::loadRecentList()
+void Application::loadConfiguration()
 {
   _recentList.clear();
   _logger.debug(TAG "Recent file list cleared");
@@ -1539,6 +1571,8 @@ void Application::loadRecentList()
       Application* self;
       std::string key;
       RecentItem item;
+      int x, y;
+      int w, h;
     };
 
     Deserialize ud;
@@ -1578,6 +1612,47 @@ void Application::loadRecentList()
           {
             ud->self->_recentList.push_back(ud->item);
             ud->self->_logger.debug(TAG "Added recent file \"%s\" - %u - %u", util::fileName(ud->item.path).c_str(), (unsigned)ud->item.emulator, (unsigned)ud->item.system);
+          }
+
+          return 0;
+        });
+
+        if (res2 != JSONSAX_OK)
+        {
+          return -1;
+        }
+      }
+      else if (ud->key == "window" && event == JSONSAX_OBJECT)
+      {
+        ud->x = ud->y = ud->w = ud->h = 0;
+
+        jsonsax_result_t res2 = jsonsax_parse((char*)str, ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+        {
+          auto ud = (Deserialize*)udata;
+
+          if (event == JSONSAX_KEY)
+          {
+            ud->key = std::string(str, num);
+          }
+          else if (event == JSONSAX_NUMBER)
+          {
+            if (ud->key == "x")
+              ud->x = (int)strtoul(str, NULL, 10);
+            else if (ud->key == "y")
+              ud->y = (int)strtoul(str, NULL, 10);
+            else if (ud->key == "w")
+              ud->w = (int)strtoul(str, NULL, 10);
+            else if (ud->key == "h")
+              ud->h = (int)strtoul(str, NULL, 10);
+          }
+          else if (event == JSONSAX_OBJECT && num == 0)
+          {
+            if (ud->w > 0 && ud->h > 0)
+            {
+              SDL_SetWindowPosition(ud->self->_window, ud->x, ud->y);
+              SDL_SetWindowSize(ud->self->_window, ud->w, ud->h);
+              ud->self->_logger.debug(TAG "Remembered window position %d,%d (%dx%d)", ud->x, ud->y, ud->w, ud->h);
+            }
           }
 
           return 0;
