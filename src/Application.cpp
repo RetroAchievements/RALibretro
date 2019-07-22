@@ -29,6 +29,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <RA_Resource.h>
 
 #include "About.h"
+#include "CdRom.h"
 #include "KeyBinds.h"
 #include "Util.h"
 
@@ -276,6 +277,7 @@ bool Application::init(const char* title, int width, int height)
   _validSlots = 0;
   lastHardcore = hardcore();
   updateMenu();
+  updateCDMenu(NULL, 0, true);
   return true;
 
 error:
@@ -750,6 +752,8 @@ bool Application::loadGame(const std::string& path)
 
   if (!romLoaded(&_logger, _system, path, data, size))
   {
+    updateCDMenu(NULL, 0, true);
+
     _gameFileName.clear();
 
     _core.unloadGame();
@@ -765,6 +769,17 @@ bool Application::loadGame(const std::string& path)
   if (data)
   {
     free(data);
+  }
+
+  if (_core.getNumDiscs() == 0)
+  {
+    updateCDMenu(NULL, 0, true);
+  }
+  else
+  {
+    char names[10][128];
+    int count = cdrom_get_cd_names(path.c_str(), names, sizeof(names) / sizeof(names[0]));
+    updateCDMenu(names, count, true);
   }
 
   _gamePath = path;
@@ -836,7 +851,7 @@ moved_recent_item:
   case Emulator::kGenesisPlusGx:
   case Emulator::kHandy:
   case Emulator::kBeetleSgx:
-  case Emulator::kMednafenPsx:
+  case Emulator::kBeetlePsx:
   case Emulator::kMednafenNgp:
   case Emulator::kFBAlpha:
   case Emulator::kProSystem:
@@ -1252,6 +1267,14 @@ void Application::loadGame()
 
   if (!path.empty())
   {
+    /* disc-based system may append discs to the playlist, have to reload core to work around that */
+    if (_core.getNumDiscs() > 0)
+    {
+      Emulator emulator = _emulator;
+      _fsm.unloadCore();
+      _fsm.loadCore(emulator);
+    }
+
     _fsm.loadGame(path);
   }
 }
@@ -1320,6 +1343,83 @@ void Application::enableRecent()
 
     info.dwTypeData = (char*)"Empty";
     SetMenuItemInfo(_menu, id, false, &info);
+  }
+}
+
+void Application::updateCDMenu(const char names[][128], int count, bool updateLabels)
+{
+  size_t i = 0;
+  size_t coreDiscCount = _core.getNumDiscs();
+
+  if (coreDiscCount > 0)
+  {
+    unsigned selectedDisc = _core.getCurrentDiscIndex();
+    bool trayOpen = _core.getTrayOpen();
+    char buffer[128];
+
+    MENUITEMINFO info;
+    memset(&info, 0, sizeof(info));
+    info.cbSize = sizeof(info);
+    GetMenuItemInfo(_menu, IDM_CD_OPEN_TRAY, false, &info);
+    info.fMask = MIIM_TYPE | MIIM_DATA;
+    info.dwTypeData = trayOpen ? "Close Tray" : "Open Tray";
+    SetMenuItemInfo(_menu, IDM_CD_OPEN_TRAY, false, &info);
+
+    for (; i < coreDiscCount; i++)
+    {
+      UINT id = IDM_CD_DISC_1 + i;
+
+      MENUITEMINFO info;
+      memset(&info, 0, sizeof(info));
+      info.cbSize = sizeof(info);
+      info.fMask = MIIM_TYPE | MIIM_DATA | MIIM_STATE;
+      info.dwTypeData = buffer;
+      info.cch = sizeof(buffer);
+      GetMenuItemInfo(_menu, id, false, &info);
+
+      if (updateLabels)
+      {
+        if (i < count)
+        {
+          info.dwTypeData = (char*)names[i];
+        }
+        else
+        {
+          sprintf(buffer, "Disc %d", (i + 1));
+          info.dwTypeData = buffer;
+        }
+      }
+
+      info.fState = (i == selectedDisc) ? MFS_CHECKED : MFS_UNCHECKED;
+      if (!trayOpen)
+        info.fState |= MF_DISABLED;
+
+      SetMenuItemInfo(_menu, id, false, &info);
+    }
+
+    EnableMenuItem(_menu, IDM_CD_OPEN_TRAY, MF_ENABLED);
+  }
+  else
+  {
+    EnableMenuItem(_menu, IDM_CD_OPEN_TRAY, MF_DISABLED);
+  }
+
+  if (updateLabels)
+  {
+    for (; i < 10; i++)
+    {
+      UINT id = IDM_CD_DISC_1 + i;
+
+      MENUITEMINFO info;
+      memset(&info, 0, sizeof(info));
+      info.cbSize = sizeof(info);
+      info.fMask = MIIM_TYPE | MIIM_DATA | MIIM_STATE;
+      GetMenuItemInfo(_menu, id, false, &info);
+
+      info.dwTypeData = (char*)"Empty";
+      info.fState = MF_DISABLED;
+      SetMenuItemInfo(_menu, id, false, &info);
+    }
   }
 }
 
@@ -1759,7 +1859,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
         static Emulator emulators[] =
         {
           Emulator::kStella, Emulator::kSnes9x, Emulator::kPicoDrive, Emulator::kGenesisPlusGx, Emulator::kFceumm,
-          Emulator::kHandy, Emulator::kBeetleSgx, Emulator::kGambatte, Emulator::kMGBA, Emulator::kMednafenPsx,
+          Emulator::kHandy, Emulator::kBeetleSgx, Emulator::kGambatte, Emulator::kMGBA, Emulator::kBeetlePsx,
           Emulator::kMednafenNgp, Emulator::kMednafenVb, Emulator::kFBAlpha, Emulator::kProSystem
         };
 
@@ -1784,7 +1884,26 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     case IDM_LOAD_RECENT_10:
       _fsm.loadRecent(_recentList[cmd - IDM_LOAD_RECENT_1].emulator, _recentList[cmd - IDM_LOAD_RECENT_1].path);
       break;
-    
+
+    case IDM_CD_OPEN_TRAY:
+      _core.setTrayOpen(!_core.getTrayOpen());
+      updateCDMenu(NULL, 0, false);
+      break;
+
+    case IDM_CD_DISC_1:
+    case IDM_CD_DISC_2:
+    case IDM_CD_DISC_3:
+    case IDM_CD_DISC_4:
+    case IDM_CD_DISC_5:
+    case IDM_CD_DISC_6:
+    case IDM_CD_DISC_7:
+    case IDM_CD_DISC_8:
+    case IDM_CD_DISC_9:
+    case IDM_CD_DISC_10:
+      _core.setCurrentDiscIndex(cmd - IDM_CD_DISC_1);
+      updateCDMenu(NULL, 0, false);
+      break;
+
     case IDM_PAUSE_GAME:
       _fsm.pauseGame();
       break;

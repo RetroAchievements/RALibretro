@@ -36,7 +36,7 @@ const char* getEmulatorName(Emulator emulator)
   case Emulator::kBeetleSgx:     return "Beetle SGX";
   case Emulator::kGambatte:      return "Gambatte";
   case Emulator::kMGBA:          return "mGBA";
-  case Emulator::kMednafenPsx:   return "Mednafen PSX";
+  case Emulator::kBeetlePsx:     return "Beetle PSX";
   case Emulator::kMednafenNgp:   return "Mednafen NGP";
   case Emulator::kMednafenVb:    return "Mednafen VB";
   case Emulator::kFBAlpha:       return "Final Burn Alpha";
@@ -61,7 +61,7 @@ const char* getEmulatorFileName(Emulator emulator)
   case Emulator::kBeetleSgx:     return "mednafen_supergrafx_libretro";
   case Emulator::kGambatte:      return "gambatte_libretro";
   case Emulator::kMGBA:          return "mgba_libretro";
-  case Emulator::kMednafenPsx:   return "mednafen_psx_libretro";
+  case Emulator::kBeetlePsx:     return "mednafen_psx_libretro";
   case Emulator::kMednafenNgp:   return "mednafen_ngp_libretro";
   case Emulator::kMednafenVb:    return "mednafen_vb_libretro";
   case Emulator::kFBAlpha:       return "fbalpha_libretro";
@@ -81,6 +81,7 @@ const char* getEmulatorExtensions(Emulator emulator)
     case Emulator::kGenesisPlusGx: return "bin|gen|smd|md|sms|gg|sg"; // mdx|md|smd|gen|bin|cue|iso|chd|sms|gg|sg
     case Emulator::kMGBA:          return "gba";                      // gba|gb|gbc
     case Emulator::kFBAlpha:       return "zip";                      // iso|zip|7z
+    case Emulator::kBeetlePsx:     return "cue|m3u";                  // exe|cue|toc|ccd|m3u|pbp|chd
     default:
       return NULL;
   }
@@ -122,7 +123,7 @@ System getSystem(Emulator emulator, const std::string game_path, libretro::Core*
   case Emulator::kFceumm:      return System::kNintendo;
   case Emulator::kHandy:       return System::kAtariLynx;
   case Emulator::kBeetleSgx:   return System::kPCEngine;
-  case Emulator::kMednafenPsx: return System::kPlayStation1;
+  case Emulator::kBeetlePsx:   return System::kPlayStation1;
   case Emulator::kMednafenNgp: return System::kNeoGeoPocket;
   case Emulator::kMednafenVb:  return System::kVirtualBoy;
   case Emulator::kFBAlpha:     return System::kArcade;
@@ -230,7 +231,7 @@ static bool romLoadPsx(Logger* logger, const std::string& path)
   uint8_t* exe_raw;
   int size, remaining;
 
-  if (!cdrom_open(cdrom, path.c_str(), 1))
+  if (!cdrom_open(cdrom, path.c_str(), 1, 1))
     return false;
 
   exe_name = NULL;

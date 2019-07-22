@@ -29,8 +29,10 @@ struct cdrom_t
   int sector_remaining;
 };
 
-bool cdrom_open(cdrom_t& cdrom, const char* filename, int track);
+bool cdrom_open(cdrom_t& cdrom, const char* filename, int disc, int track);
 void cdrom_close(cdrom_t& cdrom);
 
 bool cdrom_seek_file(cdrom_t& cdrom, const char* filename);
 int cdrom_read(cdrom_t& cdrom, void* buffer, int num_bytes);
+
+int cdrom_get_cd_names(const char* filename, char names[][128], int max_names);

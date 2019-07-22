@@ -94,6 +94,7 @@ protected:
   void        enableItems(const UINT* items, size_t count, UINT enable);
   void        enableSlots();
   void        enableRecent();
+  void        updateCDMenu(const char names[][128], int count, bool updateLabels);
   void        registerMemoryRegion(unsigned* max, unsigned bank, void* data, size_t size);
   std::string getSRamPath();
   std::string getStatePath(unsigned ndx);

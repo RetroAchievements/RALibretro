@@ -533,6 +533,7 @@ void libretro::Core::reset()
   _controllerInfoCount = 0;
   _controllerInfo = NULL;
   _ports = NULL;
+  _diskControlInterface = NULL;
   memset(&_memoryMap, 0, sizeof(_memoryMap));
   memset(&_calls, 0, sizeof(_calls));
 }
@@ -577,6 +578,22 @@ bool libretro::Core::setMessage(const struct retro_message* data)
 {
   _video->showMessage(data->msg, data->frames);
   return true;
+}
+
+void libretro::Core::setTrayOpen(bool open)
+{
+  InstanceSetter instance_setter(this);
+
+  if (_diskControlInterface)
+    _diskControlInterface->set_eject_state(open);
+}
+
+void libretro::Core::setCurrentDiscIndex(unsigned index)
+{
+  InstanceSetter instance_setter(this);
+
+  if (_diskControlInterface)
+    _diskControlInterface->set_image_index(index);
 }
 
 bool libretro::Core::shutdown()
@@ -669,9 +686,8 @@ bool libretro::Core::setKeyboardCallback(const struct retro_keyboard_callback* d
 
 bool libretro::Core::setDiskControlInterface(const struct retro_disk_control_callback* data)
 {
-  (void)data;
-  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
-  return false;
+  _diskControlInterface = data;
+  return true;
 }
 
 bool libretro::Core::setHWRender(struct retro_hw_render_callback* data)

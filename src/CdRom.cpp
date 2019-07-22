@@ -115,34 +115,70 @@ static bool cdrom_open_cue(cdrom_t& cdrom, const char* filename, int track)
   return false;
 }
 
-static bool cdrom_open_m3u(cdrom_t& cdrom, const char* filename, int track)
+static int cdrom_get_cd_names_m3u(const char* filename, char names[][128], int max_names)
 {
-  char buffer[_MAX_PATH], *ptr;
+  int count = 0;
+  char buffer[2048], *ptr, *start;
   char first_file[_MAX_PATH];
   FILE* fp = fopen(filename, "r");
-  if (!fp)
-    return false;
+  if (fp)
+  {
+    fread(buffer, 1, sizeof(buffer), fp);
+    fclose(fp);
 
-  fread(buffer, 1, sizeof(buffer), fp);
-  fclose(fp);
+    buffer[sizeof(buffer) - 1] = '\0';
+    ptr = buffer;
+    do
+    {
+      start = ptr;
+      while (*ptr && *ptr != '\n')
+        ++ptr;
 
-  buffer[_MAX_PATH - 1] = '\0';
-  ptr = buffer;
-  while (*ptr != '\0' && *ptr != '\n')
-    ++ptr;
-  *ptr = '\0';
+      if (!*ptr)
+        break;
 
-  strcpy(first_file, filename);
-  replace_filename(first_file, buffer);
+      *ptr = '\0';
+      strcpy(names[count], start);
+      ++count;
+      if (count == max_names)
+        break;
 
-  return cdrom_open(cdrom, first_file, track);
+      ++ptr;
+    } while (true);
+  }
+
+  return count;
 }
 
-bool cdrom_open(cdrom_t& cdrom, const char* filename, int track)
+int cdrom_get_cd_names(const char* filename, char names[][128], int max_names)
 {
   int len = strlen(filename);
   if (len > 4 && stricmp(&filename[len - 4], ".m3u") == 0)
-    return cdrom_open_m3u(cdrom, filename, track);
+    return cdrom_get_cd_names_m3u(filename, names, max_names);
+
+  std::string filename_path = util::fileNameWithExtension(filename);
+  strcpy(names[0], filename_path.c_str());
+  return 1;
+}
+
+static bool cdrom_open_m3u(cdrom_t& cdrom, const char* filename, int disc, int track)
+{
+  char first_file[MAX_PATH];
+  char files[1][128];
+  if (!cdrom_get_cd_names_m3u(filename, files, 1))
+    return false;
+
+  strcpy(first_file, filename);
+  replace_filename(first_file, files[0]);
+
+  return cdrom_open(cdrom, first_file, disc, track);
+}
+
+bool cdrom_open(cdrom_t& cdrom, const char* filename, int disc, int track)
+{
+  int len = strlen(filename);
+  if (len > 4 && stricmp(&filename[len - 4], ".m3u") == 0)
+    return cdrom_open_m3u(cdrom, filename, disc, track);
 
   return cdrom_open_cue(cdrom, filename, track);
 }
