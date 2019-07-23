@@ -1900,9 +1900,27 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     case IDM_CD_DISC_8:
     case IDM_CD_DISC_9:
     case IDM_CD_DISC_10:
-      _core.setCurrentDiscIndex(cmd - IDM_CD_DISC_1);
-      updateCDMenu(NULL, 0, false);
+    {
+      if (_core.getCurrentDiscIndex() != cmd - IDM_CD_DISC_1)
+      {
+        _core.setCurrentDiscIndex(cmd - IDM_CD_DISC_1);
+
+        char buffer[128];
+        MENUITEMINFO info;
+        memset(&info, 0, sizeof(info));
+        info.cbSize = sizeof(info);
+        info.fMask = MIIM_TYPE | MIIM_DATA;
+        info.dwTypeData = buffer;
+        info.cch = sizeof(buffer);
+        GetMenuItemInfo(_menu, cmd, false, &info);
+
+        std::string path = util::replaceFileName(_gamePath, buffer);
+        romLoaded(&_logger, _system, path, NULL, 0);
+
+        updateCDMenu(NULL, 0, false);
+      }
       break;
+    }
 
     case IDM_PAUSE_GAME:
       _fsm.pauseGame();

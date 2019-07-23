@@ -22,6 +22,10 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #define TAG "[EMU] "
 
+//  Manages multi-disc games
+extern void RA_ActivateDisc(unsigned char* pExe, size_t nExeSize);
+extern void RA_DeactivateDisc();
+
 const char* getEmulatorName(Emulator emulator)
 {
   switch (emulator)
@@ -307,7 +311,7 @@ static bool romLoadPsx(Logger* logger, const std::string& path)
           cdrom_read(cdrom, buffer, sizeof(buffer));
         } while (true);
 
-        RA_OnLoadNewRom(exe_raw, size);
+        RA_ActivateDisc(exe_raw, size);
         free(exe_raw);
       }
     }
@@ -374,6 +378,9 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
     ok = romLoadArcade(path);
     break;
   }
+
+  if (ok && system != System::kPlayStation1)
+    RA_DeactivateDisc();
 
   return ok;
 }

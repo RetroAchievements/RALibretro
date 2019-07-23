@@ -26,17 +26,6 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string.h>
 
-static void replace_filename(char* path, const char* new_filename)
-{
-  char* ptr = strrchr(path, '\\');
-  if (ptr)
-    ++ptr;
-  else
-    ptr = path;
-
-  strcpy(ptr, new_filename);
-}
-
 static bool cdrom_open_cue(cdrom_t& cdrom, const char* filename, int track)
 {
   FILE* fp;
@@ -87,10 +76,8 @@ static bool cdrom_open_cue(cdrom_t& cdrom, const char* filename, int track)
         }
         *ptr2 = '\0';
 
-        strcpy(buffer2, filename);
-        replace_filename(buffer2, file);
-
-        cdrom.fp = fopen(buffer2, "rb");
+        std::string binFileName = util::replaceFileName(filename, file);
+        cdrom.fp = fopen(binFileName.c_str(), "rb");
         if (!cdrom.fp)
           return false;
 
@@ -163,15 +150,12 @@ int cdrom_get_cd_names(const char* filename, char names[][128], int max_names)
 
 static bool cdrom_open_m3u(cdrom_t& cdrom, const char* filename, int disc, int track)
 {
-  char first_file[MAX_PATH];
   char files[1][128];
   if (!cdrom_get_cd_names_m3u(filename, files, 1))
     return false;
 
-  strcpy(first_file, filename);
-  replace_filename(first_file, files[0]);
-
-  return cdrom_open(cdrom, first_file, disc, track);
+  std::string cueFileName = util::replaceFileName(filename, files[0]);
+  return cdrom_open(cdrom, cueFileName.c_str(), disc, track);
 }
 
 bool cdrom_open(cdrom_t& cdrom, const char* filename, int disc, int track)
