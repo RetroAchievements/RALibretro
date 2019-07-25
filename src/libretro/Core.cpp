@@ -341,6 +341,8 @@ void libretro::Core::destroy()
     _core.unloadGame();
   }
 
+  _diskControlInterface = NULL;
+
   _core.deinit();
   _core.destroy();
   reset();

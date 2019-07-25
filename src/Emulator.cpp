@@ -295,7 +295,7 @@ static bool romLoadPsx(Logger* logger, const std::string& path)
 
         // the PSX-E header specifies the executable size as a 4-byte value 28 bytes into the header, which doesn't
         // include the header itself. We want to include the header in the hash, so append another 2048 to that value.
-        remaining = size = *(int*)(&buffer[28]) + 2048;
+        remaining = size = ((buffer[31] << 24) | (buffer[30] << 16) | (buffer[29] << 8) | buffer[28]) + 2048;
         exe_raw = (uint8_t*)malloc(size);
         tmp = (char*)exe_raw;
 
