@@ -74,22 +74,44 @@ bool Input::init(libretro::LoggerComponent* logger)
     addController(i);
   }
 
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_B] = { 0, SDL_CONTROLLER_BUTTON_B, ButtonDescriptor::Type::Button, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_Y] = { 0, SDL_CONTROLLER_BUTTON_Y, ButtonDescriptor::Type::Button, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_SELECT] = { 0, SDL_CONTROLLER_BUTTON_BACK, ButtonDescriptor::Type::Button, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_START] = { 0, SDL_CONTROLLER_BUTTON_START, ButtonDescriptor::Type::Button, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_UP] = { 0, SDL_CONTROLLER_BUTTON_DPAD_UP, ButtonDescriptor::Type::Button, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_DOWN] = { 0, SDL_CONTROLLER_BUTTON_DPAD_DOWN, ButtonDescriptor::Type::Button, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_LEFT] = { 0, SDL_CONTROLLER_BUTTON_DPAD_LEFT, ButtonDescriptor::Type::Button, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_RIGHT] = { 0, SDL_CONTROLLER_BUTTON_DPAD_RIGHT, ButtonDescriptor::Type::Button, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_A] = { 0, SDL_CONTROLLER_BUTTON_A, ButtonDescriptor::Type::Button, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_X] = { 0, SDL_CONTROLLER_BUTTON_X, ButtonDescriptor::Type::Button, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_L] = { 0, SDL_CONTROLLER_BUTTON_LEFTSHOULDER, ButtonDescriptor::Type::Button, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_R] = { 0, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, ButtonDescriptor::Type::Button, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_L2] = { 0, SDL_CONTROLLER_AXIS_TRIGGERLEFT, ButtonDescriptor::Type::Axis, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_R2] = { 0, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, ButtonDescriptor::Type::Axis, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_L3] = { 0, SDL_CONTROLLER_BUTTON_LEFTSTICK, ButtonDescriptor::Type::Button, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_R3] = { 0, SDL_CONTROLLER_BUTTON_RIGHTSTICK, ButtonDescriptor::Type::Button, 0 };
+  if (max > 0)
+  {
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_B] = { 0, SDL_CONTROLLER_BUTTON_B, ButtonDescriptor::Type::Button, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_Y] = { 0, SDL_CONTROLLER_BUTTON_Y, ButtonDescriptor::Type::Button, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_SELECT] = { 0, SDL_CONTROLLER_BUTTON_BACK, ButtonDescriptor::Type::Button, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_START] = { 0, SDL_CONTROLLER_BUTTON_START, ButtonDescriptor::Type::Button, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_UP] = { 0, SDL_CONTROLLER_BUTTON_DPAD_UP, ButtonDescriptor::Type::Button, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_DOWN] = { 0, SDL_CONTROLLER_BUTTON_DPAD_DOWN, ButtonDescriptor::Type::Button, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_LEFT] = { 0, SDL_CONTROLLER_BUTTON_DPAD_LEFT, ButtonDescriptor::Type::Button, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_RIGHT] = { 0, SDL_CONTROLLER_BUTTON_DPAD_RIGHT, ButtonDescriptor::Type::Button, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_A] = { 0, SDL_CONTROLLER_BUTTON_A, ButtonDescriptor::Type::Button, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_X] = { 0, SDL_CONTROLLER_BUTTON_X, ButtonDescriptor::Type::Button, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_L] = { 0, SDL_CONTROLLER_BUTTON_LEFTSHOULDER, ButtonDescriptor::Type::Button, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_R] = { 0, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, ButtonDescriptor::Type::Button, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_L2] = { 0, SDL_CONTROLLER_AXIS_TRIGGERLEFT, ButtonDescriptor::Type::Axis, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_R2] = { 0, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, ButtonDescriptor::Type::Axis, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_L3] = { 0, SDL_CONTROLLER_BUTTON_LEFTSTICK, ButtonDescriptor::Type::Button, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_R3] = { 0, SDL_CONTROLLER_BUTTON_RIGHTSTICK, ButtonDescriptor::Type::Button, 0 };
+  }
+  else
+  {
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_B] = { 0, SDLK_z, ButtonDescriptor::Type::Key, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_Y] = { 0, SDLK_a, ButtonDescriptor::Type::Key, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_SELECT] = { 0, SDLK_TAB, ButtonDescriptor::Type::Key, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_START] = { 0, SDLK_RETURN, ButtonDescriptor::Type::Key, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_UP] = { 0, SDLK_UP, ButtonDescriptor::Type::Key, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_DOWN] = { 0, SDLK_DOWN, ButtonDescriptor::Type::Key, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_LEFT] = { 0, SDLK_LEFT, ButtonDescriptor::Type::Key, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_RIGHT] = { 0, SDLK_RIGHT, ButtonDescriptor::Type::Key, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_A] = { 0, SDLK_x, ButtonDescriptor::Type::Key, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_X] = { 0, SDLK_s, ButtonDescriptor::Type::Key, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_L] = { 0, SDLK_d, ButtonDescriptor::Type::Key, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_R] = { 0, SDLK_c, ButtonDescriptor::Type::Key, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_L2] = { 0, SDLK_f, ButtonDescriptor::Type::Key, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_R2] = { 0, SDLK_v, ButtonDescriptor::Type::Key, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_L3] = { 0, SDLK_g, ButtonDescriptor::Type::Key, 0 };
+    _buttonMap[RETRO_DEVICE_ID_JOYPAD_R3] = { 0, SDLK_h, ButtonDescriptor::Type::Key, 0 };
+  }
 
   return true;
 }
@@ -1118,7 +1140,7 @@ protected:
   }
 };
 
-void Input::showDialog(int port)
+void Input::showControllerDialog(int port)
 {
   char label[32];
   snprintf(label, sizeof(label), "Controller %u", port + 1);

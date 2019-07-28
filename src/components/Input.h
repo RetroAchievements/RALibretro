@@ -73,7 +73,7 @@ public:
   std::string serialize();
   void deserialize(const char* json);
   void showDialog();
-  void showDialog(int portId);
+  void showControllerDialog(int portId);
 
   struct ButtonDescriptor
   {

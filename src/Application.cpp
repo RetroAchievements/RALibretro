@@ -565,7 +565,7 @@ void Application::updateMenu()
 
   static const UINT start_items[] =
   {
-    IDM_EXIT, IDM_ABOUT
+    IDM_EXIT, IDM_ABOUT, IDM_INPUT_CONFIG
   };
 
   static const UINT core_loaded_items[] =
@@ -1840,7 +1840,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       break;
 
     case IDM_INPUT_CONFIG:
-      _input.showDialog();
+      _input.showControllerDialog(0);
       break;
     
     case IDM_VIDEO_CONFIG:
