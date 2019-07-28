@@ -336,12 +336,12 @@ INT_PTR CALLBACK Dialog::s_dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM
   case WM_COMMAND:
     if (LOWORD(wparam) == IDOK || LOWORD(wparam) == IDCANCEL)
     {
-      if (LOWORD(wparam) == IDOK)
-      {
-        self = (Dialog*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-        self->retrieveData(hwnd);
-      }
+      self = (Dialog*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
+      if (LOWORD(wparam) == IDOK)
+        self->retrieveData(hwnd);
+
+      self->markClosed(hwnd);
       EndDialog(hwnd, LOWORD(wparam));
       return TRUE;
     }
@@ -349,6 +349,8 @@ INT_PTR CALLBACK Dialog::s_dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM
     break;
 
   case WM_CLOSE:
+    self = (Dialog*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    self->markClosed(hwnd);
     DestroyWindow(hwnd);
     return TRUE;
   }
@@ -358,4 +360,9 @@ INT_PTR CALLBACK Dialog::s_dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM
     return self->dialogProc(hwnd, msg, wparam, lparam);
 
   return FALSE;
+}
+
+void Dialog::markClosed(HWND hwnd)
+{
+  SetWindowLongPtr(hwnd, GWLP_USERDATA, NULL);
 }

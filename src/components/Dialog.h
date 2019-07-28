@@ -92,6 +92,7 @@ protected:
 
   static INT_PTR CALLBACK s_dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
   virtual INT_PTR dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) { return FALSE; }
+  virtual void markClosed(HWND hwnd);
 
   void*  _template;
   size_t _size;

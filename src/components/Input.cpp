@@ -74,22 +74,22 @@ bool Input::init(libretro::LoggerComponent* logger)
     addController(i);
   }
 
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_B] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_B, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_Y] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_Y, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_SELECT] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_BACK, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_START] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_START, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_UP] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_DPAD_UP, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_DOWN] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_DPAD_DOWN, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_LEFT] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_DPAD_LEFT, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_RIGHT] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_DPAD_RIGHT, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_A] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_A, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_X] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_X, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_L] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_LEFTSHOULDER, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_R] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_L2] = { 0, ButtonDescriptor::Type::Axis, SDL_CONTROLLER_AXIS_TRIGGERLEFT, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_R2] = { 0, ButtonDescriptor::Type::Axis, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_L3] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_LEFTSTICK, 0 };
-  _buttonMap[RETRO_DEVICE_ID_JOYPAD_R3] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_RIGHTSTICK, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_B] = { 0, SDL_CONTROLLER_BUTTON_B, ButtonDescriptor::Type::Button, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_Y] = { 0, SDL_CONTROLLER_BUTTON_Y, ButtonDescriptor::Type::Button, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_SELECT] = { 0, SDL_CONTROLLER_BUTTON_BACK, ButtonDescriptor::Type::Button, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_START] = { 0, SDL_CONTROLLER_BUTTON_START, ButtonDescriptor::Type::Button, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_UP] = { 0, SDL_CONTROLLER_BUTTON_DPAD_UP, ButtonDescriptor::Type::Button, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_DOWN] = { 0, SDL_CONTROLLER_BUTTON_DPAD_DOWN, ButtonDescriptor::Type::Button, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_LEFT] = { 0, SDL_CONTROLLER_BUTTON_DPAD_LEFT, ButtonDescriptor::Type::Button, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_RIGHT] = { 0, SDL_CONTROLLER_BUTTON_DPAD_RIGHT, ButtonDescriptor::Type::Button, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_A] = { 0, SDL_CONTROLLER_BUTTON_A, ButtonDescriptor::Type::Button, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_X] = { 0, SDL_CONTROLLER_BUTTON_X, ButtonDescriptor::Type::Button, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_L] = { 0, SDL_CONTROLLER_BUTTON_LEFTSHOULDER, ButtonDescriptor::Type::Button, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_R] = { 0, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, ButtonDescriptor::Type::Button, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_L2] = { 0, SDL_CONTROLLER_AXIS_TRIGGERLEFT, ButtonDescriptor::Type::Axis, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_R2] = { 0, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, ButtonDescriptor::Type::Axis, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_L3] = { 0, SDL_CONTROLLER_BUTTON_LEFTSTICK, ButtonDescriptor::Type::Button, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_R3] = { 0, SDL_CONTROLLER_BUTTON_RIGHTSTICK, ButtonDescriptor::Type::Button, 0 };
 
   return true;
 }
@@ -382,7 +382,7 @@ int16_t Input::read(unsigned port, unsigned device, unsigned index, unsigned id)
 
 Input::ButtonDescriptor Input::captureButtonPress()
 {
-  Input::ButtonDescriptor desc = { 0, Input::ButtonDescriptor::Type::None, 0, 0 };
+  Input::ButtonDescriptor desc = { 0, 0, Input::ButtonDescriptor::Type::None, 0 };
 
   if (!_pads.empty())
   {
@@ -716,6 +716,118 @@ void Input::showDialog()
   }
 }
 
+// SDL defines a function to convert a virtual key to a SDL scancode, but it's not public.
+// * SDL_Scancode WindowsScanCodeToSDLScanCode(LPARAM lParam, WPARAM wParam);
+//
+// we don't actually care about the extended keys, so we can get by just duplicating the raw keys
+// from http://hg.libsdl.org/SDL/file/131ea7dcc225/src/events/scancodes_windows.h
+static const SDL_Scancode windows_scancode_table[] =
+{
+/*	0						1							2							3							4						5							6							7 */
+/*	8						9							A							B							C						D							E							F */
+SDL_SCANCODE_UNKNOWN,		SDL_SCANCODE_ESCAPE,		SDL_SCANCODE_1,				SDL_SCANCODE_2,				SDL_SCANCODE_3,			SDL_SCANCODE_4,				SDL_SCANCODE_5,				SDL_SCANCODE_6,			/* 0 */
+SDL_SCANCODE_7,				SDL_SCANCODE_8,				SDL_SCANCODE_9,				SDL_SCANCODE_0,				SDL_SCANCODE_MINUS,		SDL_SCANCODE_EQUALS,		SDL_SCANCODE_BACKSPACE,		SDL_SCANCODE_TAB,		/* 0 */
+
+SDL_SCANCODE_Q,				SDL_SCANCODE_W,				SDL_SCANCODE_E,				SDL_SCANCODE_R,				SDL_SCANCODE_T,			SDL_SCANCODE_Y,				SDL_SCANCODE_U,				SDL_SCANCODE_I,			/* 1 */
+SDL_SCANCODE_O,				SDL_SCANCODE_P,				SDL_SCANCODE_LEFTBRACKET,	SDL_SCANCODE_RIGHTBRACKET,	SDL_SCANCODE_RETURN,	SDL_SCANCODE_LCTRL,			SDL_SCANCODE_A,				SDL_SCANCODE_S,			/* 1 */
+
+SDL_SCANCODE_D,				SDL_SCANCODE_F,				SDL_SCANCODE_G,				SDL_SCANCODE_H,				SDL_SCANCODE_J,			SDL_SCANCODE_K,				SDL_SCANCODE_L,				SDL_SCANCODE_SEMICOLON,	/* 2 */
+SDL_SCANCODE_APOSTROPHE,	SDL_SCANCODE_GRAVE,			SDL_SCANCODE_LSHIFT,		SDL_SCANCODE_BACKSLASH,		SDL_SCANCODE_Z,			SDL_SCANCODE_X,				SDL_SCANCODE_C,				SDL_SCANCODE_V,			/* 2 */
+
+SDL_SCANCODE_B,				SDL_SCANCODE_N,				SDL_SCANCODE_M,				SDL_SCANCODE_COMMA,			SDL_SCANCODE_PERIOD,	SDL_SCANCODE_SLASH,			SDL_SCANCODE_RSHIFT,		SDL_SCANCODE_PRINTSCREEN,/* 3 */
+SDL_SCANCODE_LALT,			SDL_SCANCODE_SPACE,			SDL_SCANCODE_CAPSLOCK,		SDL_SCANCODE_F1,			SDL_SCANCODE_F2,		SDL_SCANCODE_F3,			SDL_SCANCODE_F4,			SDL_SCANCODE_F5,		/* 3 */
+
+SDL_SCANCODE_F6,			SDL_SCANCODE_F7,			SDL_SCANCODE_F8,			SDL_SCANCODE_F9,			SDL_SCANCODE_F10,		SDL_SCANCODE_NUMLOCKCLEAR,	SDL_SCANCODE_SCROLLLOCK,	SDL_SCANCODE_HOME,		/* 4 */
+SDL_SCANCODE_UP,			SDL_SCANCODE_PAGEUP,		SDL_SCANCODE_KP_MINUS,		SDL_SCANCODE_LEFT,			SDL_SCANCODE_KP_5,		SDL_SCANCODE_RIGHT,			SDL_SCANCODE_KP_PLUS,		SDL_SCANCODE_END,		/* 4 */
+
+SDL_SCANCODE_DOWN,			SDL_SCANCODE_PAGEDOWN,		SDL_SCANCODE_INSERT,		SDL_SCANCODE_DELETE,		SDL_SCANCODE_UNKNOWN,	SDL_SCANCODE_UNKNOWN,		SDL_SCANCODE_NONUSBACKSLASH,SDL_SCANCODE_F11,		/* 5 */
+SDL_SCANCODE_F12,			SDL_SCANCODE_PAUSE,			SDL_SCANCODE_UNKNOWN,		SDL_SCANCODE_LGUI,			SDL_SCANCODE_RGUI,		SDL_SCANCODE_APPLICATION,	SDL_SCANCODE_UNKNOWN,		SDL_SCANCODE_UNKNOWN,	/* 5 */
+
+SDL_SCANCODE_UNKNOWN,		SDL_SCANCODE_UNKNOWN,		SDL_SCANCODE_UNKNOWN,		SDL_SCANCODE_UNKNOWN,		SDL_SCANCODE_F13,		SDL_SCANCODE_F14,			SDL_SCANCODE_F15,			SDL_SCANCODE_F16,		/* 6 */
+SDL_SCANCODE_F17,			SDL_SCANCODE_F18,			SDL_SCANCODE_F19,			SDL_SCANCODE_UNKNOWN,		SDL_SCANCODE_UNKNOWN,	SDL_SCANCODE_UNKNOWN,		SDL_SCANCODE_UNKNOWN,		SDL_SCANCODE_UNKNOWN,	/* 6 */
+
+SDL_SCANCODE_INTERNATIONAL2,		SDL_SCANCODE_UNKNOWN,		SDL_SCANCODE_UNKNOWN,		SDL_SCANCODE_INTERNATIONAL1,		SDL_SCANCODE_UNKNOWN,	SDL_SCANCODE_UNKNOWN,		SDL_SCANCODE_UNKNOWN,		SDL_SCANCODE_UNKNOWN,	/* 7 */
+SDL_SCANCODE_UNKNOWN,		SDL_SCANCODE_INTERNATIONAL4,		SDL_SCANCODE_UNKNOWN,		SDL_SCANCODE_INTERNATIONAL5,		SDL_SCANCODE_UNKNOWN,	SDL_SCANCODE_INTERNATIONAL3,		SDL_SCANCODE_UNKNOWN,		SDL_SCANCODE_UNKNOWN	/* 7 */
+};
+
+// subset of method here: http://hg.libsdl.org/SDL/file/131ea7dcc225/src/video/windows/SDL_windowsevents.c
+static SDL_Scancode WindowsScanCodeToSDLScanCode(LPARAM lparam, WPARAM wparam)
+{
+  switch (wparam)
+  {
+    case VK_PAUSE: return SDL_SCANCODE_PAUSE;
+    case VK_NUMLOCK: return SDL_SCANCODE_NUMLOCKCLEAR;
+  }
+
+  int nScanCode = (lparam >> 16) & 0xFF;
+  SDL_Scancode code = (nScanCode <= 127) ? windows_scancode_table[nScanCode] : SDL_SCANCODE_UNKNOWN;
+
+  if (lparam & (1 << 24))
+  {
+    switch (code) {
+      case SDL_SCANCODE_RETURN:
+        code = SDL_SCANCODE_KP_ENTER;
+        break;
+      case SDL_SCANCODE_LALT:
+        code = SDL_SCANCODE_RALT;
+        break;
+      case SDL_SCANCODE_LCTRL:
+        code = SDL_SCANCODE_RCTRL;
+        break;
+      case SDL_SCANCODE_SLASH:
+        code = SDL_SCANCODE_KP_DIVIDE;
+        break;
+      case SDL_SCANCODE_CAPSLOCK:
+        code = SDL_SCANCODE_KP_PLUS;
+        break;
+      default:
+        break;
+    }
+  }
+  else
+  {
+    switch (code) {
+      case SDL_SCANCODE_HOME:
+        code = SDL_SCANCODE_KP_7;
+        break;
+      case SDL_SCANCODE_UP:
+        code = SDL_SCANCODE_KP_8;
+        break;
+      case SDL_SCANCODE_PAGEUP:
+        code = SDL_SCANCODE_KP_9;
+        break;
+      case SDL_SCANCODE_LEFT:
+        code = SDL_SCANCODE_KP_4;
+        break;
+      case SDL_SCANCODE_RIGHT:
+        code = SDL_SCANCODE_KP_6;
+        break;
+      case SDL_SCANCODE_END:
+        code = SDL_SCANCODE_KP_1;
+        break;
+      case SDL_SCANCODE_DOWN:
+        code = SDL_SCANCODE_KP_2;
+        break;
+      case SDL_SCANCODE_PAGEDOWN:
+        code = SDL_SCANCODE_KP_3;
+        break;
+      case SDL_SCANCODE_INSERT:
+        code = SDL_SCANCODE_KP_0;
+        break;
+      case SDL_SCANCODE_DELETE:
+        code = SDL_SCANCODE_KP_PERIOD;
+        break;
+      case SDL_SCANCODE_PRINTSCREEN:
+        code = SDL_SCANCODE_KP_MULTIPLY;
+        break;
+      default:
+        break;
+    }
+  }
+
+  return code;
+}
+
 class ChangeInputDialog : public Dialog
 {
 public:
@@ -753,12 +865,91 @@ public:
         break;
 
       case Input::ButtonDescriptor::Type::Key:
-        sprintf(buffer, "TODO: key");
-        break;
+        sprintf(buffer, "%s%s%s%s",
+          (desc.modifiers & KMOD_CTRL) ? "Ctrl+" : "",
+          (desc.modifiers & KMOD_ALT) ? "Alt+" : "",
+          (desc.modifiers & KMOD_SHIFT) ? "Shift+" : "",
+          SDL_GetKeyName(static_cast<SDL_Keycode>(desc.button)));
+          break;
     }
   }
 
   Input* _input = nullptr;
+  bool _isOpen;
+
+  bool show(HWND hParent)
+  {
+    auto hwnd = CreateDialogIndirectParam(NULL, (LPCDLGTEMPLATE)_template, hParent, s_dialogProc, (LPARAM)this);
+    EnableWindow(hParent, 0);
+
+    ShowWindow(hwnd, 1);
+
+    _isOpen = true;
+    while(_isOpen)
+    {
+      MSG msg;
+      while(PeekMessage(&msg, 0, 0, 0, PM_NOREMOVE))
+      {
+        if(GetMessage(&msg, 0, 0, 0) > 0)
+        {
+          switch (msg.message)
+          {
+            case WM_KEYDOWN:
+            case WM_SYSKEYDOWN:
+            {
+              const auto code = WindowsScanCodeToSDLScanCode(msg.lParam, msg.wParam);
+              const auto sdlKey = SDL_GetKeyFromScancode(code);
+              switch (sdlKey)
+              {
+                case SDLK_UNKNOWN:
+                case SDLK_LALT:
+                case SDLK_RALT:
+                case SDLK_LCTRL:
+                case SDLK_RCTRL:
+                case SDLK_LSHIFT:
+                case SDLK_RSHIFT:
+                  break;
+
+                default:
+                  _buttonDescriptor.type = Input::ButtonDescriptor::Key;
+                  _buttonDescriptor.joystick_id = -1;
+                  _buttonDescriptor.button = sdlKey;
+                  _buttonDescriptor.modifiers = 0;
+
+                  if (GetKeyState(VK_CONTROL) & 0x8000)
+                    _buttonDescriptor.modifiers |= KMOD_CTRL;
+                  if (GetKeyState(VK_MENU) & 0x8000)
+                    _buttonDescriptor.modifiers |= KMOD_ALT;
+                  if (GetKeyState(VK_SHIFT) & 0x8000)
+                    _buttonDescriptor.modifiers |= KMOD_SHIFT;
+
+                  char buffer[32];
+                  getButtonLabel(buffer, _buttonDescriptor);
+                  SetDlgItemText(hwnd, ID_LABEL, buffer);
+                  break;
+              }
+            }
+
+            case WM_SYSCOMMAND:
+              break;
+
+            default:
+              if(!IsDialogMessage(hwnd, &msg))
+              {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+              }
+              break;
+          }
+        }
+      }
+      Sleep(10);
+    }
+
+    EnableWindow(hParent, 1);
+
+    return true;
+  }
 
 protected:
   Input::ButtonDescriptor _buttonDescriptor;
@@ -777,6 +968,12 @@ protected:
     // _updated is normally only set if a field changes, since this dialog has no fields,
     // always return "modified" if the user didn't cancel the dialog.
     _updated = true;
+  }
+
+  void markClosed(HWND hwnd) override
+  {
+    Dialog::markClosed(hwnd);
+    _isOpen = false;
   }
 
   INT_PTR dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override
@@ -910,7 +1107,7 @@ protected:
     // temporarily disable that behavior
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
 
-    if (db.show())
+    if (db.show(hwnd))
     {
       _buttonMap[button] = db.getButtonDescriptor();
       updateButtonLabel(button);

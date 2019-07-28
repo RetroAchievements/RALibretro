@@ -86,9 +86,9 @@ public:
     };
 
     SDL_JoystickID joystick_id;
+    uint32_t button;
     Type type;
-    uint8_t button;
-    uint8_t modifiers;
+    uint16_t modifiers;
   };
 
   ButtonDescriptor captureButtonPress();
