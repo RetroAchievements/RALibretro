@@ -21,6 +21,9 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "libretro/Components.h"
 
+#include "Dialog.h"
+
+#include <array>
 #include <map>
 
 #include <SDL_events.h>
@@ -70,6 +73,25 @@ public:
   std::string serialize();
   void deserialize(const char* json);
   void showDialog();
+  void showDialog(int portId);
+
+  struct ButtonDescriptor
+  {
+    enum Type
+    {
+      None = 0,
+      Button,
+      Axis,
+      Key,
+    };
+
+    SDL_JoystickID joystick_id;
+    Type type;
+    uint8_t button;
+    uint8_t modifiers;
+  };
+
+  ButtonDescriptor captureButtonPress();
 
 protected:
   struct Pad
@@ -123,6 +145,8 @@ protected:
 
   uint64_t                    _ports;
   std::vector<ControllerInfo> _info[kMaxPorts];
+
+  std::array<ButtonDescriptor, 16> _buttonMap;
 
   int _devices[kMaxPorts];
 };

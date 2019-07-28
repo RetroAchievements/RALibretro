@@ -33,6 +33,7 @@ public:
   void init(const char* title);
   void addCheckbox(const char* caption, DWORD id, WORD x, WORD y, WORD w, WORD h, bool* checked);
   void addLabel(const char* caption, WORD x, WORD y, WORD w, WORD h);
+  void addLabel(const char* caption, DWORD id, WORD x, WORD y, WORD w, WORD h);
   void addButton(const char* caption, DWORD id, WORD x, WORD y, WORD w, WORD h, bool isDefault);
   void addCombobox(DWORD id, WORD x, WORD y, WORD w, WORD h, WORD lines, GetOption get_option, void* udata, int* selected);
   void addEditbox(DWORD id, WORD x, WORD y, WORD w, WORD h, WORD lines, char* contents, size_t maxSize, bool readOnly);
@@ -73,6 +74,8 @@ protected:
 
   void align(size_t alignment);
 
+  void writeDlgItemTemplateEx(DWORD helpId, DWORD exStyle, DWORD style, WORD x, WORD y, WORD cx, WORD cy, DWORD id, DWORD windowClass, const char* title, WORD extraCount);
+
   void write(void* data, size_t size);
   void writeStr(const char* str);
   void writeWide(const WCHAR* str);
@@ -84,10 +87,11 @@ protected:
 
   void update(WORD x, WORD y, WORD w, WORD h);
 
-  void initControls(HWND hwnd);
-  void retrieveData(HWND hwnd);
+  virtual void initControls(HWND hwnd);
+  virtual void retrieveData(HWND hwnd);
 
   static INT_PTR CALLBACK s_dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+  virtual INT_PTR dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) { return FALSE; }
 
   void*  _template;
   size_t _size;

@@ -22,6 +22,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "Dialog.h"
 #include "jsonsax/jsonsax.h"
 
+#include <SDL_hints.h>
+
 #define KEYBOARD_ID -1
 
 #define TAG "[INP] "
@@ -71,6 +73,23 @@ bool Input::init(libretro::LoggerComponent* logger)
   {
     addController(i);
   }
+
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_B] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_B, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_Y] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_Y, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_SELECT] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_BACK, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_START] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_START, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_UP] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_DPAD_UP, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_DOWN] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_DPAD_DOWN, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_LEFT] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_DPAD_LEFT, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_RIGHT] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_DPAD_RIGHT, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_A] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_A, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_X] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_X, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_L] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_LEFTSHOULDER, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_R] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_L2] = { 0, ButtonDescriptor::Type::Axis, SDL_CONTROLLER_AXIS_TRIGGERLEFT, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_R2] = { 0, ButtonDescriptor::Type::Axis, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_L3] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_LEFTSTICK, 0 };
+  _buttonMap[RETRO_DEVICE_ID_JOYPAD_R3] = { 0, ButtonDescriptor::Type::Button, SDL_CONTROLLER_BUTTON_RIGHTSTICK, 0 };
 
   return true;
 }
@@ -361,6 +380,58 @@ int16_t Input::read(unsigned port, unsigned device, unsigned index, unsigned id)
   return 0;
 }
 
+Input::ButtonDescriptor Input::captureButtonPress()
+{
+  Input::ButtonDescriptor desc = { 0, Input::ButtonDescriptor::Type::None, 0, 0 };
+
+  if (!_pads.empty())
+  {
+    SDL_GameControllerUpdate();
+    for (const auto& pair : _pads)
+    {
+      if (!pair.second._controller)
+        continue;
+
+      for (int i = 0; i < SDL_CONTROLLER_BUTTON_MAX; ++i)
+      {
+        if (SDL_GameControllerGetButton(pair.second._controller, static_cast<SDL_GameControllerButton>(i)))
+        {
+          desc.joystick_id = pair.second._id;
+          desc.type = Input::ButtonDescriptor::Type::Button;
+          desc.button = i;
+          return desc;
+        }
+      }
+
+      int threshold = 32767 * pair.second._sensitivity;
+
+      for (int i = 0; i < SDL_CONTROLLER_AXIS_MAX; ++i)
+      {
+        const auto value = SDL_GameControllerGetAxis(pair.second._controller, static_cast<SDL_GameControllerAxis>(i));
+        if (value < -threshold)
+        {
+          desc.joystick_id = pair.second._id;
+          desc.type = Input::ButtonDescriptor::Type::Axis;
+          desc.button = i;
+          desc.modifiers = 0xFF;
+          return desc;
+        }
+        else if (value > threshold)
+        {
+          desc.joystick_id = pair.second._id;
+          desc.type = Input::ButtonDescriptor::Type::Axis;
+          desc.button = i;
+          if (i != SDL_CONTROLLER_AXIS_TRIGGERLEFT && i != SDL_CONTROLLER_AXIS_TRIGGERRIGHT)
+            desc.modifiers = 1;
+          return desc;
+        }
+      }
+    }
+  }
+
+  return desc;
+}
+
 void Input::addController(const SDL_Event* event)
 {
   addController(event->cdevice.which);
@@ -642,6 +713,227 @@ void Input::showDialog()
         }
       }
     }
+  }
+}
+
+class ChangeInputDialog : public Dialog
+{
+public:
+  static const WORD ID_LABEL = 40000;
+  static const WORD IDC_CLEAR = 50000;
+  static const WORD IDT_TIMER = 40500;
+
+  const Input::ButtonDescriptor getButtonDescriptor() const { return _buttonDescriptor; }
+
+  static void getButtonLabel(char buffer[32], Input::ButtonDescriptor& desc)
+  {
+    switch (desc.type)
+    {
+      case Input::ButtonDescriptor::Type::None:
+        sprintf(buffer, "none");
+        break;
+
+      case Input::ButtonDescriptor::Type::Button:
+        sprintf(buffer, "J%d %s", desc.joystick_id, SDL_GameControllerGetStringForButton(static_cast<SDL_GameControllerButton>(desc.button)));
+        break;
+
+      case Input::ButtonDescriptor::Type::Axis:
+        switch (desc.modifiers)
+        {
+          case 0xFF:
+            sprintf(buffer, "J%d -%s", desc.joystick_id, SDL_GameControllerGetStringForAxis(static_cast<SDL_GameControllerAxis>(desc.button)));
+            break;
+          case 0:
+            sprintf(buffer, "J%d %s", desc.joystick_id, SDL_GameControllerGetStringForAxis(static_cast<SDL_GameControllerAxis>(desc.button)));
+            break;
+          case 1:
+            sprintf(buffer, "J%d +%s", desc.joystick_id, SDL_GameControllerGetStringForAxis(static_cast<SDL_GameControllerAxis>(desc.button)));
+            break;
+        }
+        break;
+
+      case Input::ButtonDescriptor::Type::Key:
+        sprintf(buffer, "TODO: key");
+        break;
+    }
+  }
+
+  Input* _input = nullptr;
+
+protected:
+  Input::ButtonDescriptor _buttonDescriptor;
+
+  void initControls(HWND hwnd) override
+  {
+    Dialog::initControls(hwnd);
+
+    SetTimer(hwnd, IDT_TIMER, 100, (TIMERPROC)NULL);
+  }
+
+  void retrieveData(HWND hwnd) override
+  {
+    Dialog::retrieveData(hwnd);
+
+    // _updated is normally only set if a field changes, since this dialog has no fields,
+    // always return "modified" if the user didn't cancel the dialog.
+    _updated = true;
+  }
+
+  INT_PTR dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override
+  {
+    switch (msg)
+    {
+      case WM_COMMAND:
+      {
+        int controlId = LOWORD(wparam);
+        if (controlId == IDC_CLEAR)
+        {
+          _buttonDescriptor.joystick_id = 0;
+          _buttonDescriptor.type = Input::ButtonDescriptor::Type::None;
+          _buttonDescriptor.button = 0;
+          _buttonDescriptor.modifiers = 0;
+
+          char buffer[32];
+          getButtonLabel(buffer, _buttonDescriptor);
+          SetDlgItemText(hwnd, ID_LABEL, buffer);
+        }
+        break;
+      }
+
+      case WM_TIMER:
+        if (wparam == IDT_TIMER)
+        {
+          Input::ButtonDescriptor button = _input->captureButtonPress();
+          if (button.type != Input::ButtonDescriptor::Type::None)
+          {
+            _buttonDescriptor = button;
+            char buffer[32];
+            getButtonLabel(buffer, _buttonDescriptor);
+            SetDlgItemText(hwnd, ID_LABEL, buffer);
+          }
+        }
+        break;
+    }
+
+    return Dialog::dialogProc(hwnd, msg, wparam, lparam);
+  }
+};
+
+class InputDialog : public Dialog
+{
+public:
+  void initButtons(const std::array<Input::ButtonDescriptor, 16>& buttonMap)
+  {
+    _buttonMap = buttonMap;
+
+    const WORD WIDTH = 360;
+    const WORD HEIGHT = 150;
+
+    addButtonInput(0, 1, "L2", RETRO_DEVICE_ID_JOYPAD_L2);
+    addButtonInput(0, 9, "R2", RETRO_DEVICE_ID_JOYPAD_R2);
+    addButtonInput(1, 1, "L1", RETRO_DEVICE_ID_JOYPAD_L);
+    addButtonInput(1, 9, "R1", RETRO_DEVICE_ID_JOYPAD_R);
+    addButtonInput(2, 1, "Up", RETRO_DEVICE_ID_JOYPAD_UP);
+    addButtonInput(2, 4, "Select", RETRO_DEVICE_ID_JOYPAD_SELECT);
+    addButtonInput(2, 6, "Start", RETRO_DEVICE_ID_JOYPAD_START);
+    addButtonInput(2, 9, "Y", RETRO_DEVICE_ID_JOYPAD_Y);
+    addButtonInput(3, 0, "Left", RETRO_DEVICE_ID_JOYPAD_LEFT);
+    addButtonInput(3, 2, "Right", RETRO_DEVICE_ID_JOYPAD_RIGHT);
+    addButtonInput(3, 8, "X", RETRO_DEVICE_ID_JOYPAD_X);
+    addButtonInput(3, 10, "B", RETRO_DEVICE_ID_JOYPAD_B);
+    addButtonInput(4, 1, "Down", RETRO_DEVICE_ID_JOYPAD_DOWN);
+    addButtonInput(4, 9, "A", RETRO_DEVICE_ID_JOYPAD_A);
+
+    addButton("OK", IDOK, WIDTH - 55 - 50, HEIGHT - 14, 50, 14, true);
+    addButton("Cancel", IDCANCEL, WIDTH - 50, HEIGHT - 14, 50, 14, false);
+  }
+
+  Input* _input = nullptr;
+
+protected:
+  std::array<Input::ButtonDescriptor, 16> _buttonMap = {};
+  std::array<char[32], 16> _buttonLabels = {};
+
+  void updateButtonLabel(int button)
+  {
+    Input::ButtonDescriptor& desc = _buttonMap[button];
+    ChangeInputDialog::getButtonLabel(_buttonLabels[button], desc);
+  }
+
+  void addButtonInput(int row, int column, const char* label, int button)
+  {
+    const WORD ITEM_WIDTH = 60;
+    const WORD ITEM_HEIGHT = 10;
+
+    const WORD x = column * (ITEM_WIDTH / 2) + 3;
+    const WORD y = row * (ITEM_HEIGHT * 2 + 6);
+
+    addButton(label, 20000 + button, x, y, ITEM_WIDTH -6 , ITEM_HEIGHT, false);
+
+    updateButtonLabel(button);
+    addEditbox(10000 + button, x, y + ITEM_HEIGHT, ITEM_WIDTH - 6, ITEM_HEIGHT, 1, _buttonLabels[button], 16, true);
+  }
+
+  INT_PTR dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override
+  {
+    switch (msg)
+    {
+      case WM_COMMAND:
+      {
+        int controlId = LOWORD(wparam);
+        if (controlId > 20000 && controlId < 20020)
+          updateButton(hwnd, controlId - 20000);
+        break;
+      }
+    }
+
+    return Dialog::dialogProc(hwnd, msg, wparam, lparam);
+  }
+
+  void updateButton(HWND hwnd, int button)
+  {
+    char buffer[32];
+    GetDlgItemText(hwnd, 20000 + button, buffer, sizeof(buffer));
+
+    ChangeInputDialog db;
+    db.init(buffer);
+    db._input = _input;
+
+    GetDlgItemText(hwnd, 10000 + button, buffer, sizeof(buffer));
+    db.addLabel(buffer, ChangeInputDialog::ID_LABEL, 0, 0, 100, 15);
+
+    db.addButton("Clear", ChangeInputDialog::IDC_CLEAR, 0, 20, 50, 14, false);
+    db.addButton("OK", IDOK, 80, 20, 50, 14, true);
+    db.addButton("Cancel", IDCANCEL, 140, 20, 50, 14, false);
+
+    // the joystick is normally ignored if the SDL window doesn't have focus
+    // temporarily disable that behavior
+    SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
+
+    if (db.show())
+    {
+      _buttonMap[button] = db.getButtonDescriptor();
+      updateButtonLabel(button);
+      SetDlgItemText(hwnd, 10000 + button, _buttonLabels[button]);
+    }
+
+    SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "0");
+  }
+};
+
+void Input::showDialog(int port)
+{
+  char label[32];
+  snprintf(label, sizeof(label), "Controller %u", port + 1);
+
+  InputDialog db;
+  db.init(label);
+  db._input = this;
+  db.initButtons(_buttonMap);
+
+  if (db.show())
+  {
+    _updated = true;
   }
 }
 
