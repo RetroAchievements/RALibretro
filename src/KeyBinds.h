@@ -101,6 +101,11 @@ public:
   };
   typedef std::array<Binding, 64> BindingList;
 
+  static void getBindingString(char buffer[32], const KeyBinds::Binding& desc);
+
+  std::string serializeBindings() const;
+  bool deserializeBindings(const char* json);
+
 protected:
   libretro::LoggerComponent* _logger;
 

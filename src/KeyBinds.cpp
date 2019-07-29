@@ -19,8 +19,12 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "KeyBinds.h"
 
+#include "Util.h"
+
 #include "components/Dialog.h"
 #include "components/Input.h"
+
+#include <jsonsax/jsonsax.h>
 
 #include <SDL_hints.h>
 #include <SDL_keycode.h>
@@ -103,6 +107,24 @@ enum
   kMaxBindings
 };
 
+static const char* bindingNames[] = {
+  "J0_UP", "J0_DOWN", "J0_LEFT", "J0_RIGHT", "J0_X", "J0_Y", "J0_A", "J0_B",
+  "J0_L", "J0_R", "J0_L2", "J0_R2", "J0_L3", "J0_R3", "J0_SELECT", "J0_START",
+
+  "SAVE1", "SAVE2", "SAVE3", "SAVE4", "SAVE5", "SAVE6", "SAVE7", "SAVE8", "SAVE9", "SAVE0",
+  "LOAD1", "LOAD2", "LOAD3", "LOAD4", "LOAD5", "LOAD6", "LOAD7", "LOAD8", "LOAD9", "LOAD0",
+  "NEXT_SLOT", "PREV_SLOT",
+  "SLOT1", "SLOT2", "SLOT3", "SLOT4", "SLOT5", "SLOT6", "SLOT7", "SLOT8", "SLOT9", "SLOT0",
+  "LOAD_SLOT", "SAVE_SLOT",
+
+  "WINDOW_1X", "WINDOW_2X", "WINDOW_3X", "WINDOW_4X",
+  "TOGGLE_FULLSCREEN",
+
+  "SHOW_OVERLAY", "PAUSE", "FAST_FORWARD", "FAST_FORWARD_TOGGLE", "FRAME_ADVANCE",
+
+  "SCREENSHOT",
+};
+static_assert(sizeof(bindingNames) / sizeof(bindingNames[0]) == kMaxBindings, "bindingNames does not contain an appropriate number of elements");
 
 bool KeyBinds::init(libretro::LoggerComponent* logger)
 {
@@ -398,6 +420,205 @@ void KeyBinds::translate(const SDL_ControllerAxisEvent* caxis, Input& input,
   }
 }
 
+void KeyBinds::getBindingString(char buffer[32], const KeyBinds::Binding& binding)
+{
+  switch (binding.type)
+  {
+    case KeyBinds::Binding::Type::None:
+      sprintf(buffer, "none");
+      break;
+
+    case KeyBinds::Binding::Type::Button:
+      sprintf(buffer, "J%d %s", binding.joystick_id, SDL_GameControllerGetStringForButton(static_cast<SDL_GameControllerButton>(binding.button)));
+      break;
+
+    case KeyBinds::Binding::Type::Axis:
+      switch (binding.modifiers)
+      {
+        case 0xFF:
+          sprintf(buffer, "J%d -%s", binding.joystick_id, SDL_GameControllerGetStringForAxis(static_cast<SDL_GameControllerAxis>(binding.button)));
+          break;
+        case 0:
+          sprintf(buffer, "J%d %s", binding.joystick_id, SDL_GameControllerGetStringForAxis(static_cast<SDL_GameControllerAxis>(binding.button)));
+          break;
+        case 1:
+          sprintf(buffer, "J%d +%s", binding.joystick_id, SDL_GameControllerGetStringForAxis(static_cast<SDL_GameControllerAxis>(binding.button)));
+          break;
+      }
+      break;
+
+    case KeyBinds::Binding::Type::Key:
+      sprintf(buffer, "%s%s%s%s",
+        (binding.modifiers & KMOD_CTRL) ? "Ctrl+" : "",
+        (binding.modifiers & KMOD_ALT) ? "Alt+" : "",
+        (binding.modifiers & KMOD_SHIFT) ? "Shift+" : "",
+        SDL_GetKeyName(static_cast<SDL_Keycode>(binding.button)));
+      break;
+  }
+}
+
+static bool parseBindingString(const std::string& str, KeyBinds::Binding& binding)
+{
+  const char* ptr = str.c_str();
+  int button = 0;
+
+  if (str == "none")
+  {
+    binding.type = KeyBinds::Binding::Type::None;
+    binding.joystick_id = 0;
+    binding.button = 0;
+    binding.modifiers = 0;
+    return true;
+  }
+
+  if (ptr[0] == 'J' && isdigit(ptr[1]))
+  {
+    int joystick_id = (ptr[1] - '0');
+    ptr += 3;
+
+    if (*ptr == '-')
+    {
+      button = SDL_GameControllerGetAxisFromString(++ptr);
+      if (button != SDL_CONTROLLER_AXIS_INVALID)
+      {
+        binding.type = KeyBinds::Binding::Type::Axis;
+        binding.joystick_id = joystick_id;
+        binding.button = button;
+        binding.modifiers = 0xFF;
+        return true;
+      }
+    }
+    else if (*ptr == '+')
+    {
+      button = SDL_GameControllerGetAxisFromString(++ptr);
+      if (button != SDL_CONTROLLER_AXIS_INVALID)
+      {
+        binding.type = KeyBinds::Binding::Type::Axis;
+        binding.joystick_id = joystick_id;
+        binding.button = button;
+        binding.modifiers = 1;
+        return true;
+      }
+    }
+    else
+    {
+      button = SDL_GameControllerGetButtonFromString(ptr);
+      if (button != SDL_CONTROLLER_BUTTON_INVALID)
+      {
+        binding.type = KeyBinds::Binding::Type::Button;
+        binding.joystick_id = joystick_id;
+        binding.button = button;
+        binding.modifiers = 0;
+        return true;
+      }
+
+      button = SDL_GameControllerGetAxisFromString(ptr);
+      if (button != SDL_CONTROLLER_AXIS_INVALID)
+      {
+        binding.type = KeyBinds::Binding::Type::Axis;
+        binding.joystick_id = joystick_id;
+        binding.button = button;
+        binding.modifiers = 0;
+        return true;
+      }
+    }
+  }
+  else
+  {
+    int mods = 0;
+
+    if (strncmp(ptr, "Ctrl+", 5) == 0)
+    {
+      mods |= KMOD_CTRL;
+      ptr += 5;
+    }
+
+    if (strncmp(ptr, "Alt+", 4) == 0)
+    {
+      mods |= KMOD_ALT;
+      ptr += 4;
+    }
+
+    if (strncmp(ptr, "Shift+", 6) == 0)
+    {
+      mods |= KMOD_SHIFT;
+      ptr += 6;
+    }
+
+    button = SDL_GetKeyFromName(ptr);
+    if (button != SDLK_UNKNOWN)
+    {
+      binding.type = KeyBinds::Binding::Type::Key;
+      binding.joystick_id = 0;
+      binding.button = button;
+      binding.modifiers = mods;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+std::string KeyBinds::serializeBindings() const
+{
+  char binding[32];
+  std::string bindings = "{";
+  bindings.reserve(kMaxBindings * 16);
+
+  for (int i = 0; i < kMaxBindings; ++i)
+  {
+    if (i != 0)
+      bindings += ",";
+
+    bindings += "\"";
+    bindings += bindingNames[i];
+    bindings += "\":\"";
+
+    getBindingString(binding, _bindings[i]);
+    bindings += util::jsonEscape(binding);
+    bindings += "\"";
+  }
+
+  bindings += "}";
+  return bindings;
+}
+
+bool KeyBinds::deserializeBindings(const char* json)
+{
+  struct Deserialize
+  {
+    KeyBinds* self;
+    std::string key;
+  };
+  Deserialize ud;
+  ud.self = this;
+
+  jsonsax_result_t res = jsonsax_parse((char*)json, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+  {
+    auto* ud = (Deserialize*)udata;
+
+    if (event == JSONSAX_KEY)
+    {
+      ud->key = std::string(str, num);
+    }
+    else if (event == JSONSAX_STRING)
+    {
+      int binding = 0;
+      for (int i = 0; i < kMaxBindings; ++i)
+      {
+        if (ud->key == bindingNames[i])
+        {
+          parseBindingString(util::jsonUnescape(std::string(str, num)), ud->self->_bindings[i]);
+        }
+      }
+    }
+
+    return 0;
+  });
+
+  return (res == JSONSAX_OK);
+}
+
 // SDL defines a function to convert a virtual key to a SDL scancode, but it's not public.
 // * SDL_Scancode WindowsScanCodeToSDLScanCode(LPARAM lParam, WPARAM wParam);
 //
@@ -519,43 +740,6 @@ public:
 
   const KeyBinds::Binding getButtonDescriptor() const { return _buttonDescriptor; }
 
-  static void getButtonLabel(char buffer[32], KeyBinds::Binding& desc)
-  {
-    switch (desc.type)
-    {
-      case KeyBinds::Binding::Type::None:
-        sprintf(buffer, "none");
-        break;
-
-      case KeyBinds::Binding::Type::Button:
-        sprintf(buffer, "J%d %s", desc.joystick_id, SDL_GameControllerGetStringForButton(static_cast<SDL_GameControllerButton>(desc.button)));
-        break;
-
-      case KeyBinds::Binding::Type::Axis:
-        switch (desc.modifiers)
-        {
-          case 0xFF:
-            sprintf(buffer, "J%d -%s", desc.joystick_id, SDL_GameControllerGetStringForAxis(static_cast<SDL_GameControllerAxis>(desc.button)));
-            break;
-          case 0:
-            sprintf(buffer, "J%d %s", desc.joystick_id, SDL_GameControllerGetStringForAxis(static_cast<SDL_GameControllerAxis>(desc.button)));
-            break;
-          case 1:
-            sprintf(buffer, "J%d +%s", desc.joystick_id, SDL_GameControllerGetStringForAxis(static_cast<SDL_GameControllerAxis>(desc.button)));
-            break;
-        }
-        break;
-
-      case KeyBinds::Binding::Type::Key:
-        sprintf(buffer, "%s%s%s%s",
-          (desc.modifiers & KMOD_CTRL) ? "Ctrl+" : "",
-          (desc.modifiers & KMOD_ALT) ? "Alt+" : "",
-          (desc.modifiers & KMOD_SHIFT) ? "Shift+" : "",
-          SDL_GetKeyName(static_cast<SDL_Keycode>(desc.button)));
-        break;
-    }
-  }
-
   Input* _input = nullptr;
   bool _isOpen;
 
@@ -606,7 +790,7 @@ public:
                     _buttonDescriptor.modifiers |= KMOD_SHIFT;
 
                   char buffer[32];
-                  getButtonLabel(buffer, _buttonDescriptor);
+                  KeyBinds::getBindingString(buffer, _buttonDescriptor);
                   SetDlgItemText(hwnd, ID_LABEL, buffer);
                   break;
               }
@@ -673,7 +857,7 @@ protected:
           _buttonDescriptor.modifiers = 0;
 
           char buffer[32];
-          getButtonLabel(buffer, _buttonDescriptor);
+          KeyBinds::getBindingString(buffer, _buttonDescriptor);
           SetDlgItemText(hwnd, ID_LABEL, buffer);
         }
         break;
@@ -687,7 +871,7 @@ protected:
           {
             _buttonDescriptor = button;
             char buffer[32];
-            getButtonLabel(buffer, _buttonDescriptor);
+            KeyBinds::getBindingString(buffer, _buttonDescriptor);
             SetDlgItemText(hwnd, ID_LABEL, buffer);
           }
         }
@@ -795,7 +979,7 @@ protected:
   void updateButtonLabel(int button)
   {
     KeyBinds::Binding& desc = _bindings[button];
-    ChangeInputDialog::getButtonLabel(_buttonLabels[button], desc);
+    KeyBinds::getBindingString(_buttonLabels[button], desc);
   }
 
   void addButtonInput(int row, int column, const char* label, int button)
@@ -870,10 +1054,7 @@ void KeyBinds::showControllerDialog(Input& input, int port)
   db.initControllerButtons(_bindings);
 
   if (db.show())
-  {
     _bindings = db.getBindings();
-    // TODO: persist
-  }
 }
 
 void KeyBinds::showHotKeyDialog(Input& input)
@@ -884,8 +1065,5 @@ void KeyBinds::showHotKeyDialog(Input& input)
   db.initHotKeyButtons(_bindings);
 
   if (db.show())
-  {
     _bindings = db.getBindings();
-    // TODO: persist
-  }
 }

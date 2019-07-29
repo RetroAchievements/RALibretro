@@ -456,6 +456,10 @@ void Application::saveConfiguration()
   json += "\"recent\":";
   json += serializeRecentList();
 
+  // bindings
+  json += ",\"bindings\":";
+  json += _keybinds.serializeBindings();
+
   // window position
   const Uint32 flags = SDL_GetWindowFlags(_window);
   if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
@@ -1679,6 +1683,13 @@ void Application::loadConfiguration()
         });
 
         if (res2 != JSONSAX_OK)
+        {
+          return -1;
+        }
+      }
+      else if (ud->key == "bindings" && event == JSONSAX_OBJECT)
+      {
+        if (!ud->self->_keybinds.deserializeBindings(str))
         {
           return -1;
         }
