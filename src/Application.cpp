@@ -333,7 +333,8 @@ void Application::run()
         KeyBinds::Action action1, action2;
         unsigned extra1, extra2;
         _keybinds.translate(&event.caxis, _input, &action1, &extra1, &action2, &extra2);
-        handle(action1, extra1);
+        if (action1 != action2)
+          handle(action1, extra1);
         handle(action2, extra2);
         break;
       }
@@ -1987,13 +1988,13 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
     break;
 
   case KeyBinds::Action::kFastForward:
-    if (_fsm.currentState() == Fsm::State::GameTurbo)
+    if (extra)
     {
-      _fsm.normal();
+      _fsm.turbo();
     }
     else
     {
-      _fsm.turbo();
+      _fsm.normal();
     }
 
     break;
