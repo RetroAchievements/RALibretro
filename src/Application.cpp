@@ -316,20 +316,40 @@ void Application::run()
 
       case SDL_CONTROLLERDEVICEADDED:
       case SDL_CONTROLLERDEVICEREMOVED:
-      case SDL_CONTROLLERBUTTONUP:
-      case SDL_CONTROLLERBUTTONDOWN:
-      case SDL_CONTROLLERAXISMOTION:
         _input.processEvent(&event);
         break;
-      
+
+      case SDL_CONTROLLERBUTTONUP:
+      case SDL_CONTROLLERBUTTONDOWN:
+      {
+        unsigned extra;
+        KeyBinds::Action action = _keybinds.translate(&event.cbutton, &extra);
+        handle(action, extra);
+        break;
+      }
+
+      case SDL_CONTROLLERAXISMOTION:
+      {
+        KeyBinds::Action action1, action2;
+        unsigned extra1, extra2;
+        _keybinds.translate(&event.caxis, _input, &action1, &extra1, &action2, &extra2);
+        handle(action1, extra1);
+        handle(action2, extra2);
+        break;
+      }
+
       case SDL_SYSWMEVENT:
         handle(&event.syswm);
         break;
       
       case SDL_KEYUP:
       case SDL_KEYDOWN:
-        handle(&event.key);
+      {
+        unsigned extra;
+        KeyBinds::Action action = _keybinds.translate(&event.key, &extra);
+        handle(action, extra);
         break;
+      }
 
       case SDL_WINDOWEVENT:
         handle(&event.window);
@@ -1840,7 +1860,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       break;
 
     case IDM_INPUT_CONFIG:
-      _input.showControllerDialog(0);
+      _keybinds.showControllerDialog(_input, 0);
       break;
     
     case IDM_VIDEO_CONFIG:
@@ -1881,13 +1901,12 @@ void Application::handle(const SDL_WindowEvent* window)
   }
 }
 
-void Application::handle(const SDL_KeyboardEvent* key)
+void Application::handle(const KeyBinds::Action action, unsigned extra)
 {
-  unsigned extra;
-
-  switch (_keybinds.translate(key, &extra))
+  switch (action)
   {
   case KeyBinds::Action::kNothing:          break;
+
   // Joypad buttons
   case KeyBinds::Action::kButtonUp:         _input.buttonEvent(Input::Button::kUp, extra != 0); break;
   case KeyBinds::Action::kButtonDown:       _input.buttonEvent(Input::Button::kDown, extra != 0); break;
@@ -1905,15 +1924,18 @@ void Application::handle(const SDL_KeyboardEvent* key)
   case KeyBinds::Action::kButtonR3:         _input.buttonEvent(Input::Button::kR3, extra != 0); break;
   case KeyBinds::Action::kButtonSelect:     _input.buttonEvent(Input::Button::kSelect, extra != 0); break;
   case KeyBinds::Action::kButtonStart:      _input.buttonEvent(Input::Button::kStart, extra != 0); break;
+
   // State management
   case KeyBinds::Action::kSaveState:        saveState(extra); break;
   case KeyBinds::Action::kLoadState:        loadState(extra); break;
+
   // Window size
   case KeyBinds::Action::kSetWindowSize1:   resizeWindow(1); break;
   case KeyBinds::Action::kSetWindowSize2:   resizeWindow(2); break;
   case KeyBinds::Action::kSetWindowSize3:   resizeWindow(3); break;
   case KeyBinds::Action::kSetWindowSize4:   resizeWindow(4); break;
   case KeyBinds::Action::kToggleFullscreen: toggleFullscreen(); break;
+
   // Emulation speed
   case KeyBinds::Action::kStep:
     _fsm.step();

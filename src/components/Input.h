@@ -22,8 +22,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "libretro/Components.h"
 
 #include "Dialog.h"
+#include "KeyBinds.h"
 
-#include <array>
 #include <map>
 
 #include <SDL_events.h>
@@ -69,29 +69,12 @@ public:
 
   virtual void    poll() override;
   virtual int16_t read(unsigned port, unsigned device, unsigned index, unsigned id) override;
+  float getJoystickSensitivity(int joystickId);
 
   std::string serialize();
   void deserialize(const char* json);
-  void showDialog();
-  void showControllerDialog(int portId);
 
-  struct ButtonDescriptor
-  {
-    enum Type
-    {
-      None = 0,
-      Button,
-      Axis,
-      Key,
-    };
-
-    SDL_JoystickID joystick_id;
-    uint32_t button;
-    Type type;
-    uint16_t modifiers;
-  };
-
-  ButtonDescriptor captureButtonPress();
+  KeyBinds::Binding captureButtonPress();
 
 protected:
   struct Pad
@@ -102,8 +85,6 @@ protected:
     SDL_Joystick*       _joystick;
     const char*         _joystickName;
     uint64_t            _ports;
-    int                 _lastDir[6];
-    bool                _state[16];
     float               _sensitivity;
   };
 
@@ -121,6 +102,7 @@ protected:
   {
     std::string _description;
     unsigned    _id;
+    bool        _state[16];
   };
 
   enum
@@ -130,8 +112,6 @@ protected:
 
   void addController(const SDL_Event* event);
   void removeController(const SDL_Event* event);
-  void controllerButton(const SDL_Event* event);
-  void controllerAxis(const SDL_Event* event);
 
   static const char* s_getType(int index, void* udata);
   static const char* s_getPad(int index, void* udata);
@@ -145,8 +125,6 @@ protected:
 
   uint64_t                    _ports;
   std::vector<ControllerInfo> _info[kMaxPorts];
-
-  std::array<ButtonDescriptor, 16> _buttonMap;
 
   int _devices[kMaxPorts];
 };
