@@ -394,7 +394,7 @@ void KeyBinds::translate(const SDL_ControllerAxisEvent* caxis, Input& input,
 {
   *action1 = *action2 = Action::kNothing;
 
-  int threshold = 32767 * input.getJoystickSensitivity(caxis->which);
+  int threshold = static_cast<int>(32767 * input.getJoystickSensitivity(caxis->which));
   for (size_t i = 0; i < kMaxBindings; i++)
   {
     if (_bindings[i].type == Binding::Type::Axis)
@@ -425,30 +425,30 @@ void KeyBinds::getBindingString(char buffer[32], const KeyBinds::Binding& bindin
   switch (binding.type)
   {
     case KeyBinds::Binding::Type::None:
-      sprintf(buffer, "none");
+      snprintf(buffer, 32, "none");
       break;
 
     case KeyBinds::Binding::Type::Button:
-      sprintf(buffer, "J%d %s", binding.joystick_id, SDL_GameControllerGetStringForButton(static_cast<SDL_GameControllerButton>(binding.button)));
+      snprintf(buffer, 32, "J%d %s", binding.joystick_id, SDL_GameControllerGetStringForButton(static_cast<SDL_GameControllerButton>(binding.button)));
       break;
 
     case KeyBinds::Binding::Type::Axis:
       switch (binding.modifiers)
       {
         case 0xFF:
-          sprintf(buffer, "J%d -%s", binding.joystick_id, SDL_GameControllerGetStringForAxis(static_cast<SDL_GameControllerAxis>(binding.button)));
+          snprintf(buffer, 32, "J%d -%s", binding.joystick_id, SDL_GameControllerGetStringForAxis(static_cast<SDL_GameControllerAxis>(binding.button)));
           break;
         case 0:
-          sprintf(buffer, "J%d %s", binding.joystick_id, SDL_GameControllerGetStringForAxis(static_cast<SDL_GameControllerAxis>(binding.button)));
+          snprintf(buffer, 32, "J%d %s", binding.joystick_id, SDL_GameControllerGetStringForAxis(static_cast<SDL_GameControllerAxis>(binding.button)));
           break;
         case 1:
-          sprintf(buffer, "J%d +%s", binding.joystick_id, SDL_GameControllerGetStringForAxis(static_cast<SDL_GameControllerAxis>(binding.button)));
+          snprintf(buffer, 32, "J%d +%s", binding.joystick_id, SDL_GameControllerGetStringForAxis(static_cast<SDL_GameControllerAxis>(binding.button)));
           break;
       }
       break;
 
     case KeyBinds::Binding::Type::Key:
-      sprintf(buffer, "%s%s%s%s",
+      snprintf(buffer, 32, "%s%s%s%s",
         (binding.modifiers & KMOD_CTRL) ? "Ctrl+" : "",
         (binding.modifiers & KMOD_ALT) ? "Alt+" : "",
         (binding.modifiers & KMOD_SHIFT) ? "Shift+" : "",
@@ -935,21 +935,21 @@ public:
 
     for (int i = 0; i < 10; ++i)
     {
-      sprintf(label, "Save State %d", i + 1);
+      snprintf(label, sizeof(label), "Save State %d", i + 1);
       addButtonInput(i, 3, label, kSaveState1 + i);
     }
     addButtonInput(10, 3, "Save Current State", kSaveCurrent);
 
     for (int i = 0; i < 10; ++i)
     {
-      sprintf(label, "Load State %d", i + 1);
+      snprintf(label, sizeof(label), "Load State %d", i + 1);
       addButtonInput(i, 5, label, kLoadState1 + i);
     }
     addButtonInput(10, 5, "Load Current State", kLoadCurrent);
 
     for (int i = 0; i < 10; ++i)
     {
-      sprintf(label, "Select State %d", i + 1);
+      snprintf(label, sizeof(label), "Select State %d", i + 1);
       addButtonInput(i, 7, label, kSetSlot1 + i);
     }
     addButtonInput(10, 7, "Select Previous State", kPreviousSlot);

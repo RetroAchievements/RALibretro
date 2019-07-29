@@ -351,7 +351,7 @@ KeyBinds::Binding Input::captureButtonPress()
         }
       }
 
-      int threshold = 32767 * pair.second._sensitivity;
+      int threshold = static_cast<int>(32767 * pair.second._sensitivity);
 
       for (int i = 0; i < SDL_CONTROLLER_AXIS_MAX; ++i)
       {
