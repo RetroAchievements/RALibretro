@@ -198,6 +198,8 @@ bool KeyBinds::init(libretro::LoggerComponent* logger)
 
   _bindings[kScreenshot] = { 0, SDLK_PRINTSCREEN, Binding::Type::Key, 0 };
 
+   // TODO: load persisted
+
   return true;
 }
 
@@ -703,8 +705,8 @@ public:
   {
     _bindings = bindings;
 
-    const WORD WIDTH = 360;
-    const WORD HEIGHT = 150;
+    const WORD WIDTH = 478;
+    const WORD HEIGHT = 144;
 
     addButtonInput(0, 1, "L2", kButtonL2);
     addButtonInput(0, 9, "R2", kButtonR2);
@@ -720,6 +722,54 @@ public:
     addButtonInput(3, 10, "A", kButtonA);
     addButtonInput(4, 1, "Down", kButtonDown);
     addButtonInput(4, 9, "B", kButtonB);
+
+    addButton("OK", IDOK, WIDTH - 55 - 50, HEIGHT - 14, 50, 14, true);
+    addButton("Cancel", IDCANCEL, WIDTH - 50, HEIGHT - 14, 50, 14, false);
+  }
+
+  void initHotKeyButtons(const KeyBinds::BindingList& bindings)
+  {
+    _bindings = bindings;
+
+    const WORD WIDTH = 357;
+    const WORD HEIGHT = 325;
+    char label[32];
+
+    addButtonInput(0, 0, "Window Size 1x", kSetWindowSize1);
+    addButtonInput(1, 0, "Window Size 2x", kSetWindowSize2);
+    addButtonInput(2, 0, "Window Size 3x", kSetWindowSize3);
+    addButtonInput(3, 0, "Window Size 4x", kSetWindowSize4);
+    addButtonInput(4, 0, "Toggle Fullscreen", kToggleFullscreen);
+
+    addButtonInput(5, 0, "Show Overlay", kPauseToggle);
+    addButtonInput(6, 0, "Pause", kPauseToggleNoOvl);
+    addButtonInput(7, 0, "Frame Advance", kStep);
+    addButtonInput(8, 0, "Fast Forward (Hold)", kFastForward);
+    addButtonInput(9, 0, "Fast Forward (Toggle)", kFastForwardToggle);
+
+    addButtonInput(10, 0, "Take Screenshot", kScreenshot);
+
+    for (int i = 0; i < 10; ++i)
+    {
+      sprintf(label, "Save State %d", i + 1);
+      addButtonInput(i, 3, label, kSaveState1 + i);
+    }
+    addButtonInput(10, 3, "Save Current State", kSaveCurrent);
+
+    for (int i = 0; i < 10; ++i)
+    {
+      sprintf(label, "Load State %d", i + 1);
+      addButtonInput(i, 5, label, kLoadState1 + i);
+    }
+    addButtonInput(10, 5, "Load Current State", kLoadCurrent);
+
+    for (int i = 0; i < 10; ++i)
+    {
+      sprintf(label, "Select State %d", i + 1);
+      addButtonInput(i, 7, label, kSetSlot1 + i);
+    }
+    addButtonInput(10, 7, "Select Previous State", kPreviousSlot);
+    addButtonInput(11, 7, "Select Next State", kNextSlot);
 
     addButton("OK", IDOK, WIDTH - 55 - 50, HEIGHT - 14, 50, 14, true);
     addButton("Cancel", IDCANCEL, WIDTH - 50, HEIGHT - 14, 50, 14, false);
@@ -750,7 +800,7 @@ protected:
 
   void addButtonInput(int row, int column, const char* label, int button)
   {
-    const WORD ITEM_WIDTH = 60;
+    const WORD ITEM_WIDTH = 80;
     const WORD ITEM_HEIGHT = 10;
 
     const WORD x = column * (ITEM_WIDTH / 2) + 3;
@@ -820,5 +870,22 @@ void KeyBinds::showControllerDialog(Input& input, int port)
   db.initControllerButtons(_bindings);
 
   if (db.show())
+  {
     _bindings = db.getBindings();
+    // TODO: persist
+  }
+}
+
+void KeyBinds::showHotKeyDialog(Input& input)
+{
+  InputDialog db;
+  db.init("Hot Keys");
+  db._input = &input;
+  db.initHotKeyButtons(_bindings);
+
+  if (db.show())
+  {
+    _bindings = db.getBindings();
+    // TODO: persist
+  }
 }

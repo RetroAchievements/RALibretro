@@ -580,17 +580,17 @@ void Application::updateMenu()
     IDM_PAUSE_GAME, IDM_RESUME_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
-    IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
+    IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   static const UINT start_items[] =
   {
-    IDM_EXIT, IDM_ABOUT, IDM_INPUT_CONFIG
+    IDM_EXIT, IDM_ABOUT
   };
 
   static const UINT core_loaded_items[] =
   {
-    IDM_LOAD_GAME, IDM_EXIT, IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_ABOUT
+    IDM_LOAD_GAME, IDM_EXIT, IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_ABOUT
   };
 
   static const UINT game_running_items[] =
@@ -598,7 +598,7 @@ void Application::updateMenu()
     IDM_LOAD_GAME, IDM_PAUSE_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
-    IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
+    IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   static const UINT game_paused_items[] =
@@ -606,7 +606,7 @@ void Application::updateMenu()
     IDM_LOAD_GAME, IDM_RESUME_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
-    IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
+    IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   static const UINT game_turbo_items[] =
@@ -614,7 +614,7 @@ void Application::updateMenu()
     IDM_LOAD_GAME, IDM_PAUSE_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
-    IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
+    IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   enableItems(all_items, sizeof(all_items) / sizeof(all_items[0]), MF_DISABLED);
@@ -1860,9 +1860,13 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       break;
 
     case IDM_INPUT_CONFIG:
+      _keybinds.showHotKeyDialog(_input);
+      break;
+
+    case IDM_INPUT_CONTROLLER_1:
       _keybinds.showControllerDialog(_input, 0);
       break;
-    
+
     case IDM_VIDEO_CONFIG:
       _video.showDialog();
       break;

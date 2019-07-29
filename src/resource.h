@@ -91,3 +91,5 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #define IDM_TURBO_GAME                          40009
 #define IDM_LOAD_STATE                          40010
 #define IDM_SAVE_STATE                          40011
+#define IDM_INPUT_CONTROLLER_1                  40012
+#define IDM_INPUT_CONTROLLER_2                  40013

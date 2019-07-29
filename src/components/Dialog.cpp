@@ -70,13 +70,13 @@ void Dialog::init(const char* title)
   write<DWORD>(0);
   write<DWORD>(WS_EX_WINDOWEDGE);
   write<DWORD>(DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP);
-  _numControls = (WORD*)((uint8_t*)_template + _size);
+  _numControls = (WORD*)(&((uint8_t*)_template)[16]);
   write<WORD>(0);
   write<WORD>(0);
   write<WORD>(0);
-  _width = (WORD*)((uint8_t*)_template + _size);
+  _width = (WORD*)(&((uint8_t*)_template)[22]);
   write<WORD>(0);
-  _height = (WORD*)((uint8_t*)_template + _size);
+  _height = (WORD*)(&((uint8_t*)_template)[24]);
   write<WORD>(0);
   writeWide(L"");
   writeWide(L"");
@@ -200,6 +200,10 @@ void Dialog::write(void* data, size_t size)
 
     _template = t;
     _reserved = r;
+
+    _numControls = (WORD*)(&((uint8_t*)_template)[16]);
+    _width = (WORD*)(&((uint8_t*)_template)[22]);
+    _height = (WORD*)(&((uint8_t*)_template)[24]);
   }
 
   memcpy((uint8_t*)_template + _size, data, size);

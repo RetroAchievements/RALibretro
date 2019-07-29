@@ -82,6 +82,7 @@ public:
     Action* action1, unsigned* extra1, Action* action2, unsigned* extra2);
 
   void showControllerDialog(Input& input, int portId);
+  void showHotKeyDialog(Input& input);
 
   struct Binding
   {

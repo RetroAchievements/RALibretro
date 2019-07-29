@@ -109,7 +109,11 @@ main MENU
     POPUP "Settings"
     {
         MENUITEM "Emulation", IDM_CORE_CONFIG
-        MENUITEM "Input", IDM_INPUT_CONFIG
+        POPUP "Input"
+        {
+            MENUITEM "Hot Keys", IDM_INPUT_CONFIG
+            MENUITEM "Controller 1", IDM_INPUT_CONTROLLER_1
+        }
         MENUITEM "Video", IDM_VIDEO_CONFIG
         POPUP "Window Size"
         {
