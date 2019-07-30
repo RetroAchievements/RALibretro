@@ -803,6 +803,8 @@ public:
 
   bool show(HWND hParent)
   {
+    _updated = false;
+
     auto hwnd = CreateDialogIndirectParam(NULL, (LPCDLGTEMPLATE)_template, hParent, s_dialogProc, (LPARAM)this);
     EnableWindow(hParent, 0);
 
@@ -832,6 +834,7 @@ public:
                 case SDLK_RCTRL:
                 case SDLK_LSHIFT:
                 case SDLK_RSHIFT:
+                  // don't allow modifiers by themselves
                   break;
 
                 default:
@@ -872,7 +875,7 @@ public:
 
     EnableWindow(hParent, 1);
 
-    return true;
+    return _updated;
   }
 
 protected:
