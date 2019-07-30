@@ -34,7 +34,7 @@ public:
   {
     kNothing,
 
-    // Joypad buttons
+    // Joypad buttons (extra = port << 8 | pressed)
     kButtonUp,
     kButtonDown,
     kButtonLeft,
@@ -52,7 +52,7 @@ public:
     kButtonSelect,
     kButtonStart,
 
-    // State state management
+    // State state management (extra = slot)
     kSaveState,
     kLoadState,
 
@@ -66,7 +66,7 @@ public:
     // Emulation speed
     kPauseToggle,
     kPauseToggleNoOvl,
-    kFastForward,
+    kFastForward, // (extra = enabled)
     kStep,
 
     // Screenshot
@@ -99,7 +99,7 @@ public:
     Type type;
     uint16_t modifiers;
   };
-  typedef std::array<Binding, 64> BindingList;
+  typedef std::array<Binding, 77> BindingList;
 
   static void getBindingString(char buffer[32], const KeyBinds::Binding& desc);
 

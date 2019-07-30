@@ -200,29 +200,28 @@ void Input::autoAssign()
   }
 }
 
-void Input::buttonEvent(Button button, bool pressed)
+void Input::buttonEvent(int port, Button button, bool pressed)
 {
-  int port;
   int rbutton;
 
   switch (button)
   {
-    case Button::kUp:     port = 0; rbutton = RETRO_DEVICE_ID_JOYPAD_UP; break;
-    case Button::kDown:   port = 0; rbutton = RETRO_DEVICE_ID_JOYPAD_DOWN; break;
-    case Button::kLeft:   port = 0; rbutton = RETRO_DEVICE_ID_JOYPAD_LEFT; break;
-    case Button::kRight:  port = 0; rbutton = RETRO_DEVICE_ID_JOYPAD_RIGHT; break;
-    case Button::kX:      port = 0; rbutton = RETRO_DEVICE_ID_JOYPAD_X; break;
-    case Button::kY:      port = 0; rbutton = RETRO_DEVICE_ID_JOYPAD_Y; break;
-    case Button::kA:      port = 0; rbutton = RETRO_DEVICE_ID_JOYPAD_A; break;
-    case Button::kB:      port = 0; rbutton = RETRO_DEVICE_ID_JOYPAD_B; break;
-    case Button::kL:      port = 0; rbutton = RETRO_DEVICE_ID_JOYPAD_L; break;
-    case Button::kR:      port = 0; rbutton = RETRO_DEVICE_ID_JOYPAD_R; break;
-    case Button::kL2:     port = 0; rbutton = RETRO_DEVICE_ID_JOYPAD_L2; break;
-    case Button::kR2:     port = 0; rbutton = RETRO_DEVICE_ID_JOYPAD_R2; break;
-    case Button::kL3:     port = 0; rbutton = RETRO_DEVICE_ID_JOYPAD_L3; break;
-    case Button::kR3:     port = 0; rbutton = RETRO_DEVICE_ID_JOYPAD_R3; break;
-    case Button::kSelect: port = 0; rbutton = RETRO_DEVICE_ID_JOYPAD_SELECT; break;
-    case Button::kStart:  port = 0; rbutton = RETRO_DEVICE_ID_JOYPAD_START; break;
+    case Button::kUp:     rbutton = RETRO_DEVICE_ID_JOYPAD_UP; break;
+    case Button::kDown:   rbutton = RETRO_DEVICE_ID_JOYPAD_DOWN; break;
+    case Button::kLeft:   rbutton = RETRO_DEVICE_ID_JOYPAD_LEFT; break;
+    case Button::kRight:  rbutton = RETRO_DEVICE_ID_JOYPAD_RIGHT; break;
+    case Button::kX:      rbutton = RETRO_DEVICE_ID_JOYPAD_X; break;
+    case Button::kY:      rbutton = RETRO_DEVICE_ID_JOYPAD_Y; break;
+    case Button::kA:      rbutton = RETRO_DEVICE_ID_JOYPAD_A; break;
+    case Button::kB:      rbutton = RETRO_DEVICE_ID_JOYPAD_B; break;
+    case Button::kL:      rbutton = RETRO_DEVICE_ID_JOYPAD_L; break;
+    case Button::kR:      rbutton = RETRO_DEVICE_ID_JOYPAD_R; break;
+    case Button::kL2:     rbutton = RETRO_DEVICE_ID_JOYPAD_L2; break;
+    case Button::kR2:     rbutton = RETRO_DEVICE_ID_JOYPAD_R2; break;
+    case Button::kL3:     rbutton = RETRO_DEVICE_ID_JOYPAD_L3; break;
+    case Button::kR3:     rbutton = RETRO_DEVICE_ID_JOYPAD_R3; break;
+    case Button::kSelect: rbutton = RETRO_DEVICE_ID_JOYPAD_SELECT; break;
+    case Button::kStart:  rbutton = RETRO_DEVICE_ID_JOYPAD_START; break;
     default:              return;
   }
 

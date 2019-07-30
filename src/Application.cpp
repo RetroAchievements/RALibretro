@@ -1879,6 +1879,10 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       _keybinds.showControllerDialog(_input, 0);
       break;
 
+    case IDM_INPUT_CONTROLLER_2:
+      _keybinds.showControllerDialog(_input, 1);
+      break;
+
     case IDM_VIDEO_CONFIG:
       _video.showDialog();
       break;
@@ -1924,22 +1928,22 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
   case KeyBinds::Action::kNothing:          break;
 
   // Joypad buttons
-  case KeyBinds::Action::kButtonUp:         _input.buttonEvent(Input::Button::kUp, extra != 0); break;
-  case KeyBinds::Action::kButtonDown:       _input.buttonEvent(Input::Button::kDown, extra != 0); break;
-  case KeyBinds::Action::kButtonLeft:       _input.buttonEvent(Input::Button::kLeft, extra != 0); break;
-  case KeyBinds::Action::kButtonRight:      _input.buttonEvent(Input::Button::kRight, extra != 0); break;
-  case KeyBinds::Action::kButtonX:          _input.buttonEvent(Input::Button::kX, extra != 0); break;
-  case KeyBinds::Action::kButtonY:          _input.buttonEvent(Input::Button::kY, extra != 0); break;
-  case KeyBinds::Action::kButtonA:          _input.buttonEvent(Input::Button::kA, extra != 0); break;
-  case KeyBinds::Action::kButtonB:          _input.buttonEvent(Input::Button::kB, extra != 0); break;
-  case KeyBinds::Action::kButtonL:          _input.buttonEvent(Input::Button::kL, extra != 0); break;
-  case KeyBinds::Action::kButtonR:          _input.buttonEvent(Input::Button::kR, extra != 0); break;
-  case KeyBinds::Action::kButtonL2:         _input.buttonEvent(Input::Button::kL2, extra != 0); break;
-  case KeyBinds::Action::kButtonR2:         _input.buttonEvent(Input::Button::kR2, extra != 0); break;
-  case KeyBinds::Action::kButtonL3:         _input.buttonEvent(Input::Button::kL3, extra != 0); break;
-  case KeyBinds::Action::kButtonR3:         _input.buttonEvent(Input::Button::kR3, extra != 0); break;
-  case KeyBinds::Action::kButtonSelect:     _input.buttonEvent(Input::Button::kSelect, extra != 0); break;
-  case KeyBinds::Action::kButtonStart:      _input.buttonEvent(Input::Button::kStart, extra != 0); break;
+  case KeyBinds::Action::kButtonUp:         _input.buttonEvent(extra >> 8, Input::Button::kUp, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonDown:       _input.buttonEvent(extra >> 8, Input::Button::kDown, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonLeft:       _input.buttonEvent(extra >> 8, Input::Button::kLeft, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonRight:      _input.buttonEvent(extra >> 8, Input::Button::kRight, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonX:          _input.buttonEvent(extra >> 8, Input::Button::kX, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonY:          _input.buttonEvent(extra >> 8, Input::Button::kY, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonA:          _input.buttonEvent(extra >> 8, Input::Button::kA, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonB:          _input.buttonEvent(extra >> 8, Input::Button::kB, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonL:          _input.buttonEvent(extra >> 8, Input::Button::kL, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonR:          _input.buttonEvent(extra >> 8, Input::Button::kR, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonL2:         _input.buttonEvent(extra >> 8, Input::Button::kL2, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonR2:         _input.buttonEvent(extra >> 8, Input::Button::kR2, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonL3:         _input.buttonEvent(extra >> 8, Input::Button::kL3, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonR3:         _input.buttonEvent(extra >> 8, Input::Button::kR3, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonSelect:     _input.buttonEvent(extra >> 8, Input::Button::kSelect, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonStart:      _input.buttonEvent(extra >> 8, Input::Button::kStart, (extra & 0xFF) != 0); break;
 
   // State management
   case KeyBinds::Action::kSaveState:        saveState(extra); break;

@@ -58,7 +58,7 @@ public:
 
   void addController(int which);
   void autoAssign();
-  void buttonEvent(Button button, bool pressed);
+  void buttonEvent(int port, Button button, bool pressed);
   void processEvent(const SDL_Event* event);
 
   virtual void setInputDescriptors(const struct retro_input_descriptor* descs, unsigned count) override;

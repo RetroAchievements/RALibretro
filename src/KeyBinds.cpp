@@ -34,22 +34,39 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 enum
 {
   // Joypad buttons
-  kButtonUp,
-  kButtonDown,
-  kButtonLeft,
-  kButtonRight,
-  kButtonX,
-  kButtonY,
-  kButtonA,
-  kButtonB,
-  kButtonL,
-  kButtonR,
-  kButtonL2,
-  kButtonR2,
-  kButtonL3,
-  kButtonR3,
-  kButtonSelect,
-  kButtonStart,
+  kJoy0Up,
+  kJoy0Down,
+  kJoy0Left,
+  kJoy0Right,
+  kJoy0X,
+  kJoy0Y,
+  kJoy0A,
+  kJoy0B,
+  kJoy0L,
+  kJoy0R,
+  kJoy0L2,
+  kJoy0R2,
+  kJoy0L3,
+  kJoy0R3,
+  kJoy0Select,
+  kJoy0Start,
+
+  kJoy1Up,
+  kJoy1Down,
+  kJoy1Left,
+  kJoy1Right,
+  kJoy1X,
+  kJoy1Y,
+  kJoy1A,
+  kJoy1B,
+  kJoy1L,
+  kJoy1R,
+  kJoy1L2,
+  kJoy1R2,
+  kJoy1L3,
+  kJoy1R3,
+  kJoy1Select,
+  kJoy1Start,
 
   // State management
   kSaveState1,
@@ -111,6 +128,9 @@ static const char* bindingNames[] = {
   "J0_UP", "J0_DOWN", "J0_LEFT", "J0_RIGHT", "J0_X", "J0_Y", "J0_A", "J0_B",
   "J0_L", "J0_R", "J0_L2", "J0_R2", "J0_L3", "J0_R3", "J0_SELECT", "J0_START",
 
+  "J1_UP", "J1_DOWN", "J1_LEFT", "J1_RIGHT", "J1_X", "J1_Y", "J1_A", "J1_B",
+  "J1_L", "J1_R", "J1_L2", "J1_R2", "J1_L3", "J1_R3", "J1_SELECT", "J1_START",
+
   "SAVE1", "SAVE2", "SAVE3", "SAVE4", "SAVE5", "SAVE6", "SAVE7", "SAVE8", "SAVE9", "SAVE0",
   "LOAD1", "LOAD2", "LOAD3", "LOAD4", "LOAD5", "LOAD6", "LOAD7", "LOAD8", "LOAD9", "LOAD0",
   "NEXT_SLOT", "PREV_SLOT",
@@ -128,47 +148,49 @@ static_assert(sizeof(bindingNames) / sizeof(bindingNames[0]) == kMaxBindings, "b
 
 bool KeyBinds::init(libretro::LoggerComponent* logger)
 {
+  static_assert(sizeof(_bindings) / sizeof(_bindings[0]) == kMaxBindings, "BindingList does not contain an appropriate number of elements");
+
   _logger = logger;
   _slot = 1;
   _ff = false;
 
   if (SDL_NumJoysticks() > 0)
   {
-    _bindings[kButtonUp] = { 0, SDL_CONTROLLER_BUTTON_DPAD_UP, Binding::Type::Button, 0 };
-    _bindings[kButtonDown] = { 0, SDL_CONTROLLER_BUTTON_DPAD_DOWN, Binding::Type::Button, 0 };
-    _bindings[kButtonLeft] = { 0, SDL_CONTROLLER_BUTTON_DPAD_LEFT, Binding::Type::Button, 0 };
-    _bindings[kButtonRight] = { 0, SDL_CONTROLLER_BUTTON_DPAD_RIGHT, Binding::Type::Button, 0 };
-    _bindings[kButtonX] = { 0, SDL_CONTROLLER_BUTTON_Y, Binding::Type::Button, 0 };
-    _bindings[kButtonY] = { 0, SDL_CONTROLLER_BUTTON_X, Binding::Type::Button, 0 };
-    _bindings[kButtonA] = { 0, SDL_CONTROLLER_BUTTON_B, Binding::Type::Button, 0 };
-    _bindings[kButtonB] = { 0, SDL_CONTROLLER_BUTTON_A, Binding::Type::Button, 0 };
-    _bindings[kButtonL] = { 0, SDL_CONTROLLER_BUTTON_LEFTSHOULDER, Binding::Type::Button, 0 };
-    _bindings[kButtonR] = { 0, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, Binding::Type::Button, 0 };
-    _bindings[kButtonL2] = { 0, SDL_CONTROLLER_AXIS_TRIGGERLEFT, Binding::Type::Axis, 0 };
-    _bindings[kButtonR2] = { 0, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, Binding::Type::Axis, 0 };
-    _bindings[kButtonL3] = { 0, SDL_CONTROLLER_BUTTON_LEFTSTICK, Binding::Type::Button, 0 };
-    _bindings[kButtonR3] = { 0, SDL_CONTROLLER_BUTTON_RIGHTSTICK, Binding::Type::Button, 0 };
-    _bindings[kButtonSelect] = { 0, SDL_CONTROLLER_BUTTON_BACK, Binding::Type::Button, 0 };
-    _bindings[kButtonStart] = { 0, SDL_CONTROLLER_BUTTON_START, Binding::Type::Button, 0 };
+    _bindings[kJoy0Up] = { 0, SDL_CONTROLLER_BUTTON_DPAD_UP, Binding::Type::Button, 0 };
+    _bindings[kJoy0Down] = { 0, SDL_CONTROLLER_BUTTON_DPAD_DOWN, Binding::Type::Button, 0 };
+    _bindings[kJoy0Left] = { 0, SDL_CONTROLLER_BUTTON_DPAD_LEFT, Binding::Type::Button, 0 };
+    _bindings[kJoy0Right] = { 0, SDL_CONTROLLER_BUTTON_DPAD_RIGHT, Binding::Type::Button, 0 };
+    _bindings[kJoy0X] = { 0, SDL_CONTROLLER_BUTTON_Y, Binding::Type::Button, 0 };
+    _bindings[kJoy0Y] = { 0, SDL_CONTROLLER_BUTTON_X, Binding::Type::Button, 0 };
+    _bindings[kJoy0A] = { 0, SDL_CONTROLLER_BUTTON_B, Binding::Type::Button, 0 };
+    _bindings[kJoy0B] = { 0, SDL_CONTROLLER_BUTTON_A, Binding::Type::Button, 0 };
+    _bindings[kJoy0L] = { 0, SDL_CONTROLLER_BUTTON_LEFTSHOULDER, Binding::Type::Button, 0 };
+    _bindings[kJoy0R] = { 0, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, Binding::Type::Button, 0 };
+    _bindings[kJoy0L2] = { 0, SDL_CONTROLLER_AXIS_TRIGGERLEFT, Binding::Type::Axis, 0 };
+    _bindings[kJoy0R2] = { 0, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, Binding::Type::Axis, 0 };
+    _bindings[kJoy0L3] = { 0, SDL_CONTROLLER_BUTTON_LEFTSTICK, Binding::Type::Button, 0 };
+    _bindings[kJoy0R3] = { 0, SDL_CONTROLLER_BUTTON_RIGHTSTICK, Binding::Type::Button, 0 };
+    _bindings[kJoy0Select] = { 0, SDL_CONTROLLER_BUTTON_BACK, Binding::Type::Button, 0 };
+    _bindings[kJoy0Start] = { 0, SDL_CONTROLLER_BUTTON_START, Binding::Type::Button, 0 };
   }
   else
   {
-    _bindings[kButtonUp] = { 0, SDLK_UP, Binding::Type::Key, 0 };
-    _bindings[kButtonDown] = { 0, SDLK_DOWN, Binding::Type::Key, 0 };
-    _bindings[kButtonLeft] = { 0, SDLK_LEFT, Binding::Type::Key, 0 };
-    _bindings[kButtonRight] = { 0, SDLK_RIGHT, Binding::Type::Key, 0 };
-    _bindings[kButtonX] = { 0, SDLK_s, Binding::Type::Key, 0 };
-    _bindings[kButtonY] = { 0, SDLK_a, Binding::Type::Key, 0 };
-    _bindings[kButtonA] = { 0, SDLK_x, Binding::Type::Key, 0 };
-    _bindings[kButtonB] = { 0, SDLK_z, Binding::Type::Key, 0 };
-    _bindings[kButtonL] = { 0, SDLK_d, Binding::Type::Key, 0 };
-    _bindings[kButtonR] = { 0, SDLK_c, Binding::Type::Key, 0 };
-    _bindings[kButtonL2] = { 0, SDLK_f, Binding::Type::Key, 0 };
-    _bindings[kButtonR2] = { 0, SDLK_v, Binding::Type::Key, 0 };
-    _bindings[kButtonL3] = { 0, SDLK_g, Binding::Type::Key, 0 };
-    _bindings[kButtonR3] = { 0, SDLK_h, Binding::Type::Key, 0 };
-    _bindings[kButtonSelect] = { 0, SDLK_TAB, Binding::Type::Key, 0 };
-    _bindings[kButtonStart] = { 0, SDLK_RETURN, Binding::Type::Key, 0 };
+    _bindings[kJoy0Up] = { 0, SDLK_UP, Binding::Type::Key, 0 };
+    _bindings[kJoy0Down] = { 0, SDLK_DOWN, Binding::Type::Key, 0 };
+    _bindings[kJoy0Left] = { 0, SDLK_LEFT, Binding::Type::Key, 0 };
+    _bindings[kJoy0Right] = { 0, SDLK_RIGHT, Binding::Type::Key, 0 };
+    _bindings[kJoy0X] = { 0, SDLK_s, Binding::Type::Key, 0 };
+    _bindings[kJoy0Y] = { 0, SDLK_a, Binding::Type::Key, 0 };
+    _bindings[kJoy0A] = { 0, SDLK_x, Binding::Type::Key, 0 };
+    _bindings[kJoy0B] = { 0, SDLK_z, Binding::Type::Key, 0 };
+    _bindings[kJoy0L] = { 0, SDLK_d, Binding::Type::Key, 0 };
+    _bindings[kJoy0R] = { 0, SDLK_c, Binding::Type::Key, 0 };
+    _bindings[kJoy0L2] = { 0, SDLK_f, Binding::Type::Key, 0 };
+    _bindings[kJoy0R2] = { 0, SDLK_v, Binding::Type::Key, 0 };
+    _bindings[kJoy0L3] = { 0, SDLK_g, Binding::Type::Key, 0 };
+    _bindings[kJoy0R3] = { 0, SDLK_h, Binding::Type::Key, 0 };
+    _bindings[kJoy0Select] = { 0, SDLK_TAB, Binding::Type::Key, 0 };
+    _bindings[kJoy0Start] = { 0, SDLK_RETURN, Binding::Type::Key, 0 };
   }
 
   _bindings[kSaveState1] = { 0, SDLK_F1, Binding::Type::Key, KMOD_SHIFT };
@@ -225,27 +247,46 @@ bool KeyBinds::init(libretro::LoggerComponent* logger)
   return true;
 }
 
+#define JOY_EXTRA(port, pressed) ((port << 8) | pressed)
+
 KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
 {
   switch (button)
   {
     // Joypad buttons
-    case kButtonUp:     *extra = 1; return Action::kButtonUp;
-    case kButtonDown:   *extra = 1; return Action::kButtonDown;
-    case kButtonLeft:   *extra = 1; return Action::kButtonLeft;
-    case kButtonRight:  *extra = 1; return Action::kButtonRight;
-    case kButtonX:      *extra = 1; return Action::kButtonX;
-    case kButtonY:      *extra = 1; return Action::kButtonY;
-    case kButtonA:      *extra = 1; return Action::kButtonA;
-    case kButtonB:      *extra = 1; return Action::kButtonB;
-    case kButtonL:      *extra = 1; return Action::kButtonL;
-    case kButtonR:      *extra = 1; return Action::kButtonR;
-    case kButtonL2:     *extra = 1; return Action::kButtonL2;
-    case kButtonR2:     *extra = 1; return Action::kButtonR2;
-    case kButtonL3:     *extra = 1; return Action::kButtonL3;
-    case kButtonR3:     *extra = 1; return Action::kButtonR3;
-    case kButtonSelect: *extra = 1; return Action::kButtonSelect;
-    case kButtonStart:  *extra = 1; return Action::kButtonStart;
+    case kJoy0Up:       *extra = JOY_EXTRA(0, 1); return Action::kButtonUp;
+    case kJoy0Down:     *extra = JOY_EXTRA(0, 1); return Action::kButtonDown;
+    case kJoy0Left:     *extra = JOY_EXTRA(0, 1); return Action::kButtonLeft;
+    case kJoy0Right:    *extra = JOY_EXTRA(0, 1); return Action::kButtonRight;
+    case kJoy0X:        *extra = JOY_EXTRA(0, 1); return Action::kButtonX;
+    case kJoy0Y:        *extra = JOY_EXTRA(0, 1); return Action::kButtonY;
+    case kJoy0A:        *extra = JOY_EXTRA(0, 1); return Action::kButtonA;
+    case kJoy0B:        *extra = JOY_EXTRA(0, 1); return Action::kButtonB;
+    case kJoy0L:        *extra = JOY_EXTRA(0, 1); return Action::kButtonL;
+    case kJoy0R:        *extra = JOY_EXTRA(0, 1); return Action::kButtonR;
+    case kJoy0L2:       *extra = JOY_EXTRA(0, 1); return Action::kButtonL2;
+    case kJoy0R2:       *extra = JOY_EXTRA(0, 1); return Action::kButtonR2;
+    case kJoy0L3:       *extra = JOY_EXTRA(0, 1); return Action::kButtonL3;
+    case kJoy0R3:       *extra = JOY_EXTRA(0, 1); return Action::kButtonR3;
+    case kJoy0Select:   *extra = JOY_EXTRA(0, 1); return Action::kButtonSelect;
+    case kJoy0Start:    *extra = JOY_EXTRA(0, 1); return Action::kButtonStart;
+
+    case kJoy1Up:       *extra = JOY_EXTRA(1, 1); return Action::kButtonUp;
+    case kJoy1Down:     *extra = JOY_EXTRA(1, 1); return Action::kButtonDown;
+    case kJoy1Left:     *extra = JOY_EXTRA(1, 1); return Action::kButtonLeft;
+    case kJoy1Right:    *extra = JOY_EXTRA(1, 1); return Action::kButtonRight;
+    case kJoy1X:        *extra = JOY_EXTRA(1, 1); return Action::kButtonX;
+    case kJoy1Y:        *extra = JOY_EXTRA(1, 1); return Action::kButtonY;
+    case kJoy1A:        *extra = JOY_EXTRA(1, 1); return Action::kButtonA;
+    case kJoy1B:        *extra = JOY_EXTRA(1, 1); return Action::kButtonB;
+    case kJoy1L:        *extra = JOY_EXTRA(1, 1); return Action::kButtonL;
+    case kJoy1R:        *extra = JOY_EXTRA(1, 1); return Action::kButtonR;
+    case kJoy1L2:       *extra = JOY_EXTRA(1, 1); return Action::kButtonL2;
+    case kJoy1R2:       *extra = JOY_EXTRA(1, 1); return Action::kButtonR2;
+    case kJoy1L3:       *extra = JOY_EXTRA(1, 1); return Action::kButtonL3;
+    case kJoy1R3:       *extra = JOY_EXTRA(1, 1); return Action::kButtonR3;
+    case kJoy1Select:   *extra = JOY_EXTRA(1, 1); return Action::kButtonSelect;
+    case kJoy1Start:    *extra = JOY_EXTRA(1, 1); return Action::kButtonStart;
 
     // State state management
     case kSaveState1:   *extra = 1; return Action::kSaveState;
@@ -309,22 +350,39 @@ KeyBinds::Action KeyBinds::translateButtonReleased(int button, unsigned* extra)
   switch (button)
   {
     // Joypad buttons
-    case kButtonUp:     *extra = 0; return Action::kButtonUp;
-    case kButtonDown:   *extra = 0; return Action::kButtonDown;
-    case kButtonLeft:   *extra = 0; return Action::kButtonLeft;
-    case kButtonRight:  *extra = 0; return Action::kButtonRight;
-    case kButtonX:      *extra = 0; return Action::kButtonX;
-    case kButtonY:      *extra = 0; return Action::kButtonY;
-    case kButtonA:      *extra = 0; return Action::kButtonA;
-    case kButtonB:      *extra = 0; return Action::kButtonB;
-    case kButtonL:      *extra = 0; return Action::kButtonL;
-    case kButtonR:      *extra = 0; return Action::kButtonR;
-    case kButtonL2:     *extra = 0; return Action::kButtonL2;
-    case kButtonR2:     *extra = 0; return Action::kButtonR2;
-    case kButtonL3:     *extra = 0; return Action::kButtonL3;
-    case kButtonR3:     *extra = 0; return Action::kButtonR3;
-    case kButtonSelect: *extra = 0; return Action::kButtonSelect;
-    case kButtonStart:  *extra = 0; return Action::kButtonStart;
+    case kJoy0Up:       *extra = JOY_EXTRA(0, 0); return Action::kButtonUp;
+    case kJoy0Down:     *extra = JOY_EXTRA(0, 0); return Action::kButtonDown;
+    case kJoy0Left:     *extra = JOY_EXTRA(0, 0); return Action::kButtonLeft;
+    case kJoy0Right:    *extra = JOY_EXTRA(0, 0); return Action::kButtonRight;
+    case kJoy0X:        *extra = JOY_EXTRA(0, 0); return Action::kButtonX;
+    case kJoy0Y:        *extra = JOY_EXTRA(0, 0); return Action::kButtonY;
+    case kJoy0A:        *extra = JOY_EXTRA(0, 0); return Action::kButtonA;
+    case kJoy0B:        *extra = JOY_EXTRA(0, 0); return Action::kButtonB;
+    case kJoy0L:        *extra = JOY_EXTRA(0, 0); return Action::kButtonL;
+    case kJoy0R:        *extra = JOY_EXTRA(0, 0); return Action::kButtonR;
+    case kJoy0L2:       *extra = JOY_EXTRA(0, 0); return Action::kButtonL2;
+    case kJoy0R2:       *extra = JOY_EXTRA(0, 0); return Action::kButtonR2;
+    case kJoy0L3:       *extra = JOY_EXTRA(0, 0); return Action::kButtonL3;
+    case kJoy0R3:       *extra = JOY_EXTRA(0, 0); return Action::kButtonR3;
+    case kJoy0Select:   *extra = JOY_EXTRA(0, 0); return Action::kButtonSelect;
+    case kJoy0Start:    *extra = JOY_EXTRA(0, 0); return Action::kButtonStart;
+
+    case kJoy1Up:       *extra = JOY_EXTRA(1, 0); return Action::kButtonUp;
+    case kJoy1Down:     *extra = JOY_EXTRA(1, 0); return Action::kButtonDown;
+    case kJoy1Left:     *extra = JOY_EXTRA(1, 0); return Action::kButtonLeft;
+    case kJoy1Right:    *extra = JOY_EXTRA(1, 0); return Action::kButtonRight;
+    case kJoy1X:        *extra = JOY_EXTRA(1, 0); return Action::kButtonX;
+    case kJoy1Y:        *extra = JOY_EXTRA(1, 0); return Action::kButtonY;
+    case kJoy1A:        *extra = JOY_EXTRA(1, 0); return Action::kButtonA;
+    case kJoy1B:        *extra = JOY_EXTRA(1, 0); return Action::kButtonB;
+    case kJoy1L:        *extra = JOY_EXTRA(1, 0); return Action::kButtonL;
+    case kJoy1R:        *extra = JOY_EXTRA(1, 0); return Action::kButtonR;
+    case kJoy1L2:       *extra = JOY_EXTRA(1, 0); return Action::kButtonL2;
+    case kJoy1R2:       *extra = JOY_EXTRA(1, 0); return Action::kButtonR2;
+    case kJoy1L3:       *extra = JOY_EXTRA(1, 0); return Action::kButtonL3;
+    case kJoy1R3:       *extra = JOY_EXTRA(1, 0); return Action::kButtonR3;
+    case kJoy1Select:   *extra = JOY_EXTRA(1, 0); return Action::kButtonSelect;
+    case kJoy1Start:    *extra = JOY_EXTRA(1, 0); return Action::kButtonStart;
 
     // Emulation speed
     case kFastForward: *extra = (unsigned)_ff; return Action::kFastForward;
@@ -885,27 +943,27 @@ protected:
 class InputDialog : public Dialog
 {
 public:
-  void initControllerButtons(const KeyBinds::BindingList& bindings)
+  void initControllerButtons(const KeyBinds::BindingList& bindings, int base)
   {
     _bindings = bindings;
 
     const WORD WIDTH = 478;
     const WORD HEIGHT = 144;
 
-    addButtonInput(0, 1, "L2", kButtonL2);
-    addButtonInput(0, 9, "R2", kButtonR2);
-    addButtonInput(1, 1, "L1", kButtonL);
-    addButtonInput(1, 9, "R1", kButtonR);
-    addButtonInput(2, 1, "Up", kButtonUp);
-    addButtonInput(2, 4, "Select", kButtonSelect);
-    addButtonInput(2, 6, "Start", kButtonStart);
-    addButtonInput(2, 9, "X", kButtonX);
-    addButtonInput(3, 0, "Left", kButtonLeft);
-    addButtonInput(3, 2, "Right", kButtonRight);
-    addButtonInput(3, 8, "Y", kButtonY);
-    addButtonInput(3, 10, "A", kButtonA);
-    addButtonInput(4, 1, "Down", kButtonDown);
-    addButtonInput(4, 9, "B", kButtonB);
+    addButtonInput(0, 1, "L2", kJoy0L2 + base);
+    addButtonInput(0, 9, "R2", kJoy0R2 + base);
+    addButtonInput(1, 1, "L1", kJoy0L + base);
+    addButtonInput(1, 9, "R1", kJoy0R + base);
+    addButtonInput(2, 1, "Up", kJoy0Up + base);
+    addButtonInput(2, 4, "Select", kJoy0Select + base);
+    addButtonInput(2, 6, "Start", kJoy0Start + base);
+    addButtonInput(2, 9, "X", kJoy0X + base);
+    addButtonInput(3, 0, "Left", kJoy0Left + base);
+    addButtonInput(3, 2, "Right", kJoy0Right + base);
+    addButtonInput(3, 8, "Y", kJoy0Y + base);
+    addButtonInput(3, 10, "A", kJoy0A + base);
+    addButtonInput(4, 1, "Down", kJoy0Down + base);
+    addButtonInput(4, 9, "B", kJoy0B + base);
 
     addButton("OK", IDOK, WIDTH - 55 - 50, HEIGHT - 14, 50, 14, true);
     addButton("Cancel", IDCANCEL, WIDTH - 50, HEIGHT - 14, 50, 14, false);
@@ -1051,7 +1109,16 @@ void KeyBinds::showControllerDialog(Input& input, int port)
   InputDialog db;
   db.init(label);
   db._input = &input;
-  db.initControllerButtons(_bindings);
+
+  switch (port)
+  {
+    case 0:
+      db.initControllerButtons(_bindings, kJoy0Up);
+      break;
+    case 1:
+      db.initControllerButtons(_bindings, kJoy1Up);
+      break;
+  }
 
   if (db.show())
     _bindings = db.getBindings();
