@@ -4,7 +4,7 @@ CC=i686-w64-mingw32-gcc
 CXX=i686-w64-mingw32-g++
 RC=i686-w64-mingw32-windres
 
-INCLUDES=-Isrc -I./src/RA_Integration/src -I./src/RA_Integration/src/rapidjson/include -Isrc/SDL2/include
+INCLUDES=-Isrc -I./src/RAInterface -I./src/miniz
 DEFINES=-DOUTSIDE_SPEEX -DRANDOM_PREFIX=speex -DEXPORT= -D_USE_SSE2 -DFIXED_POINT
 CFLAGS=-Wall -m32
 
@@ -23,9 +23,10 @@ CXXFLAGS=$(CFLAGS) -std=c++11
 # main
 OBJS=\
 	src/dynlib/dynlib.o src/jsonsax/jsonsax.o src/libretro/BareCore.o src/libretro/Core.o \
-	src/RA_Implementation.o src/RA_Integration/src/RA_Interface.o src/components/Audio.o \
+	src/RA_Implementation.o src/RAInterface/RA_Interface.o src/components/Audio.o \
 	src/components/Config.o src/components/Dialog.o src/components/Input.o \
 	src/components/Logger.o src/components/Video.o src/speex/resample.o src/About.o \
+  src/miniz/miniz.o src/miniz/miniz_tdef.o src/miniz/miniz_tinfl.o src/miniz/miniz_zip.o \
 	src/Application.o src/Emulator.o src/Fsm.o src/Git.o src/Gl.o src/GlUtil.o \
 	src/KeyBinds.o src/main.o src/menu.res src/Util.o
 
