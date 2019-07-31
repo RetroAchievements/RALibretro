@@ -10,3 +10,6 @@
 [submodule "src/RA_Integration"]
 	path = src/RA_Integration
 	url = https://github.com/RetroAchievements/RAIntegration.git
+[submodule "src/RAInterface"]
+	path = src/RAInterface
+	url = https://github.com/RetroAchievements/RAInterface.git

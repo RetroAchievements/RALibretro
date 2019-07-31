@@ -28,8 +28,8 @@
     <Filter Include="Source Files\speex">
       <UniqueIdentifier>{d1aeaa60-23b8-4d0c-af9d-025f837827b9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\RA_Integration">
-      <UniqueIdentifier>{327760fa-a82f-4fc7-a522-359086500937}</UniqueIdentifier>
+    <Filter Include="Source Files\RAInterface">
+      <UniqueIdentifier>{32b33d66-cfa3-44be-839e-0cc44f28fb9d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -102,9 +102,6 @@
     <ClCompile Include="speex\resample.c">
       <Filter>Source Files\speex</Filter>
     </ClCompile>
-    <ClCompile Include="RA_Integration\src\RA_Interface.cpp">
-      <Filter>Source Files\RA_Integration</Filter>
-    </ClCompile>
     <ClCompile Include="miniz\miniz.c">
       <Filter>Source Files\miniz</Filter>
     </ClCompile>
@@ -113,6 +110,9 @@
     </ClCompile>
     <ClCompile Include="miniz\miniz_tdef.c">
       <Filter>Source Files\miniz</Filter>
+    </ClCompile>
+    <ClCompile Include="RAInterface\RA_Interface.cpp">
+      <Filter>Source Files\RAInterface</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

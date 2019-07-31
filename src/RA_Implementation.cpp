@@ -1,8 +1,8 @@
-#include "RA_Integration/RA_Implementation/RA_Implementation.h"
 #include "RA_Interface.h"
 
 #include <windows.h>
 
+#include "Git.h"
 
 extern HWND g_mainWindow;
 
@@ -97,9 +97,18 @@ void LoadROM(const char* sFullPath)
   loadROM(sFullPath);
 }
 
-
-//  Installs these shared functions into the DLL
-void RA_InitShared()
+void RA_Init(HWND hWnd)
 {
-  RA_InstallSharedFunctions(&GameIsActive, &CauseUnpause, &CausePause, &RebuildMenu, &GetEstimatedGameTitle, &ResetEmulation, &LoadROM);
+  // initialize the DLL
+  RA_Init(hWnd, RA_Libretro, git::getReleaseVersion());
+
+  // provide callbacks to the DLL
+  RA_InstallSharedFunctions(NULL, &CauseUnpause, &CausePause, &RebuildMenu, &GetEstimatedGameTitle, &ResetEmulation, &LoadROM);
+
+  // add a placeholder menu item and start the login process - menu will be updated when login completes
+  RebuildMenu();
+  RA_AttemptLogin(false);
+
+  // ensure titlebar text matches expected format
+  RA_UpdateAppTitle("");
 }

@@ -25,8 +25,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "libretro/Core.h"
 #include "jsonsax/jsonsax.h"
 
-#include "RA_Integration/RA_Implementation/RA_Implementation.h"
-#include <RA_Resource.h>
+#include "RA_Interface.h"
 
 #include "About.h"
 #include "KeyBinds.h"
@@ -265,10 +264,8 @@ bool Application::init(const char* title, int width, int height)
 
     loadConfiguration();
 
-    RA_Init(g_mainWindow, RA_Libretro, git::getReleaseVersion());
-    RA_InitShared();
-    RA_AttemptLogin(true);
-    RebuildMenu();
+    extern void RA_Init(HWND hwnd);
+    RA_Init(g_mainWindow);
   }
 
   SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
@@ -385,45 +382,19 @@ void Application::run()
       SDL_GL_SwapWindow(_window);
     }
 
-    RA_HandleHTTPResults();
-
-    static Uint32 t0 = 0;
-
-    if (t0 == 0)
+    if (RA_IsOverlayFullyVisible())
     {
-      t0 = SDL_GetTicks();
+      ControllerInput input;
+      input.m_bUpPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP) != 0;
+      input.m_bDownPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN) != 0;
+      input.m_bLeftPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT) != 0;
+      input.m_bRightPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT) != 0;
+      input.m_bConfirmPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A) != 0;
+      input.m_bCancelPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B) != 0;
+      input.m_bQuitPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START) != 0;
+
+      RA_NavigateOverlay(&input);
     }
-    else
-    {
-      Uint32 t1 = SDL_GetTicks();
-      HDC hdc = GetDC(g_mainWindow);
-
-      if (hdc != NULL)
-      {
-        ControllerInput input;
-        input.m_bUpPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP) != 0;
-        input.m_bDownPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN) != 0;
-        input.m_bLeftPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT) != 0;
-        input.m_bRightPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT) != 0;
-        input.m_bConfirmPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A) != 0;
-        input.m_bCancelPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B) != 0;
-        input.m_bQuitPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START) != 0;
-
-        RECT size;
-        GetClientRect(g_mainWindow, &size);
-
-        RA_UpdateRenderOverlay(hdc, &input, (t1 - t0) / 1000.0f, &size, false, _fsm.currentState() == Fsm::State::GamePaused);
-        ReleaseDC(g_mainWindow, hdc);
-      }
-      else
-      {
-        _logger.error(TAG "GetDC(g_mainWindow) returned NULL");
-      }
-
-      t0 = t1;
-    }
-
-    SDL_Delay(1);
   }
   while (_fsm.currentState() != Fsm::State::Quit);
 }
