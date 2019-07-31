@@ -1547,8 +1547,10 @@ void Application::buildSystemsMenu()
   if (availableSystems.empty())
     return;
 
+  // use map to sort labels
   std::set<std::string> systemCores;
   std::map<std::string, System> systemMap;
+  std::map<std::string, int> systemItems;
   for (auto system : availableSystems)
     systemMap.insert_or_assign(getSystemName(system), system);
 
@@ -1561,15 +1563,21 @@ void Application::buildSystemsMenu()
   for (const auto& pair : systemMap)
   {
     System system = pair.second;
-    HMENU systemMenu = CreateMenu();
     systemCores.clear();
-    getSystemCores(pair.second, systemCores);
+    getSystemCores(system, systemCores);
+    if (systemCores.empty())
+      continue;
 
+    systemItems.clear();
     for (const auto& systemCore : systemCores)
     {
       int id = encodeCoreName(systemCore, pair.second);
-      AppendMenu(systemMenu, MF_STRING, IDM_SYSTEM_FIRST + id, getEmulatorName(systemCore, system).c_str());
+      systemItems.insert_or_assign(getEmulatorName(systemCore, system), id);
     }
+
+    HMENU systemMenu = CreateMenu();
+    for (const auto& systemItem : systemItems)
+      AppendMenu(systemMenu, MF_STRING, IDM_SYSTEM_FIRST + systemItem.second, systemItem.first.c_str());
 
     AppendMenu(systemsMenu, MF_POPUP | MF_STRING, (UINT_PTR)systemMenu, pair.first.c_str());
   }
