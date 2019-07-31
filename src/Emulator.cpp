@@ -19,68 +19,215 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Emulator.h"
 
-const char* getEmulatorName(Emulator emulator)
+#include "components\Config.h"
+#include "components\Logger.h"
+
+#include <jsonsax\jsonsax.h>
+
+#define TAG "[EMU] "
+
+struct CoreInfo
 {
-  switch (emulator)
+  std::string name;
+  std::string filename;
+  std::string extensions;
+  std::set<System> systems;
+};
+
+static std::vector<CoreInfo> s_coreInfos;
+
+static const CoreInfo* getCoreInfo(const std::string& coreName, System system)
+{
+  for (const auto& coreInfo : s_coreInfos)
   {
-  case Emulator::kNone:          break;
-  case Emulator::kStella:        return "Stella";
-  case Emulator::kSnes9x:        return "Snes9x";
-  case Emulator::kPicoDrive:     return "PicoDrive";
-  case Emulator::kGenesisPlusGx: return "Genesis Plus GX";
-  case Emulator::kFceumm:        return "FCEUmm";
-  case Emulator::kHandy:         return "Handy";
-  case Emulator::kBeetleSgx:     return "Beetle SGX";
-  case Emulator::kGambatte:      return "Gambatte";
-  case Emulator::kMGBA:          return "mGBA";
-  case Emulator::kMednafenPsx:   return "Mednafen PSX";
-  case Emulator::kMednafenNgp:   return "Mednafen NGP";
-  case Emulator::kMednafenVb:    return "Mednafen VB";
-  case Emulator::kFBAlpha:       return "Final Burn Alpha";
-  case Emulator::kProSystem:     return "ProSystem";
-  default:                       break;
+    if (coreInfo.filename == coreName)
+    {
+      if (coreInfo.systems.find(system) != coreInfo.systems.end())
+        return &coreInfo;
+    }
   }
-  
-  return "?";
+
+  return NULL;
 }
 
-const char* getEmulatorFileName(Emulator emulator)
+const std::string& getEmulatorName(const std::string& coreName, System system)
 {
-  switch (emulator)
-  {
-  case Emulator::kNone:          break;
-  case Emulator::kStella:        return "stella_libretro";
-  case Emulator::kSnes9x:        return "snes9x_libretro";
-  case Emulator::kPicoDrive:     return "picodrive_libretro";
-  case Emulator::kGenesisPlusGx: return "genesis_plus_gx_libretro";
-  case Emulator::kFceumm:        return "fceumm_libretro";
-  case Emulator::kHandy:         return "handy_libretro";
-  case Emulator::kBeetleSgx:     return "mednafen_supergrafx_libretro";
-  case Emulator::kGambatte:      return "gambatte_libretro";
-  case Emulator::kMGBA:          return "mgba_libretro";
-  case Emulator::kMednafenPsx:   return "mednafen_psx_libretro";
-  case Emulator::kMednafenNgp:   return "mednafen_ngp_libretro";
-  case Emulator::kMednafenVb:    return "mednafen_vb_libretro";
-  case Emulator::kFBAlpha:       return "fbalpha_libretro";
-  case Emulator::kProSystem:     return "prosystem_libretro";
-  default:                       break;
-  }
-  
-  return "?";
+  const auto* coreInfo = getCoreInfo(coreName, system);
+  return (coreInfo != NULL) ? coreInfo->name : coreName;
 }
 
-const char* getEmulatorExtensions(Emulator emulator)
+const char* getEmulatorExtensions(const std::string& coreName, System system)
 {
-  /* provide filtered lists for cores that support filetypes that aren't fully RetroAchievement compatible */
-  switch (emulator)
+  const auto* coreInfo = getCoreInfo(coreName, system);
+  if (coreInfo != NULL && !coreInfo->extensions.empty())
+    return coreInfo->extensions.c_str();
+
+  return NULL;
+}
+
+bool loadCores(Config* config, Logger* logger)
+{
+  std::string path = config->getRootFolder();
+  path += "Cores\\cores.json";
+
+  logger->debug(TAG "Identifying available cores");
+
+  size_t size;
+  void* data = util::loadFile(logger, path, &size);
+
+  if (data == NULL)
   {
-    case Emulator::kPicoDrive:     return "bin|gen|smd|md|sms";       // bin|gen|smd|md|32x|cue|iso|sms
-    case Emulator::kGenesisPlusGx: return "bin|gen|smd|md|sms|gg|sg"; // mdx|md|smd|gen|bin|cue|iso|chd|sms|gg|sg
-    case Emulator::kMGBA:          return "gba";                      // gba|gb|gbc
-    case Emulator::kFBAlpha:       return "zip";                      // iso|zip|7z
-    default:
-      return NULL;
+    logger->error(TAG "Could not locate cores.json");
+    return false;
   }
+
+  struct Deserialize
+  {
+    CoreInfo* core;
+    std::string key;
+    Config* config;
+  };
+
+  Deserialize ud;
+  ud.core = NULL;
+  ud.config = config;
+
+  jsonsax_parse((char*)data, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+  {
+    auto ud = (Deserialize*)udata;
+
+    if (event == JSONSAX_KEY)
+    {
+      ud->key = std::string(str, num);
+
+      std::string path = ud->config->getRootFolder();
+      path += "Cores\\" + ud->key + ".dll";
+
+      FILE* file = fopen(path.c_str(), "r");
+      if (file)
+      {
+        fclose(file);
+
+        s_coreInfos.emplace_back();
+        ud->core = &s_coreInfos.back();
+        ud->core->filename = ud->key;
+      }
+      else
+      {
+        ud->core = NULL;
+      }
+    }
+    else if (event == JSONSAX_OBJECT)
+    {
+      if (ud->core != NULL)
+      {
+        jsonsax_result_t res2 = jsonsax_parse((char*)str, ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+        {
+          auto ud = (Deserialize*)udata;
+
+          if (event == JSONSAX_KEY)
+          {
+            ud->key = std::string(str, num);
+          }
+          else if (event == JSONSAX_STRING)
+          {
+            if (ud->key == "name")
+              ud->core->name = std::string(str, num);
+            else if (ud->key == "extensions")
+              ud->core->extensions = std::string(str, num);
+          }
+          else if (event == JSONSAX_ARRAY)
+          {
+            if (ud->key == "systems")
+            {
+              jsonsax_result_t res3 = jsonsax_parse((char*)str, ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+              {
+                auto ud = (Deserialize*)udata;
+
+                if (event == JSONSAX_NUMBER)
+                {
+                  std::string system = std::string(str, num);
+                  ud->core->systems.insert(static_cast<System>(std::stoi(system)));
+                }
+
+                return 0;
+              });
+            }
+          }
+
+          return 0;
+        });
+      }
+    }
+
+    return 0;
+  });
+
+  free(data);
+  return true;
+}
+
+void getAvailableSystems(std::set<System>& systems)
+{
+  for (const auto& core : s_coreInfos)
+  {
+    for (auto system : core.systems)
+      systems.insert(system);
+  }
+}
+
+void getSystemCores(System system, std::set<std::string>& coreNames)
+{
+  for (const auto& core : s_coreInfos)
+  {
+    if (core.systems.find(system) != core.systems.end())
+      coreNames.insert(core.name);
+  }
+}
+
+int encodeCoreName(const std::string& coreName, System system)
+{
+  for (int i = 0; i < s_coreInfos.size(); ++i)
+  {
+    if (s_coreInfos[i].name == coreName)
+    {
+      int j = 0;
+      for (auto s : s_coreInfos[i].systems)
+      {
+        if (s == system)
+          return (j * 100) + i;
+
+        ++j;
+      }
+    }
+  }
+
+  return 0;
+}
+
+const std::string& getCoreName(int encoded, System& system)
+{
+  int i = encoded % 100;
+  int j = encoded / 100;
+
+  if (i > s_coreInfos.size())
+    i = 0;
+
+  if (j > s_coreInfos[i].systems.size())
+    j = 0;
+
+  for (auto s : s_coreInfos[i].systems)
+  {
+    if (j == 0)
+    {
+      system = s;
+      break;
+    }
+
+    --j;
+  }
+
+  return s_coreInfos[i].filename;
 }
 
 const char* getSystemName(System system)
@@ -107,64 +254,6 @@ const char* getSystemName(System system)
   }
   
   return "?";
-}
-
-System getSystem(Emulator emulator, const std::string game_path, libretro::Core* core)
-{
-  switch (emulator)
-  {
-  case Emulator::kNone:        return System::kNone;
-  case Emulator::kStella:      return System::kAtari2600;
-  case Emulator::kSnes9x:      return System::kSuperNintendo;
-  case Emulator::kFceumm:      return System::kNintendo;
-  case Emulator::kHandy:       return System::kAtariLynx;
-  case Emulator::kBeetleSgx:   return System::kPCEngine;
-  case Emulator::kMednafenPsx: return System::kPlayStation1;
-  case Emulator::kMednafenNgp: return System::kNeoGeoPocket;
-  case Emulator::kMednafenVb:  return System::kVirtualBoy;
-  case Emulator::kFBAlpha:     return System::kArcade;
-  case Emulator::kProSystem:   return System::kAtari7800;
-
-  case Emulator::kPicoDrive:
-  case Emulator::kGenesisPlusGx:
-    if (core->getMemorySize(RETRO_MEMORY_SYSTEM_RAM) == 0x2000)
-    {
-      if (game_path.substr(game_path.length() - 3) == ".gg")
-      {
-        return System::kGameGear;
-      }
-      else
-      {
-        return System::kMasterSystem;
-      }
-    }
-    else
-    {
-      return System::kMegaDrive;
-    }
-
-  case Emulator::kGambatte:
-  case Emulator::kMGBA:
-    if (game_path.substr(game_path.length() - 4) == ".gbc")
-    {
-      return System::kGameBoyColor;
-    }
-    else if (game_path.substr(game_path.length() - 4) == ".gba")
-    {
-      // Gambatte doesn't support GBA, but it won't be a problem to test it here
-      return System::kGameBoyAdvance;
-    }
-    else
-    {
-      return System::kGameBoy;
-    }
-  
-  default:
-    break;
-  }
-
-
-  return System::kNone;
 }
 
 static bool romLoadedWithPadding(void* rom, size_t size, size_t max_size, int fill)

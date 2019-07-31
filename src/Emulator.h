@@ -19,6 +19,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <set>
 #include <string>
 
 #include "libretro/Core.h"
@@ -26,25 +27,6 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <RA_Interface.h>
 
 #include "Util.h"
-
-enum class Emulator
-{
-  kNone,
-  kStella,
-  kSnes9x,
-  kPicoDrive,
-  kGenesisPlusGx,
-  kFceumm,
-  kHandy,
-  kBeetleSgx,
-  kGambatte,
-  kMGBA,
-  kMednafenPsx,
-  kMednafenNgp,
-  kMednafenVb,
-  kFBAlpha,
-  kProSystem
-};
 
 enum class System
 {
@@ -67,10 +49,18 @@ enum class System
   kAtari7800      = Atari7800
 };
 
-const char* getEmulatorName(Emulator emulator);
-const char* getEmulatorFileName(Emulator emulator);
-const char* getEmulatorExtensions(Emulator emulator);
+const std::string& getEmulatorName(const std::string& coreName, System system);
+const char* getEmulatorExtensions(const std::string& coreName, System system);
 const char* getSystemName(System system);
 
-System getSystem(Emulator emulator, const std::string game_path, libretro::Core* core);
+class Config;
+class Logger;
+bool   loadCores(Config* config, Logger* logger);
+
+void   getAvailableSystems(std::set<System>& systems);
+void   getSystemCores(System system, std::set<std::string>& coreNames);
+int    encodeCoreName(const std::string& coreName, System system);
+const std::string& getCoreName(int encoded, System& system);
+
+System getSystem(const std::string& core_name, const std::string& game_path, libretro::Core* core);
 bool   romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size);

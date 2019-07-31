@@ -22,20 +22,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 // Keep those in increasing order
-#define IDM_SYSTEM_STELLA                       50000
-#define IDM_SYSTEM_SNES9X                       50001
-#define IDM_SYSTEM_PICODRIVE                    50002
-#define IDM_SYSTEM_GENESISPLUSGX                50003
-#define IDM_SYSTEM_FCEUMM                       50004
-#define IDM_SYSTEM_HANDY                        50005
-#define IDM_SYSTEM_BEETLESGX                    50006
-#define IDM_SYSTEM_GAMBATTE                     50007
-#define IDM_SYSTEM_MGBA                         50008
-#define IDM_SYSTEM_MEDNAFENPSX                  50009
-#define IDM_SYSTEM_MEDNAFENNGP                  50010
-#define IDM_SYSTEM_MEDNAFENVB                   50011
-#define IDM_SYSTEM_FBALPHA                      50012
-#define IDM_SYSTEM_PROSYSTEM                    50013
+#define IDM_SYSTEM_FIRST                        45000
+#define IDM_SYSTEM_LAST                         49999
 
 // Keep those in increasing order
 #define IDM_SAVE_STATE_1                        51000

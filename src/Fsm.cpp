@@ -45,7 +45,7 @@ void Fsm::after(State state) const {
   }
 }
 
-bool Fsm::loadCore(Emulator core) {
+bool Fsm::loadCore(const_string core) {
   switch (__state) {
     case State::CoreLoaded: {
       if (!before()) {
@@ -446,7 +446,7 @@ bool Fsm::loadGame(const_string path) {
   return false;
 }
 
-bool Fsm::loadRecent(Emulator core, const_string path) {
+bool Fsm::loadRecent(const_string core, const_string path) {
   switch (__state) {
     case State::CoreLoaded: {
       if (!before()) {

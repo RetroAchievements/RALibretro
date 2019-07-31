@@ -101,8 +101,6 @@ bool Application::init(const char* title, int width, int height)
   }
   inited = kNothingInited;
 
-  _emulator = Emulator::kNone;
-
   if (!_logger.init())
   {
     goto error;
@@ -263,6 +261,8 @@ bool Application::init(const char* title, int width, int height)
     _menu = LoadMenu(NULL, "MAIN");
     SetMenu(g_mainWindow, _menu);
 
+    loadCores(&_config, &_logger);
+    buildSystemsMenu();
     loadConfiguration();
 
     RA_Init(g_mainWindow, RA_Libretro, git::getReleaseVersion());
@@ -272,7 +272,7 @@ bool Application::init(const char* title, int width, int height)
   }
 
   SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
-  _emulator = Emulator::kNone;
+  _coreName.clear();
   _validSlots = 0;
   lastHardcore = hardcore();
   updateMenu();
@@ -296,7 +296,7 @@ error:
   case kNothingInited:     break;
   }
 
-  _emulator = Emulator::kNone;
+  _coreName.clear();
   return false;
 }
 
@@ -484,7 +484,7 @@ void Application::destroy()
   _logger.destroy();
 }
 
-bool Application::loadCore(Emulator emulator)
+bool Application::loadCore(const std::string& coreName)
 {
   _config.reset();
   _input.reset();
@@ -496,7 +496,7 @@ bool Application::loadCore(Emulator emulator)
 
   std::string path = _config.getRootFolder();
   path += "Cores\\";
-  path += getEmulatorFileName(emulator);
+  path += coreName;
   path += ".dll";
 
   if (!_core.loadCore(path.c_str()))
@@ -505,7 +505,7 @@ bool Application::loadCore(Emulator emulator)
   }
 
   size_t size;
-  void* data = util::loadFile(&_logger, getCoreConfigPath(emulator), &size);
+  void* data = util::loadFile(&_logger, getCoreConfigPath(coreName), &size);
 
   if (data != NULL)
   {
@@ -548,7 +548,7 @@ bool Application::loadCore(Emulator emulator)
     free(data);
   }
 
-  _emulator = emulator;
+  _coreName = coreName;
   return true;
 }
 
@@ -656,7 +656,7 @@ bool Application::loadGame(const std::string& path)
   /* if the core says it wants the full path, we have to see if it supports zip files */
   if (iszip && info->need_fullpath)
   {
-    ptr = getEmulatorExtensions(_emulator);
+    ptr = getEmulatorExtensions(_coreName, _system);
     if (ptr == NULL)
       ptr = info->valid_extensions;
 
@@ -741,8 +741,6 @@ bool Application::loadGame(const std::string& path)
     return false;
   }
 
-  _system = getSystem(_emulator, unzippedFileName, &_core);
-
   RA_SetConsoleID((unsigned)_system);
   RA_ClearMemoryBanks();
 
@@ -773,11 +771,11 @@ bool Application::loadGame(const std::string& path)
   {
     const RecentItem item = _recentList[i];
 
-    if (item.path == path && item.emulator == _emulator && item.system == _system)
+    if (item.path == path && item.coreName == _coreName && item.system == _system)
     {
       _recentList.erase(_recentList.begin() + i);
       _recentList.insert(_recentList.begin(), item);
-      _logger.debug(TAG "Moved recent file %zu to front \"%s\" - %u - %u", i, util::fileName(item.path).c_str(), (unsigned)item.emulator, (unsigned)item.system);
+      _logger.debug(TAG "Moved recent file %zu to front \"%s\" - %s - %u", i, util::fileName(item.path).c_str(), item.coreName.c_str(), (unsigned)item.system);
       goto moved_recent_item;
     }
   }
@@ -791,11 +789,11 @@ bool Application::loadGame(const std::string& path)
   {
     RecentItem item;
     item.path = path;
-    item.emulator = _emulator;
+    item.coreName = _coreName;
     item.system = _system;
 
     _recentList.insert(_recentList.begin(), item);
-    _logger.debug(TAG "Added recent file \"%s\" - %u - %u", util::fileName(item.path).c_str(), (unsigned)item.emulator, (unsigned)item.system);
+    _logger.debug(TAG "Added recent file \"%s\" - %s - %u", util::fileName(item.path).c_str(), item.coreName.c_str(), (unsigned)item.system);
   }
 
 moved_recent_item:
@@ -826,27 +824,19 @@ moved_recent_item:
   _memoryBanks[1].count = 0;
   unsigned numBanks = 0;
 
-  switch (_emulator)
+  switch (_system)
   {
-  case Emulator::kNone:
+  case System::kNone:
     break;
 
-  case Emulator::kStella:
-  case Emulator::kPicoDrive:
-  case Emulator::kGenesisPlusGx:
-  case Emulator::kHandy:
-  case Emulator::kBeetleSgx:
-  case Emulator::kMednafenPsx:
-  case Emulator::kMednafenNgp:
-  case Emulator::kFBAlpha:
-  case Emulator::kProSystem:
+  default:
     data = _core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
     size = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
     registerMemoryRegion(&numBanks, 0, data, size);
     break;
 
-  case Emulator::kSnes9x:
-  case Emulator::kMednafenVb:
+  case System::kSuperNintendo:
+  case System::kVirtualBoy:
     data = _core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
     size = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
     registerMemoryRegion(&numBanks, 0, data, size);
@@ -856,8 +846,9 @@ moved_recent_item:
     registerMemoryRegion(&numBanks, 1, data, size);
 
     break;
-  
-  case Emulator::kGambatte:
+
+  case System::kGameBoy:
+  case System::kGameBoyColor:
     {
       const struct retro_memory_map* mmap = _core.getMemoryMap();
       struct retro_memory_descriptor* layout = new struct retro_memory_descriptor[mmap->num_descriptors + 2];
@@ -937,7 +928,7 @@ moved_recent_item:
 
     break;
 
-  case Emulator::kFceumm:
+  case System::kNintendo:
     {
       const struct retro_memory_map* mmap = _core.getMemoryMap();
       void* pointer[64];
@@ -968,9 +959,8 @@ moved_recent_item:
     }
 
     break;
-  
-  case Emulator::kMGBA:
-    if (_system == System::kGameBoyAdvance)
+
+  case System::kGameBoyAdvance:
     {
       const struct retro_memory_map* mmap = _core.getMemoryMap();
 
@@ -991,12 +981,6 @@ moved_recent_item:
           registerMemoryRegion(&numBanks, 1, data, size);
         }
       }
-    }
-    else
-    {
-      data = _core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
-      size = 32768;
-      registerMemoryRegion(&numBanks, 0, data, size);
     }
 
     break;
@@ -1059,7 +1043,7 @@ void Application::unloadCore()
   json.append(_video.serialize());
   json.append("}");
 
-  util::saveFile(&_logger, getCoreConfigPath(_emulator), json.c_str(), json.length());
+  util::saveFile(&_logger, getCoreConfigPath(_coreName), json.c_str(), json.length());
 
   _core.destroy();
 }
@@ -1214,7 +1198,7 @@ void Application::loadGame()
   const struct retro_system_info* info = _core.getSystemInfo();
   std::string file_types;
   std::string supported_exts;
-  const char* ptr = getEmulatorExtensions(_emulator);
+  const char* ptr = getEmulatorExtensions(_coreName, _system);
   if (ptr == NULL)
     ptr = info->valid_extensions;
 
@@ -1298,7 +1282,7 @@ void Application::enableRecent()
 
     std::string caption = util::fileName(_recentList[i].path);
     caption += " (";
-    caption += getEmulatorName(_recentList[i].emulator);
+    caption += getEmulatorName(_recentList[i].coreName, _recentList[i].system);
     caption += " - ";
     caption += getSystemName(_recentList[i].system);
     caption += ")";
@@ -1355,7 +1339,7 @@ std::string Application::getStatePath(unsigned ndx)
   path += _gameFileName;
 
   path += "-";
-  path += getEmulatorFileName(_emulator);
+  path += _coreName;
   
   char index[16];
   sprintf(index, ".%03u", ndx);
@@ -1373,11 +1357,11 @@ std::string Application::getConfigPath()
   return path;
 }
 
-std::string Application::getCoreConfigPath(Emulator emulator)
+std::string Application::getCoreConfigPath(const std::string& coreName)
 {
   std::string path = _config.getRootFolder();
   path += "Cores\\";
-  path += getEmulatorFileName(emulator);
+  path += coreName;
   path += ".json";
   return path;
 }
@@ -1556,6 +1540,41 @@ void Application::aboutDialog()
   ::aboutDialog(_logger.contents().c_str());
 }
 
+void Application::buildSystemsMenu()
+{
+  std::set<System> availableSystems;
+  getAvailableSystems(availableSystems);
+  if (availableSystems.empty())
+    return;
+
+  std::set<std::string> systemCores;
+  std::map<std::string, System> systemMap;
+  for (auto system : availableSystems)
+    systemMap.insert_or_assign(getSystemName(system), system);
+
+  HMENU fileMenu = GetSubMenu(_menu, 0);
+  HMENU systemsMenu = GetSubMenu(fileMenu, 0);
+
+  while (GetMenuItemCount(systemsMenu) > 0)
+    DeleteMenu(systemsMenu, 0, MF_BYPOSITION);
+
+  for (const auto& pair : systemMap)
+  {
+    System system = pair.second;
+    HMENU systemMenu = CreateMenu();
+    systemCores.clear();
+    getSystemCores(pair.second, systemCores);
+
+    for (const auto& systemCore : systemCores)
+    {
+      int id = encodeCoreName(systemCore, pair.second);
+      AppendMenu(systemMenu, MF_STRING, IDM_SYSTEM_FIRST + id, getEmulatorName(systemCore, system).c_str());
+    }
+
+    AppendMenu(systemsMenu, MF_POPUP | MF_STRING, (UINT_PTR)systemMenu, pair.first.c_str());
+  }
+}
+
 void Application::loadConfiguration()
 {
   _recentList.clear();
@@ -1600,9 +1619,30 @@ void Application::loadConfiguration()
           {
             ud->item.path = util::jsonUnescape(std::string(str, num));
           }
+          else if (event == JSONSAX_STRING && ud->key == "core")
+          {
+            ud->item.coreName = std::string(str, num);
+          }
           else if (event == JSONSAX_NUMBER && ud->key == "emulator")
           {
-            ud->item.emulator = (Emulator)strtoul(str, NULL, 10);
+            // legacy format
+            switch (strtoul(str, NULL, 10))
+            {
+              case 1:  ud->item.coreName = "stella_libretro"; break;
+              case 2:  ud->item.coreName = "snes9x_libretro"; break;
+              case 3:  ud->item.coreName = "picodrive_libretro"; break;
+              case 4:  ud->item.coreName = "genesis_plus_gx_libretro"; break;
+              case 5:  ud->item.coreName = "fceumm_libretro"; break;
+              case 6:  ud->item.coreName = "handy_libretro"; break;
+              case 7:  ud->item.coreName = "mednafen_supergrafx_libretro"; break;
+              case 8:  ud->item.coreName = "gambatte_libretro"; break;
+              case 9:  ud->item.coreName = "mgba_libretro"; break;
+              case 10: ud->item.coreName = "mednafen_psx_libretro"; break;
+              case 11: ud->item.coreName = "mednafen_ngp_libretro"; break;
+              case 12: ud->item.coreName = "mednafen_vb_libretro"; break;
+              case 13: ud->item.coreName = "fbalpha_libretro"; break;
+              case 14: ud->item.coreName = "prosystem_libretro"; break;
+            }
           }
           else if (event == JSONSAX_NUMBER && ud->key == "system")
           {
@@ -1611,7 +1651,7 @@ void Application::loadConfiguration()
           else if (event == JSONSAX_OBJECT && num == 0)
           {
             ud->self->_recentList.push_back(ud->item);
-            ud->self->_logger.debug(TAG "Added recent file \"%s\" - %u - %u", util::fileName(ud->item.path).c_str(), (unsigned)ud->item.emulator, (unsigned)ud->item.system);
+            ud->self->_logger.debug(TAG "Added recent file \"%s\" - %s - %u", util::fileName(ud->item.path).c_str(), ud->item.coreName.c_str(), (unsigned)ud->item.system);
           }
 
           return 0;
@@ -1688,11 +1728,10 @@ std::string Application::serializeRecentList()
     json += "\"path\":\"";
     json += util::jsonEscape(_recentList[i].path);
 
-    json += "\",\"emulator\":";
-    snprintf(buffer, sizeof(buffer), "%u", (unsigned)_recentList[i].emulator);
-    json += buffer;
+    json += "\",\"core\":\"";
+    json += _recentList[i].coreName;
 
-    json += ",\"system\":";
+    json += "\",\"system\":";
     snprintf(buffer, sizeof(buffer), "%u", (unsigned)_recentList[i].system);
     json += buffer;
 
@@ -1741,33 +1780,6 @@ void Application::handle(const SDL_SysWMEvent* syswm)
 
     switch (cmd)
     {
-    case IDM_SYSTEM_STELLA:
-    case IDM_SYSTEM_SNES9X:
-    case IDM_SYSTEM_PICODRIVE:
-    case IDM_SYSTEM_GENESISPLUSGX:
-    case IDM_SYSTEM_FCEUMM:
-    case IDM_SYSTEM_HANDY:
-    case IDM_SYSTEM_BEETLESGX:
-    case IDM_SYSTEM_GAMBATTE:
-    case IDM_SYSTEM_MGBA:
-    case IDM_SYSTEM_MEDNAFENPSX:
-    case IDM_SYSTEM_MEDNAFENNGP:
-    case IDM_SYSTEM_MEDNAFENVB:
-    case IDM_SYSTEM_FBALPHA:
-    case IDM_SYSTEM_PROSYSTEM:
-      {
-        static Emulator emulators[] =
-        {
-          Emulator::kStella, Emulator::kSnes9x, Emulator::kPicoDrive, Emulator::kGenesisPlusGx, Emulator::kFceumm,
-          Emulator::kHandy, Emulator::kBeetleSgx, Emulator::kGambatte, Emulator::kMGBA, Emulator::kMednafenPsx,
-          Emulator::kMednafenNgp, Emulator::kMednafenVb, Emulator::kFBAlpha, Emulator::kProSystem
-        };
-
-        _fsm.loadCore(emulators[cmd - IDM_SYSTEM_STELLA]);
-      }
-      
-      break;
-    
     case IDM_LOAD_GAME:
       loadGame();
       break;
@@ -1782,8 +1794,15 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     case IDM_LOAD_RECENT_8:
     case IDM_LOAD_RECENT_9:
     case IDM_LOAD_RECENT_10:
-      _fsm.loadRecent(_recentList[cmd - IDM_LOAD_RECENT_1].emulator, _recentList[cmd - IDM_LOAD_RECENT_1].path);
+    {
+      const auto& recent = _recentList[cmd - IDM_LOAD_RECENT_1];
+      if (_fsm.loadCore(recent.coreName))
+      {
+        _system = recent.system;
+        _fsm.loadRecent(recent.coreName, recent.path);
+      }
       break;
+    }
     
     case IDM_PAUSE_GAME:
       _fsm.pauseGame();
@@ -1866,6 +1885,13 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       if (cmd >= IDM_RA_MENUSTART && cmd < IDM_RA_MENUEND)
       {
         RA_InvokeDialog(cmd);
+      }
+      else if (cmd >= IDM_SYSTEM_FIRST && cmd <= IDM_SYSTEM_LAST)
+      {
+        System system;
+        const std::string& coreName = getCoreName(cmd - IDM_SYSTEM_FIRST, system);
+        if (_fsm.loadCore(coreName))
+          _system = system;
       }
 
       break;
