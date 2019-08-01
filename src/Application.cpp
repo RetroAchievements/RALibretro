@@ -38,6 +38,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "resource.h"
 
+#include <assert.h>
 #include <time.h>
 #include <sys/stat.h>
 
@@ -262,6 +263,9 @@ bool Application::init(const char* title, int width, int height)
     g_mainWindow = wminfo.info.win.window;
 
     _menu = LoadMenu(NULL, "MAIN");
+    _cdRomMenu = GetSubMenu(GetSubMenu(_menu, 0), 10);
+    assert(GetMenuItemID(_cdRomMenu, 0) == IDM_CD_OPEN_TRAY);
+
     SetMenu(g_mainWindow, _menu);
 
     loadConfiguration();
@@ -1351,7 +1355,21 @@ void Application::updateCDMenu(const char names[][128], int count, bool updateLa
   size_t i = 0;
   size_t coreDiscCount = _core.getNumDiscs();
 
-  if (coreDiscCount > 0)
+  size_t menuItemCount = GetMenuItemCount(_cdRomMenu);
+  while (menuItemCount > coreDiscCount + 1)
+    DeleteMenu(_cdRomMenu, --menuItemCount, MF_BYPOSITION);
+
+  while (menuItemCount < coreDiscCount + 1)
+  {
+    AppendMenu(_cdRomMenu, MF_STRING, IDM_CD_DISC_FIRST + menuItemCount - 1, "Empty");
+    ++menuItemCount;
+  }
+
+  if (coreDiscCount == 0)
+  {
+    EnableMenuItem(_cdRomMenu, IDM_CD_OPEN_TRAY, MF_DISABLED);
+  }
+  else
   {
     unsigned selectedDisc = _core.getCurrentDiscIndex();
     bool trayOpen = _core.getTrayOpen();
@@ -1367,7 +1385,7 @@ void Application::updateCDMenu(const char names[][128], int count, bool updateLa
 
     for (; i < coreDiscCount; i++)
     {
-      UINT id = IDM_CD_DISC_1 + i;
+      UINT id = IDM_CD_DISC_FIRST + i;
 
       MENUITEMINFO info;
       memset(&info, 0, sizeof(info));
@@ -1379,7 +1397,7 @@ void Application::updateCDMenu(const char names[][128], int count, bool updateLa
 
       if (updateLabels)
       {
-        if (i < count)
+        if ((int)i < count)
         {
           info.dwTypeData = (char*)names[i];
         }
@@ -1398,28 +1416,6 @@ void Application::updateCDMenu(const char names[][128], int count, bool updateLa
     }
 
     EnableMenuItem(_menu, IDM_CD_OPEN_TRAY, MF_ENABLED);
-  }
-  else
-  {
-    EnableMenuItem(_menu, IDM_CD_OPEN_TRAY, MF_DISABLED);
-  }
-
-  if (updateLabels)
-  {
-    for (; i < 10; i++)
-    {
-      UINT id = IDM_CD_DISC_1 + i;
-
-      MENUITEMINFO info;
-      memset(&info, 0, sizeof(info));
-      info.cbSize = sizeof(info);
-      info.fMask = MIIM_TYPE | MIIM_DATA | MIIM_STATE;
-      GetMenuItemInfo(_menu, id, false, &info);
-
-      info.dwTypeData = (char*)"Empty";
-      info.fState = MF_DISABLED;
-      SetMenuItemInfo(_menu, id, false, &info);
-    }
   }
 }
 
@@ -1890,38 +1886,6 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       updateCDMenu(NULL, 0, false);
       break;
 
-    case IDM_CD_DISC_1:
-    case IDM_CD_DISC_2:
-    case IDM_CD_DISC_3:
-    case IDM_CD_DISC_4:
-    case IDM_CD_DISC_5:
-    case IDM_CD_DISC_6:
-    case IDM_CD_DISC_7:
-    case IDM_CD_DISC_8:
-    case IDM_CD_DISC_9:
-    case IDM_CD_DISC_10:
-    {
-      if (_core.getCurrentDiscIndex() != cmd - IDM_CD_DISC_1)
-      {
-        _core.setCurrentDiscIndex(cmd - IDM_CD_DISC_1);
-
-        char buffer[128];
-        MENUITEMINFO info;
-        memset(&info, 0, sizeof(info));
-        info.cbSize = sizeof(info);
-        info.fMask = MIIM_TYPE | MIIM_DATA;
-        info.dwTypeData = buffer;
-        info.cch = sizeof(buffer);
-        GetMenuItemInfo(_menu, cmd, false, &info);
-
-        std::string path = util::replaceFileName(_gamePath, buffer);
-        romLoaded(&_logger, _system, path, NULL, 0);
-
-        updateCDMenu(NULL, 0, false);
-      }
-      break;
-    }
-
     case IDM_PAUSE_GAME:
       _fsm.pauseGame();
       break;
@@ -2003,6 +1967,28 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       if (cmd >= IDM_RA_MENUSTART && cmd < IDM_RA_MENUEND)
       {
         RA_InvokeDialog(cmd);
+      }
+      else if (cmd >= IDM_CD_DISC_FIRST && cmd <= IDM_CD_DISC_LAST)
+      {
+        if (_core.getCurrentDiscIndex() != cmd - IDM_CD_DISC_FIRST)
+        {
+          _core.setCurrentDiscIndex(cmd - IDM_CD_DISC_FIRST);
+
+          char buffer[128];
+          MENUITEMINFO info;
+          memset(&info, 0, sizeof(info));
+          info.cbSize = sizeof(info);
+          info.fMask = MIIM_TYPE | MIIM_DATA;
+          info.dwTypeData = buffer;
+          info.cch = sizeof(buffer);
+          GetMenuItemInfo(_menu, cmd, false, &info);
+
+          std::string path = util::replaceFileName(_gamePath, buffer);
+          romLoaded(&_logger, _system, path, NULL, 0);
+
+          updateCDMenu(NULL, 0, false);
+        }
+        break;
       }
 
       break;

@@ -79,17 +79,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #define IDM_WINDOW_3X                           54002
 #define IDM_WINDOW_4X                           54003
 
-// Keep those in increasing order
-#define IDM_CD_DISC_1                           55000
-#define IDM_CD_DISC_2                           55001
-#define IDM_CD_DISC_3                           55002
-#define IDM_CD_DISC_4                           55003
-#define IDM_CD_DISC_5                           55004
-#define IDM_CD_DISC_6                           55005
-#define IDM_CD_DISC_7                           55006
-#define IDM_CD_DISC_8                           55007
-#define IDM_CD_DISC_9                           55008
-#define IDM_CD_DISC_10                          55009
+#define IDM_CD_DISC_FIRST                       55000
+#define IDM_CD_DISC_LAST                        55019
 
 #define IDM_LOAD_GAME                           40000
 #define IDM_RESET_GAME                          40001

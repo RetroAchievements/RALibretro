@@ -30,7 +30,6 @@ static bool cdrom_open_cue(cdrom_t& cdrom, const char* filename, int track)
 {
   FILE* fp;
   char buffer[1024], *file, *ptr, *ptr2;
-  char buffer2[_MAX_PATH];
   int num;
 
   memset(&cdrom, 0, sizeof(cdrom_t));
@@ -106,14 +105,13 @@ static int cdrom_get_cd_names_m3u(const char* filename, char names[][128], int m
 {
   int count = 0;
   char buffer[2048], *ptr, *start;
-  char first_file[_MAX_PATH];
   FILE* fp = fopen(filename, "r");
   if (fp)
   {
-    fread(buffer, 1, sizeof(buffer), fp);
+    size_t bytes = fread(buffer, 1, sizeof(buffer), fp);
     fclose(fp);
 
-    buffer[sizeof(buffer) - 1] = '\0';
+    buffer[bytes] = '\0';
     ptr = buffer;
     do
     {
@@ -121,13 +119,18 @@ static int cdrom_get_cd_names_m3u(const char* filename, char names[][128], int m
       while (*ptr && *ptr != '\n')
         ++ptr;
 
-      if (!*ptr)
-        break;
+      if (ptr > start)
+      {
+        char* name = names[count];
+        memcpy(name, start, ptr - start);
+        name[ptr - start] = '\0';
+        ++count;
 
-      *ptr = '\0';
-      strcpy(names[count], start);
-      ++count;
-      if (count == max_names)
+        if (count == max_names)
+          break;
+      }
+
+      if (!*ptr)
         break;
 
       ++ptr;

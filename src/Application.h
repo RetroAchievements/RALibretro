@@ -150,4 +150,5 @@ protected:
   MemoryBank _memoryBanks[2];
 
   HMENU _menu;
+  HMENU _cdRomMenu;
 };
