@@ -19,7 +19,6 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Input.h"
 
-#include "Dialog.h"
 #include "jsonsax/jsonsax.h"
 
 #define KEYBOARD_ID -1
@@ -56,10 +55,7 @@ bool Input::init(libretro::LoggerComponent* logger)
   keyb._joystick = NULL;
   keyb._joystickName = "Keyboard";
   keyb._ports = 0;
-  keyb._lastDir[0] = keyb._lastDir[1] = keyb._lastDir[2] =
-  keyb._lastDir[3] = keyb._lastDir[4] = keyb._lastDir[5] = -1;
   keyb._sensitivity = 0.5f;
-  memset(keyb._state, 0, sizeof(keyb._state));
 
   _pads.insert(std::make_pair(keyb._id, keyb));
   _logger->info(TAG "Controller %s (%s) added", keyb._controllerName, keyb._joystickName);
@@ -85,10 +81,12 @@ void Input::reset()
   ControllerInfo none;
   none._description = "None";
   none._id = RETRO_DEVICE_NONE;
+  memset(none._state, 0, sizeof(none._state));
 
   ControllerInfo retropad;
   retropad._description = "RetroPad";
   retropad._id = RETRO_DEVICE_JOYPAD;
+  memset(retropad._state, 0, sizeof(retropad._state));
 
   for (unsigned i = 0; i < kMaxPorts; i++)
   {
@@ -140,10 +138,7 @@ void Input::addController(int which)
     pad._controllerName = SDL_GameControllerName(pad._controller);
     pad._joystickName = SDL_JoystickName(pad._joystick);
     pad._ports = 0;
-    pad._lastDir[0] = pad._lastDir[1] = pad._lastDir[2] =
-    pad._lastDir[3] = pad._lastDir[4] = pad._lastDir[5] = -1;
     pad._sensitivity = 0.5f;
-    memset(pad._state, 0, sizeof(pad._state));
 
     _pads.insert(std::make_pair(pad._id, pad));
     _logger->info(TAG "Controller %s (%s) added", pad._controllerName, pad._joystickName);
@@ -205,17 +200,12 @@ void Input::autoAssign()
   }
 }
 
-void Input::buttonEvent(Button button, bool pressed)
+void Input::buttonEvent(int port, Button button, bool pressed)
 {
-  auto found = _pads.find(KEYBOARD_ID);
+  int rbutton;
 
-  if (found != _pads.end())
+  switch (button)
   {
-    Pad* pad = &found->second;
-    unsigned rbutton;
-
-    switch (button)
-    {
     case Button::kUp:     rbutton = RETRO_DEVICE_ID_JOYPAD_UP; break;
     case Button::kDown:   rbutton = RETRO_DEVICE_ID_JOYPAD_DOWN; break;
     case Button::kLeft:   rbutton = RETRO_DEVICE_ID_JOYPAD_LEFT; break;
@@ -233,10 +223,9 @@ void Input::buttonEvent(Button button, bool pressed)
     case Button::kSelect: rbutton = RETRO_DEVICE_ID_JOYPAD_SELECT; break;
     case Button::kStart:  rbutton = RETRO_DEVICE_ID_JOYPAD_START; break;
     default:              return;
-    }
-
-    pad->_state[rbutton] = pressed;
   }
+
+  _info[port][_devices[port]]._state[rbutton] = pressed;
 }
 
 void Input::processEvent(const SDL_Event* event)
@@ -249,15 +238,6 @@ void Input::processEvent(const SDL_Event* event)
 
   case SDL_CONTROLLERDEVICEREMOVED:
     removeController(event);
-    break;
-
-  case SDL_CONTROLLERBUTTONUP:
-  case SDL_CONTROLLERBUTTONDOWN:
-    controllerButton(event);
-    break;
-
-  case SDL_CONTROLLERAXISMOTION:
-    controllerAxis(event);
     break;
   }
 }
@@ -344,21 +324,59 @@ void Input::poll()
 
 int16_t Input::read(unsigned port, unsigned device, unsigned index, unsigned id)
 {
-  (void)index;
+  return (port < kMaxPorts &&_info[port][_devices[port]]._state[id]) ? 32767 : 0;
+}
 
-  uint64_t bit = 1ULL << port;
+KeyBinds::Binding Input::captureButtonPress()
+{
+  KeyBinds::Binding desc = { 0, 0, KeyBinds::Binding::Type::None, 0 };
 
-  for (const auto& pair: _pads)
+  if (!_pads.empty())
   {
-    const Pad* pad = &pair.second;
-
-    if ((pad->_ports & bit) != 0 && _devices[port] != 0)
+    SDL_GameControllerUpdate();
+    for (const auto& pair : _pads)
     {
-      return pad->_state[id] ? 32767 : 0;
+      if (!pair.second._controller)
+        continue;
+
+      for (int i = 0; i < SDL_CONTROLLER_BUTTON_MAX; ++i)
+      {
+        if (SDL_GameControllerGetButton(pair.second._controller, static_cast<SDL_GameControllerButton>(i)))
+        {
+          desc.joystick_id = pair.second._id;
+          desc.type = KeyBinds::Binding::Type::Button;
+          desc.button = i;
+          return desc;
+        }
+      }
+
+      int threshold = static_cast<int>(32767 * pair.second._sensitivity);
+
+      for (int i = 0; i < SDL_CONTROLLER_AXIS_MAX; ++i)
+      {
+        const auto value = SDL_GameControllerGetAxis(pair.second._controller, static_cast<SDL_GameControllerAxis>(i));
+        if (value < -threshold)
+        {
+          desc.joystick_id = pair.second._id;
+          desc.type = KeyBinds::Binding::Type::Axis;
+          desc.button = i;
+          desc.modifiers = 0xFF;
+          return desc;
+        }
+        else if (value > threshold)
+        {
+          desc.joystick_id = pair.second._id;
+          desc.type = KeyBinds::Binding::Type::Axis;
+          desc.button = i;
+          if (i != SDL_CONTROLLER_AXIS_TRIGGERLEFT && i != SDL_CONTROLLER_AXIS_TRIGGERRIGHT)
+            desc.modifiers = 1;
+          return desc;
+        }
+      }
     }
   }
 
-  return 0;
+  return desc;
 }
 
 void Input::addController(const SDL_Event* event)
@@ -384,130 +402,10 @@ void Input::removeController(const SDL_Event* event)
   }
 }
 
-void Input::controllerButton(const SDL_Event* event)
+float Input::getJoystickSensitivity(int joystickId)
 {
-  auto found = _pads.find(event->cbutton.which);
-
-  if (found != _pads.end())
-  {
-    Pad* pad = &found->second;
-    unsigned button;
-
-    switch (event->cbutton.button)
-    {
-    case SDL_CONTROLLER_BUTTON_DPAD_UP:       button = RETRO_DEVICE_ID_JOYPAD_UP; break;
-    case SDL_CONTROLLER_BUTTON_DPAD_DOWN:     button = RETRO_DEVICE_ID_JOYPAD_DOWN; break;
-    case SDL_CONTROLLER_BUTTON_DPAD_LEFT:     button = RETRO_DEVICE_ID_JOYPAD_LEFT; break;
-    case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:    button = RETRO_DEVICE_ID_JOYPAD_RIGHT; break;
-    case SDL_CONTROLLER_BUTTON_Y:             button = RETRO_DEVICE_ID_JOYPAD_X; break;
-    case SDL_CONTROLLER_BUTTON_X:             button = RETRO_DEVICE_ID_JOYPAD_Y; break;
-    case SDL_CONTROLLER_BUTTON_B:             button = RETRO_DEVICE_ID_JOYPAD_A; break;
-    case SDL_CONTROLLER_BUTTON_A:             button = RETRO_DEVICE_ID_JOYPAD_B; break;
-    case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:  button = RETRO_DEVICE_ID_JOYPAD_L; break;
-    case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER: button = RETRO_DEVICE_ID_JOYPAD_R; break;
-    case SDL_CONTROLLER_BUTTON_LEFTSTICK:     button = RETRO_DEVICE_ID_JOYPAD_L3; break;
-    case SDL_CONTROLLER_BUTTON_RIGHTSTICK:    button = RETRO_DEVICE_ID_JOYPAD_R3; break;
-    case SDL_CONTROLLER_BUTTON_BACK:          button = RETRO_DEVICE_ID_JOYPAD_SELECT; break;
-    case SDL_CONTROLLER_BUTTON_START:         button = RETRO_DEVICE_ID_JOYPAD_START; break;
-    case SDL_CONTROLLER_BUTTON_GUIDE:         // fallthrough
-    default:                                  return;
-    }
-
-    pad->_state[button] = event->cbutton.state == SDL_PRESSED;
-  }
-}
-
-void Input::controllerAxis(const SDL_Event* event)
-{
-  auto found = _pads.find(event->caxis.which);
-
-  if (found != _pads.end())
-  {
-    Pad* pad = &found->second;
-    int threshold = 32767 * pad->_sensitivity;
-    int positive, negative;
-    int button;
-    int *last_dir;
-
-    switch (event->caxis.axis)
-    {
-    case SDL_CONTROLLER_AXIS_LEFTX:
-    case SDL_CONTROLLER_AXIS_LEFTY:
-    case SDL_CONTROLLER_AXIS_RIGHTX:
-    case SDL_CONTROLLER_AXIS_RIGHTY:
-      switch (event->caxis.axis)
-      {
-      case SDL_CONTROLLER_AXIS_LEFTX:
-        positive = RETRO_DEVICE_ID_JOYPAD_RIGHT;
-        negative = RETRO_DEVICE_ID_JOYPAD_LEFT;
-        last_dir = pad->_lastDir + 0;
-        break;
-
-      case SDL_CONTROLLER_AXIS_LEFTY:
-        positive = RETRO_DEVICE_ID_JOYPAD_DOWN;
-        negative = RETRO_DEVICE_ID_JOYPAD_UP;
-        last_dir = pad->_lastDir + 1;
-        break;
-
-      case SDL_CONTROLLER_AXIS_RIGHTX:
-        positive = RETRO_DEVICE_ID_JOYPAD_RIGHT;
-        negative = RETRO_DEVICE_ID_JOYPAD_LEFT;
-        last_dir = pad->_lastDir + 2;
-        break;
-
-      case SDL_CONTROLLER_AXIS_RIGHTY:
-        positive = RETRO_DEVICE_ID_JOYPAD_DOWN;
-        negative = RETRO_DEVICE_ID_JOYPAD_UP;
-        last_dir = pad->_lastDir + 3;
-        break;
-      }
-
-      if (event->caxis.value < -threshold)
-      {
-        button = negative;
-      }
-      else if (event->caxis.value > threshold)
-      {
-        button = positive;
-      }
-      else
-      {
-        button = -1;
-      }
-
-      break;
-
-    case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
-    case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
-      if (event->caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT)
-      {
-        button = RETRO_DEVICE_ID_JOYPAD_L2;
-        last_dir = pad->_lastDir + 4;
-      }
-      else
-      {
-        button = RETRO_DEVICE_ID_JOYPAD_R2;
-        last_dir = pad->_lastDir + 5;
-      }
-
-      break;
-
-    default:
-      return;
-    }
-
-    if (*last_dir != -1)
-    {
-      pad->_state[*last_dir] = false;
-    }
-
-    if (event->caxis.value < -threshold || event->caxis.value > threshold)
-    {
-      pad->_state[button] = true;
-    }
-
-    *last_dir = button;
-  }
+  auto found = _pads.find(joystickId);
+  return (found != _pads.end()) ? found->second._sensitivity : 0.0f;
 }
 
 std::string Input::serialize()
@@ -560,89 +458,6 @@ void Input::deserialize(const char* json)
     
     return 0;
   });
-}
-
-void Input::showDialog()
-{
-  int selectedDevice[kMaxPorts];
-  int selectedPad[kMaxPorts];
-
-  for (unsigned port = 0; port < kMaxPorts; port++)
-  {
-    selectedDevice[port] = _devices[port];
-
-    uint64_t bit = 1ULL << port;
-    int selected = 0;
-    selectedPad[port] = 0;
-
-    for (const auto& pair: _pads)
-    {
-      selected++;
-      const Pad* pad = &pair.second;
-
-      if ((pad->_ports & bit) != 0)
-      {
-        selectedPad[port] = selected;
-        break;
-      }
-    }
-  }
-
-  const WORD WIDTH = 280;
-  const WORD LINE = 15;
-
-  Dialog db;
-  db.init("Input Settings");
-
-  WORD y = 0;
-  DWORD id = 0;
-
-  for (unsigned port = 0; port < kMaxPorts; port++)
-  {
-    char label[32];
-    snprintf(label, sizeof(label), "Port %u", port + 1);
-    db.addLabel(label, 0, y, WIDTH / 3 - 5, 8);
-
-    db.addCombobox(40000 + id, WIDTH / 3 + 5, y, WIDTH / 3 - 10, LINE, 5, s_getType, (void*)&_info[port], &selectedDevice[port]);
-
-    db.addCombobox(50000 + id, WIDTH * 2 / 3 + 5, y, WIDTH / 3 - 5, LINE, 5, s_getPad, (void*)&_pads, &selectedPad[port]);
-
-    y += LINE;
-    id++;
-  }
-
-  db.addButton("OK", IDOK, WIDTH - 55 - 50, y, 50, 14, true);
-  db.addButton("Cancel", IDCANCEL, WIDTH - 50, y, 50, 14, false);
-
-  _updated = db.show();
-
-  if (_updated)
-  {
-    for (auto& pair: _pads)
-    {
-      Pad* pad = &pair.second;
-      pad->_ports = 0;
-    }
-
-    for (unsigned port = 0; port < kMaxPorts; port++)
-    {
-      _devices[port] = selectedDevice[port];
-
-      uint64_t bit = 1ULL << port;
-      int selected = selectedPad[port];
-
-      for (auto& pair: _pads)
-      {
-        Pad* pad = &pair.second;
-
-        if (--selected == 0)
-        {
-          pad->_ports |= bit;
-          break;
-        }
-      }
-    }
-  }
 }
 
 const char* Input::s_getType(int index, void* udata)

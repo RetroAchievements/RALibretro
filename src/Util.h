@@ -37,6 +37,7 @@ namespace util
   std::string fileName(const std::string& path);
   std::string fileNameWithExtension(const std::string& path);
   std::string extension(const std::string& path);
+  std::string replaceFileName(const std::string& originalPath, const char* newFileName);
   std::string openFileDialog(HWND hWnd, const char* extensionsFilter);
   std::string saveFileDialog(HWND hWnd, const char* extensionsFilter);
   const void* toRgb(Logger* logger, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format);

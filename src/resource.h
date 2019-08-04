@@ -67,6 +67,9 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #define IDM_WINDOW_3X                           54002
 #define IDM_WINDOW_4X                           54003
 
+#define IDM_CD_DISC_FIRST                       55000
+#define IDM_CD_DISC_LAST                        55019
+
 #define IDM_LOAD_GAME                           40000
 #define IDM_RESET_GAME                          40001
 #define IDM_EXIT                                40002
@@ -79,3 +82,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #define IDM_TURBO_GAME                          40009
 #define IDM_LOAD_STATE                          40010
 #define IDM_SAVE_STATE                          40011
+#define IDM_CD_ROM                              40012
+#define IDM_CD_OPEN_TRAY                        40013
+#define IDM_INPUT_CONTROLLER_1                  40014
+#define IDM_INPUT_CONTROLLER_2                  40015

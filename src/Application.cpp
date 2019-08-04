@@ -29,6 +29,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <RA_Resource.h>
 
 #include "About.h"
+#include "CdRom.h"
 #include "KeyBinds.h"
 #include "Util.h"
 
@@ -37,6 +38,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "resource.h"
 
+#include <assert.h>
 #include <time.h>
 #include <sys/stat.h>
 
@@ -259,6 +261,9 @@ bool Application::init(const char* title, int width, int height)
     g_mainWindow = wminfo.info.win.window;
 
     _menu = LoadMenu(NULL, "MAIN");
+    _cdRomMenu = GetSubMenu(GetSubMenu(_menu, 0), 10);
+    assert(GetMenuItemID(_cdRomMenu, 0) == IDM_CD_OPEN_TRAY);
+
     SetMenu(g_mainWindow, _menu);
 
     loadCores(&_config, &_logger);
@@ -276,6 +281,7 @@ bool Application::init(const char* title, int width, int height)
   _validSlots = 0;
   lastHardcore = hardcore();
   updateMenu();
+  updateCDMenu(NULL, 0, true);
   return true;
 
 error:
@@ -316,20 +322,41 @@ void Application::run()
 
       case SDL_CONTROLLERDEVICEADDED:
       case SDL_CONTROLLERDEVICEREMOVED:
-      case SDL_CONTROLLERBUTTONUP:
-      case SDL_CONTROLLERBUTTONDOWN:
-      case SDL_CONTROLLERAXISMOTION:
         _input.processEvent(&event);
         break;
-      
+
+      case SDL_CONTROLLERBUTTONUP:
+      case SDL_CONTROLLERBUTTONDOWN:
+      {
+        unsigned extra;
+        KeyBinds::Action action = _keybinds.translate(&event.cbutton, &extra);
+        handle(action, extra);
+        break;
+      }
+
+      case SDL_CONTROLLERAXISMOTION:
+      {
+        KeyBinds::Action action1, action2;
+        unsigned extra1, extra2;
+        _keybinds.translate(&event.caxis, _input, &action1, &extra1, &action2, &extra2);
+        if (action1 != action2)
+          handle(action1, extra1);
+        handle(action2, extra2);
+        break;
+      }
+
       case SDL_SYSWMEVENT:
         handle(&event.syswm);
         break;
       
       case SDL_KEYUP:
       case SDL_KEYDOWN:
-        handle(&event.key);
+      {
+        unsigned extra;
+        KeyBinds::Action action = _keybinds.translate(&event.key, &extra);
+        handle(action, extra);
         break;
+      }
 
       case SDL_WINDOWEVENT:
         handle(&event.window);
@@ -435,6 +462,10 @@ void Application::saveConfiguration()
   // recent items
   json += "\"recent\":";
   json += serializeRecentList();
+
+  // bindings
+  json += ",\"bindings\":";
+  json += _keybinds.serializeBindings();
 
   // window position
   const Uint32 flags = SDL_GetWindowFlags(_window);
@@ -560,7 +591,7 @@ void Application::updateMenu()
     IDM_PAUSE_GAME, IDM_RESUME_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
-    IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
+    IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   static const UINT start_items[] =
@@ -570,7 +601,7 @@ void Application::updateMenu()
 
   static const UINT core_loaded_items[] =
   {
-    IDM_LOAD_GAME, IDM_EXIT, IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_ABOUT
+    IDM_LOAD_GAME, IDM_EXIT, IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_ABOUT
   };
 
   static const UINT game_running_items[] =
@@ -578,7 +609,7 @@ void Application::updateMenu()
     IDM_LOAD_GAME, IDM_PAUSE_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
-    IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
+    IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   static const UINT game_paused_items[] =
@@ -586,7 +617,7 @@ void Application::updateMenu()
     IDM_LOAD_GAME, IDM_RESUME_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
-    IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
+    IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   static const UINT game_turbo_items[] =
@@ -594,7 +625,7 @@ void Application::updateMenu()
     IDM_LOAD_GAME, IDM_PAUSE_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
-    IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
+    IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   enableItems(all_items, sizeof(all_items) / sizeof(all_items[0]), MF_DISABLED);
@@ -748,6 +779,8 @@ bool Application::loadGame(const std::string& path)
 
   if (!romLoaded(&_logger, _system, path, data, size))
   {
+    updateCDMenu(NULL, 0, true);
+
     _gameFileName.clear();
 
     _core.unloadGame();
@@ -763,6 +796,17 @@ bool Application::loadGame(const std::string& path)
   if (data)
   {
     free(data);
+  }
+
+  if (_core.getNumDiscs() == 0)
+  {
+    updateCDMenu(NULL, 0, true);
+  }
+  else
+  {
+    char names[10][128];
+    int count = cdrom_get_cd_names(path.c_str(), names, sizeof(names) / sizeof(names[0]));
+    updateCDMenu(names, count, true);
   }
 
   _gamePath = path;
@@ -1236,6 +1280,14 @@ void Application::loadGame()
 
   if (!path.empty())
   {
+    /* disc-based system may append discs to the playlist, have to reload core to work around that */
+    if (_core.getNumDiscs() > 0)
+    {
+      std::string coreName = _coreName;
+      _fsm.unloadCore();
+      _fsm.loadCore(coreName);
+    }
+
     _fsm.loadGame(path);
   }
 }
@@ -1304,6 +1356,75 @@ void Application::enableRecent()
 
     info.dwTypeData = (char*)"Empty";
     SetMenuItemInfo(_menu, id, false, &info);
+  }
+}
+
+void Application::updateCDMenu(const char names[][128], int count, bool updateLabels)
+{
+  size_t i = 0;
+  size_t coreDiscCount = _core.getNumDiscs();
+
+  size_t menuItemCount = GetMenuItemCount(_cdRomMenu);
+  while (menuItemCount > coreDiscCount + 1)
+    DeleteMenu(_cdRomMenu, --menuItemCount, MF_BYPOSITION);
+
+  while (menuItemCount < coreDiscCount + 1)
+  {
+    AppendMenu(_cdRomMenu, MF_STRING, IDM_CD_DISC_FIRST + menuItemCount - 1, "Empty");
+    ++menuItemCount;
+  }
+
+  if (coreDiscCount == 0)
+  {
+    EnableMenuItem(_cdRomMenu, IDM_CD_OPEN_TRAY, MF_DISABLED);
+  }
+  else
+  {
+    unsigned selectedDisc = _core.getCurrentDiscIndex();
+    bool trayOpen = _core.getTrayOpen();
+    char buffer[128];
+
+    MENUITEMINFO info;
+    memset(&info, 0, sizeof(info));
+    info.cbSize = sizeof(info);
+    GetMenuItemInfo(_menu, IDM_CD_OPEN_TRAY, false, &info);
+    info.fMask = MIIM_TYPE | MIIM_DATA;
+    info.dwTypeData = trayOpen ? "Close Tray" : "Open Tray";
+    SetMenuItemInfo(_menu, IDM_CD_OPEN_TRAY, false, &info);
+
+    for (; i < coreDiscCount; i++)
+    {
+      UINT id = IDM_CD_DISC_FIRST + i;
+
+      MENUITEMINFO info;
+      memset(&info, 0, sizeof(info));
+      info.cbSize = sizeof(info);
+      info.fMask = MIIM_TYPE | MIIM_DATA | MIIM_STATE;
+      info.dwTypeData = buffer;
+      info.cch = sizeof(buffer);
+      GetMenuItemInfo(_menu, id, false, &info);
+
+      if (updateLabels)
+      {
+        if ((int)i < count)
+        {
+          info.dwTypeData = (char*)names[i];
+        }
+        else
+        {
+          sprintf(buffer, "Disc %d", (i + 1));
+          info.dwTypeData = buffer;
+        }
+      }
+
+      info.fState = (i == selectedDisc) ? MFS_CHECKED : MFS_UNCHECKED;
+      if (!trayOpen)
+        info.fState |= MF_DISABLED;
+
+      SetMenuItemInfo(_menu, id, false, &info);
+    }
+
+    EnableMenuItem(_menu, IDM_CD_OPEN_TRAY, MF_ENABLED);
   }
 }
 
@@ -1711,6 +1832,13 @@ void Application::loadConfiguration()
           return -1;
         }
       }
+      else if (ud->key == "bindings" && event == JSONSAX_OBJECT)
+      {
+        if (!ud->self->_keybinds.deserializeBindings(str))
+        {
+          return -1;
+        }
+      }
 
       return 0;
     });
@@ -1812,6 +1940,11 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       break;
     }
     
+    case IDM_CD_OPEN_TRAY:
+      _core.setTrayOpen(!_core.getTrayOpen());
+      updateCDMenu(NULL, 0, false);
+      break;
+
     case IDM_PAUSE_GAME:
       _fsm.pauseGame();
       break;
@@ -1867,9 +2000,17 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       break;
 
     case IDM_INPUT_CONFIG:
-      _input.showDialog();
+      _keybinds.showHotKeyDialog(_input);
       break;
-    
+
+    case IDM_INPUT_CONTROLLER_1:
+      _keybinds.showControllerDialog(_input, 0);
+      break;
+
+    case IDM_INPUT_CONTROLLER_2:
+      _keybinds.showControllerDialog(_input, 1);
+      break;
+
     case IDM_VIDEO_CONFIG:
       _video.showDialog();
       break;
@@ -1894,6 +2035,27 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       {
         RA_InvokeDialog(cmd);
       }
+      else if (cmd >= IDM_CD_DISC_FIRST && cmd <= IDM_CD_DISC_LAST)
+      {
+        if (_core.getCurrentDiscIndex() != cmd - IDM_CD_DISC_FIRST)
+        {
+          _core.setCurrentDiscIndex(cmd - IDM_CD_DISC_FIRST);
+
+          char buffer[128];
+          MENUITEMINFO info;
+          memset(&info, 0, sizeof(info));
+          info.cbSize = sizeof(info);
+          info.fMask = MIIM_TYPE | MIIM_DATA;
+          info.dwTypeData = buffer;
+          info.cch = sizeof(buffer);
+          GetMenuItemInfo(_menu, cmd, false, &info);
+
+          std::string path = util::replaceFileName(_gamePath, buffer);
+          romLoaded(&_logger, _system, path, NULL, 0);
+
+          updateCDMenu(NULL, 0, false);
+        }
+      }
       else if (cmd >= IDM_SYSTEM_FIRST && cmd <= IDM_SYSTEM_LAST)
       {
         System system;
@@ -1915,39 +2077,41 @@ void Application::handle(const SDL_WindowEvent* window)
   }
 }
 
-void Application::handle(const SDL_KeyboardEvent* key)
+void Application::handle(const KeyBinds::Action action, unsigned extra)
 {
-  unsigned extra;
-
-  switch (_keybinds.translate(key, &extra))
+  switch (action)
   {
   case KeyBinds::Action::kNothing:          break;
+
   // Joypad buttons
-  case KeyBinds::Action::kButtonUp:         _input.buttonEvent(Input::Button::kUp, extra != 0); break;
-  case KeyBinds::Action::kButtonDown:       _input.buttonEvent(Input::Button::kDown, extra != 0); break;
-  case KeyBinds::Action::kButtonLeft:       _input.buttonEvent(Input::Button::kLeft, extra != 0); break;
-  case KeyBinds::Action::kButtonRight:      _input.buttonEvent(Input::Button::kRight, extra != 0); break;
-  case KeyBinds::Action::kButtonX:          _input.buttonEvent(Input::Button::kX, extra != 0); break;
-  case KeyBinds::Action::kButtonY:          _input.buttonEvent(Input::Button::kY, extra != 0); break;
-  case KeyBinds::Action::kButtonA:          _input.buttonEvent(Input::Button::kA, extra != 0); break;
-  case KeyBinds::Action::kButtonB:          _input.buttonEvent(Input::Button::kB, extra != 0); break;
-  case KeyBinds::Action::kButtonL:          _input.buttonEvent(Input::Button::kL, extra != 0); break;
-  case KeyBinds::Action::kButtonR:          _input.buttonEvent(Input::Button::kR, extra != 0); break;
-  case KeyBinds::Action::kButtonL2:         _input.buttonEvent(Input::Button::kL2, extra != 0); break;
-  case KeyBinds::Action::kButtonR2:         _input.buttonEvent(Input::Button::kR2, extra != 0); break;
-  case KeyBinds::Action::kButtonL3:         _input.buttonEvent(Input::Button::kL3, extra != 0); break;
-  case KeyBinds::Action::kButtonR3:         _input.buttonEvent(Input::Button::kR3, extra != 0); break;
-  case KeyBinds::Action::kButtonSelect:     _input.buttonEvent(Input::Button::kSelect, extra != 0); break;
-  case KeyBinds::Action::kButtonStart:      _input.buttonEvent(Input::Button::kStart, extra != 0); break;
+  case KeyBinds::Action::kButtonUp:         _input.buttonEvent(extra >> 8, Input::Button::kUp, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonDown:       _input.buttonEvent(extra >> 8, Input::Button::kDown, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonLeft:       _input.buttonEvent(extra >> 8, Input::Button::kLeft, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonRight:      _input.buttonEvent(extra >> 8, Input::Button::kRight, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonX:          _input.buttonEvent(extra >> 8, Input::Button::kX, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonY:          _input.buttonEvent(extra >> 8, Input::Button::kY, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonA:          _input.buttonEvent(extra >> 8, Input::Button::kA, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonB:          _input.buttonEvent(extra >> 8, Input::Button::kB, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonL:          _input.buttonEvent(extra >> 8, Input::Button::kL, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonR:          _input.buttonEvent(extra >> 8, Input::Button::kR, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonL2:         _input.buttonEvent(extra >> 8, Input::Button::kL2, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonR2:         _input.buttonEvent(extra >> 8, Input::Button::kR2, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonL3:         _input.buttonEvent(extra >> 8, Input::Button::kL3, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonR3:         _input.buttonEvent(extra >> 8, Input::Button::kR3, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonSelect:     _input.buttonEvent(extra >> 8, Input::Button::kSelect, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonStart:      _input.buttonEvent(extra >> 8, Input::Button::kStart, (extra & 0xFF) != 0); break;
+
   // State management
   case KeyBinds::Action::kSaveState:        saveState(extra); break;
   case KeyBinds::Action::kLoadState:        loadState(extra); break;
+
   // Window size
   case KeyBinds::Action::kSetWindowSize1:   resizeWindow(1); break;
   case KeyBinds::Action::kSetWindowSize2:   resizeWindow(2); break;
   case KeyBinds::Action::kSetWindowSize3:   resizeWindow(3); break;
   case KeyBinds::Action::kSetWindowSize4:   resizeWindow(4); break;
   case KeyBinds::Action::kToggleFullscreen: toggleFullscreen(); break;
+
   // Emulation speed
   case KeyBinds::Action::kStep:
     _fsm.step();
@@ -1984,13 +2148,13 @@ void Application::handle(const SDL_KeyboardEvent* key)
     break;
 
   case KeyBinds::Action::kFastForward:
-    if (_fsm.currentState() == Fsm::State::GameTurbo)
+    if (extra)
     {
-      _fsm.normal();
+      _fsm.turbo();
     }
     else
     {
-      _fsm.turbo();
+      _fsm.normal();
     }
 
     break;
