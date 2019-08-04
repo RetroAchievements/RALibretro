@@ -10,7 +10,7 @@
 
 # GLOBALS #####################################################################
 SUPPORTED_CORES=(
-    fbalpha fceumm gambatte genesis_plus_gx handy mednafen_ngp
+    fbalpha fceumm gambatte genesis_plus_gx handy mednafen_ngp mednafen_psx
     mednafen_supergrafx mednafen_vb mgba picodrive snes9x stella
     prosystem
 )

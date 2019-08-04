@@ -275,6 +275,17 @@ std::string util::extension(const std::string& path)
   }
 }
 
+std::string util::replaceFileName(const std::string& originalPath, const char* newFileName)
+{
+  std::string newPath = originalPath;
+  const int ndx = newPath.find_last_of('\\');
+  if (ndx == std::string::npos)
+    return newFileName;
+
+  newPath.replace(newPath.begin() + ndx + 1, newPath.end(), newFileName);
+  return newPath;
+}
+
 std::string util::openFileDialog(HWND hWnd, const char* extensionsFilter)
 {
   char path[_MAX_PATH];
