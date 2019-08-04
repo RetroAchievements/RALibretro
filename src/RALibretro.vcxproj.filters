@@ -114,6 +114,9 @@
     <ClCompile Include="RAInterface\RA_Interface.cpp">
       <Filter>Source Files\RAInterface</Filter>
     </ClCompile>
+    <ClCompile Include="CdRom.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="About.h">

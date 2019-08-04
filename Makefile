@@ -50,6 +50,7 @@ OBJS=\
 	src/speex/resample.o \
 	src/About.o \
 	src/Application.o \
+	src/CdRom.o \
 	src/Emulator.o \
 	src/Fsm.o \
 	src/Git.o \

@@ -94,6 +94,7 @@ protected:
   void        enableItems(const UINT* items, size_t count, UINT enable);
   void        enableSlots();
   void        enableRecent();
+  void        updateCDMenu(const char names[][128], int count, bool updateLabels);
   void        registerMemoryRegion(unsigned* max, unsigned bank, void* data, size_t size);
   std::string getSRamPath();
   std::string getStatePath(unsigned ndx);
@@ -112,7 +113,7 @@ protected:
   void        toggleFullscreen();
   void        handle(const SDL_SysWMEvent* syswm);
   void        handle(const SDL_WindowEvent* window);
-  void        handle(const SDL_KeyboardEvent* key);
+  void        handle(const KeyBinds::Action action, unsigned extra);
   void        loadConfiguration();
   void        saveConfiguration();
   std::string serializeRecentList();
@@ -149,4 +150,5 @@ protected:
   MemoryBank _memoryBanks[2];
 
   HMENU _menu;
+  HMENU _cdRomMenu;
 };

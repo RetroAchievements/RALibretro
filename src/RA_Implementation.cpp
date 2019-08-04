@@ -5,6 +5,7 @@
 #include "Git.h"
 
 extern HWND g_mainWindow;
+int g_activeGame;
 
 bool isGameActive();
 void getGameName(char name[], size_t len);
@@ -111,4 +112,19 @@ void RA_Init(HWND hWnd)
 
   // ensure titlebar text matches expected format
   RA_UpdateAppTitle("");
+}
+
+void RA_ActivateDisc(unsigned char* pExe, size_t nExeSize)
+{
+  int loadedGame = RA_IdentifyRom(pExe, nExeSize);
+  if (loadedGame != g_activeGame)
+  {
+    g_activeGame = loadedGame;
+    RA_ActivateGame(loadedGame);
+  }
+}
+
+void RA_DeactivateDisc()
+{
+  g_activeGame = 0;
 }

@@ -55,6 +55,12 @@ void Logger::vprintf(enum retro_log_level level, const char* fmt, va_list args)
   char line[RING_LOG_MAX_LINE_SIZE];
   size_t length = vsnprintf(line, sizeof(line), fmt, args);
 
+  if (length >= sizeof(line))
+  {
+    length = sizeof(line) - 1;
+    line[length - 1] = line[length - 2] = line[length - 3] = '.';
+  }
+
   while (length > 0 && line[length - 1] == '\n')
   {
     line[--length] = 0;
