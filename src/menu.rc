@@ -40,13 +40,13 @@ main MENU
         POPUP "Select Core"
         {
             MENUITEM "Beetle SGX (PC Engine)", IDM_SYSTEM_BEETLESGX
+            MENUITEM "Beetle PSX (PlayStation)", IDM_SYSTEM_MEDNAFENPSX
             MENUITEM "FCEUmm (Nintendo)", IDM_SYSTEM_FCEUMM
             MENUITEM "Final Burn Alpha (Neo Geo, CPS1, CPS2, CPS3)", IDM_SYSTEM_FBALPHA
             MENUITEM "Gambatte (Game Boy, Game Boy Color)", IDM_SYSTEM_GAMBATTE
             MENUITEM "Genesis Plus GX (Game Gear, Master System, Mega Drive)", IDM_SYSTEM_GENESISPLUSGX
             MENUITEM "Handy (Atari Lynx)", IDM_SYSTEM_HANDY
             MENUITEM "Mednafen NGP (Neo Geo Pocket)", IDM_SYSTEM_MEDNAFENNGP
-            //MENUITEM "Mednafen PSX (PlayStation)", IDM_SYSTEM_MEDNAFENPSX
             MENUITEM "Mednafen VB (Virtual Boy)", IDM_SYSTEM_MEDNAFENVB
             MENUITEM "mGBA (Game Boy Advance)", IDM_SYSTEM_MGBA
             MENUITEM "PicoDrive (Master System, Mega Drive)", IDM_SYSTEM_PICODRIVE
@@ -74,6 +74,11 @@ main MENU
         MENUITEM "Resume Game", IDM_RESUME_GAME
         MENUITEM "Turbo", IDM_TURBO_GAME
         MENUITEM "Reset Game", IDM_RESET_GAME
+        MENUITEM SEPARATOR
+        POPUP "CD-ROM"
+        {
+            MENUITEM "Open Tray", IDM_CD_OPEN_TRAY
+        }
         MENUITEM SEPARATOR
         POPUP "Save Game State"
         {

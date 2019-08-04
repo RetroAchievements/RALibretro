@@ -114,6 +114,9 @@
     <ClCompile Include="miniz\miniz_tdef.c">
       <Filter>Source Files\miniz</Filter>
     </ClCompile>
+    <ClCompile Include="CdRom.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="About.h">

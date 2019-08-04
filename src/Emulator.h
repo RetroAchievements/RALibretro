@@ -39,7 +39,7 @@ enum class Emulator
   kBeetleSgx,
   kGambatte,
   kMGBA,
-  kMednafenPsx,
+  kBeetlePsx,
   kMednafenNgp,
   kMednafenVb,
   kFBAlpha,
