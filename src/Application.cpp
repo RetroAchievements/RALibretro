@@ -322,20 +322,41 @@ void Application::run()
 
       case SDL_CONTROLLERDEVICEADDED:
       case SDL_CONTROLLERDEVICEREMOVED:
-      case SDL_CONTROLLERBUTTONUP:
-      case SDL_CONTROLLERBUTTONDOWN:
-      case SDL_CONTROLLERAXISMOTION:
         _input.processEvent(&event);
         break;
-      
+
+      case SDL_CONTROLLERBUTTONUP:
+      case SDL_CONTROLLERBUTTONDOWN:
+      {
+        unsigned extra;
+        KeyBinds::Action action = _keybinds.translate(&event.cbutton, &extra);
+        handle(action, extra);
+        break;
+      }
+
+      case SDL_CONTROLLERAXISMOTION:
+      {
+        KeyBinds::Action action1, action2;
+        unsigned extra1, extra2;
+        _keybinds.translate(&event.caxis, _input, &action1, &extra1, &action2, &extra2);
+        if (action1 != action2)
+          handle(action1, extra1);
+        handle(action2, extra2);
+        break;
+      }
+
       case SDL_SYSWMEVENT:
         handle(&event.syswm);
         break;
       
       case SDL_KEYUP:
       case SDL_KEYDOWN:
-        handle(&event.key);
+      {
+        unsigned extra;
+        KeyBinds::Action action = _keybinds.translate(&event.key, &extra);
+        handle(action, extra);
         break;
+      }
 
       case SDL_WINDOWEVENT:
         handle(&event.window);
@@ -441,6 +462,10 @@ void Application::saveConfiguration()
   // recent items
   json += "\"recent\":";
   json += serializeRecentList();
+
+  // bindings
+  json += ",\"bindings\":";
+  json += _keybinds.serializeBindings();
 
   // window position
   const Uint32 flags = SDL_GetWindowFlags(_window);
@@ -566,7 +591,7 @@ void Application::updateMenu()
     IDM_PAUSE_GAME, IDM_RESUME_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
-    IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
+    IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   static const UINT start_items[] =
@@ -576,7 +601,7 @@ void Application::updateMenu()
 
   static const UINT core_loaded_items[] =
   {
-    IDM_LOAD_GAME, IDM_EXIT, IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_ABOUT
+    IDM_LOAD_GAME, IDM_EXIT, IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_ABOUT
   };
 
   static const UINT game_running_items[] =
@@ -584,7 +609,7 @@ void Application::updateMenu()
     IDM_LOAD_GAME, IDM_PAUSE_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
-    IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
+    IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   static const UINT game_paused_items[] =
@@ -592,7 +617,7 @@ void Application::updateMenu()
     IDM_LOAD_GAME, IDM_RESUME_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
-    IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
+    IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   static const UINT game_turbo_items[] =
@@ -600,7 +625,7 @@ void Application::updateMenu()
     IDM_LOAD_GAME, IDM_PAUSE_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
-    IDM_CORE_CONFIG, IDM_INPUT_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
+    IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   enableItems(all_items, sizeof(all_items) / sizeof(all_items[0]), MF_DISABLED);
@@ -1759,6 +1784,13 @@ void Application::loadConfiguration()
           return -1;
         }
       }
+      else if (ud->key == "bindings" && event == JSONSAX_OBJECT)
+      {
+        if (!ud->self->_keybinds.deserializeBindings(str))
+        {
+          return -1;
+        }
+      }
 
       return 0;
     });
@@ -1941,9 +1973,17 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       break;
 
     case IDM_INPUT_CONFIG:
-      _input.showDialog();
+      _keybinds.showHotKeyDialog(_input);
       break;
-    
+
+    case IDM_INPUT_CONTROLLER_1:
+      _keybinds.showControllerDialog(_input, 0);
+      break;
+
+    case IDM_INPUT_CONTROLLER_2:
+      _keybinds.showControllerDialog(_input, 1);
+      break;
+
     case IDM_VIDEO_CONFIG:
       _video.showDialog();
       break;
@@ -2004,39 +2044,41 @@ void Application::handle(const SDL_WindowEvent* window)
   }
 }
 
-void Application::handle(const SDL_KeyboardEvent* key)
+void Application::handle(const KeyBinds::Action action, unsigned extra)
 {
-  unsigned extra;
-
-  switch (_keybinds.translate(key, &extra))
+  switch (action)
   {
   case KeyBinds::Action::kNothing:          break;
+
   // Joypad buttons
-  case KeyBinds::Action::kButtonUp:         _input.buttonEvent(Input::Button::kUp, extra != 0); break;
-  case KeyBinds::Action::kButtonDown:       _input.buttonEvent(Input::Button::kDown, extra != 0); break;
-  case KeyBinds::Action::kButtonLeft:       _input.buttonEvent(Input::Button::kLeft, extra != 0); break;
-  case KeyBinds::Action::kButtonRight:      _input.buttonEvent(Input::Button::kRight, extra != 0); break;
-  case KeyBinds::Action::kButtonX:          _input.buttonEvent(Input::Button::kX, extra != 0); break;
-  case KeyBinds::Action::kButtonY:          _input.buttonEvent(Input::Button::kY, extra != 0); break;
-  case KeyBinds::Action::kButtonA:          _input.buttonEvent(Input::Button::kA, extra != 0); break;
-  case KeyBinds::Action::kButtonB:          _input.buttonEvent(Input::Button::kB, extra != 0); break;
-  case KeyBinds::Action::kButtonL:          _input.buttonEvent(Input::Button::kL, extra != 0); break;
-  case KeyBinds::Action::kButtonR:          _input.buttonEvent(Input::Button::kR, extra != 0); break;
-  case KeyBinds::Action::kButtonL2:         _input.buttonEvent(Input::Button::kL2, extra != 0); break;
-  case KeyBinds::Action::kButtonR2:         _input.buttonEvent(Input::Button::kR2, extra != 0); break;
-  case KeyBinds::Action::kButtonL3:         _input.buttonEvent(Input::Button::kL3, extra != 0); break;
-  case KeyBinds::Action::kButtonR3:         _input.buttonEvent(Input::Button::kR3, extra != 0); break;
-  case KeyBinds::Action::kButtonSelect:     _input.buttonEvent(Input::Button::kSelect, extra != 0); break;
-  case KeyBinds::Action::kButtonStart:      _input.buttonEvent(Input::Button::kStart, extra != 0); break;
+  case KeyBinds::Action::kButtonUp:         _input.buttonEvent(extra >> 8, Input::Button::kUp, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonDown:       _input.buttonEvent(extra >> 8, Input::Button::kDown, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonLeft:       _input.buttonEvent(extra >> 8, Input::Button::kLeft, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonRight:      _input.buttonEvent(extra >> 8, Input::Button::kRight, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonX:          _input.buttonEvent(extra >> 8, Input::Button::kX, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonY:          _input.buttonEvent(extra >> 8, Input::Button::kY, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonA:          _input.buttonEvent(extra >> 8, Input::Button::kA, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonB:          _input.buttonEvent(extra >> 8, Input::Button::kB, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonL:          _input.buttonEvent(extra >> 8, Input::Button::kL, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonR:          _input.buttonEvent(extra >> 8, Input::Button::kR, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonL2:         _input.buttonEvent(extra >> 8, Input::Button::kL2, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonR2:         _input.buttonEvent(extra >> 8, Input::Button::kR2, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonL3:         _input.buttonEvent(extra >> 8, Input::Button::kL3, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonR3:         _input.buttonEvent(extra >> 8, Input::Button::kR3, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonSelect:     _input.buttonEvent(extra >> 8, Input::Button::kSelect, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kButtonStart:      _input.buttonEvent(extra >> 8, Input::Button::kStart, (extra & 0xFF) != 0); break;
+
   // State management
   case KeyBinds::Action::kSaveState:        saveState(extra); break;
   case KeyBinds::Action::kLoadState:        loadState(extra); break;
+
   // Window size
   case KeyBinds::Action::kSetWindowSize1:   resizeWindow(1); break;
   case KeyBinds::Action::kSetWindowSize2:   resizeWindow(2); break;
   case KeyBinds::Action::kSetWindowSize3:   resizeWindow(3); break;
   case KeyBinds::Action::kSetWindowSize4:   resizeWindow(4); break;
   case KeyBinds::Action::kToggleFullscreen: toggleFullscreen(); break;
+
   // Emulation speed
   case KeyBinds::Action::kStep:
     _fsm.step();
@@ -2073,13 +2115,13 @@ void Application::handle(const SDL_KeyboardEvent* key)
     break;
 
   case KeyBinds::Action::kFastForward:
-    if (_fsm.currentState() == Fsm::State::GameTurbo)
+    if (extra)
     {
-      _fsm.normal();
+      _fsm.turbo();
     }
     else
     {
-      _fsm.turbo();
+      _fsm.normal();
     }
 
     break;

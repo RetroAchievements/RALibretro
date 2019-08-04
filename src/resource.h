@@ -96,3 +96,5 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #define IDM_SAVE_STATE                          40011
 #define IDM_CD_ROM                              40012
 #define IDM_CD_OPEN_TRAY                        40013
+#define IDM_INPUT_CONTROLLER_1                  40014
+#define IDM_INPUT_CONTROLLER_2                  40015

@@ -113,7 +113,7 @@ protected:
   void        toggleFullscreen();
   void        handle(const SDL_SysWMEvent* syswm);
   void        handle(const SDL_WindowEvent* window);
-  void        handle(const SDL_KeyboardEvent* key);
+  void        handle(const KeyBinds::Action action, unsigned extra);
   void        loadConfiguration();
   void        saveConfiguration();
   std::string serializeRecentList();

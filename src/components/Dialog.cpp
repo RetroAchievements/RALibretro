@@ -23,7 +23,12 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 extern HWND g_mainWindow;
 
+// dynamically builds a DLGTEMPLATEEX to construct a dialog
 // https://blogs.msdn.microsoft.com/oldnewthing/20050429-00
+// https://docs.microsoft.com/en-us/windows/win32/dlgbox/dlgitemtemplateex
+
+#define DIALOG_MARGIN 5
+
 
 Dialog::Dialog()
 {
@@ -65,13 +70,13 @@ void Dialog::init(const char* title)
   write<DWORD>(0);
   write<DWORD>(WS_EX_WINDOWEDGE);
   write<DWORD>(DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP);
-  _numControls = (WORD*)((uint8_t*)_template + _size);
+  _numControls = (WORD*)(&((uint8_t*)_template)[16]);
   write<WORD>(0);
   write<WORD>(0);
   write<WORD>(0);
-  _width = (WORD*)((uint8_t*)_template + _size);
+  _width = (WORD*)(&((uint8_t*)_template)[22]);
   write<WORD>(0);
-  _height = (WORD*)((uint8_t*)_template + _size);
+  _height = (WORD*)(&((uint8_t*)_template)[24]);
   write<WORD>(0);
   writeWide(L"");
   writeWide(L"");
@@ -84,20 +89,26 @@ void Dialog::init(const char* title)
   writeWide(ncm.lfMessageFont.lfFaceName);
 }
 
-void Dialog::addCheckbox(const char* caption, DWORD id, WORD x, WORD y, WORD w, WORD h, bool* checked)
+void Dialog::writeDlgItemTemplateEx(DWORD helpId, DWORD exStyle, DWORD style, WORD x, WORD y, WORD cx, WORD cy,
+  DWORD id, DWORD windowClass, const char* title, WORD extraCount)
 {
   align(sizeof(DWORD));
-  write<DWORD>(0);
-  write<DWORD>(0);
-  write<DWORD>(BS_AUTOCHECKBOX | WS_TABSTOP | WS_CHILD | WS_VISIBLE);
-  write<WORD>(x + 5);
-  write<WORD>(y + 5);
-  write<WORD>(w);
-  write<WORD>(h);
+  write<DWORD>(helpId);
+  write<DWORD>(exStyle);
+  write<DWORD>(style);
+  write<WORD>(x + DIALOG_MARGIN);
+  write<WORD>(y + DIALOG_MARGIN);
+  write<WORD>(cx);
+  write<WORD>(cy);
   write<DWORD>(id);
-  write<DWORD>(0x0080ffff);
-  writeStr(caption);
-  write<WORD>(0);
+  write<DWORD>(windowClass);
+  writeStr(title);
+  write<WORD>(extraCount);
+}
+
+void Dialog::addCheckbox(const char* caption, DWORD id, WORD x, WORD y, WORD w, WORD h, bool* checked)
+{
+  writeDlgItemTemplateEx(0, 0, BS_AUTOCHECKBOX | WS_TABSTOP | WS_CHILD | WS_VISIBLE, x, y, w, h, id, 0x0080FFFF, caption, 0);
 
   ControlData cd;
   cd._type = kCheckbox;
@@ -110,18 +121,12 @@ void Dialog::addCheckbox(const char* caption, DWORD id, WORD x, WORD y, WORD w, 
 
 void Dialog::addLabel(const char* caption, WORD x, WORD y, WORD w, WORD h)
 {
-  align(sizeof(DWORD));
-  write<DWORD>(0);
-  write<DWORD>(0);
-  write<DWORD>(WS_CHILD | WS_VISIBLE);
-  write<WORD>(x + 5);
-  write<WORD>(y + 5);
-  write<WORD>(w);
-  write<WORD>(h);
-  write<DWORD>(-1);
-  write<DWORD>(0x0082FFFF);
-  writeStr(caption);
-  write<WORD>(0);
+  addLabel(caption, -1, x, y, w, h);
+}
+
+void Dialog::addLabel(const char* caption, DWORD id, WORD x, WORD y, WORD w, WORD h)
+{
+  writeDlgItemTemplateEx(0, 0, WS_CHILD | WS_VISIBLE, x, y, w, h, id, 0x0082FFFF, caption, 0);
 
   update(x, y, w, h);
 }
@@ -130,36 +135,14 @@ void Dialog::addButton(const char* caption, DWORD id, WORD x, WORD y, WORD w, WO
 {
   DWORD defStyle = isDefault ? BS_DEFPUSHBUTTON : 0;
 
-  align(sizeof(DWORD));
-  write<DWORD>(0);
-  write<DWORD>(0);
-  write<DWORD>(WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | defStyle);
-  write<WORD>(x + 5);
-  write<WORD>(y + 5);
-  write<WORD>(w);
-  write<WORD>(h);
-  write<DWORD>(id);
-  write<DWORD>(0x0080ffff);
-  writeStr(caption);
-  write<WORD>(0);
+  writeDlgItemTemplateEx(0, 0, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | defStyle, x, y, w, h, id, 0x0080FFFF, caption, 0);
 
   update(x, y, w, h);
 }
 
 void Dialog::addCombobox(DWORD id, WORD x, WORD y, WORD w, WORD h, WORD lines, GetOption get_option, void* udata, int* selected)
 {
-  align(sizeof(DWORD));
-  write<DWORD>(0);
-  write<DWORD>(0);
-  write<DWORD>(CBS_DROPDOWNLIST | WS_TABSTOP | WS_CHILD | WS_VISIBLE);
-  write<WORD>(x + 5);
-  write<WORD>(y + 5);
-  write<WORD>(w);
-  write<WORD>(h * lines);
-  write<DWORD>(id);
-  write<DWORD>(0x0085ffff);
-  writeWide(L"");
-  write<WORD>(0);
+  writeDlgItemTemplateEx(0, 0, CBS_DROPDOWNLIST | WS_TABSTOP | WS_CHILD | WS_VISIBLE, x, y, w, h * lines, id, 0x0085FFFF, "", 0);
 
   ControlData cd;
   cd._type = kCombobox;
@@ -174,21 +157,11 @@ void Dialog::addCombobox(DWORD id, WORD x, WORD y, WORD w, WORD h, WORD lines, G
 
 void Dialog::addEditbox(DWORD id, WORD x, WORD y, WORD w, WORD h, WORD lines, char* contents, size_t maxSize, bool readOnly)
 {
-  DWORD multiline = lines > 1 ? ES_MULTILINE : 0;
+  DWORD multiline = lines > 1 ? ES_MULTILINE|WS_VSCROLL : 0;
   DWORD ro = readOnly ? ES_READONLY : 0;
 
-  align(sizeof(DWORD));
-  write<DWORD>(0);
-  write<DWORD>(0);
-  write<DWORD>(WS_VSCROLL | WS_TABSTOP | WS_BORDER | ES_AUTOHSCROLL | WS_EX_CLIENTEDGE | multiline | ro | WS_TABSTOP | WS_CHILD | WS_VISIBLE);
-  write<WORD>(x + 5);
-  write<WORD>(y + 5);
-  write<WORD>(w);
-  write<WORD>(h * lines);
-  write<DWORD>(id);
-  write<DWORD>(0x0081ffff);
-  writeWide(L"");
-  write<WORD>(0);
+  writeDlgItemTemplateEx(0, 0, WS_TABSTOP | WS_BORDER | ES_AUTOHSCROLL | WS_EX_CLIENTEDGE | multiline | ro | WS_TABSTOP | WS_CHILD | WS_VISIBLE,
+    x, y, w, h * lines, id, 0x0081FFFF, "", 0);
 
   ControlData cd;
   cd._type = kEditbox;
@@ -227,6 +200,10 @@ void Dialog::write(void* data, size_t size)
 
     _template = t;
     _reserved = r;
+
+    _numControls = (WORD*)(&((uint8_t*)_template)[16]);
+    _width = (WORD*)(&((uint8_t*)_template)[22]);
+    _height = (WORD*)(&((uint8_t*)_template)[24]);
   }
 
   memcpy((uint8_t*)_template + _size, data, size);
@@ -363,12 +340,12 @@ INT_PTR CALLBACK Dialog::s_dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM
   case WM_COMMAND:
     if (LOWORD(wparam) == IDOK || LOWORD(wparam) == IDCANCEL)
     {
-      if (LOWORD(wparam) == IDOK)
-      {
-        self = (Dialog*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-        self->retrieveData(hwnd);
-      }
+      self = (Dialog*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
+      if (LOWORD(wparam) == IDOK)
+        self->retrieveData(hwnd);
+
+      self->markClosed(hwnd);
       EndDialog(hwnd, LOWORD(wparam));
       return TRUE;
     }
@@ -376,9 +353,20 @@ INT_PTR CALLBACK Dialog::s_dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM
     break;
 
   case WM_CLOSE:
+    self = (Dialog*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    self->markClosed(hwnd);
     DestroyWindow(hwnd);
     return TRUE;
   }
 
+  self = (Dialog*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+  if (self)
+    return self->dialogProc(hwnd, msg, wparam, lparam);
+
   return FALSE;
+}
+
+void Dialog::markClosed(HWND hwnd)
+{
+  SetWindowLongPtr(hwnd, GWLP_USERDATA, NULL);
 }
