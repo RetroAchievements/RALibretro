@@ -1601,6 +1601,8 @@ void Application::loadState(const std::string& path)
   free(data);
   RA_OnLoadState(path.c_str());
 
+  updateCDMenu(NULL, 0, true);
+
   unsigned width, height, pitch;
   enum retro_pixel_format format;
   _video.getFramebufferSize(&width, &height, &format);
