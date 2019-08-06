@@ -40,6 +40,11 @@ namespace libretro
   public:
     virtual void vprintf(enum retro_log_level level, const char* fmt, va_list args) = 0;
 
+    void setLogLevel(enum retro_log_level level)
+    {
+      _level = level;
+    }
+
     void printf(enum retro_log_level level, const char* fmt, ...)
     {
       va_list args;
@@ -50,6 +55,9 @@ namespace libretro
 
     void debug(const char* fmt, ...)
     {
+      if (_level > RETRO_LOG_DEBUG)
+        return;
+
       va_list args;
       va_start(args, fmt);
       vprintf(RETRO_LOG_DEBUG, fmt, args);
@@ -58,6 +66,9 @@ namespace libretro
 
     void info(const char* fmt, ...)
     {
+      if (_level > RETRO_LOG_INFO)
+        return;
+
       va_list args;
       va_start(args, fmt);
       vprintf(RETRO_LOG_INFO, fmt, args);
@@ -66,6 +77,9 @@ namespace libretro
 
     void warn(const char* fmt, ...)
     {
+      if (_level > RETRO_LOG_WARN)
+        return;
+
       va_list args;
       va_start(args, fmt);
       vprintf(RETRO_LOG_WARN, fmt, args);
@@ -79,6 +93,9 @@ namespace libretro
       vprintf(RETRO_LOG_ERROR, fmt, args);
       va_end(args);
     }
+
+  private:
+    enum retro_log_level _level = RETRO_LOG_INFO;
   };
 
   /**

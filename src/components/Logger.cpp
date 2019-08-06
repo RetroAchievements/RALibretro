@@ -40,6 +40,10 @@ bool Logger::init()
   _file = fopen("log.txt", "w");
 #endif
 
+#ifndef NDEBUG
+  setLogLevel(RETRO_LOG_DEBUG);
+#endif
+
   return true;
 }
 
