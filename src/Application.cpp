@@ -402,12 +402,9 @@ void Application::run()
       RA_DoAchievementsFrame();
     }
 
-    if (!RA_IsOverlayFullyVisible())
-    {
-      Gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      _video.draw();
-      SDL_GL_SwapWindow(_window);
-    }
+    Gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    _video.draw();
+    SDL_GL_SwapWindow(_window);
 
     if (RA_IsOverlayFullyVisible())
     {
