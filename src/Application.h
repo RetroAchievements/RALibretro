@@ -48,7 +48,7 @@ public:
   void destroy();
 
   // FSM
-  bool loadCore(Emulator emulator);
+  bool loadCore(const std::string& coreName);
   void updateMenu();
   bool loadGame(const std::string& path);
   void unloadCore();
@@ -82,7 +82,7 @@ protected:
   struct RecentItem
   {
     std::string path;
-    Emulator emulator;
+    std::string coreName;
     System system;
   };
 
@@ -99,7 +99,7 @@ protected:
   std::string getSRamPath();
   std::string getStatePath(unsigned ndx);
   std::string getConfigPath();
-  std::string getCoreConfigPath(Emulator emulator);
+  std::string getCoreConfigPath(const std::string& coreName);
   std::string getScreenshotPath();
   void        saveState(const std::string& path);
   void        saveState(unsigned ndx);
@@ -114,6 +114,7 @@ protected:
   void        handle(const SDL_SysWMEvent* syswm);
   void        handle(const SDL_WindowEvent* window);
   void        handle(const KeyBinds::Action action, unsigned extra);
+  void        buildSystemsMenu();
   void        loadConfiguration();
   void        saveConfiguration();
   std::string serializeRecentList();
@@ -121,7 +122,7 @@ protected:
   Fsm _fsm;
   bool lastHardcore;
 
-  Emulator _emulator;
+  std::string _coreName;
   System   _system;
 
   SDL_Window*       _window;

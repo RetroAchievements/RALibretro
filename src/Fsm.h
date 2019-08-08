@@ -31,9 +31,9 @@ public:
   const char* stateName(State state) const;
 #endif
 
-  bool loadCore(Emulator core);
+  bool loadCore(const_string core);
   bool loadGame(const_string path);
-  bool loadRecent(Emulator core, const_string path);
+  bool loadRecent(const_string core, const_string path);
   bool normal();
   bool pauseGame();
   bool pauseGameNoOvl();

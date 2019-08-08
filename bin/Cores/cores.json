@@ -1,0 +1,68 @@
+{
+  "fbalpha_libretro":{
+    "name": "FB Alpha",
+    "extensions": "zip",
+    "systems": [27]
+  },
+  "fceumm_libretro":{
+    "name": "FCEUmm",
+    "systems": [7]
+  },
+  "gambatte_libretro":{
+    "name": "Gambatte",
+    "systems": [4,6]
+  },
+  "genesis_plus_gx_libretro":{
+    "name": "Genesis Plus GX",
+    "extensions": "bin|gen|smd|md|sms",
+    "systems": [1,11]
+  },
+  "genesis_plus_gx_libretro":{
+    "name": "Genesis Plus GX",
+    "extensions": "gg|sg",
+    "systems": [15]
+  },
+  "handy_libretro":{
+    "name": "Handy",
+    "systems": [13]
+  },
+  "mednafen_ngp_libretro":{
+    "name": "Mednafen NeoPop",
+    "systems": [14]
+  },
+  "mednafen_psx_libretro":{
+    "name": "Beetle PSX",
+    "extensions": "m3u|cue",
+    "systems": [12]
+  },
+  "mednafen_supergrafx_libretro":{
+    "name": "Mednafen SuperGrafX",
+    "systems": [8]
+  },
+  "mednafen_vb_libretro":{
+    "name": "Mednafen VB",
+    "systems": [28]
+  },
+  "mgba_libretro":{
+    "name": "mGBA",
+    "extensions": "gba",
+    "systems": [5]
+  },
+  "picodrive_libretro":{
+    "name": "PicoDrive",
+    "extensions": "bin|gen|smd|md|sms",
+    "systems": [1,11]
+  },
+  "prosystem_libretro":{
+    "name": "ProSystem",
+    "systems": [51]
+  },
+  "snes9x_libretro":{
+    "name": "Snes9x",
+    "systems": [3]
+  },
+  "stella_libretro":{
+    "name": "Stella",
+    "systems": [25]
+  }
+}

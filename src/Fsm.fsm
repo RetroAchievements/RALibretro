@@ -67,13 +67,13 @@ fsm Fsm {
   }
 
   Start {
-    loadCore(Emulator core) => CoreLoaded {
+    loadCore(const_string core) => CoreLoaded {
       if (!ctx.loadCore(core)) {
         forbid;
       }
     }
 
-    loadRecent(Emulator core, const_string path) => loadCore(core) => loadGame(path);
+    loadRecent(const_string core, const_string path) => loadCore(core) => loadGame(path);
 
     quit() => Quit;
   }
@@ -81,7 +81,7 @@ fsm Fsm {
   Quit {}
 
   CoreLoaded {
-    loadCore(Emulator core) => unloadCore() => loadCore(core);
+    loadCore(const_string core) => unloadCore() => loadCore(core);
 
     unloadCore() => Start {
       ctx.unloadCore();
@@ -93,7 +93,7 @@ fsm Fsm {
       }
     }
 
-    loadRecent(Emulator core, const_string path) => unloadCore() => loadCore(core) => loadGame(path);
+    loadRecent(const_string core, const_string path) => unloadCore() => loadCore(core) => loadGame(path);
 
     quit() => unloadCore() => quit();
   }
@@ -125,11 +125,11 @@ fsm Fsm {
       }
     }
 
-    loadCore(Emulator core) => unloadGame() => unloadCore() => loadCore(core);
+    loadCore(const_string core) => unloadGame() => unloadCore() => loadCore(core);
 
     loadGame(const_string path) => unloadGame() => loadGame(path);
 
-    loadRecent(Emulator core, const_string path) => unloadGame() => loadRecent(core, path);
+    loadRecent(const_string core, const_string path) => unloadGame() => loadRecent(core, path);
 
     quit() => unloadGame() => quit();
   }
@@ -153,11 +153,11 @@ fsm Fsm {
       }
     }
 
-    loadCore(Emulator core) => unloadGame() => unloadCore() => loadCore(core);
+    loadCore(const_string core) => unloadGame() => unloadCore() => loadCore(core);
 
     loadGame(const_string path) => unloadGame() => loadGame(path);
 
-    loadRecent(Emulator core, const_string path) => unloadGame() => loadRecent(core, path);
+    loadRecent(const_string core, const_string path) => unloadGame() => loadRecent(core, path);
 
     quit() => unloadGame() => quit();
   }
@@ -181,11 +181,11 @@ fsm Fsm {
       }
     }
 
-    loadCore(Emulator core) => unloadGame() => unloadCore() => loadCore(core);
+    loadCore(const_string core) => unloadGame() => unloadCore() => loadCore(core);
 
     loadGame(const_string path) => unloadGame() => loadGame(path);
 
-    loadRecent(Emulator core, const_string path) => unloadGame() => loadRecent(core, path);
+    loadRecent(const_string core, const_string path) => unloadGame() => loadRecent(core, path);
 
     quit() => unloadGame() => quit();
   }
@@ -219,11 +219,11 @@ fsm Fsm {
       }
     }
 
-    loadCore(Emulator core) => unloadGame() => unloadCore() => loadCore(core);
+    loadCore(const_string core) => unloadGame() => unloadCore() => loadCore(core);
 
     loadGame(const_string path) => unloadGame() => loadGame(path);
 
-    loadRecent(Emulator core, const_string path) => unloadGame() => loadRecent(core, path);
+    loadRecent(const_string core, const_string path) => unloadGame() => loadRecent(core, path);
 
     quit() => unloadGame() => quit();
   }
