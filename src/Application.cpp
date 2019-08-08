@@ -25,8 +25,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "libretro/Core.h"
 #include "jsonsax/jsonsax.h"
 
-#include "RA_Integration/RA_Implementation/RA_Implementation.h"
-#include <RA_Resource.h>
+#include "RA_Interface.h"
 
 #include "About.h"
 #include "CdRom.h"
@@ -270,10 +269,8 @@ bool Application::init(const char* title, int width, int height)
 
     loadConfiguration();
 
-    RA_Init(g_mainWindow, RA_Libretro, git::getReleaseVersion());
-    RA_InitShared();
-    RA_AttemptLogin(true);
-    RebuildMenu();
+    extern void RA_Init(HWND hwnd);
+    RA_Init(g_mainWindow);
   }
 
   SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
@@ -405,52 +402,23 @@ void Application::run()
       RA_DoAchievementsFrame();
     }
 
-    if (!RA_IsOverlayFullyVisible())
+    Gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    _video.draw();
+    SDL_GL_SwapWindow(_window);
+
+    if (RA_IsOverlayFullyVisible())
     {
-      Gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      _video.draw();
-      SDL_GL_SwapWindow(_window);
+      ControllerInput input;
+      input.m_bUpPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP) != 0;
+      input.m_bDownPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN) != 0;
+      input.m_bLeftPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT) != 0;
+      input.m_bRightPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT) != 0;
+      input.m_bConfirmPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A) != 0;
+      input.m_bCancelPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B) != 0;
+      input.m_bQuitPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START) != 0;
+
+      RA_NavigateOverlay(&input);
     }
-
-    RA_HandleHTTPResults();
-
-    static Uint32 t0 = 0;
-
-    if (t0 == 0)
-    {
-      t0 = SDL_GetTicks();
-    }
-    else
-    {
-      Uint32 t1 = SDL_GetTicks();
-      HDC hdc = GetDC(g_mainWindow);
-
-      if (hdc != NULL)
-      {
-        ControllerInput input;
-        input.m_bUpPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP) != 0;
-        input.m_bDownPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN) != 0;
-        input.m_bLeftPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT) != 0;
-        input.m_bRightPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT) != 0;
-        input.m_bConfirmPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A) != 0;
-        input.m_bCancelPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B) != 0;
-        input.m_bQuitPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START) != 0;
-
-        RECT size;
-        GetClientRect(g_mainWindow, &size);
-
-        RA_UpdateRenderOverlay(hdc, &input, (t1 - t0) / 1000.0f, &size, false, _fsm.currentState() == Fsm::State::GamePaused);
-        ReleaseDC(g_mainWindow, hdc);
-      }
-      else
-      {
-        _logger.error(TAG "GetDC(g_mainWindow) returned NULL");
-      }
-
-      t0 = t1;
-    }
-
-    SDL_Delay(1);
   }
   while (_fsm.currentState() != Fsm::State::Quit);
 }
@@ -1405,7 +1373,7 @@ void Application::updateCDMenu(const char names[][128], int count, bool updateLa
     info.cbSize = sizeof(info);
     GetMenuItemInfo(_menu, IDM_CD_OPEN_TRAY, false, &info);
     info.fMask = MIIM_TYPE | MIIM_DATA;
-    info.dwTypeData = trayOpen ? "Close Tray" : "Open Tray";
+    info.dwTypeData = (LPSTR)(trayOpen ? "Close Tray" : "Open Tray");
     SetMenuItemInfo(_menu, IDM_CD_OPEN_TRAY, false, &info);
 
     for (; i < coreDiscCount; i++)
@@ -2010,9 +1978,10 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       }
       else if (cmd >= IDM_CD_DISC_FIRST && cmd <= IDM_CD_DISC_LAST)
       {
-        if (_core.getCurrentDiscIndex() != cmd - IDM_CD_DISC_FIRST)
+        unsigned newDiscIndex = cmd - IDM_CD_DISC_FIRST;
+        if (_core.getCurrentDiscIndex() != newDiscIndex)
         {
-          _core.setCurrentDiscIndex(cmd - IDM_CD_DISC_FIRST);
+          _core.setCurrentDiscIndex(newDiscIndex);
 
           char buffer[128];
           MENUITEMINFO info;

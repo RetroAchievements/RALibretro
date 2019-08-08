@@ -29,7 +29,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 static bool cdrom_open_cue(cdrom_t& cdrom, const char* filename, int track)
 {
   FILE* fp;
-  char buffer[1024], *file, *ptr, *ptr2;
+  char buffer[1024], *file = buffer, *ptr, *ptr2;
   int num;
 
   memset(&cdrom, 0, sizeof(cdrom_t));

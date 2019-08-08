@@ -76,7 +76,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)miniz;$(ProjectDir)RA_Integration\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)miniz;$(ProjectDir)RAInterface;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -100,7 +100,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)miniz;$(ProjectDir)RA_Integration\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)miniz;$(ProjectDir)RAInterface;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -145,8 +145,8 @@
     <ClCompile Include="miniz\miniz_tdef.c" />
     <ClCompile Include="miniz\miniz_tinfl.c" />
     <ClCompile Include="miniz\miniz_zip.c" />
+    <ClCompile Include="RAInterface\RA_Interface.cpp" />
     <ClCompile Include="RA_Implementation.cpp" />
-    <ClCompile Include="RA_Integration\src\RA_Interface.cpp" />
     <ClCompile Include="speex\resample.c" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
