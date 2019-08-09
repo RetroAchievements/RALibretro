@@ -91,11 +91,13 @@ bool loadCores(Config* config, Logger* logger)
     CoreInfo* core;
     std::string key;
     Config* config;
+    Logger* logger;
   };
 
   Deserialize ud;
   ud.core = NULL;
   ud.config = config;
+  ud.logger = logger;
 
   jsonsax_parse((char*)data, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
   {
@@ -108,7 +110,7 @@ bool loadCores(Config* config, Logger* logger)
       std::string path = ud->config->getRootFolder();
       path += "Cores\\" + ud->key + ".dll";
 
-      FILE* file = fopen(path.c_str(), "r");
+      FILE* file = util::openFile(ud->logger, path, "r");
       if (file)
       {
         fclose(file);
@@ -321,7 +323,7 @@ static bool romLoadPsx(Logger* logger, const std::string& path)
   uint8_t* exe_raw;
   int size, remaining;
 
-  if (!cdrom_open(cdrom, path.c_str(), 1, 1))
+  if (!cdrom_open(cdrom, path.c_str(), 1, 1, logger))
     return false;
 
   exe_name = NULL;
