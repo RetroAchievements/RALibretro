@@ -99,70 +99,74 @@ bool loadCores(Config* config, Logger* logger)
     CoreInfo* core;
     std::string key;
     Config* config;
+    Logger* logger;
+    bool inCore;
+    bool inSystems;
   };
 
   Deserialize ud;
   ud.core = NULL;
   ud.config = config;
+  ud.logger = logger;
+  ud.inCore = false;
+  ud.inSystems = false;
 
   jsonsax_parse((char*)data, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
   {
     auto ud = (Deserialize*)udata;
 
-    if (event == JSONSAX_KEY)
+    switch (event)
     {
-      ud->key = std::string(str, num);
+      case JSONSAX_KEY:
+        ud->key = std::string(str, num);
 
-      std::string path = ud->config->getRootFolder();
-      path += "Cores\\" + ud->key + ".dll";
-
-      s_coreInfos.emplace_back();
-      ud->core = &s_coreInfos.back();
-      ud->core->filename = ud->key;
-      ud->core->filetime = util::fileTime(path);
-      ud->core->servertime = 0;
-    }
-    else if (event == JSONSAX_OBJECT)
-    {
-      if (ud->core != NULL)
-      {
-        jsonsax_result_t res2 = jsonsax_parse((char*)str, ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+        if (!ud->inCore)
         {
-          auto ud = (Deserialize*)udata;
+          std::string path = ud->config->getRootFolder();
+          path += "Cores\\" + ud->key + ".dll";
 
-          if (event == JSONSAX_KEY)
+          s_coreInfos.emplace_back();
+          ud->core = &s_coreInfos.back();
+          ud->core->filename = ud->key;
+          ud->core->filetime = util::fileTime(path);
+          ud->core->servertime = 0;
+        }
+        break;
+
+      case JSONSAX_OBJECT:
+        if (ud->core != NULL)
+        {
+          ud->inCore = (num == 1);
+        }
+        break;
+
+      case JSONSAX_STRING:
+        if (ud->inCore && ud->core != NULL)
+        {
+          if (ud->key == "name")
+            ud->core->name = std::string(str, num);
+          else if (ud->key == "extensions")
+            ud->core->extensions = std::string(str, num);
+        }
+        break;
+
+      case JSONSAX_ARRAY:
+        if (ud->inCore && ud->core != NULL)
+        {
+          if (ud->key == "systems")
           {
-            ud->key = std::string(str, num);
+            ud->inSystems = (num == 1);
           }
-          else if (event == JSONSAX_STRING)
-          {
-            if (ud->key == "name")
-              ud->core->name = std::string(str, num);
-            else if (ud->key == "extensions")
-              ud->core->extensions = std::string(str, num);
-          }
-          else if (event == JSONSAX_ARRAY)
-          {
-            if (ud->key == "systems")
-            {
-              jsonsax_result_t res3 = jsonsax_parse((char*)str, ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
-              {
-                auto ud = (Deserialize*)udata;
+        }
+        break;
 
-                if (event == JSONSAX_NUMBER)
-                {
-                  std::string system = std::string(str, num);
-                  ud->core->systems.insert(static_cast<System>(std::stoi(system)));
-                }
-
-                return 0;
-              });
-            }
-          }
-
-          return 0;
-        });
-      }
+      case JSONSAX_NUMBER:
+        if (ud->inSystems && ud->core != NULL)
+        {
+          std::string system = std::string(str, num);
+          ud->core->systems.insert(static_cast<System>(std::stoi(system)));
+        }
+        break;
     }
 
     return 0;
