@@ -470,3 +470,9 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
 
   return ok;
 }
+
+void romUnloaded(Logger* logger)
+{
+  RA_DeactivateDisc();
+  RA_ActivateGame(0);
+}
