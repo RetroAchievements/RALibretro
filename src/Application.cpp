@@ -1556,7 +1556,7 @@ void Application::loadState(const std::string& path)
   free(data);
   RA_OnLoadState(path.c_str());
 
-  updateCDMenu(NULL, 0, true);
+  updateCDMenu(NULL, 0, false);
 
   unsigned width, height, pitch;
   enum retro_pixel_format format;
