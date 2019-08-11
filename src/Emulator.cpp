@@ -526,7 +526,7 @@ protected:
       if (pair.second->filetime)
       {
         struct tm tm;
-        localtime_s(&tm, &pair.second->filetime);
+        gmtime_s(&tm, &pair.second->filetime);
         std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", &tm);
         SetWindowText(hLocalTime, buffer);
         SetWindowText(hUpdate, "Update");
@@ -542,7 +542,7 @@ protected:
       if (pair.second->servertime)
       {
         struct tm tm;
-        localtime_s(&tm, &pair.second->servertime);
+        gmtime_s(&tm, &pair.second->servertime);
         std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", &tm);
         SetWindowText(hServerTime, buffer);
 
@@ -552,7 +552,9 @@ protected:
         }
         else
         {
-          EnableWindow(hUpdate, (pair.second->servertime > pair.second->filetime));
+          const auto roundedServerTime = pair.second->servertime / 86400;
+          const auto roundedFileTime = pair.second->filetime / 86400;
+          EnableWindow(hUpdate, (roundedServerTime > roundedFileTime));
         }
       }
       else
@@ -702,23 +704,20 @@ static void getCoreSystemTimes(Config* config, Logger* logger)
     while (*fileEnd && *fileEnd != '.')
       ++fileEnd;
 
-    time_t now = time(NULL);
     std::string coreName(fileStart, fileEnd - fileStart);
     for (auto& coreInfo : s_coreInfos)
     {
       if (coreInfo.filename == coreName)
       {
         struct tm tm;
-        localtime_s(&tm, &now);
+        memset(&tm, 0, sizeof(tm));
 
         int y, m, d;
         sscanf_s(dateStart, "%d-%d-%d", &y, &m, &d);
         tm.tm_year = y - 1900;
         tm.tm_mon = m - 1;
         tm.tm_mday = d;
-        tm.tm_hour = 0;
-        tm.tm_min = 0;
-        tm.tm_sec = 0;
+        tm.tm_isdst = -1;
 
         coreInfo.servertime = mktime(&tm);
       }
@@ -767,6 +766,10 @@ bool showCoresDialog(Config* config, Logger* logger)
   int selectedCoreIndex = 0;
   db.addCombobox(50000, 0, 0, 200, 16, db.numSystems, s_getCoreName, &db, &selectedCoreIndex);
   y += 20;
+
+  db.addLabel("Local", 170, y, 50, 14);
+  db.addLabel("Server", 230, y, 50, 14);
+  y += 10;
 
   for (int i = 0; i < maxSystemCoreCount; ++i)
   {
