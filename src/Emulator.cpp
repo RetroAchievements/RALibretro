@@ -21,9 +21,13 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "Emulator.h"
 
 #include "components\Config.h"
+#include "components\Dialog.h"
 #include "components\Logger.h"
 
 #include <jsonsax\jsonsax.h>
+
+#include <ctime>
+#include <map>
 
 #define TAG "[EMU] "
 
@@ -37,6 +41,8 @@ struct CoreInfo
   std::string filename;
   std::string extensions;
   std::set<System> systems;
+  time_t filetime;
+  time_t servertime;
 };
 
 static std::vector<CoreInfo> s_coreInfos;
@@ -108,19 +114,11 @@ bool loadCores(Config* config, Logger* logger)
       std::string path = ud->config->getRootFolder();
       path += "Cores\\" + ud->key + ".dll";
 
-      FILE* file = fopen(path.c_str(), "r");
-      if (file)
-      {
-        fclose(file);
-
-        s_coreInfos.emplace_back();
-        ud->core = &s_coreInfos.back();
-        ud->core->filename = ud->key;
-      }
-      else
-      {
-        ud->core = NULL;
-      }
+      s_coreInfos.emplace_back();
+      ud->core = &s_coreInfos.back();
+      ud->core->filename = ud->key;
+      ud->core->filetime = util::fileTime(path);
+      ud->core->servertime = 0;
     }
     else if (event == JSONSAX_OBJECT)
     {
@@ -176,16 +174,19 @@ void getAvailableSystems(std::set<System>& systems)
 {
   for (const auto& core : s_coreInfos)
   {
-    for (auto system : core.systems)
-      systems.insert(system);
+    if (core.filetime)
+    {
+      for (auto system : core.systems)
+        systems.insert(system);
+    }
   }
 }
 
-void getSystemCores(System system, std::set<std::string>& coreNames)
+void getAvailableSystemCores(System system, std::set<std::string>& coreNames)
 {
   for (const auto& core : s_coreInfos)
   {
-    if (core.systems.find(system) != core.systems.end())
+    if (core.filetime && core.systems.find(system) != core.systems.end())
       coreNames.insert(core.name);
   }
 }
@@ -469,4 +470,183 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
     RA_DeactivateDisc();
 
   return ok;
+}
+
+class CoreDialog : public Dialog
+{
+public:
+  System systemIds[NumConsoleIDs];
+  int numSystems = 0;
+  std::vector<std::string> coreNames;
+
+protected:
+
+  void updateCores(HWND hwnd)
+  {
+    const HWND hComboBox = GetDlgItem(hwnd, 50000);
+    const int selectedIndex = SendMessage(hComboBox, CB_GETCURSEL, 0, 0);
+    if (selectedIndex < 0)
+      return;
+
+    const System system = systemIds[selectedIndex];
+
+    std::map<std::string, const CoreInfo*> systemCores;
+    for (const auto& core : s_coreInfos)
+    {
+      if (core.systems.find(system) != core.systems.end())
+        systemCores.insert_or_assign(core.name, &core);
+    }
+
+    char buffer[64];
+    int index = 0;
+    for (const auto& pair : systemCores)
+    {
+      HWND hCoreName = GetDlgItem(hwnd, 51000 + index);
+      HWND hLocalTime = GetDlgItem(hwnd, 51100 + index);
+      HWND hServerTime = GetDlgItem(hwnd, 51200 + index);
+      HWND hUpdate = GetDlgItem(hwnd, 51300 + index);
+      HWND hDelete = GetDlgItem(hwnd, 51400 + index);
+
+      ShowWindow(hCoreName, SW_SHOW);
+      ShowWindow(hLocalTime, SW_SHOW);
+      ShowWindow(hServerTime, SW_SHOW);
+      ShowWindow(hUpdate, SW_SHOW);
+      ShowWindow(hDelete, SW_SHOW);
+
+      coreNames[index] = pair.second->filename;
+      ++index;
+
+      SetWindowText(hCoreName, pair.first.c_str());
+
+      if (pair.second->filetime)
+      {
+        const auto* tm = std::localtime(&pair.second->filetime);
+        std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", tm);
+        SetWindowText(hLocalTime, buffer);
+        SetWindowText(hUpdate, "Update");
+        EnableWindow(hDelete, TRUE);
+      }
+      else
+      {
+        SetWindowText(hLocalTime, "n/a");
+        SetWindowText(hUpdate, "Download");
+        EnableWindow(hDelete, FALSE);
+      }
+
+      if (pair.second->servertime)
+      {
+        const auto* tm = std::localtime(&pair.second->servertime);
+        std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", tm);
+        SetWindowText(hServerTime, buffer);
+
+        if (!pair.second->filetime)
+        {
+          EnableWindow(hUpdate, TRUE);
+        }
+        else
+        {
+          EnableWindow(hUpdate, (pair.second->servertime > pair.second->filetime));
+        }
+      }
+      else
+      {
+        SetWindowText(hServerTime, "n/a");
+        EnableWindow(hUpdate, FALSE);
+      }
+    }
+
+    for (; index < coreNames.size(); ++index)
+    {
+      HWND hCoreName = GetDlgItem(hwnd, 51000 + index);
+      HWND hLocalTime = GetDlgItem(hwnd, 51100 + index);
+      HWND hServerTime = GetDlgItem(hwnd, 51200 + index);
+      HWND hUpdate = GetDlgItem(hwnd, 51300 + index);
+      HWND hDelete = GetDlgItem(hwnd, 51400 + index);
+
+      ShowWindow(hCoreName, SW_HIDE);
+      ShowWindow(hLocalTime, SW_HIDE);
+      ShowWindow(hServerTime, SW_HIDE);
+      ShowWindow(hUpdate, SW_HIDE);
+      ShowWindow(hDelete, SW_HIDE);
+    }
+  }
+
+  void initControls(HWND hwnd) override
+  {
+    Dialog::initControls(hwnd);
+
+    updateCores(hwnd);
+  }
+
+  INT_PTR dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override
+  {
+    switch (msg)
+    {
+      case WM_COMMAND:
+        if (HIWORD(wparam) == CBN_SELCHANGE)
+        {
+          updateCores(hwnd);
+          return 0;
+        }
+        break;
+    }
+
+    return Dialog::dialogProc(hwnd, msg, wparam, lparam);
+  }
+};
+
+static const char* s_getCoreName(int index, void* udata)
+{
+  auto db = (CoreDialog*)udata;
+  if (index < db->numSystems)
+    return getSystemName(db->systemIds[index]);
+
+  return NULL;
+}
+
+void showCoresDialog()
+{
+  CoreDialog db;
+  db.init("Manage Cores");
+
+  std::map<std::string, System> allSystems;
+  int systemCoreCounts[NumConsoleIDs];
+  memset(systemCoreCounts, 0, sizeof(systemCoreCounts));
+  int maxSystemCoreCount = 0;
+
+  for (const auto& core : s_coreInfos)
+  {
+    for (auto system : core.systems)
+    {
+      allSystems.insert_or_assign(getSystemName(system), system);
+      if (++systemCoreCounts[(int)system] > maxSystemCoreCount)
+        maxSystemCoreCount = systemCoreCounts[(int)system];
+    }
+  }
+
+  for (const auto& pair : allSystems)
+    db.systemIds[db.numSystems++] = pair.second;
+
+  db.coreNames.resize(maxSystemCoreCount);
+
+  const DWORD WIDTH = 420;
+  WORD y = 0;
+
+  int selectedCoreIndex = 0;
+  db.addCombobox(50000, 0, 0, 200, 16, db.numSystems, s_getCoreName, &db, &selectedCoreIndex);
+  y += 20;
+
+  for (int i = 0; i < maxSystemCoreCount; ++i)
+  {
+    db.addLabel("Core Name", 51000 + i, 0, y + 3, 160, 14);
+    db.addLabel("Local Time", 51100 + i, 170, y + 3, 50, 14);
+    db.addLabel("Server Time", 51200 + i, 230, y + 3, 50, 14);
+    db.addButton("Update", 51300 + i, 290, y, 60, 14, false);
+    db.addButton("Delete", 51400 + i, 360, y, 60, 14, false);
+    y += 18;
+  }
+
+  db.addButton("OK", IDOK, WIDTH - 50, y, 50, 14, true);
+
+  db.show();
 }

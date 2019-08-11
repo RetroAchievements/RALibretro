@@ -58,9 +58,11 @@ class Logger;
 bool   loadCores(Config* config, Logger* logger);
 
 void   getAvailableSystems(std::set<System>& systems);
-void   getSystemCores(System system, std::set<std::string>& coreNames);
+void   getAvailableSystemCores(System system, std::set<std::string>& coreNames);
 int    encodeCoreName(const std::string& coreName, System system);
 const std::string& getCoreName(int encoded, System& system);
 
 System getSystem(const std::string& core_name, const std::string& game_path, libretro::Core* core);
 bool   romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size);
+
+void   showCoresDialog();

@@ -29,6 +29,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace util
 {
+  time_t      fileTime(const std::string& path);
   void*       loadFile(Logger* logger, const std::string& path, size_t* size);
   void*       loadZippedFile(Logger* logger, const std::string& path, size_t* size, std::string& unzippedFileName);
   bool        saveFile(Logger* logger, const std::string& path, const void* data, size_t size);

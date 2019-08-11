@@ -1655,7 +1655,7 @@ void Application::buildSystemsMenu()
   {
     System system = pair.second;
     systemCores.clear();
-    getSystemCores(system, systemCores);
+    getAvailableSystemCores(system, systemCores);
     if (systemCores.empty())
       continue;
 
@@ -1991,7 +1991,11 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     case IDM_WINDOW_4X:
       resizeWindow(cmd - IDM_WINDOW_1X + 1);
       break;
-    
+
+    case IDM_MANAGE_CORES:
+      showCoresDialog();
+      break;
+
     case IDM_EXIT:
       _fsm.quit();
       break;

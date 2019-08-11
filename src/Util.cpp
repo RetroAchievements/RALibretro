@@ -40,6 +40,15 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #define TAG "[UTL] "
 
+time_t util::fileTime(const std::string& path)
+{
+  struct stat filestat;
+  if (stat(path.c_str(), &filestat) != 0)
+    return 0;
+
+  return filestat.st_mtime;
+}
+
 void* util::loadFile(Logger* logger, const std::string& path, size_t* size)
 {
   void* data;
