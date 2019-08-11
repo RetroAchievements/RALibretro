@@ -195,7 +195,7 @@ void getAvailableSystemCores(System system, std::set<std::string>& coreNames)
 
 int encodeCoreName(const std::string& coreName, System system)
 {
-  for (int i = 0; i < s_coreInfos.size(); ++i)
+  for (size_t i = 0; i < s_coreInfos.size(); ++i)
   {
     if (s_coreInfos[i].name == coreName)
     {
@@ -215,8 +215,8 @@ int encodeCoreName(const std::string& coreName, System system)
 
 const std::string& getCoreName(int encoded, System& system)
 {
-  int i = encoded % 100;
-  int j = encoded / 100;
+  size_t i = encoded % 100;
+  size_t j = encoded / 100;
 
   if (i > s_coreInfos.size())
     i = 0;
@@ -480,6 +480,9 @@ public:
   System systemIds[NumConsoleIDs];
   int numSystems = 0;
   std::vector<std::string> coreNames;
+  Config* config;
+  Logger* logger;
+  bool modified = false;
 
 protected:
 
@@ -500,7 +503,7 @@ protected:
     }
 
     char buffer[64];
-    int index = 0;
+    size_t index = 0;
     for (const auto& pair : systemCores)
     {
       HWND hCoreName = GetDlgItem(hwnd, 51000 + index);
@@ -522,8 +525,9 @@ protected:
 
       if (pair.second->filetime)
       {
-        const auto* tm = std::localtime(&pair.second->filetime);
-        std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", tm);
+        struct tm tm;
+        localtime_s(&tm, &pair.second->filetime);
+        std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", &tm);
         SetWindowText(hLocalTime, buffer);
         SetWindowText(hUpdate, "Update");
         EnableWindow(hDelete, TRUE);
@@ -537,8 +541,9 @@ protected:
 
       if (pair.second->servertime)
       {
-        const auto* tm = std::localtime(&pair.second->servertime);
-        std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", tm);
+        struct tm tm;
+        localtime_s(&tm, &pair.second->servertime);
+        std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", &tm);
         SetWindowText(hServerTime, buffer);
 
         if (!pair.second->filetime)
@@ -573,6 +578,53 @@ protected:
     }
   }
 
+  void deleteCore(HWND hwnd, const std::string& coreName)
+  {
+    std::string path = config->getRootFolder();
+    path += "Cores\\" + coreName + ".dll";
+    util::deleteFile(path);
+
+    for (auto& core : s_coreInfos)
+    {
+      if (core.filename == coreName)
+      {
+        core.filetime = 0;
+        modified = true;
+        break;
+      }
+    }
+
+    updateCores(hwnd);
+  }
+
+  void updateCore(HWND hwnd, const std::string& coreName)
+  {
+    std::string coreFile = coreName + ".dll";
+    std::string path = config->getRootFolder();
+    path += "Cores\\" + coreFile;
+    std::string zipPath = path + ".zip";
+
+    std::string url = BUILDBOT_URL;
+    url += coreName + ".dll.zip";
+    util::downloadFile(logger, url, zipPath);
+
+    util::unzipFile(logger, zipPath, coreFile, path);
+
+    util::deleteFile(zipPath);
+
+    for (auto& core : s_coreInfos)
+    {
+      if (core.filename == coreName)
+      {
+        core.filetime = util::fileTime(path);
+        modified = true;
+        break;
+      }
+    }
+
+    updateCores(hwnd);
+  }
+
   void initControls(HWND hwnd) override
   {
     Dialog::initControls(hwnd);
@@ -588,6 +640,27 @@ protected:
         if (HIWORD(wparam) == CBN_SELCHANGE)
         {
           updateCores(hwnd);
+          return 0;
+        }
+
+        int cmd = LOWORD(wparam);
+        if (cmd >= 51300 && cmd < 51500)
+        {
+          if (cmd >= 51400)
+          {
+            deleteCore(hwnd, coreNames[cmd - 51400]);
+          }
+          else
+          {
+            HWND hUpdate = GetDlgItem(hwnd, cmd);
+            SetWindowText(hUpdate, "Downloading...");
+            EnableWindow(hwnd, FALSE);
+
+            updateCore(hwnd, coreNames[cmd - 51300]);
+
+            EnableWindow(hwnd, TRUE);
+          }
+
           return 0;
         }
         break;
@@ -629,19 +702,23 @@ static void getCoreSystemTimes(Config* config, Logger* logger)
     while (*fileEnd && *fileEnd != '.')
       ++fileEnd;
 
+    time_t now = time(NULL);
     std::string coreName(fileStart, fileEnd - fileStart);
     for (auto& coreInfo : s_coreInfos)
     {
       if (coreInfo.filename == coreName)
       {
         struct tm tm;
-        memset(&tm, 0, sizeof(tm));
+        localtime_s(&tm, &now);
 
         int y, m, d;
-        sscanf(dateStart, "%d-%d-%d", &y, &m, &d);
+        sscanf_s(dateStart, "%d-%d-%d", &y, &m, &d);
         tm.tm_year = y - 1900;
         tm.tm_mon = m - 1;
         tm.tm_mday = d;
+        tm.tm_hour = 0;
+        tm.tm_min = 0;
+        tm.tm_sec = 0;
 
         coreInfo.servertime = mktime(&tm);
       }
@@ -655,10 +732,12 @@ static void getCoreSystemTimes(Config* config, Logger* logger)
   }
 }
 
-void showCoresDialog(Config* config, Logger* logger)
+bool showCoresDialog(Config* config, Logger* logger)
 {
   CoreDialog db;
   db.init("Manage Cores");
+  db.config = config;
+  db.logger = logger;
 
   getCoreSystemTimes(config, logger);
 
@@ -702,4 +781,6 @@ void showCoresDialog(Config* config, Logger* logger)
   db.addButton("OK", IDOK, WIDTH - 50, y, 50, 14, true);
 
   db.show();
+
+  return db.modified;
 }

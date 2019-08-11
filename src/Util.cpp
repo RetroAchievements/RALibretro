@@ -159,6 +159,33 @@ void* util::loadZippedFile(Logger* logger, const std::string& path, size_t* size
   return data;
 }
 
+void util::unzipFile(Logger* logger, const std::string& zipPath, const std::string& archiveFileName, const std::string& unzippedPath)
+{
+  mz_bool status;
+  mz_zip_archive zip_archive;
+  memset(&zip_archive, 0, sizeof(zip_archive));
+
+  status = mz_zip_reader_init_file(&zip_archive, zipPath.c_str(), 0);
+  if (!status)
+  {
+    logger->error(TAG "Error opening \"%s\": %s", zipPath.c_str(), strerror(errno));
+  }
+  else
+  {
+    status = mz_zip_reader_extract_file_to_file(&zip_archive, archiveFileName.c_str(), unzippedPath.c_str(), 0);
+    if (!status)
+    {
+      logger->error(TAG "Error decompressing file in \"%s\": %s", zipPath.c_str(), strerror(errno));
+    }
+    else
+    {
+      logger->error(TAG "Unzipped \"%s\" from \"%s\":\"%s\"", unzippedPath.c_str(), zipPath.c_str(), archiveFileName.c_str());
+    }
+
+    mz_zip_reader_end(&zip_archive);
+  }
+}
+
 std::string util::loadFile(Logger* logger, const std::string& path)
 {
   FILE* file = fopen(path.c_str(), "r");
@@ -199,6 +226,11 @@ bool util::saveFile(Logger* logger, const std::string& path, const void* data, s
   fclose(file);
   logger->info(TAG "Wrote %zu bytes to \"%s\"", size, path.c_str());
   return true;
+}
+
+void util::deleteFile(const std::string& path)
+{
+  remove(path.c_str());
 }
 
 bool util::downloadFile(Logger* logger, const std::string& url, const std::string& path)
