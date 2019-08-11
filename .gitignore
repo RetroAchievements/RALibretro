@@ -12,7 +12,9 @@
 /bin/*.txt
 /bin/RA_Integration.dll
 /bin/Assets
-/bin/Cores/*.json
+/bin/Cores/*libretro.json
+/bin/Cores/*.dll
+/bin/Cores/index.txt
 /bin/RACache
 /bin/Release
 /bin/Saves
