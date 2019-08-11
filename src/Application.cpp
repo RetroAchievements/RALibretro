@@ -1993,7 +1993,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       break;
 
     case IDM_MANAGE_CORES:
-      showCoresDialog();
+      showCoresDialog(&_config, &_logger);
       break;
 
     case IDM_EXIT:

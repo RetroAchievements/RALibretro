@@ -31,6 +31,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #define TAG "[EMU] "
 
+static const char* BUILDBOT_URL = "https://buildbot.libretro.com/nightly/windows/x86/latest/";
+
 //  Manages multi-disc games
 extern void RA_ActivateDisc(unsigned char* pExe, size_t nExeSize);
 extern void RA_DeactivateDisc();
@@ -604,10 +606,61 @@ static const char* s_getCoreName(int index, void* udata)
   return NULL;
 }
 
-void showCoresDialog()
+static void getCoreSystemTimes(Config* config, Logger* logger)
+{
+  std::string path = config->getRootFolder();
+  path += "Cores\\index.txt";
+  const time_t now = time(NULL);
+  const time_t lastCheck = util::fileTime(path);
+  if (now - lastCheck > 60 * 60 * 24) // 24 hours
+  {
+    std::string url = BUILDBOT_URL;
+    url += ".index-extended";
+    util::downloadFile(logger, url, path);
+  }
+
+  const std::string index = util::loadFile(logger, path);
+
+  const char* dateStart = index.c_str();
+  while (*dateStart)
+  {
+    const char* fileStart = dateStart + 20;
+    const char* fileEnd = fileStart;
+    while (*fileEnd && *fileEnd != '.')
+      ++fileEnd;
+
+    std::string coreName(fileStart, fileEnd - fileStart);
+    for (auto& coreInfo : s_coreInfos)
+    {
+      if (coreInfo.filename == coreName)
+      {
+        struct tm tm;
+        memset(&tm, 0, sizeof(tm));
+
+        int y, m, d;
+        sscanf(dateStart, "%d-%d-%d", &y, &m, &d);
+        tm.tm_year = y - 1900;
+        tm.tm_mon = m - 1;
+        tm.tm_mday = d;
+
+        coreInfo.servertime = mktime(&tm);
+      }
+    }
+
+    dateStart = fileEnd;
+    while (*dateStart && *dateStart != '\n')
+      ++dateStart;
+    if (*dateStart == '\n')
+      ++dateStart;
+  }
+}
+
+void showCoresDialog(Config* config, Logger* logger)
 {
   CoreDialog db;
   db.init("Manage Cores");
+
+  getCoreSystemTimes(config, logger);
 
   std::map<std::string, System> allSystems;
   int systemCoreCounts[NumConsoleIDs];

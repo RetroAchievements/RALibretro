@@ -29,6 +29,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #define WIN32_LEAN_AND_MEAN
 #include <commdlg.h>
 #include <shlobj.h>
+#include <winhttp.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define STBIW_ASSERT(x)
@@ -158,6 +159,26 @@ void* util::loadZippedFile(Logger* logger, const std::string& path, size_t* size
   return data;
 }
 
+std::string util::loadFile(Logger* logger, const std::string& path)
+{
+  FILE* file = fopen(path.c_str(), "r");
+  if (!file)
+  {
+    logger->error(TAG "Error opening \"%s\": %s", path.c_str(), strerror(errno));
+    return "";
+  }
+
+  std::string contents;
+  fseek(file, 0, SEEK_END);
+  contents.resize(ftell(file));
+  fseek(file, 0, SEEK_SET);
+  const auto bytesRead = fread((void*)contents.data(), 1, contents.capacity(), file);
+  contents.resize(bytesRead);
+  fclose(file);
+
+  return contents;
+}
+
 bool util::saveFile(Logger* logger, const std::string& path, const void* data, size_t size)
 {
   FILE* file = fopen(path.c_str(), "wb");
@@ -178,6 +199,123 @@ bool util::saveFile(Logger* logger, const std::string& path, const void* data, s
   fclose(file);
   logger->info(TAG "Wrote %zu bytes to \"%s\"", size, path.c_str());
   return true;
+}
+
+bool util::downloadFile(Logger* logger, const std::string& url, const std::string& path)
+{
+  bool bSuccess = false;
+  HINTERNET hSession = nullptr, hConnect = nullptr, hRequest = nullptr;
+
+  WCHAR wBuffer[1024];
+  size_t nTemp;
+
+  const char* hostName = url.c_str();
+  bool secure = false;
+  if (strncmp(hostName, "http://", 7) == 0)
+  {
+    hostName += 7;
+  }
+  else if (strncmp(hostName, "https://", 8) == 0)
+  {
+    hostName += 8;
+    secure = TRUE;
+  }
+
+  const char* pageStart = strchr(hostName, '/');
+
+  // Use WinHttpOpen to obtain a session handle.
+  hSession = WinHttpOpen(L"RALibRetro", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+    WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+
+  // Specify an HTTP server.
+  if (hSession == nullptr)
+  {
+    logger->error(TAG "Could not create HINTERNET: 0x%08X", GetLastError());
+  }
+  else
+  {
+    mbstowcs_s(&nTemp, wBuffer, sizeof(wBuffer) / sizeof(wBuffer[0]), hostName, pageStart - hostName);
+    hConnect = WinHttpConnect(hSession, wBuffer, secure ? INTERNET_DEFAULT_HTTPS_PORT : INTERNET_DEFAULT_HTTP_PORT, 0);
+
+    // Create an HTTP Request handle.
+    if (hConnect == nullptr)
+    {
+      logger->error(TAG "Could not connect to %.*s: 0x%08X", pageStart - hostName, hostName, GetLastError());
+    }
+    else
+    {
+      mbstowcs_s(&nTemp, wBuffer, sizeof(wBuffer)/sizeof(wBuffer[0]), pageStart + 1, strlen(pageStart + 1) + 1);
+
+      hRequest = WinHttpOpenRequest(hConnect, L"GET", wBuffer, nullptr, 
+        WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, secure ? WINHTTP_FLAG_SECURE : 0);
+
+      // Send a Request.
+      if (hRequest == nullptr)
+      {
+        logger->error("Could not create request for %s: 0x%08X", pageStart + 1, GetLastError());
+      }
+      else
+      {
+        BOOL bResults = WinHttpSendRequest(hRequest,
+          L"Content-Type: application/x-www-form-urlencoded", 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0);
+
+        if (!bResults || !WinHttpReceiveResponse(hRequest, nullptr))
+        {
+          logger->error("Error receiving response: 0x%08X", GetLastError());
+        }
+        else
+        {
+          FILE* file = fopen(path.c_str(), "wb");
+          if (file == NULL)
+          {
+            logger->error(TAG "Error opening file \"%s\": %s", path.c_str(), strerror(errno));
+          }
+          else
+          {
+            DWORD statusCode;
+            DWORD dwSize = sizeof(DWORD);
+            WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, WINHTTP_HEADER_NAME_BY_INDEX, &statusCode, &dwSize, WINHTTP_NO_HEADER_INDEX);
+
+            DWORD availableBytes = 0;
+            WinHttpQueryDataAvailable(hRequest, &availableBytes);
+
+            std::string sBuffer;
+
+            bSuccess = TRUE;
+            while (availableBytes > 0)
+            {
+              const DWORD bytesToRead = min(availableBytes, 4096);
+              sBuffer.resize(bytesToRead);
+
+              DWORD bytesFetched = 0U;
+              if (WinHttpReadData(hRequest, (void*)sBuffer.data(), bytesToRead, &bytesFetched))
+              {
+                fwrite(sBuffer.data(), 1, bytesFetched, file);
+              }
+              else
+              {
+                logger->error("Error reading response data: 0x%08X", GetLastError());
+                bSuccess = false;
+                break;
+              }
+
+              WinHttpQueryDataAvailable(hRequest, &availableBytes);
+            }
+
+            fclose(file);
+          }
+        }
+
+        WinHttpCloseHandle(hRequest);
+      }
+
+      WinHttpCloseHandle(hConnect);
+    }
+
+    WinHttpCloseHandle(hSession);
+  }
+
+  return bSuccess;
 }
 
 std::string util::jsonEscape(const std::string& str)
