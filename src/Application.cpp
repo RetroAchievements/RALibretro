@@ -500,6 +500,9 @@ bool Application::loadCore(const std::string& coreName)
 
   if (!_core.loadCore(path.c_str()))
   {
+    std::string message = "Could not load ";
+    message += coreName;
+    MessageBox(g_mainWindow, message.c_str(), "Failed", MB_OK);
     return false;
   }
 
