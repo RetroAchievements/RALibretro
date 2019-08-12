@@ -38,6 +38,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "resource.h"
 
 #include <assert.h>
+#include <chrono>
 #include <time.h>
 #include <sys/stat.h>
 
@@ -303,16 +304,16 @@ error:
   return false;
 }
 
-void Application::run()
+void Application::processEvents()
 {
+  SDL_Event event;
+  if (!SDL_PollEvent(&event))
+    return;
+
   do
   {
-    SDL_Event event;
-
-    while (SDL_PollEvent(&event))
+    switch (event.type)
     {
-      switch (event.type)
-      {
       case SDL_QUIT:
         _fsm.quit();
         break;
@@ -345,7 +346,7 @@ void Application::run()
       case SDL_SYSWMEVENT:
         handle(&event.syswm);
         break;
-      
+
       case SDL_KEYUP:
       case SDL_KEYDOWN:
       {
@@ -358,54 +359,180 @@ void Application::run()
       case SDL_WINDOWEVENT:
         handle(&event.window);
         break;
-      }
     }
+  } while (SDL_PollEvent(&event));
 
-    if (hardcore() != lastHardcore)
-    {
-      lastHardcore = hardcore();
-      updateMenu();
-    }
+  if (hardcore() != lastHardcore)
+  {
+    lastHardcore = hardcore();
+    updateMenu();
+  }
+}
 
-    int limit = 0;
-    bool audio = false;
+void Application::runSmoothed()
+{
+  const int SMOOTHING_FRAMES = 32;
+  uint32_t frameMicroseconds[SMOOTHING_FRAMES];
+  uint32_t totalMicroseconds;
+  int frameIndex = 0;
+  int nFaults = 0;
+  int skippedFrames = 0;
+  int totalSkippedFrames = 0;
 
-    switch (_fsm.currentState())
-    {
-    case Fsm::State::GameRunning:
-      limit = 1;
-      audio = true;
+  const auto tFirstFrameStart = std::chrono::steady_clock::now();
+
+  // do one frame with audio
+  _core.step(true);
+  RA_DoAchievementsFrame();
+
+  // render it
+  _video.draw();
+  SDL_GL_SwapWindow(_window);
+
+  const auto tFirstFrameEnd = std::chrono::steady_clock::now();
+  const auto tFirstFrameElapsed = std::chrono::duration_cast<std::chrono::microseconds>(tFirstFrameEnd - tFirstFrameStart);
+
+  for (int i = 0; i < SMOOTHING_FRAMES; ++i)
+    frameMicroseconds[i] = (uint32_t)tFirstFrameElapsed.count();
+  totalMicroseconds = frameMicroseconds[0] * SMOOTHING_FRAMES;
+
+  do
+  {
+    auto tFrameStart = std::chrono::steady_clock::now();
+
+    processEvents();
+    if (_fsm.currentState() != Fsm::State::GameRunning)
       break;
 
-    case Fsm::State::GamePaused:
-    case Fsm::State::GamePausedNoOvl:
-    default:
-      limit = 0;
-      audio = false;
-      break;
+    // do one frame with audio
+    _core.step(true);
+    RA_DoAchievementsFrame();
 
-    case Fsm::State::FrameStep:
-      limit = 1;
-      audio = false;
-      _fsm.resumeGame();
-      break;
-
-    case Fsm::State::GameTurbo:
-      limit = 5;
-      audio = false;
-      break;
-    }
-
-    for (int i = 0; i < limit; i++)
-    {
-      _core.step(audio);
-      RA_DoAchievementsFrame();
-    }
-
-    Gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // render it
     _video.draw();
     SDL_GL_SwapWindow(_window);
 
+    skippedFrames = 0;
+    do
+    {
+      const auto tFrameEnd = std::chrono::steady_clock::now();
+      const auto tFrameElapsed = std::chrono::duration_cast<std::chrono::microseconds>(tFrameEnd - tFrameStart);
+
+      if (tFrameElapsed > std::chrono::seconds(2))
+      {
+        // processEvents will block while the user is interacting with the UI. treat this frame
+        // as a fault and ignore it. If the framerate returns to normal, it'll be canceled out.
+        nFaults++;
+        break;
+      }
+
+      totalMicroseconds -= frameMicroseconds[frameIndex];
+      frameMicroseconds[frameIndex] = (uint32_t)tFrameElapsed.count();
+      totalMicroseconds += frameMicroseconds[frameIndex];
+      frameIndex++;
+      frameIndex %= SMOOTHING_FRAMES;
+
+      // if we're not reaching our target framerate, run some frames without rendering them
+      const unsigned int fps = (SMOOTHING_FRAMES * 1000000) / totalMicroseconds;
+
+      if (frameIndex == 0)
+      {
+        _logger.debug("FPS: %u (%d/%d not rendered, %d faults)", fps, totalSkippedFrames, SMOOTHING_FRAMES, nFaults);
+        totalSkippedFrames = 0;
+      }
+
+      if (fps >= 55)
+      {
+        // one good frame counters two bad ones
+        if (nFaults)
+          --nFaults;
+        if (nFaults)
+          --nFaults;
+
+        break;
+      }
+
+      tFrameStart = std::chrono::steady_clock::now();
+
+      // do one frame with audio, but don't render it
+      _core.step(true);
+      RA_DoAchievementsFrame();
+
+      ++totalSkippedFrames;
+      if (++skippedFrames == 4)
+      {
+        nFaults++;
+        if (nFaults == 100)
+        {
+          _fsm.pauseGame();
+
+          MessageBox(g_mainWindow, "Your system doesn't appear to be able to run this core at the desired speed. Consider changing some of the settings for the core. Game has been paused.", "Performance Problem Detected", MB_OK);
+          nFaults = 0;
+        }
+
+        break;
+      }
+    } while (true);
+
+  } while (true);
+}
+
+void Application::run()
+{
+  do
+  {
+    // handle any pending events
+    processEvents();
+
+    switch (_fsm.currentState())
+    {
+      case Fsm::State::GameRunning:
+      {
+        if (_core.getPerformanceLevel() > 10)
+        {
+          runSmoothed();
+          continue;
+        }
+
+        // do one frame with audio
+        _core.step(true);
+        RA_DoAchievementsFrame();
+        break;
+      }
+
+      case Fsm::State::GamePaused:
+      case Fsm::State::GamePausedNoOvl:
+      default:
+        // do no frames
+        break;
+
+      case Fsm::State::FrameStep:
+        // do one frame without audio
+        _core.step(false);
+        RA_DoAchievementsFrame();
+
+        // set state to GamePaused
+        _fsm.resumeGame();
+        break;
+
+      case Fsm::State::GameTurbo:
+        // do five frames without audio
+        for (int i = 0; i < 5; i++)
+        {
+          _core.step(false);
+          RA_DoAchievementsFrame();
+        }
+        break;
+
+      case Fsm::State::Quit:
+        return;
+    }
+
+    // render
+    _video.draw();
+    SDL_GL_SwapWindow(_window);
+
+    // handle overlay navigation
     if (RA_IsOverlayFullyVisible())
     {
       ControllerInput input;
@@ -419,8 +546,7 @@ void Application::run()
 
       RA_NavigateOverlay(&input);
     }
-  }
-  while (_fsm.currentState() != Fsm::State::Quit);
+  } while (true);
 }
 
 void Application::saveConfiguration()

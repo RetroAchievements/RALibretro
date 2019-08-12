@@ -82,6 +82,8 @@ void Video::draw()
 {
   if (_texture != 0)
   {
+    Gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     Gl::useProgram(_program);
 
     Gl::enableVertexAttribArray(_posAttribute);

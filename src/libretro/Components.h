@@ -53,6 +53,9 @@ namespace libretro
       va_end(args);
     }
 
+#ifdef NDEBUG
+    void debug(const char* fmt, ...) {}
+#else
     void debug(const char* fmt, ...)
     {
       if (_level > RETRO_LOG_DEBUG)
@@ -63,6 +66,7 @@ namespace libretro
       vprintf(RETRO_LOG_DEBUG, fmt, args);
       va_end(args);
     }
+#endif
 
     void info(const char* fmt, ...)
     {

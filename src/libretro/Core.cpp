@@ -29,7 +29,7 @@ SOFTWARE.
 
 #define SAMPLE_COUNT 8192
 
-#define TAG "[CRE] "
+#define TAG "[COR] "
 
 /**
  * Unavoidable because the libretro API don't have an userdata pointer to
@@ -606,6 +606,7 @@ bool libretro::Core::shutdown()
 
 bool libretro::Core::setPerformanceLevel(unsigned data)
 {
+  _logger->info(TAG "Performance level %u reported", data);
   _performanceLevel = data;
   return true;
 }
@@ -1482,7 +1483,7 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
       _calls[cmd / 8] |= 1 << (cmd & 7);
     }
 
-    ret = false;
+    return false;
   }
 
   if (ret)
