@@ -86,9 +86,91 @@ static bool cdrom_open_cue(cdrom_t& cdrom, const char* filename, int track)
         while (*ptr == ' ')
           ++ptr;
 
-        cdrom.sector_size = 2352;
-        if (strncmp(ptr, "MODE", 4) == 0)
-          cdrom.sector_size = atoi(ptr + 6);
+        // Attempt to determine the sector and header sizes. The CUE file may be lying.
+        // Look for the sync pattern using each of the supported sector sizes.
+        // Then check for the presence of "CD001", which is gauranteed to be in either the
+        // boot record or primary volume descriptor, one of which is always at sector 16.
+        const unsigned char sync_pattern[] = {
+            0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00
+        };
+
+        unsigned char header[32];
+        cdrom.sector_size = 0;
+
+        fseek(cdrom.fp, 16 * 2352, SEEK_SET);
+        fread(header, 1, sizeof(header), cdrom.fp);
+
+        if (memcmp(header, sync_pattern, 12) == 0)
+        {
+          cdrom.sector_size = 2352;
+
+          if (memcmp(&header[25], "CD001", 5) == 0)
+            cdrom.sector_header_size = 24;
+          else if (memcmp(&header[17], "CD001", 5) == 0)
+            cdrom.sector_header_size = 16;
+        }
+        else
+        {
+          fseek(cdrom.fp, 16 * 2336, SEEK_SET);
+          fread(header, 1, sizeof(header), cdrom.fp);
+
+          if (memcmp(header, sync_pattern, 12) == 0)
+          {
+            cdrom.sector_size = 2336;
+
+            if (memcmp(&header[25], "CD001", 5) == 0)
+              cdrom.sector_header_size = 24;
+            else if (memcmp(&header[17], "CD001", 5) == 0)
+              cdrom.sector_header_size = 16;
+          }
+          else
+          {
+            fseek(cdrom.fp, 16 * 2048, SEEK_SET);
+            fread(header, 1, sizeof(header), cdrom.fp);
+
+            if (memcmp(&header[1], "CD001", 5) == 0)
+            {
+              cdrom.sector_size = 2048;
+              cdrom.sector_header_size = 0;
+            }
+          }
+        }
+
+        // could not determine, which means we'll probably have more issues later
+        // but use the CUE provided information anyway
+        if (cdrom.sector_size == 0)
+        {
+          // All of these modes have 2048 byte payloads. In MODE1/2352 and MODE2/2352
+          // modes, the mode can actually be specified per sector to change the payload
+          // size, but that reduces the ability to recover from errors when the disc
+          // is damaged, so it's seldomly used, and when it is, it's mostly for audio
+          // or video data where a blip or two probably won't be noticed by the user.
+          // So, while we techincally support all of the following modes, we only do
+          // so with 2048 byte payloads.
+          // http://totalsonicmastering.com/cuesheetsyntax.htm
+          // MODE1/2048 ? CDROM Mode1 Data (cooked) [no header, no footer]
+          // MODE1/2352 ? CDROM Mode1 Data (raw)    [16 byte header, 288 byte footer]
+          // MODE2/2336 ? CDROM-XA Mode2 Data       [8 byte header, 280 byte footer]
+          // MODE2/2352 ? CDROM-XA Mode2 Data       [24 byte header, 280 byte footer]
+
+          cdrom.sector_size = 2352;       // default to MODE1/2352
+          cdrom.sector_header_size = 16;
+
+          if (strncmp(ptr, "MODE2/2352", 10) == 0)
+          {
+            cdrom.sector_header_size = 24;
+          }
+          else if (strncmp(ptr, "MODE1/2048", 10) == 0)
+          {
+            cdrom.sector_size = 2048;
+            cdrom.sector_header_size = 0;
+          }
+          else if (strncmp(ptr, "MODE2/2336", 10) == 0)
+          {
+            cdrom.sector_size = 2336;
+            cdrom.sector_header_size = 8;
+          }
+        }
 
         return true;
       }
@@ -181,9 +263,7 @@ void cdrom_close(cdrom_t& cdrom)
 
 static int cdrom_sector_start(cdrom_t& cdrom, int sector)
 {
-  // each sector has a 12-byte header (that's included in sector_size).
-  // the entire file also has a 12-byte header
-  return sector * cdrom.sector_size + 12 + 12;
+  return sector * cdrom.sector_size + cdrom.sector_header_size;
 }
 
 static void cdrom_seek_sector(cdrom_t& cdrom, int sector)
@@ -207,6 +287,7 @@ bool cdrom_seek_file(cdrom_t& cdrom, const char* filename)
   fread(buffer, 1, 256, cdrom.fp);
 
   // the directory_record starts at 156, the sector containing the table of contents is 2 bytes into that.
+  // https://www.cdroller.com/htm/readdata.html
   sector = buffer[156 + 2] | (buffer[156 + 3] << 8) | (buffer[156 + 4] << 16);
   cdrom_seek_sector(cdrom, sector);
 
