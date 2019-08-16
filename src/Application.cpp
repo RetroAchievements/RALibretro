@@ -1091,7 +1091,7 @@ bool Application::unloadGame()
     util::saveFile(&_logger, sram.c_str(), data, size);
   }
 
-  RA_OnLoadNewRom(NULL, 0);
+  romUnloaded(&_logger);
 
   return true;
 }
