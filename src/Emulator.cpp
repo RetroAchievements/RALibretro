@@ -21,11 +21,17 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "Emulator.h"
 
 #include "components\Config.h"
+#include "components\Dialog.h"
 #include "components\Logger.h"
 
 #include <jsonsax\jsonsax.h>
 
+#include <ctime>
+#include <map>
+
 #define TAG "[EMU] "
+
+static const char* BUILDBOT_URL = "https://buildbot.libretro.com/nightly/windows/x86/latest/";
 
 //  Manages multi-disc games
 extern void RA_ActivateDisc(unsigned char* pExe, size_t nExeSize);
@@ -37,6 +43,8 @@ struct CoreInfo
   std::string filename;
   std::string extensions;
   std::set<System> systems;
+  time_t filetime;
+  time_t servertime;
 };
 
 static std::vector<CoreInfo> s_coreInfos;
@@ -92,79 +100,73 @@ bool loadCores(Config* config, Logger* logger)
     std::string key;
     Config* config;
     Logger* logger;
+    bool inCore;
+    bool inSystems;
   };
 
   Deserialize ud;
   ud.core = NULL;
   ud.config = config;
   ud.logger = logger;
+  ud.inCore = false;
+  ud.inSystems = false;
 
   jsonsax_parse((char*)data, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
   {
     auto ud = (Deserialize*)udata;
 
-    if (event == JSONSAX_KEY)
+    switch (event)
     {
-      ud->key = std::string(str, num);
+      case JSONSAX_KEY:
+        ud->key = std::string(str, num);
 
-      std::string path = ud->config->getRootFolder();
-      path += "Cores\\" + ud->key + ".dll";
-
-      FILE* file = util::openFile(ud->logger, path, "r");
-      if (file)
-      {
-        fclose(file);
-
-        s_coreInfos.emplace_back();
-        ud->core = &s_coreInfos.back();
-        ud->core->filename = ud->key;
-      }
-      else
-      {
-        ud->core = NULL;
-      }
-    }
-    else if (event == JSONSAX_OBJECT)
-    {
-      if (ud->core != NULL)
-      {
-        jsonsax_result_t res2 = jsonsax_parse((char*)str, ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+        if (!ud->inCore)
         {
-          auto ud = (Deserialize*)udata;
+          std::string path = ud->config->getRootFolder();
+          path += "Cores\\" + ud->key + ".dll";
 
-          if (event == JSONSAX_KEY)
+          s_coreInfos.emplace_back();
+          ud->core = &s_coreInfos.back();
+          ud->core->filename = ud->key;
+          ud->core->filetime = util::fileTime(path);
+          ud->core->servertime = 0;
+        }
+        break;
+
+      case JSONSAX_OBJECT:
+        if (ud->core != NULL)
+        {
+          ud->inCore = (num == 1);
+        }
+        break;
+
+      case JSONSAX_STRING:
+        if (ud->inCore && ud->core != NULL)
+        {
+          if (ud->key == "name")
+            ud->core->name = std::string(str, num);
+          else if (ud->key == "extensions")
+            ud->core->extensions = std::string(str, num);
+        }
+        break;
+
+      case JSONSAX_ARRAY:
+        if (ud->inCore && ud->core != NULL)
+        {
+          if (ud->key == "systems")
           {
-            ud->key = std::string(str, num);
+            ud->inSystems = (num == 1);
           }
-          else if (event == JSONSAX_STRING)
-          {
-            if (ud->key == "name")
-              ud->core->name = std::string(str, num);
-            else if (ud->key == "extensions")
-              ud->core->extensions = std::string(str, num);
-          }
-          else if (event == JSONSAX_ARRAY)
-          {
-            if (ud->key == "systems")
-            {
-              jsonsax_result_t res3 = jsonsax_parse((char*)str, ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
-              {
-                auto ud = (Deserialize*)udata;
+        }
+        break;
 
-                if (event == JSONSAX_NUMBER)
-                {
-                  std::string system = std::string(str, num);
-                  ud->core->systems.insert(static_cast<System>(std::stoi(system)));
-                }
-
-                return 0;
-              });
-            }
-          }
-
-          return 0;
-        });
-      }
+      case JSONSAX_NUMBER:
+        if (ud->inSystems && ud->core != NULL)
+        {
+          std::string system = std::string(str, num);
+          ud->core->systems.insert(static_cast<System>(std::stoi(system)));
+        }
+        break;
     }
 
     return 0;
@@ -178,23 +180,26 @@ void getAvailableSystems(std::set<System>& systems)
 {
   for (const auto& core : s_coreInfos)
   {
-    for (auto system : core.systems)
-      systems.insert(system);
+    if (core.filetime)
+    {
+      for (auto system : core.systems)
+        systems.insert(system);
+    }
   }
 }
 
-void getSystemCores(System system, std::set<std::string>& coreNames)
+void getAvailableSystemCores(System system, std::set<std::string>& coreNames)
 {
   for (const auto& core : s_coreInfos)
   {
-    if (core.systems.find(system) != core.systems.end())
+    if (core.filetime && core.systems.find(system) != core.systems.end())
       coreNames.insert(core.name);
   }
 }
 
 int encodeCoreName(const std::string& coreName, System system)
 {
-  for (int i = 0; i < s_coreInfos.size(); ++i)
+  for (size_t i = 0; i < s_coreInfos.size(); ++i)
   {
     if (s_coreInfos[i].name == coreName)
     {
@@ -214,8 +219,8 @@ int encodeCoreName(const std::string& coreName, System system)
 
 const std::string& getCoreName(int encoded, System& system)
 {
-  int i = encoded % 100;
-  int j = encoded / 100;
+  size_t i = encoded % 100;
+  size_t j = encoded / 100;
 
   if (i > s_coreInfos.size())
     i = 0;
@@ -477,4 +482,334 @@ void romUnloaded(Logger* logger)
 {
   RA_DeactivateDisc();
   RA_ActivateGame(0);
+}
+
+class CoreDialog : public Dialog
+{
+public:
+  System systemIds[NumConsoleIDs];
+  int numSystems = 0;
+  std::vector<std::string> coreNames;
+  Config* config;
+  Logger* logger;
+  bool modified = false;
+
+protected:
+
+  void updateCores(HWND hwnd)
+  {
+    const HWND hComboBox = GetDlgItem(hwnd, 50000);
+    const int selectedIndex = SendMessage(hComboBox, CB_GETCURSEL, 0, 0);
+    if (selectedIndex < 0)
+      return;
+
+    const System system = systemIds[selectedIndex];
+
+    std::map<std::string, const CoreInfo*> systemCores;
+    for (const auto& core : s_coreInfos)
+    {
+      if (core.systems.find(system) != core.systems.end())
+        systemCores.insert_or_assign(core.name, &core);
+    }
+
+    char buffer[64];
+    size_t index = 0;
+    for (const auto& pair : systemCores)
+    {
+      HWND hCoreName = GetDlgItem(hwnd, 51000 + index);
+      HWND hLocalTime = GetDlgItem(hwnd, 51100 + index);
+      HWND hServerTime = GetDlgItem(hwnd, 51200 + index);
+      HWND hUpdate = GetDlgItem(hwnd, 51300 + index);
+      HWND hDelete = GetDlgItem(hwnd, 51400 + index);
+
+      ShowWindow(hCoreName, SW_SHOW);
+      ShowWindow(hLocalTime, SW_SHOW);
+      ShowWindow(hServerTime, SW_SHOW);
+      ShowWindow(hUpdate, SW_SHOW);
+      ShowWindow(hDelete, SW_SHOW);
+
+      coreNames[index] = pair.second->filename;
+      ++index;
+
+      SetWindowText(hCoreName, pair.first.c_str());
+
+      if (pair.second->filetime)
+      {
+        struct tm tm;
+        gmtime_s(&tm, &pair.second->filetime);
+        std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", &tm);
+        SetWindowText(hLocalTime, buffer);
+        SetWindowText(hUpdate, "Update");
+        EnableWindow(hDelete, TRUE);
+      }
+      else
+      {
+        SetWindowText(hLocalTime, "n/a");
+        SetWindowText(hUpdate, "Download");
+        EnableWindow(hDelete, FALSE);
+      }
+
+      if (pair.second->servertime)
+      {
+        struct tm tm;
+        gmtime_s(&tm, &pair.second->servertime);
+        std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", &tm);
+        SetWindowText(hServerTime, buffer);
+
+        if (!pair.second->filetime)
+        {
+          EnableWindow(hUpdate, TRUE);
+        }
+        else
+        {
+          const auto roundedServerTime = pair.second->servertime / 86400;
+          const auto roundedFileTime = pair.second->filetime / 86400;
+          EnableWindow(hUpdate, (roundedServerTime > roundedFileTime));
+        }
+      }
+      else
+      {
+        SetWindowText(hServerTime, "n/a");
+        EnableWindow(hUpdate, FALSE);
+      }
+    }
+
+    for (; index < coreNames.size(); ++index)
+    {
+      HWND hCoreName = GetDlgItem(hwnd, 51000 + index);
+      HWND hLocalTime = GetDlgItem(hwnd, 51100 + index);
+      HWND hServerTime = GetDlgItem(hwnd, 51200 + index);
+      HWND hUpdate = GetDlgItem(hwnd, 51300 + index);
+      HWND hDelete = GetDlgItem(hwnd, 51400 + index);
+
+      ShowWindow(hCoreName, SW_HIDE);
+      ShowWindow(hLocalTime, SW_HIDE);
+      ShowWindow(hServerTime, SW_HIDE);
+      ShowWindow(hUpdate, SW_HIDE);
+      ShowWindow(hDelete, SW_HIDE);
+    }
+  }
+
+  void deleteCore(HWND hwnd, const std::string& coreName)
+  {
+    std::string path = config->getRootFolder();
+    path += "Cores\\" + coreName + ".dll";
+    util::deleteFile(path);
+
+    for (auto& core : s_coreInfos)
+    {
+      if (core.filename == coreName)
+      {
+        core.filetime = 0;
+        modified = true;
+        break;
+      }
+    }
+
+    updateCores(hwnd);
+  }
+
+  void updateCore(HWND hwnd, const std::string& coreName)
+  {
+    std::string coreFile = coreName + ".dll";
+    std::string path = config->getRootFolder();
+    path += "Cores\\" + coreFile;
+    std::string zipPath = path + ".zip";
+
+    std::string url = BUILDBOT_URL;
+    url += coreName + ".dll.zip";
+    if (!util::downloadFile(logger, url, zipPath))
+    {
+      MessageBox(hwnd, "Download failed.", "Error", MB_OK);
+    }
+
+    if (!util::unzipFile(logger, zipPath, coreFile, path))
+    {
+      const auto unicodePath = util::utf8ToUChar(path);
+      if (unicodePath.length() != path.length())
+      {
+        MessageBox(hwnd, "miniz does not support unicode paths. Please manually unzip the file in the Cores subdirectory and restart RALibRetro.", "Error", MB_OK);
+      }
+      else
+      {
+        MessageBox(hwnd, "Unzip failed. Please manually unzip the file in the Cores subdirectory and restart RALibRetro.", "Error", MB_OK);
+      }
+    }
+    else
+    {
+      util::deleteFile(zipPath);
+    }
+
+    for (auto& core : s_coreInfos)
+    {
+      if (core.filename == coreName)
+      {
+        core.filetime = util::fileTime(path);
+        modified = true;
+        break;
+      }
+    }
+
+    updateCores(hwnd);
+  }
+
+  void initControls(HWND hwnd) override
+  {
+    Dialog::initControls(hwnd);
+
+    updateCores(hwnd);
+  }
+
+  INT_PTR dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override
+  {
+    switch (msg)
+    {
+      case WM_COMMAND:
+        if (HIWORD(wparam) == CBN_SELCHANGE)
+        {
+          updateCores(hwnd);
+          return 0;
+        }
+
+        int cmd = LOWORD(wparam);
+        if (cmd >= 51300 && cmd < 51500)
+        {
+          if (cmd >= 51400)
+          {
+            deleteCore(hwnd, coreNames[cmd - 51400]);
+          }
+          else
+          {
+            HWND hUpdate = GetDlgItem(hwnd, cmd);
+            SetWindowText(hUpdate, "Downloading...");
+            EnableWindow(hwnd, FALSE);
+
+            updateCore(hwnd, coreNames[cmd - 51300]);
+
+            EnableWindow(hwnd, TRUE);
+          }
+
+          return 0;
+        }
+        break;
+    }
+
+    return Dialog::dialogProc(hwnd, msg, wparam, lparam);
+  }
+};
+
+static const char* s_getCoreName(int index, void* udata)
+{
+  auto db = (CoreDialog*)udata;
+  if (index < db->numSystems)
+    return getSystemName(db->systemIds[index]);
+
+  return NULL;
+}
+
+static void getCoreSystemTimes(Config* config, Logger* logger)
+{
+  std::string path = config->getRootFolder();
+  path += "Cores\\index.txt";
+  const time_t now = time(NULL);
+  const time_t lastCheck = util::fileTime(path);
+  if (now - lastCheck > 60 * 60 * 24) // 24 hours
+  {
+    std::string url = BUILDBOT_URL;
+    url += ".index-extended";
+    util::downloadFile(logger, url, path);
+  }
+
+  const std::string index = util::loadFile(logger, path);
+
+  const char* dateStart = index.c_str();
+  while (*dateStart)
+  {
+    const char* fileStart = dateStart + 20;
+    const char* fileEnd = fileStart;
+    while (*fileEnd && *fileEnd != '.')
+      ++fileEnd;
+
+    std::string coreName(fileStart, fileEnd - fileStart);
+    for (auto& coreInfo : s_coreInfos)
+    {
+      if (coreInfo.filename == coreName)
+      {
+        struct tm tm;
+        memset(&tm, 0, sizeof(tm));
+
+        int y, m, d;
+        sscanf_s(dateStart, "%d-%d-%d", &y, &m, &d);
+        tm.tm_year = y - 1900;
+        tm.tm_mon = m - 1;
+        tm.tm_mday = d;
+        tm.tm_isdst = -1;
+
+        coreInfo.servertime = mktime(&tm);
+      }
+    }
+
+    dateStart = fileEnd;
+    while (*dateStart && *dateStart != '\n')
+      ++dateStart;
+    if (*dateStart == '\n')
+      ++dateStart;
+  }
+}
+
+bool showCoresDialog(Config* config, Logger* logger)
+{
+  CoreDialog db;
+  db.init("Manage Cores");
+  db.config = config;
+  db.logger = logger;
+
+  getCoreSystemTimes(config, logger);
+
+  std::map<std::string, System> allSystems;
+  int systemCoreCounts[NumConsoleIDs];
+  memset(systemCoreCounts, 0, sizeof(systemCoreCounts));
+  int maxSystemCoreCount = 0;
+
+  for (const auto& core : s_coreInfos)
+  {
+    for (auto system : core.systems)
+    {
+      allSystems.insert_or_assign(getSystemName(system), system);
+      if (++systemCoreCounts[(int)system] > maxSystemCoreCount)
+        maxSystemCoreCount = systemCoreCounts[(int)system];
+    }
+  }
+
+  for (const auto& pair : allSystems)
+    db.systemIds[db.numSystems++] = pair.second;
+
+  db.coreNames.resize(maxSystemCoreCount);
+
+  const DWORD WIDTH = 420;
+  WORD y = 0;
+
+  int selectedCoreIndex = 0;
+  db.addCombobox(50000, 0, 0, 200, 16, db.numSystems, s_getCoreName, &db, &selectedCoreIndex);
+  y += 20;
+
+  db.addLabel("Local", 170, y, 50, 14);
+  db.addLabel("Server", 230, y, 50, 14);
+  y += 10;
+
+  for (int i = 0; i < maxSystemCoreCount; ++i)
+  {
+    db.addLabel("Core Name", 51000 + i, 0, y + 3, 160, 14);
+    db.addLabel("Local Time", 51100 + i, 170, y + 3, 50, 14);
+    db.addLabel("Server Time", 51200 + i, 230, y + 3, 50, 14);
+    db.addButton("Update", 51300 + i, 290, y, 60, 14, false);
+    db.addButton("Delete", 51400 + i, 360, y, 60, 14, false);
+    y += 18;
+  }
+
+  db.addButton("OK", IDOK, WIDTH - 50, y, 50, 14, true);
+
+  db.show();
+
+  return db.modified;
 }

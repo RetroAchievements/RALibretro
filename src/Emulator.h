@@ -58,9 +58,11 @@ class Logger;
 bool   loadCores(Config* config, Logger* logger);
 
 void   getAvailableSystems(std::set<System>& systems);
-void   getSystemCores(System system, std::set<std::string>& coreNames);
+void   getAvailableSystemCores(System system, std::set<std::string>& coreNames);
 int    encodeCoreName(const std::string& coreName, System system);
 const std::string& getCoreName(int encoded, System& system);
 
 bool   romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size);
 void   romUnloaded(Logger* logger);
+
+bool   showCoresDialog(Config* config, Logger* logger);

@@ -20,6 +20,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "Config.h"
 
 #include "Dialog.h"
+#include "Util.h"
 #include "jsonsax/jsonsax.h"
 
 #define WIN32_LEAN_AND_MEAN
@@ -36,15 +37,15 @@ bool Config::init(libretro::LoggerComponent* logger)
   _logger = logger;
 
   HMODULE hModule = GetModuleHandleW(NULL);
-  char path[MAX_PATH + 1];
-  DWORD len = GetModuleFileNameA(hModule, path, sizeof(path) / sizeof(path[0]) - 1);
+  WCHAR path[MAX_PATH + 1];
+  DWORD len = GetModuleFileNameW(hModule, path, sizeof(path) / sizeof(path[0]) - 1);
   path[len] = 0;
 
-  char* bslash = strrchr(path, '\\');
-
-  if (bslash != NULL) {
-    bslash[1] = 0;
-    _rootFolder = path;
+  _rootFolder = util::ucharToUtf8(path);
+  size_t index = _rootFolder.find_last_of('\\');
+  if (index != std::string::npos)
+  {
+    _rootFolder.resize(index + 1);
   }
   else
   {

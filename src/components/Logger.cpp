@@ -123,6 +123,9 @@ void Logger::vprintf(enum retro_log_level level, const char* fmt, va_list args)
 #ifdef LOG_TO_FILE
   // Log to the log file.
   fprintf(_file, "[%s] %s\n", desc, line);
+#ifndef NDEBUG
+  fflush(_file);
+#endif
 #endif
 }
 

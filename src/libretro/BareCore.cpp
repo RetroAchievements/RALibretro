@@ -24,6 +24,8 @@ SOFTWARE.
 
 #include "BareCore.h"
 
+#include "Util.h"
+
 #include <sys/stat.h>
 #include <stdio.h>
 #include <stddef.h>
@@ -46,6 +48,12 @@ bool libretro::BareCore::load(libretro::LoggerComponent* logger, const char* pat
   _logger->info(TAG "Loading core %s", path);
 
   _handle = dynlib_open(path);
+
+  if (!_handle)
+  {
+    const std::wstring unicodePath = util::utf8ToUChar(path);
+    _handle = LoadLibraryW(unicodePath.c_str());
+  }
 
   if (_handle == NULL)
   {

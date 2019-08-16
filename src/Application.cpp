@@ -500,6 +500,9 @@ bool Application::loadCore(const std::string& coreName)
 
   if (!_core.loadCore(path.c_str()))
   {
+    std::string message = "Could not load ";
+    message += coreName;
+    MessageBox(g_mainWindow, message.c_str(), "Failed", MB_OK);
     return false;
   }
 
@@ -1556,7 +1559,7 @@ void Application::loadState(const std::string& path)
   free(data);
   RA_OnLoadState(path.c_str());
 
-  updateCDMenu(NULL, 0, true);
+  updateCDMenu(NULL, 0, false);
 
   unsigned width, height, pitch;
   enum retro_pixel_format format;
@@ -1660,7 +1663,7 @@ void Application::buildSystemsMenu()
   {
     System system = pair.second;
     systemCores.clear();
-    getSystemCores(system, systemCores);
+    getAvailableSystemCores(system, systemCores);
     if (systemCores.empty())
       continue;
 
@@ -1996,7 +1999,12 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     case IDM_WINDOW_4X:
       resizeWindow(cmd - IDM_WINDOW_1X + 1);
       break;
-    
+
+    case IDM_MANAGE_CORES:
+      if (showCoresDialog(&_config, &_logger))
+        buildSystemsMenu();
+      break;
+
     case IDM_EXIT:
       _fsm.quit();
       break;
