@@ -710,6 +710,7 @@ bool Application::loadGame(const std::string& path)
 
     if (data == NULL)
     {
+      MessageBox(g_mainWindow, "Unable to open file", "Error", MB_OK);
       return false;
     }
   }
@@ -733,7 +734,7 @@ bool Application::loadGame(const std::string& path)
     // The most common cause of failure is missing system files.
     _logger.debug(TAG "Game load failure (%s)", info ? info->library_name : "Unknown");
 
-    MessageBox(g_mainWindow, "Game load error. Please ensure that requires system files are present and restart.", "Core Error", MB_OK);
+    MessageBox(g_mainWindow, "Game load error. Please ensure that required system files are present and restart.", "Core Error", MB_OK);
 
     if (data)
     {
@@ -776,7 +777,7 @@ bool Application::loadGame(const std::string& path)
   else
   {
     char names[10][128];
-    int count = cdrom_get_cd_names(path.c_str(), names, sizeof(names) / sizeof(names[0]));
+    int count = cdrom_get_cd_names(path.c_str(), names, sizeof(names) / sizeof(names[0]), &_logger);
     updateCDMenu(names, count, true);
   }
 
@@ -1093,7 +1094,7 @@ bool Application::unloadGame()
     util::saveFile(&_logger, sram.c_str(), data, size);
   }
 
-  RA_OnLoadNewRom(NULL, 0);
+  romUnloaded(&_logger);
 
   return true;
 }
@@ -1247,7 +1248,7 @@ void Application::loadGame()
   file_types.append(supported_exts);
   file_types.append("\0", 1);
 
-  std::string path = util::openFileDialog(g_mainWindow, file_types.c_str());
+  std::string path = util::openFileDialog(g_mainWindow, file_types);
 
   if (!path.empty())
   {
@@ -1523,7 +1524,9 @@ void Application::saveState(unsigned ndx)
 
 void Application::saveState()
 {
-  std::string path = util::saveFileDialog(g_mainWindow, "*.STATE\0");
+  std::string extensions = "*.STATE";
+  extensions.append("\0", 1);
+  std::string path = util::saveFileDialog(g_mainWindow, extensions);
 
   if (!path.empty())
   {
@@ -1596,7 +1599,9 @@ void Application::loadState(unsigned ndx)
 
 void Application::loadState()
 {
-  std::string path = util::openFileDialog(g_mainWindow, "*.STATE\0");
+  std::string extensions = "*.STATE";
+  extensions.append("\0", 1);
+  std::string path = util::openFileDialog(g_mainWindow, extensions);
 
   if (path.empty())
   {
@@ -1646,7 +1651,7 @@ void Application::buildSystemsMenu()
   std::map<std::string, System> systemMap;
   std::map<std::string, int> systemItems;
   for (auto system : availableSystems)
-    systemMap.insert_or_assign(getSystemName(system), system);
+    systemMap.emplace(getSystemName(system), system);
 
   HMENU fileMenu = GetSubMenu(_menu, 0);
   HMENU systemsMenu = GetSubMenu(fileMenu, 0);
@@ -1666,7 +1671,7 @@ void Application::buildSystemsMenu()
     for (const auto& systemCore : systemCores)
     {
       int id = encodeCoreName(systemCore, pair.second);
-      systemItems.insert_or_assign(getEmulatorName(systemCore, system), id);
+      systemItems.emplace(getEmulatorName(systemCore, system), id);
     }
 
     HMENU systemMenu = CreateMenu();
@@ -1969,7 +1974,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       break;
       
     case IDM_CORE_CONFIG:
-      _config.showDialog();
+      _config.showDialog(_core.getSystemInfo()->library_name);
       break;
 
     case IDM_INPUT_CONFIG:

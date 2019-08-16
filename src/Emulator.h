@@ -62,7 +62,7 @@ void   getAvailableSystemCores(System system, std::set<std::string>& coreNames);
 int    encodeCoreName(const std::string& coreName, System system);
 const std::string& getCoreName(int encoded, System& system);
 
-System getSystem(const std::string& core_name, const std::string& game_path, libretro::Core* core);
 bool   romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size);
+void   romUnloaded(Logger* logger);
 
 bool   showCoresDialog(Config* config, Logger* logger);

@@ -30,10 +30,11 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 namespace util
 {
   time_t      fileTime(const std::string& path);
+  FILE*       openFile(Logger* logger, const std::string& path, const char* mode);
   std::string loadFile(Logger* logger, const std::string& path);
   void*       loadFile(Logger* logger, const std::string& path, size_t* size);
   void*       loadZippedFile(Logger* logger, const std::string& path, size_t* size, std::string& unzippedFileName);
-  void        unzipFile(Logger* logger, const std::string& zipPath, const std::string& archiveFileName, const std::string& unzippedPath);
+  bool        unzipFile(Logger* logger, const std::string& zipPath, const std::string& archiveFileName, const std::string& unzippedPath);
   bool        saveFile(Logger* logger, const std::string& path, const void* data, size_t size);
   void        deleteFile(const std::string& path);
   bool        downloadFile(Logger* logger, const std::string& url, const std::string& path);
@@ -43,10 +44,12 @@ namespace util
   std::string fileNameWithExtension(const std::string& path);
   std::string extension(const std::string& path);
   std::string replaceFileName(const std::string& originalPath, const char* newFileName);
-  std::string openFileDialog(HWND hWnd, const char* extensionsFilter);
-  std::string saveFileDialog(HWND hWnd, const char* extensionsFilter);
+  std::string openFileDialog(HWND hWnd, const std::string& extensionsFilter);
+  std::string saveFileDialog(HWND hWnd, const std::string& extensionsFilter);
   const void* toRgb(Logger* logger, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format);
   void        saveImage(Logger* logger, const std::string& path, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format);
   const void* fromRgb(Logger* logger, const void* data, unsigned width, unsigned height, unsigned* pitch, enum retro_pixel_format format);
   const void* loadImage(Logger* logger, const std::string& path, unsigned* width, unsigned* height, unsigned* pitch);
+  std::string ucharToUtf8(const std::wstring& unicodeString);
+  std::wstring utf8ToUChar(const std::string& utf8String);
 }

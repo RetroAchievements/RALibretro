@@ -328,7 +328,7 @@ static bool romLoadPsx(Logger* logger, const std::string& path)
   uint8_t* exe_raw;
   int size, remaining;
 
-  if (!cdrom_open(cdrom, path.c_str(), 1, 1))
+  if (!cdrom_open(cdrom, path.c_str(), 1, 1, logger))
     return false;
 
   exe_name = NULL;
@@ -478,6 +478,12 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
   return ok;
 }
 
+void romUnloaded(Logger* logger)
+{
+  RA_DeactivateDisc();
+  RA_ActivateGame(0);
+}
+
 class CoreDialog : public Dialog
 {
 public:
@@ -612,11 +618,27 @@ protected:
 
     std::string url = BUILDBOT_URL;
     url += coreName + ".dll.zip";
-    util::downloadFile(logger, url, zipPath);
+    if (!util::downloadFile(logger, url, zipPath))
+    {
+      MessageBox(hwnd, "Download failed.", "Error", MB_OK);
+    }
 
-    util::unzipFile(logger, zipPath, coreFile, path);
-
-    util::deleteFile(zipPath);
+    if (!util::unzipFile(logger, zipPath, coreFile, path))
+    {
+      const auto unicodePath = util::utf8ToUChar(path);
+      if (unicodePath.length() != path.length())
+      {
+        MessageBox(hwnd, "miniz does not support unicode paths. Please manually unzip the file in the Cores subdirectory and restart RALibRetro.", "Error", MB_OK);
+      }
+      else
+      {
+        MessageBox(hwnd, "Unzip failed. Please manually unzip the file in the Cores subdirectory and restart RALibRetro.", "Error", MB_OK);
+      }
+    }
+    else
+    {
+      util::deleteFile(zipPath);
+    }
 
     for (auto& core : s_coreInfos)
     {
