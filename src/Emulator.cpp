@@ -324,14 +324,13 @@ static bool romLoadNes(void* rom, size_t size)
 static bool romLoadPsx(Logger* logger, const std::string& path)
 {
   cdrom_t cdrom;
-  char buffer[2048], *tmp, *exe_name;
+  char buffer[2048], *tmp, *exe_name_start;
+  std::string exe_name;
   uint8_t* exe_raw;
   int size, remaining;
 
   if (!cdrom_open(cdrom, path.c_str(), 1, 1, logger))
     return false;
-
-  exe_name = NULL;
 
   // extract the "BOOT=executable" line from the "SYSTEM.CNF" file, then hash the contents of "executable"
   if (!cdrom_seek_file(cdrom, "SYSTEM.CNF"))
@@ -345,19 +344,25 @@ static bool romLoadPsx(Logger* logger, const std::string& path)
     {
       if (strncmp(tmp, "BOOT", 4) == 0)
       {
-        exe_name = tmp + 4;
-        while (isspace(*exe_name))
-          ++exe_name;
-        if (*exe_name == '=')
+        exe_name_start = tmp + 4;
+        while (isspace(*exe_name_start))
+          ++exe_name_start;
+        if (*exe_name_start == '=')
         {
-          ++exe_name;
-          while (isspace(*exe_name))
-            ++exe_name;
+          ++exe_name_start;
+          while (isspace(*exe_name_start))
+            ++exe_name_start;
 
-          if (strncmp(exe_name, "cdrom:", 6) == 0)
-            exe_name += 6;
-          if (*exe_name == '\\')
-            ++exe_name;
+          if (strncmp(exe_name_start, "cdrom:", 6) == 0)
+            exe_name_start += 6;
+          if (*exe_name_start == '\\')
+            ++exe_name_start;
+
+          tmp = exe_name_start;
+          while (*tmp != '\n' && *tmp != ';' && *tmp != ' ')
+            ++tmp;
+
+          exe_name.assign(exe_name_start, tmp - exe_name_start);
           break;
         }
       }
@@ -366,21 +371,15 @@ static bool romLoadPsx(Logger* logger, const std::string& path)
         ++tmp;
     }
 
-    if (!exe_name)
+    if (exe_name.empty())
     {
       logger->debug(TAG "Failed to locate BOOT directive in SYSTEM.CNF in %s", path.c_str());
     }
     else
     {
-      tmp = exe_name;
-      while (*tmp != '\n' && *tmp != ';' && *tmp != ' ')
-        ++tmp;
-      strncpy(buffer, exe_name, tmp - exe_name);
-      buffer[tmp - exe_name] = '\0';
-
-      if (!cdrom_seek_file(cdrom, buffer))
+      if (!cdrom_seek_file(cdrom, exe_name.c_str()))
       {
-        logger->debug(TAG "Failed to locate %s in %s", buffer, path.c_str());
+        logger->debug(TAG "Failed to locate %s in %s", exe_name.c_str(), path.c_str());
       }
       else
       {
@@ -388,9 +387,18 @@ static bool romLoadPsx(Logger* logger, const std::string& path)
 
         // the PSX-E header specifies the executable size as a 4-byte value 28 bytes into the header, which doesn't
         // include the header itself. We want to include the header in the hash, so append another 2048 to that value.
-        remaining = size = (((uint8_t)buffer[31] << 24) | ((uint8_t)buffer[30] << 16) | ((uint8_t)buffer[29] << 8) | (uint8_t)buffer[28]) + 2048;
+        size = (((uint8_t)buffer[31] << 24) | ((uint8_t)buffer[30] << 16) | ((uint8_t)buffer[29] << 8) | (uint8_t)buffer[28]) + 2048;
+
+        // there's also a few games that are use a singular engine and only differ via their data files. luckily, they have
+        // unique serial numbers, and use the serial number as the boot file in the standard way. include the boot file in the hash
+        size += exe_name.length();
+
         exe_raw = (uint8_t*)malloc(size);
         tmp = (char*)exe_raw;
+
+        memcpy(tmp, exe_name.c_str(), exe_name.length());
+        remaining = size - exe_name.length();
+        tmp += exe_name.length();
 
         do
         {
@@ -412,7 +420,7 @@ static bool romLoadPsx(Logger* logger, const std::string& path)
 
   cdrom_close(cdrom);
 
-  return (exe_name != NULL);
+  return (!exe_name.empty());
 }
 
 static bool romLoadArcade(const std::string& path)
