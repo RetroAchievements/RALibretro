@@ -50,7 +50,7 @@ public:
 
   std::string serialize();
   void deserialize(const char* json);
-  void showDialog();
+  void showDialog(const std::string& coreName);
 
 protected:
   static const char* s_getOption(int index, void* udata);

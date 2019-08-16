@@ -100,14 +100,14 @@ main MENU
     }
     POPUP "Settings"
     {
-        MENUITEM "Emulation", IDM_CORE_CONFIG
+        MENUITEM "Core Settings...", IDM_CORE_CONFIG
         POPUP "Input"
         {
-            MENUITEM "Hot Keys", IDM_INPUT_CONFIG
-            MENUITEM "Controller 1", IDM_INPUT_CONTROLLER_1
-            MENUITEM "Controller 2", IDM_INPUT_CONTROLLER_2
+            MENUITEM "Hot Keys...", IDM_INPUT_CONFIG
+            MENUITEM "Controller 1...", IDM_INPUT_CONTROLLER_1
+            MENUITEM "Controller 2...", IDM_INPUT_CONTROLLER_2
         }
-        MENUITEM "Video", IDM_VIDEO_CONFIG
+        MENUITEM "Video...", IDM_VIDEO_CONFIG
         POPUP "Window Size"
         {
             MENUITEM "Resize to 1x", IDM_WINDOW_1X

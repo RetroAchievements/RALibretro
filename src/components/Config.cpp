@@ -266,28 +266,64 @@ void Config::deserialize(const char* json)
   _updated = true;
 }
 
-void Config::showDialog()
+void Config::showDialog(const std::string& coreName)
 {
-  const WORD WIDTH = 280;
-  const WORD LINE = 15;
+  const WORD HEADER_WIDTH = 90;
+  const WORD VALUE_WIDTH = 100;
+  const WORD LINE_HEIGHT = 15;
+
+  std::string title = coreName + " Settings";
 
   Dialog db;
-  db.init("Emulation Settings");
+  db.init(title.c_str());
 
+  WORD x = 0;
   WORD y = 0;
-  DWORD id = 0;
 
-  for (auto& var: _variables)
+  if (_variables.empty())
   {
-    db.addLabel(var._name.c_str(), 0, y, WIDTH / 3 - 5, 8);
-    db.addCombobox(50000 + id, WIDTH / 3 + 5, y, WIDTH - WIDTH / 3 - 5, LINE, 5, s_getOption, (void*)&var._options, &var._selected);
+    db.addLabel("No settings", 0, 0, HEADER_WIDTH + VALUE_WIDTH, LINE_HEIGHT);
+    x = HEADER_WIDTH + VALUE_WIDTH + 15;
+    y = LINE_HEIGHT;
+  }
+  else
+  {
+    const WORD MAX_ROWS = 16;
+    WORD row = 0;
+    WORD id = 0;
 
-    y += LINE;
-    id++;
+    // evenly distribute the variables across multiple columns so no more than MAX_ROWS rows exist
+    const WORD columns = ((WORD)_variables.size() + MAX_ROWS - 1) / MAX_ROWS;
+    const WORD rows = ((WORD)_variables.size() + columns - 1) / columns;
+
+    for (auto& var : _variables)
+    {
+      db.addLabel(var._name.c_str(), x, y + 2, HEADER_WIDTH - 5, 8);
+      db.addCombobox(50000 + id, x + HEADER_WIDTH + 5, y, VALUE_WIDTH, LINE_HEIGHT, 5,
+        s_getOption, (void*)& var._options, &var._selected);
+
+      if (++row == rows)
+      {
+        y = 0;
+        row = 0;
+        x += HEADER_WIDTH + VALUE_WIDTH + 15;
+      }
+      else
+      {
+        y += LINE_HEIGHT;
+      }
+
+      ++id;
+    }
+
+    if (columns > 1 && (_variables.size() % rows) != 0)
+      x += HEADER_WIDTH + VALUE_WIDTH + 15;
+
+    y = rows * LINE_HEIGHT;
   }
 
-  db.addButton("OK", IDOK, WIDTH - 55 - 50, y, 50, 14, true);
-  db.addButton("Cancel", IDCANCEL, WIDTH - 50, y, 50, 14, false);
+  db.addButton("OK", IDOK, x - 60 - 55, y + 4, 50, 14, true);
+  db.addButton("Cancel", IDCANCEL, x - 60, y + 4, 50, 14, false);
 
   _updated = db.show();
 
