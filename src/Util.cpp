@@ -31,6 +31,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <shlobj.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+#define STBI_MSC_SECURE_CRT
+#define STBI_WRITE_NO_STDIO
 #define STBIW_ASSERT(x)
 #include "stb_image_write.h"
 
@@ -40,46 +42,70 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #define TAG "[UTL] "
 
-void* util::loadFile(Logger* logger, const std::string& path, size_t* size)
+FILE* util::openFile(Logger* logger, const std::string& path, const char* mode)
 {
-  void* data;
-  struct stat statbuf;
-
-  if (stat(path.c_str(), &statbuf) != 0)
+  FILE* file;
+  bool isAscii = true;
+  for (const char c : path)
   {
-    logger->error(TAG "Error getting info from \"%s\": %s", path.c_str(), strerror(errno));
-    return NULL;
+    if (c & 0x80)
+    {
+      isAscii = false;
+      break;
+    }
   }
 
-  *size = statbuf.st_size;
-  data = malloc(*size + 1);
+  errno_t err;
+  if (isAscii)
+  {
+    err = fopen_s(&file, path.c_str(), mode);
+  }
+  else
+  {
+    std::wstring unicodePath = util::utf8ToUChar(path);
+    std::wstring unicodeMode = util::utf8ToUChar(mode);
+    err = _wfopen_s(&file, unicodePath.c_str(), unicodeMode.c_str());
+  }
 
+  if (err)
+  {
+    char buffer[256];
+    strerror_s(buffer, sizeof(buffer), err);
+    logger->error(TAG "Error opening \"%s\": %s", path.c_str(), buffer);
+    file = NULL;
+  }
+
+  return file;
+}
+
+void* util::loadFile(Logger* logger, const std::string& path, size_t* size)
+{
+  FILE* file = util::openFile(logger, path, "rb");
+  if (file == NULL)
+    return NULL;
+
+  fseek(file, 0, SEEK_END);
+  *size = ftell(file);
+
+  void* data = malloc(*size + 1);
   if (data == NULL)
   {
+    fclose(file);
     logger->error(TAG "Out of memory allocating %lu bytes to load \"%s\"", *size, path.c_str());
     return NULL;
   }
 
-  FILE* file = fopen(path.c_str(), "rb");
-
-  if (file == NULL)
-  {
-    logger->error(TAG "Error opening \"%s\": %s", path.c_str(), strerror(errno));
-    free(data);
-    return NULL;
-  }
-
+  fseek(file, 0, SEEK_SET);
   size_t numread = fread(data, 1, *size, file);
+  fclose(file);
 
   if (numread < 0 || numread != *size)
   {
     logger->error(TAG "Error reading \"%s\": %s", path.c_str(), strerror(errno));
-    fclose(file);
     free(data);
     return NULL;
   }
 
-  fclose(file);
   *((uint8_t*)data + *size) = 0;
   logger->info(TAG "Read %zu bytes from \"%s\"", *size, path.c_str());
   return data;
@@ -131,7 +157,7 @@ void* util::loadZippedFile(Logger* logger, const std::string& path, size_t* size
     return NULL;
   }
 
-  *size = file_stat.m_uncomp_size;
+  *size = (size_t)file_stat.m_uncomp_size;
   data = malloc(*size);
 
   status = mz_zip_reader_extract_to_mem(&zip_archive, 0, data, *size, 0);
@@ -151,13 +177,9 @@ void* util::loadZippedFile(Logger* logger, const std::string& path, size_t* size
 
 bool util::saveFile(Logger* logger, const std::string& path, const void* data, size_t size)
 {
-  FILE* file = fopen(path.c_str(), "wb");
-
+  FILE* file = util::openFile(logger, path, "wb");
   if (file == NULL)
-  {
-    logger->error(TAG "Error opening file \"%s\": %s", path.c_str(), strerror(errno));
     return false;
-  }
 
   if (fwrite(data, 1, size, file) != size)
   {
@@ -253,7 +275,7 @@ std::string util::fileNameWithExtension(const std::string& path)
 std::string util::fileName(const std::string& path)
 {
   std::string filename = fileNameWithExtension(path);
-  int ndx = filename.find_last_of('.');
+  const auto ndx = filename.find_last_of('.');
   if (ndx != std::string::npos)
     filename.resize(ndx);
 
@@ -278,7 +300,7 @@ std::string util::extension(const std::string& path)
 std::string util::replaceFileName(const std::string& originalPath, const char* newFileName)
 {
   std::string newPath = originalPath;
-  const int ndx = newPath.find_last_of('\\');
+  const auto ndx = newPath.find_last_of('\\');
   if (ndx == std::string::npos)
     return newFileName;
 
@@ -286,26 +308,27 @@ std::string util::replaceFileName(const std::string& originalPath, const char* n
   return newPath;
 }
 
-std::string util::openFileDialog(HWND hWnd, const char* extensionsFilter)
+std::string util::openFileDialog(HWND hWnd, const std::string& extensionsFilter)
 {
-  char path[_MAX_PATH];
+  std::wstring unicodeExtensionsFilter = util::utf8ToUChar(extensionsFilter);
+  wchar_t path[_MAX_PATH];
   path[0] = 0;
 
-  OPENFILENAME cfg;
+  OPENFILENAMEW cfg;
 
   cfg.lStructSize = sizeof(cfg);
   cfg.hwndOwner = hWnd;
   cfg.hInstance = NULL;
-  cfg.lpstrFilter = extensionsFilter;
+  cfg.lpstrFilter = unicodeExtensionsFilter.c_str();
   cfg.lpstrCustomFilter = NULL;
   cfg.nMaxCustFilter = 0;
   cfg.nFilterIndex = 2;
   cfg.lpstrFile = path;
-  cfg.nMaxFile = sizeof(path);
+  cfg.nMaxFile = sizeof(path)/sizeof(path[0]);
   cfg.lpstrFileTitle = NULL;
   cfg.nMaxFileTitle = 0;
   cfg.lpstrInitialDir = NULL;
-  cfg.lpstrTitle = "Load";
+  cfg.lpstrTitle = L"Load";
   cfg.Flags = OFN_FILEMUSTEXIST;
   cfg.nFileOffset = 0;
   cfg.nFileExtension = 0;
@@ -314,9 +337,9 @@ std::string util::openFileDialog(HWND hWnd, const char* extensionsFilter)
   cfg.lpfnHook = NULL;
   cfg.lpTemplateName = NULL;
 
-  if (GetOpenFileName(&cfg) == TRUE)
+  if (GetOpenFileNameW(&cfg) == TRUE)
   {
-    return path;
+    return util::ucharToUtf8(path);
   }
   else
   {
@@ -324,26 +347,27 @@ std::string util::openFileDialog(HWND hWnd, const char* extensionsFilter)
   }
 }
 
-std::string util::saveFileDialog(HWND hWnd, const char* extensionsFilter)
+std::string util::saveFileDialog(HWND hWnd, const std::string& extensionsFilter)
 {
-  char path[_MAX_PATH];
+  std::wstring unicodeExtensionsFilter = util::utf8ToUChar(extensionsFilter);
+  wchar_t path[_MAX_PATH];
   path[0] = 0;
 
-  OPENFILENAME cfg;
+  OPENFILENAMEW cfg;
 
   cfg.lStructSize = sizeof(cfg);
   cfg.hwndOwner = hWnd;
   cfg.hInstance = NULL;
-  cfg.lpstrFilter = extensionsFilter;
+  cfg.lpstrFilter = unicodeExtensionsFilter.c_str();
   cfg.lpstrCustomFilter = NULL;
   cfg.nMaxCustFilter = 0;
   cfg.nFilterIndex = 2;
   cfg.lpstrFile = path;
-  cfg.nMaxFile = sizeof(path);
+  cfg.nMaxFile = sizeof(path)/sizeof(path[0]);
   cfg.lpstrFileTitle = NULL;
   cfg.nMaxFileTitle = 0;
   cfg.lpstrInitialDir = NULL;
-  cfg.lpstrTitle = "Save";
+  cfg.lpstrTitle = L"Save";
   cfg.Flags = OFN_NOREADONLYRETURN | OFN_OVERWRITEPROMPT;
   cfg.nFileOffset = 0;
   cfg.nFileExtension = 0;
@@ -352,9 +376,9 @@ std::string util::saveFileDialog(HWND hWnd, const char* extensionsFilter)
   cfg.lpfnHook = NULL;
   cfg.lpTemplateName = NULL;
 
-  if (GetSaveFileName(&cfg) == TRUE)
+  if (GetSaveFileNameW(&cfg) == TRUE)
   {
-    return path;
+    return util::ucharToUtf8(path);
   }
   else
   {
@@ -460,10 +484,23 @@ void util::saveImage(Logger* logger, const std::string& path, const void* data, 
     return;
   }
 
-  stbi_write_png(path.c_str(), width, height, 3, pixels, 0);
-  free((void*)pixels);
+  int len;
+  unsigned char* png = stbi_write_png_to_mem((unsigned char*)pixels, 0, width, height, 3, &len);
+  if (png)
+  {
+    FILE* f = util::openFile(logger, path, "wb");
+    if (f)
+    {
+      fwrite(png, 1, len, f);
+      fclose(f);
 
-  logger->info(TAG "Wrote image %u x %u to %s", width, height, path.c_str());
+      logger->info(TAG "Wrote image %u x %u to %s", width, height, path.c_str());
+    }
+
+    STBIW_FREE(png);
+  }
+
+  free((void*)pixels);
 }
 
 const void* util::fromRgb(Logger* logger, const void* data, unsigned width, unsigned height, unsigned* pitch, enum retro_pixel_format format)
@@ -579,8 +616,19 @@ const void* util::fromRgb(Logger* logger, const void* data, unsigned width, unsi
 
 const void* util::loadImage(Logger* logger, const std::string& path, unsigned* width, unsigned* height, unsigned* pitch)
 {
+  FILE* f = util::openFile(logger, path, "rb");
+  if (!f)
+  {
+    *width = 0;
+    *height = 0;
+    *pitch = 0;
+    return NULL;
+  }
+
   int w, h;
-  void* rgb888 = stbi_load(path.c_str(), &w, &h, NULL, STBI_rgb);
+  void* rgb888 = stbi_load_from_file(f, &w, &h, NULL, STBI_rgb);
+
+  fclose(f);
 
   logger->info(TAG "Read image %u x %u from %s", w, h, path.c_str());
 
@@ -589,4 +637,28 @@ const void* util::loadImage(Logger* logger, const std::string& path, unsigned* w
   *pitch = w * 3;
 
   return rgb888;
+}
+
+std::string util::ucharToUtf8(const std::wstring& unicodeString)
+{
+  const auto len = unicodeString.length();
+  const auto needed = WideCharToMultiByte(CP_UTF8, 0, unicodeString.c_str(), len + 1, nullptr, 0, nullptr, nullptr);
+
+  std::string str(needed, '\0');
+  WideCharToMultiByte(CP_UTF8, 0, unicodeString.c_str(), len + 1, (LPSTR)str.data(), str.capacity(), nullptr, nullptr);
+  str.resize(needed - 1); // terminator is not actually part of the string
+
+  return str;
+}
+
+std::wstring util::utf8ToUChar(const std::string& utf8String)
+{
+  const auto len = utf8String.length();
+  const auto needed = MultiByteToWideChar(CP_UTF8, 0, utf8String.c_str(), len + 1, nullptr, 0);
+
+  std::wstring wstr(needed, '\0');
+  MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8String.c_str(), len + 1, (LPWSTR)wstr.data(), wstr.capacity());
+  wstr.resize(needed - 1); // terminator is not actually part of the string
+
+  return wstr;
 }
