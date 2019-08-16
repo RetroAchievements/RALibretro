@@ -90,6 +90,9 @@ protected:
   static void s_audioCallback(void* udata, Uint8* stream, int len);
 
   // Helpers
+  void        processEvents();
+  void        runSmoothed();
+
   void        loadGame();
   void        enableItems(const UINT* items, size_t count, UINT enable);
   void        enableSlots();

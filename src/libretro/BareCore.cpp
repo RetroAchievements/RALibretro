@@ -31,7 +31,7 @@ SOFTWARE.
 #include <stddef.h>
 #include <string.h>
 
-#define TAG "[BRE] "
+#define TAG "[BCR] "
 
 #define CORE_DLSYM(prop, name) \
   do { \
