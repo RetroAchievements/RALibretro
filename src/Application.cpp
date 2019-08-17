@@ -371,6 +371,7 @@ void Application::processEvents()
 
 void Application::runSmoothed()
 {
+  const int TARGET_FRAMES = (int)round(_core.getSystemAVInfo()->timing.fps);
   const int SMOOTHING_FRAMES = 32;
   uint32_t frameMicroseconds[SMOOTHING_FRAMES];
   uint32_t totalMicroseconds;
@@ -441,7 +442,7 @@ void Application::runSmoothed()
         totalSkippedFrames = 0;
       }
 
-      if (fps >= 55)
+      if (fps >= TARGET_FRAMES - 5)
       {
         // one good frame counters two bad ones
         if (nFaults)
@@ -464,9 +465,13 @@ void Application::runSmoothed()
         nFaults++;
         if (nFaults == 100)
         {
-          _fsm.pauseGame();
+          if (hardcore())
+          {
+            _fsm.pauseGame();
 
-          MessageBox(g_mainWindow, "Your system doesn't appear to be able to run this core at the desired speed. Consider changing some of the settings for the core. Game has been paused.", "Performance Problem Detected", MB_OK);
+            MessageBox(g_mainWindow, "Your system doesn't appear to be able to run this core at the desired speed. Consider changing some of the settings for the core. Game has been paused.", "Performance Problem Detected", MB_OK);
+          }
+
           nFaults = 0;
         }
 
