@@ -371,6 +371,7 @@ void Application::processEvents()
 
 void Application::runSmoothed()
 {
+  const int TARGET_FRAMES = (int)round(_core.getSystemAVInfo()->timing.fps);
   const int SMOOTHING_FRAMES = 32;
   uint32_t frameMicroseconds[SMOOTHING_FRAMES];
   uint32_t totalMicroseconds;
@@ -441,7 +442,7 @@ void Application::runSmoothed()
         totalSkippedFrames = 0;
       }
 
-      if (fps >= 55)
+      if (fps >= TARGET_FRAMES - 5)
       {
         // one good frame counters two bad ones
         if (nFaults)
