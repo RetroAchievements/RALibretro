@@ -32,7 +32,11 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #define TAG "[EMU] "
 
+#if defined(_M_X64) || defined(__amd64__)
+static const char* BUILDBOT_URL = "https://buildbot.libretro.com/nightly/windows/x86_64/latest/";
+#else
 static const char* BUILDBOT_URL = "https://buildbot.libretro.com/nightly/windows/x86/latest/";
+#endif
 
 struct CoreInfo
 {

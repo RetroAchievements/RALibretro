@@ -22,7 +22,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{418D11DE-D07C-4BF2-A454-ACCCB451BBE1}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -36,10 +36,14 @@
     <PlatformToolset>v141_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <PlatformToolset>v141</PlatformToolset>
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <PlatformToolset>v141</PlatformToolset>
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141_xp</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -52,31 +56,52 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)..\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\</IntDir>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
     <LocalDebuggerCommand>$(ProjectDir)..\bin\RALibRetro.exe</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>$(ProjectDir)..\bin</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)..\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\</IntDir>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
     <LocalDebuggerCommand>$(ProjectDir)..\bin\RALibRetro.exe</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>$(ProjectDir)..\bin</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\</IntDir>
+    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
+    <LocalDebuggerCommand>$(ProjectDir)..\bin64\RALibRetro.exe</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>$(ProjectDir)..\bin64</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\</IntDir>
+    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
+    <LocalDebuggerCommand>$(ProjectDir)..\bin64\RALibRetro.exe</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>$(ProjectDir)..\bin64</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>LOG_TO_FILE;WIN32;_DEBUG;_WINDOWS;OUTSIDE_SPEEX;RANDOM_PREFIX=speex;_USE_SSE2;FIXED_POINT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)miniz;$(ProjectDir)RAInterface;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>LOG_TO_FILE;WIN32;_DEBUG;_WINDOWS;OUTSIDE_SPEEX;RANDOM_PREFIX=speex;_USE_SSE2;FIXED_POINT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -89,8 +114,8 @@
       <Command>$(ProjectDir)..\etc\MakeGitCpp.bat</Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Command>copy /b/y $(TargetPath) $(ProjectDir)..\bin</Command>
-      <Outputs>$(ProjectDir)..\bin\RALibretro.exe</Outputs>
+      <Command>copy /b/y $(TargetPath) $(SolutionDir)\bin</Command>
+      <Outputs>$(SolutionDir)\bin\RALibretro.exe</Outputs>
       <Inputs>$(TargetPath)</Inputs>
       <Message>Copying $(TargetFileName) to bin directory</Message>
     </CustomBuildStep>
@@ -113,14 +138,74 @@
       <AdditionalDependencies>SDL2main.lib;SDL2.lib;dinput8.lib;winmm.lib;imm32.lib;version.lib;winhttp.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
-      <Command>copy /b/y $(TargetPath) $(ProjectDir)..\bin</Command>
-      <Outputs>$(ProjectDir)..\bin\RALibretro.exe</Outputs>
+      <Command>copy /b/y $(TargetPath) $(SolutionDir)\bin</Command>
+      <Outputs>$(SolutionDir)\bin\RALibretro.exe</Outputs>
       <Inputs>$(TargetPath)</Inputs>
       <Message>Copying $(TargetFileName) to bin directory</Message>
     </CustomBuildStep>
     <PreBuildEvent>
       <Command>$(ProjectDir)..\etc\MakeGitCpp.bat</Command>
     </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)miniz;$(ProjectDir)RAInterface;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization>Disabled</Optimization>
+      <OmitFramePointers>false</OmitFramePointers>
+      <PreprocessorDefinitions>LOG_TO_FILE;_WIN64;_DEBUG;_WINDOWS;OUTSIDE_SPEEX;RANDOM_PREFIX=speex;_USE_SSE2;FIXED_POINT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <TargetMachine>MachineX64</TargetMachine>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(ProjectDir)SDL2\lib\x64;$(DXSDK_DIR)Lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2main.lib;SDL2.lib;dinput8.lib;winmm.lib;imm32.lib;version.lib;winhttp.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <CustomBuildStep>
+      <Command>copy /b/y $(TargetPath) $(SolutionDir)\bin64</Command>
+      <Outputs>$(SolutionDir)\bin64\$(TargetFileName)</Outputs>
+      <Inputs>$(TargetPath)</Inputs>
+      <Message>Copying $(TargetFileName) to bin64 directory</Message>
+    </CustomBuildStep>
+    <PreBuildEvent>
+      <Command>$(ProjectDir)..\etc\MakeGitCpp.bat</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>xcopy /D /Q /Y $(SolutionDir)\bin\Cores\cores.json $(SolutionDir)\bin64\Cores\</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)miniz;$(ProjectDir)RAInterface;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization>Disabled</Optimization>
+      <OmitFramePointers>false</OmitFramePointers>
+      <PreprocessorDefinitions>LOG_TO_FILE;_WIN64;_DEBUG;_WINDOWS;OUTSIDE_SPEEX;RANDOM_PREFIX=speex;_USE_SSE2;FIXED_POINT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <TargetMachine>MachineX64</TargetMachine>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(ProjectDir)SDL2\lib\x64;$(DXSDK_DIR)Lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2main.lib;SDL2.lib;dinput8.lib;winmm.lib;imm32.lib;version.lib;winhttp.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <CustomBuildStep>
+      <Command>copy /b/y $(TargetPath) $(SolutionDir)\bin64</Command>
+      <Outputs>$(SolutionDir)\bin64\$(TargetFileName)</Outputs>
+      <Inputs>$(TargetPath)</Inputs>
+      <Message>Copying $(TargetFileName) to bin64 directory</Message>
+    </CustomBuildStep>
+    <PreBuildEvent>
+      <Command>$(ProjectDir)..\etc\MakeGitCpp.bat</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>xcopy /D /Q /Y $(SolutionDir)\bin\Cores\cores.json $(SolutionDir)\bin64\Cores\</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="About.cpp" />

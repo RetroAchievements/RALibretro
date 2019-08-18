@@ -10,6 +10,7 @@
 /bin/*.cfg
 /bin/*.json
 /bin/*.txt
+/bin/*.zip
 /bin/RA_Integration.dll
 /bin/Assets
 /bin/Cores/*libretro.json
@@ -20,13 +21,7 @@
 /bin/Saves
 /bin/Screenshots
 /bin/System
+/bin64
 /RALibretro*.zip
 /obj
-/Debug
-/Release
-/ipch
 /src/Git.cpp
-/src/menu.res
-/src/log.txt
-/*.db
-/RetroAchievementsKey
