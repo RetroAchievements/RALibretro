@@ -282,14 +282,28 @@ bool cdrom_seek_file(cdrom_t& cdrom, const char* filename)
   if (!cdrom.fp)
     return false;
 
-  // find the cd information (always 16 frames in)
-  cdrom_seek_sector(cdrom, 16);
-  fread(buffer, 1, 256, cdrom.fp);
+  const char* slash = strrchr(filename, '\\');
+  if (slash)
+  {
+    // find the directory record for the first part of the path
+    std::string sPath(filename, slash - filename);
+    if (!cdrom_seek_file(cdrom, sPath.c_str()))
+      return false;
 
-  // the directory_record starts at 156, the sector containing the table of contents is 2 bytes into that.
-  // https://www.cdroller.com/htm/readdata.html
-  sector = buffer[156 + 2] | (buffer[156 + 3] << 8) | (buffer[156 + 4] << 16);
-  cdrom_seek_sector(cdrom, sector);
+    filename += sPath.length() + 1;
+    filename_length -= sPath.length() + 1;
+  }
+  else
+  {
+    // find the cd information (always 16 frames in)
+    cdrom_seek_sector(cdrom, 16);
+    fread(buffer, 1, 256, cdrom.fp);
+
+    // the directory_record starts at 156, the sector containing the table of contents is 2 bytes into that.
+    // https://www.cdroller.com/htm/readdata.html
+    sector = buffer[156 + 2] | (buffer[156 + 3] << 8) | (buffer[156 + 4] << 16);
+    cdrom_seek_sector(cdrom, sector);
+  }
 
   // process the table of contents
   cdrom_read(cdrom, buffer, sizeof(buffer));
@@ -300,8 +314,8 @@ bool cdrom_seek_file(cdrom_t& cdrom, const char* filename)
     if (!*tmp)
       return false;
 
-    // filename is 33 bytes into the record and the format is "FILENAME;version"
-    if (tmp[33 + filename_length] == ';' && !strnicmp((const char*)(tmp + 33), filename, filename_length))
+    // filename is 33 bytes into the record and the format is "FILENAME;version" or "DIRECTORY"
+    if ((tmp[33 + filename_length] == ';' || tmp[33 + filename_length] == '\0') && !strnicmp((const char*)(tmp + 33), filename, filename_length))
     {
       sector = tmp[2] | (tmp[3] << 8) | (tmp[4] << 16);
       cdrom_seek_sector(cdrom, sector);
