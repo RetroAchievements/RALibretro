@@ -637,6 +637,12 @@ bool Application::loadCore(const std::string& coreName)
     return false;
   }
 
+  const std::string* deprecationMessage = getCoreDeprecationMessage(coreName);
+  if (deprecationMessage)
+  {
+    MessageBox(g_mainWindow, deprecationMessage->c_str(), "Warning", MB_OK | MB_ICONWARNING);
+  }
+
   size_t size;
   void* data = util::loadFile(&_logger, getCoreConfigPath(coreName), &size);
 

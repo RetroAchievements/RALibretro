@@ -42,6 +42,7 @@ struct CoreInfo
   std::string name;
   std::string filename;
   std::string extensions;
+  std::string deprecationMessage;
   std::set<System> systems;
   time_t filetime;
   time_t servertime;
@@ -147,6 +148,8 @@ bool loadCores(Config* config, Logger* logger)
             ud->core->name = std::string(str, num);
           else if (ud->key == "extensions")
             ud->core->extensions = std::string(str, num);
+          else if (ud->key == "deprecated")
+            ud->core->deprecationMessage = std::string(str, num);
         }
         break;
 
@@ -240,6 +243,22 @@ const std::string& getCoreName(int encoded, System& system)
   }
 
   return s_coreInfos[i].filename;
+}
+
+const std::string* getCoreDeprecationMessage(const std::string& coreName)
+{
+  for (size_t i = 0; i < s_coreInfos.size(); ++i)
+  {
+    if (s_coreInfos[i].filename == coreName)
+    {
+      if (s_coreInfos[i].deprecationMessage.empty())
+        return NULL;
+
+      return &s_coreInfos[i].deprecationMessage;
+    }
+  }
+
+  return NULL;
 }
 
 const char* getSystemName(System system)
@@ -516,6 +535,9 @@ protected:
     std::map<std::string, const CoreInfo*> systemCores;
     for (const auto& core : s_coreInfos)
     {
+      if (!core.deprecationMessage.empty() && !core.filetime)
+        continue;
+
       if (core.systems.find(system) != core.systems.end())
         systemCores.insert_or_assign(core.name, &core);
     }
@@ -539,7 +561,15 @@ protected:
       coreNames[index] = pair.second->filename;
       ++index;
 
-      SetWindowText(hCoreName, pair.first.c_str());
+      if (pair.second->deprecationMessage.empty())
+      {
+        SetWindowText(hCoreName, pair.first.c_str());
+      }
+      else
+      {
+        std::string deprecatedName = pair.first + " (Deprecated)";
+        SetWindowText(hCoreName, deprecatedName.c_str());
+      }
 
       if (pair.second->filetime)
       {
@@ -781,6 +811,9 @@ bool showCoresDialog(Config* config, Logger* logger)
 
   for (const auto& core : s_coreInfos)
   {
+    if (!core.deprecationMessage.empty() && !core.filetime)
+      continue;
+
     for (auto system : core.systems)
     {
       allSystems.insert_or_assign(getSystemName(system), system);
