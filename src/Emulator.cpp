@@ -379,7 +379,7 @@ static bool romLoadPsx(Logger* logger, const std::string& path)
     {
       if (!cdrom_seek_file(cdrom, exe_name.c_str()))
       {
-        logger->debug(TAG "Failed to locate %s in %s", exe_name.c_str(), path.c_str());
+        logger->info(TAG "Failed to locate %s in %s", exe_name.c_str(), path.c_str());
       }
       else
       {
