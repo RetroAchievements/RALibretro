@@ -23,6 +23,10 @@
     "name": "Gambatte",
     "systems": [4,6]
   },
+  "gearboy_libretro":{
+    "name": "Gearboy",
+    "systems": [4,6]
+  },
   "gearsystem_libretro":{
     "name": "Gearsystem",
     "extensions": "bin|sms|rom",
