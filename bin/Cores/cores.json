@@ -2,6 +2,12 @@
   "fbalpha_libretro":{
     "name": "FB Alpha",
     "extensions": "zip",
+    "deprecated": "FB Alpha is no longer maintained. Please use FinalBurn Neo.",
+    "systems": [27]
+  },
+  "fbneo_libretro":{
+    "name": "FinalBurn Neo",
+    "extensions": "zip",
     "systems": [27]
   },
   "fceumm_libretro":{
