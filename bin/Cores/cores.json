@@ -4,6 +4,14 @@
     "extensions": "col",
     "systems": [44]
   },
+  "bsnes_mercury_balanced_libretro":{
+    "name": "bsnes-mercury (Balanced)",
+    "systems": [3]
+  },
+  "bsnes_mercury_performance_libretro":{
+    "name": "bsnes-mercury (Performance)",
+    "systems": [3]
+  },
   "fbalpha_libretro":{
     "name": "FB Alpha",
     "extensions": "zip",
