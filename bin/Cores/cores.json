@@ -47,6 +47,10 @@
     "name": "Handy",
     "systems": [13]
   },
+  "mednafen_gba_libretro":{
+    "name": "Mednafen VBA-M",
+    "systems": [5]
+  },
   "mednafen_ngp_libretro":{
     "name": "Mednafen NeoPop",
     "systems": [14]
