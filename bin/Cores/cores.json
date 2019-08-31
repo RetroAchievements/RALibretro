@@ -41,6 +41,10 @@
     "name": "Mednafen NeoPop",
     "systems": [14]
   },
+  "mednafen_pce_fast_libretro":{
+    "name": "Beetle PCE Fast",
+    "systems": [8]
+  },
   "mednafen_psx_libretro":{
     "name": "Beetle PSX",
     "extensions": "m3u|cue",

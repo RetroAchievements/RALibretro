@@ -52,7 +52,8 @@ bool libretro::BareCore::load(libretro::LoggerComponent* logger, const char* pat
   if (!_handle)
   {
     const std::wstring unicodePath = util::utf8ToUChar(path);
-    _handle = LoadLibraryW(unicodePath.c_str());
+    if (unicodePath.length() != strlen(path))
+      _handle = LoadLibraryW(unicodePath.c_str());
   }
 
   if (_handle == NULL)
