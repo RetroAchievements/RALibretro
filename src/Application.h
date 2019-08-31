@@ -54,7 +54,6 @@ public:
   void unloadCore();
   void resetGame();
   bool hardcore();
-  void setTurbo(bool turbo);
   bool unloadGame();
   void pauseGame(bool pause);
 

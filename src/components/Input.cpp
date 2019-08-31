@@ -228,6 +228,22 @@ void Input::buttonEvent(int port, Button button, bool pressed)
   _info[port][_devices[port]]._state[rbutton] = pressed;
 }
 
+void Input::axisEvent(int port, Axis axis, int16_t value)
+{
+  int raxis;
+
+  switch (axis)
+  {
+    case Axis::kLeftAxisX:  raxis = (RETRO_DEVICE_INDEX_ANALOG_LEFT  << 1) | RETRO_DEVICE_ID_ANALOG_X; break;
+    case Axis::kLeftAxisY:  raxis = (RETRO_DEVICE_INDEX_ANALOG_LEFT  << 1) | RETRO_DEVICE_ID_ANALOG_Y; break;
+    case Axis::kRightAxisX: raxis = (RETRO_DEVICE_INDEX_ANALOG_RIGHT << 1) | RETRO_DEVICE_ID_ANALOG_X; break;
+    case Axis::kRightAxisY: raxis = (RETRO_DEVICE_INDEX_ANALOG_RIGHT << 1) | RETRO_DEVICE_ID_ANALOG_Y; break;
+    default:                return;
+  }
+
+  _info[port][_devices[port]]._axis[raxis] = value;
+}
+
 void Input::processEvent(const SDL_Event* event)
 {
   switch (event->type)
@@ -276,10 +292,14 @@ void Input::setControllerInfo(const struct retro_controller_info* rinfo, unsigne
       info._description = rinfo->types[i].desc;
       info._id = rinfo->types[i].id;
 
-      if ((info._id & RETRO_DEVICE_MASK) == RETRO_DEVICE_JOYPAD)
+      if ((info._id & RETRO_DEVICE_MASK) == RETRO_DEVICE_JOYPAD ||
+          (info._id & RETRO_DEVICE_MASK) == RETRO_DEVICE_ANALOG)
       {
         if (port < kMaxPorts)
         {
+          memset(info._state, 0, sizeof(info._state));
+          memset(info._axis, 0, sizeof(info._axis));
+
           _info[port].push_back(info);
           _ports |= 1ULL << port;
         }
@@ -292,6 +312,28 @@ void Input::setControllerInfo(const struct retro_controller_info* rinfo, unsigne
   }
 }
 
+void Input::getControllerNames(unsigned port, std::vector<std::string>& names, int& selectedIndex) const
+{
+  names.clear();
+
+  if (port < kMaxPorts)
+  {
+    for (const ControllerInfo& info : _info[port])
+      names.push_back(info._description);
+
+    selectedIndex = _devices[port];
+  }
+  else
+  {
+    selectedIndex = 0;
+  }
+}
+
+void Input::setSelectedControllerIndex(unsigned port, int selectedIndex)
+{
+  _devices[port] = selectedIndex;
+}
+
 bool Input::ctrlUpdated()
 {
   bool updated = _updated;
@@ -301,17 +343,8 @@ bool Input::ctrlUpdated()
 
 unsigned Input::getController(unsigned port)
 {
-  uint64_t bit = 1ULL << port;
-
-  for (const auto& pair: _pads)
-  {
-    const Pad* pad = &pair.second;
-
-    if ((pad->_ports & bit) != 0)
-    {
-      return _info[port][_devices[port]]._id;
-    }
-  }
+  if (port < kMaxPorts)
+    return _info[port][_devices[port]]._id;
 
   return RETRO_DEVICE_NONE;
 }
@@ -324,7 +357,19 @@ void Input::poll()
 
 int16_t Input::read(unsigned port, unsigned device, unsigned index, unsigned id)
 {
-  return (port < kMaxPorts &&_info[port][_devices[port]]._state[id]) ? 32767 : 0;
+  if (port < kMaxPorts)
+  {
+    switch (device)
+    {
+      case RETRO_DEVICE_JOYPAD:
+        return _info[port][_devices[port]]._state[id] ? 32767 : 0;
+
+      case RETRO_DEVICE_ANALOG:
+        return _info[port][_devices[port]]._axis[index << 1 | id];
+    }
+  }
+
+  return 0;
 }
 
 KeyBinds::Binding Input::captureButtonPress()
@@ -391,11 +436,10 @@ void Input::removeController(const SDL_Event* event)
   if (it != _pads.end())
   {
     Pad* pad = &it->second;
+    _logger->info(TAG "Controller %s (%s) removed", pad->_controllerName, pad->_joystickName);
 
     SDL_GameControllerClose(pad->_controller);
     _pads.erase(it);
-
-    _logger->info(TAG "Controller %s (%s) removed", pad->_controllerName, pad->_joystickName);
 
     // Flag a pending update so the core will receive an event for this removal
     _updated = true;

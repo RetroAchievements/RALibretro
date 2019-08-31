@@ -49,7 +49,15 @@ public:
     kL3,
     kR3,
     kSelect,
-    kStart
+    kStart,
+  };
+
+  enum class Axis
+  {
+    kLeftAxisX,
+    kLeftAxisY,
+    kRightAxisX,
+    kRightAxisY
   };
 
   bool init(libretro::LoggerComponent* logger);
@@ -59,6 +67,7 @@ public:
   void addController(int which);
   void autoAssign();
   void buttonEvent(int port, Button button, bool pressed);
+  void axisEvent(int port, Axis axis, int16_t value);
   void processEvent(const SDL_Event* event);
 
   virtual void setInputDescriptors(const struct retro_input_descriptor* descs, unsigned count) override;
@@ -66,6 +75,8 @@ public:
   virtual void     setControllerInfo(const struct retro_controller_info* info, unsigned count) override;
   virtual bool     ctrlUpdated() override;
   virtual unsigned getController(unsigned port) override;
+  void             getControllerNames(unsigned port, std::vector<std::string>& names, int& selectedIndex) const;
+  void             setSelectedControllerIndex(unsigned port, int selectedIndex);
 
   virtual void    poll() override;
   virtual int16_t read(unsigned port, unsigned device, unsigned index, unsigned id) override;
@@ -103,6 +114,7 @@ protected:
     std::string _description;
     unsigned    _id;
     bool        _state[16];
+    int16_t     _axis[4];
   };
 
   enum

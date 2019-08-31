@@ -205,6 +205,9 @@ std::string Config::serialize()
 
   for (const auto& pair : _selections)
   {
+    if (pair.first[0] == '_' && pair.first[1] == '_')
+      continue;
+
     json.append(comma);
     comma = ",";
 
@@ -267,7 +270,37 @@ void Config::deserialize(const char* json)
   _updated = true;
 }
 
-void Config::showDialog(const std::string& coreName)
+void Config::initializeControllerVariable(Variable& variable, const char* name, const char* key, const std::map<std::string, unsigned>& names, unsigned selectedDevice)
+{
+  variable._name = name;
+  variable._key = key;
+  variable._selected = 0;
+
+  for (const auto& pair : names)
+  {
+    if (pair.second == selectedDevice)
+      variable._selected = variable._options.size();
+
+    variable._options.push_back(pair.first);
+  }
+}
+
+void Config::initializeInput(Input& input)
+{
+  Variable controllerVariable;
+
+  for (unsigned i = 2; i > 0; --i)
+  {
+    controllerVariable._key = "__controller" + std::to_string(i);
+    controllerVariable._name = "Controller " + std::to_string(i);
+
+    input.getControllerNames(i - 1, controllerVariable._options, controllerVariable._selected);
+    if (controllerVariable._options.size() > 1)
+      _variables.insert(_variables.begin(), controllerVariable);
+  }
+}
+
+void Config::showDialog(const std::string& coreName, Input& input)
 {
   const WORD HEADER_WIDTH = 90;
   const WORD VALUE_WIDTH = 100;
@@ -284,7 +317,6 @@ void Config::showDialog(const std::string& coreName)
   if (_variables.empty())
   {
     db.addLabel("No settings", 0, 0, HEADER_WIDTH + VALUE_WIDTH, LINE_HEIGHT);
-    x = HEADER_WIDTH + VALUE_WIDTH + 15;
     y = LINE_HEIGHT;
   }
   else
@@ -303,25 +335,25 @@ void Config::showDialog(const std::string& coreName)
       db.addCombobox(50000 + id, x + HEADER_WIDTH + 5, y, VALUE_WIDTH, LINE_HEIGHT, 5,
         s_getOption, (void*)& var._options, &var._selected);
 
-      if (++row == rows)
+      if (++id < _variables.size())
       {
-        y = 0;
-        row = 0;
-        x += HEADER_WIDTH + VALUE_WIDTH + 15;
+        if (++row == rows)
+        {
+          y = 0;
+          row = 0;
+          x += HEADER_WIDTH + VALUE_WIDTH + 15;
+        }
+        else
+        {
+          y += LINE_HEIGHT;
+        }
       }
-      else
-      {
-        y += LINE_HEIGHT;
-      }
-
-      ++id;
     }
-
-    if (columns > 1 && (_variables.size() % rows) != 0)
-      x += HEADER_WIDTH + VALUE_WIDTH + 15;
 
     y = rows * LINE_HEIGHT;
   }
+
+  x += HEADER_WIDTH + VALUE_WIDTH + 15;
 
   db.addButton("OK", IDOK, x - 60 - 55, y + 4, 50, 14, true);
   db.addButton("Cancel", IDCANCEL, x - 60, y + 4, 50, 14, false);
@@ -332,7 +364,15 @@ void Config::showDialog(const std::string& coreName)
   {
     for (auto& var : _variables)
     {
-      _selections[var._key] = var._options[var._selected];
+      if (var._key.length() == 13 && SDL_strncmp(var._key.c_str(), "__controller", 12) == 0)
+      {
+        const unsigned port = var._key[12] - '1';
+        input.setSelectedControllerIndex(port, var._selected);
+      }
+      else
+      {
+        _selections[var._key] = var._options[var._selected];
+      }
     }
   }
 }

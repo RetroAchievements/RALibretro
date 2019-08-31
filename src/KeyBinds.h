@@ -52,6 +52,12 @@ public:
     kButtonSelect,
     kButtonStart,
 
+    // Joypad analog sticks
+    kAxisLeftX,
+    kAxisLeftY,
+    kAxisRightX,
+    kAxisRightY,
+
     // State state management (extra = slot)
     kSaveState,
     kLoadState,
@@ -99,7 +105,7 @@ public:
     Type type;
     uint16_t modifiers;
   };
-  typedef std::array<Binding, 77> BindingList;
+  typedef std::array<Binding, 85> BindingList;
 
   static void getBindingString(char buffer[32], const KeyBinds::Binding& desc);
 
@@ -111,6 +117,7 @@ protected:
 
   KeyBinds::Action translateButtonPress(int button, unsigned* extra);
   KeyBinds::Action translateButtonReleased(int button, unsigned* extra);
+  KeyBinds::Action translateAnalog(int button, Sint16 value, unsigned* extra);
 
   BindingList _bindings;
 

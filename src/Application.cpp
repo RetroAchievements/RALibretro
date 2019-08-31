@@ -685,6 +685,8 @@ bool Application::loadCore(const std::string& coreName)
     });
 
     free(data);
+
+    _config.initializeInput(_input);
   }
 
   _coreName = coreName;
@@ -2125,7 +2127,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       break;
       
     case IDM_CORE_CONFIG:
-      _config.showDialog(_core.getSystemInfo()->library_name);
+      _config.showDialog(_core.getSystemInfo()->library_name, _input);
       break;
 
     case IDM_INPUT_CONFIG:
@@ -2235,6 +2237,12 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
   case KeyBinds::Action::kButtonR3:         _input.buttonEvent(extra >> 8, Input::Button::kR3, (extra & 0xFF) != 0); break;
   case KeyBinds::Action::kButtonSelect:     _input.buttonEvent(extra >> 8, Input::Button::kSelect, (extra & 0xFF) != 0); break;
   case KeyBinds::Action::kButtonStart:      _input.buttonEvent(extra >> 8, Input::Button::kStart, (extra & 0xFF) != 0); break;
+
+  // Joypad analog sticks
+  case KeyBinds::Action::kAxisLeftX:        _input.axisEvent(extra >> 16, Input::Axis::kLeftAxisX, (int16_t)(extra & 0xFFFF)); break;
+  case KeyBinds::Action::kAxisLeftY:        _input.axisEvent(extra >> 16, Input::Axis::kLeftAxisY, (int16_t)(extra & 0xFFFF)); break;
+  case KeyBinds::Action::kAxisRightX:       _input.axisEvent(extra >> 16, Input::Axis::kRightAxisX, (int16_t)(extra & 0xFFFF)); break;
+  case KeyBinds::Action::kAxisRightY:       _input.axisEvent(extra >> 16, Input::Axis::kRightAxisY, (int16_t)(extra & 0xFFFF)); break;
 
   // State management
   case KeyBinds::Action::kSaveState:        saveState(extra); break;
