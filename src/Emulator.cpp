@@ -270,17 +270,19 @@ const char* getSystemName(System system)
   case System::kMasterSystem:   return "Master System";
   case System::kMegaDrive:      return "Sega Genesis";
   case System::kNintendo:       return "Nintendo Entertainment System";
-  case System::kPCEngine:       return "TurboGrafx-16";
+  case System::kPCEngine:       return "PC Engine";
   case System::kSuperNintendo:  return "Super Nintendo Entertainment System";
   case System::kGameBoy:        return "Game Boy";
   case System::kGameBoyColor:   return "Game Boy Color";
   case System::kGameBoyAdvance: return "Game Boy Advance";
+  case System::kNintendo64:     return "Nintendo 64";
   case System::kPlayStation1:   return "PlayStation";
   case System::kNeoGeoPocket:   return "Neo Geo Pocket";
   case System::kVirtualBoy:     return "Virtual Boy";
   case System::kGameGear:       return "Game Gear";
   case System::kArcade:         return "Arcade";
   case System::kAtari7800:      return "Atari 7800";
+  case System::kColecovision:   return "Colecovision";
   default:                      break;
   }
   

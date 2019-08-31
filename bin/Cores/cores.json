@@ -1,4 +1,9 @@
 {
+  "bluemsx_libretro":{
+    "name": "blueMSX",
+    "extensions": "col",
+    "systems": [44]
+  },
   "fbalpha_libretro":{
     "name": "FB Alpha",
     "extensions": "zip",

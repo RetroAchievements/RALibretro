@@ -151,7 +151,8 @@ void libretro::BareCore::init() const
 void libretro::BareCore::deinit() const
 {
   _logger->debug(TAG "Calling %s", __FUNCTION__);
-  _deinit();
+  if (_deinit)
+    _deinit();
   _logger->debug(TAG "Called  %s", __FUNCTION__);
 }
 

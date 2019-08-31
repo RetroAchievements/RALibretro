@@ -41,12 +41,14 @@ enum class System
   kGameBoy        = GB,
   kGameBoyColor   = GBC,
   kGameBoyAdvance = GBA,
+  kNintendo64     = N64,
   kPlayStation1   = PlayStation,
   kNeoGeoPocket   = NeoGeoPocket,
   kVirtualBoy     = VirtualBoy,
   kGameGear       = GameGear,
   kArcade         = Arcade,
-  kAtari7800      = Atari7800
+  kAtari7800      = Atari7800,
+  kColecovision   = Colecovision
 };
 
 const std::string& getEmulatorName(const std::string& coreName, System system);
