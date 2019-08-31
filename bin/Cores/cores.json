@@ -93,5 +93,9 @@
   "stella_libretro":{
     "name": "Stella",
     "systems": [25]
+  },
+  "vba_next_libretro":{
+    "name": "VBA Next",
+    "systems": [5]
   }
 }
