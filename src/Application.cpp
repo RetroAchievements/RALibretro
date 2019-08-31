@@ -688,6 +688,20 @@ bool Application::loadCore(const std::string& coreName)
   }
 
   _coreName = coreName;
+
+  std::string coreDetail = coreName + "/";
+  const char* scan = _core.getSystemInfo()->library_version;
+  while (*scan)
+  {
+    if (*scan == ' ')
+      coreDetail.push_back('_');
+    else
+      coreDetail.push_back(*scan);
+
+    ++scan;
+  }
+  RA_SetUserAgentDetail(coreDetail.c_str());
+
   return true;
 }
 
