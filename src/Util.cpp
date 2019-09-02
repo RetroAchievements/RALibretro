@@ -363,7 +363,7 @@ bool util::downloadFile(Logger* logger, const std::string& url, const std::strin
             bSuccess = TRUE;
             while (availableBytes > 0)
             {
-              const DWORD bytesToRead = min(availableBytes, 4096);
+              const DWORD bytesToRead = availableBytes < 4096 ? availableBytes : 4096;
               sBuffer.resize(bytesToRead);
 
               DWORD bytesFetched = 0U;

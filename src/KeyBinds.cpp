@@ -451,7 +451,7 @@ KeyBinds::Action KeyBinds::translate(const SDL_KeyboardEvent* key, unsigned* ext
   {
     if (_bindings[i].type == Binding::Type::Key)
     {
-      if (key->keysym.sym == _bindings[i].button && mod == _bindings[i].modifiers)
+      if ((uint32_t)key->keysym.sym == _bindings[i].button && mod == _bindings[i].modifiers)
       {
         if (key->state == SDL_PRESSED)
           return translateButtonPress(i, extra);
@@ -732,7 +732,6 @@ bool KeyBinds::deserializeBindings(const char* json)
     }
     else if (event == JSONSAX_STRING)
     {
-      int binding = 0;
       for (int i = 0; i < kMaxBindings; ++i)
       {
         if (ud->key == bindingNames[i])

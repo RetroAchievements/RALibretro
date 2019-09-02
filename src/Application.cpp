@@ -371,8 +371,8 @@ void Application::processEvents()
 
 void Application::runSmoothed()
 {
-  const int TARGET_FRAMES = (int)round(_core.getSystemAVInfo()->timing.fps);
-  const int SMOOTHING_FRAMES = 32;
+  const unsigned int TARGET_FRAMES = (int)round(_core.getSystemAVInfo()->timing.fps);
+  const unsigned int SMOOTHING_FRAMES = 32;
   uint32_t frameMicroseconds[SMOOTHING_FRAMES];
   uint32_t totalMicroseconds;
   int frameIndex = 0;
@@ -393,7 +393,7 @@ void Application::runSmoothed()
   const auto tFirstFrameEnd = std::chrono::steady_clock::now();
   const auto tFirstFrameElapsed = std::chrono::duration_cast<std::chrono::microseconds>(tFirstFrameEnd - tFirstFrameStart);
 
-  for (int i = 0; i < SMOOTHING_FRAMES; ++i)
+  for (unsigned int i = 0; i < SMOOTHING_FRAMES; ++i)
     frameMicroseconds[i] = (uint32_t)tFirstFrameElapsed.count();
   totalMicroseconds = frameMicroseconds[0] * SMOOTHING_FRAMES;
 

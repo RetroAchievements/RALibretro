@@ -368,5 +368,5 @@ INT_PTR CALLBACK Dialog::s_dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM
 
 void Dialog::markClosed(HWND hwnd)
 {
-  SetWindowLongPtr(hwnd, GWLP_USERDATA, NULL);
+  SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);
 }
