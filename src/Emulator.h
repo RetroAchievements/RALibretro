@@ -48,7 +48,8 @@ enum class System
   kGameGear       = GameGear,
   kArcade         = Arcade,
   kAtari7800      = Atari7800,
-  kColecovision   = Colecovision
+  kColecovision   = Colecovision,
+  kSG1000         = SG1000
 };
 
 const std::string& getEmulatorName(const std::string& coreName, System system);

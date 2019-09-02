@@ -4,6 +4,11 @@
     "extensions": "col",
     "systems": [44]
   },
+  "bluemsx_libretro":{
+    "name": "blueMSX",
+    "extensions": "sg",
+    "systems": [33]
+  },
   "bsnes_mercury_balanced_libretro":{
     "name": "bsnes-mercury (Balanced)",
     "systems": [3]

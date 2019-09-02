@@ -283,6 +283,7 @@ const char* getSystemName(System system)
   case System::kArcade:         return "Arcade";
   case System::kAtari7800:      return "Atari 7800";
   case System::kColecovision:   return "Colecovision";
+  case System::kSG1000:         return "SG-1000";
   default:                      break;
   }
   
