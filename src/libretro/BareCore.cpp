@@ -52,7 +52,8 @@ bool libretro::BareCore::load(libretro::LoggerComponent* logger, const char* pat
   if (!_handle)
   {
     const std::wstring unicodePath = util::utf8ToUChar(path);
-    _handle = LoadLibraryW(unicodePath.c_str());
+    if (unicodePath.length() != strlen(path))
+      _handle = LoadLibraryW(unicodePath.c_str());
   }
 
   if (_handle == NULL)
@@ -151,7 +152,8 @@ void libretro::BareCore::init() const
 void libretro::BareCore::deinit() const
 {
   _logger->debug(TAG "Calling %s", __FUNCTION__);
-  _deinit();
+  if (_deinit)
+    _deinit();
   _logger->debug(TAG "Called  %s", __FUNCTION__);
 }
 

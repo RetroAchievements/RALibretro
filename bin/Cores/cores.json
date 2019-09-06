@@ -1,4 +1,22 @@
 {
+  "bluemsx_libretro":{
+    "name": "blueMSX",
+    "extensions": "col",
+    "systems": [44]
+  },
+  "bluemsx_libretro":{
+    "name": "blueMSX",
+    "extensions": "sg",
+    "systems": [33]
+  },
+  "bsnes_mercury_balanced_libretro":{
+    "name": "bsnes-mercury (Balanced)",
+    "systems": [3]
+  },
+  "bsnes_mercury_performance_libretro":{
+    "name": "bsnes-mercury (Performance)",
+    "systems": [3]
+  },
   "fbalpha_libretro":{
     "name": "FB Alpha",
     "extensions": "zip",
@@ -18,6 +36,20 @@
     "name": "Gambatte",
     "systems": [4,6]
   },
+  "gearboy_libretro":{
+    "name": "Gearboy",
+    "systems": [4,6]
+  },
+  "gearsystem_libretro":{
+    "name": "Gearsystem",
+    "extensions": "bin|sms|rom",
+    "systems": [1,11]
+  },
+  "gearsystem_libretro":{
+    "name": "Gearsystem",
+    "extensions": "gg|sg",
+    "systems": [15]
+  },
   "genesis_plus_gx_libretro":{
     "name": "Genesis Plus GX",
     "extensions": "bin|gen|smd|md|sms",
@@ -32,9 +64,17 @@
     "name": "Handy",
     "systems": [13]
   },
+  "mednafen_gba_libretro":{
+    "name": "Mednafen VBA-M",
+    "systems": [5]
+  },
   "mednafen_ngp_libretro":{
     "name": "Mednafen NeoPop",
     "systems": [14]
+  },
+  "mednafen_pce_fast_libretro":{
+    "name": "Beetle PCE Fast",
+    "systems": [8]
   },
   "mednafen_psx_libretro":{
     "name": "Beetle PSX",
@@ -70,5 +110,9 @@
   "stella_libretro":{
     "name": "Stella",
     "systems": [25]
+  },
+  "vba_next_libretro":{
+    "name": "VBA Next",
+    "systems": [5]
   }
 }
