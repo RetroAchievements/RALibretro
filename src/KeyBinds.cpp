@@ -50,6 +50,10 @@ enum
   kJoy0R3,
   kJoy0Select,
   kJoy0Start,
+  kJoy0LeftAnalogX,
+  kJoy0LeftAnalogY,
+  kJoy0RightAnalogX,
+  kJoy0RightAnalogY,
 
   kJoy1Up,
   kJoy1Down,
@@ -67,6 +71,10 @@ enum
   kJoy1R3,
   kJoy1Select,
   kJoy1Start,
+  kJoy1LeftAnalogX,
+  kJoy1LeftAnalogY,
+  kJoy1RightAnalogX,
+  kJoy1RightAnalogY,
 
   // State management
   kSaveState1,
@@ -127,9 +135,11 @@ enum
 static const char* bindingNames[] = {
   "J0_UP", "J0_DOWN", "J0_LEFT", "J0_RIGHT", "J0_X", "J0_Y", "J0_A", "J0_B",
   "J0_L", "J0_R", "J0_L2", "J0_R2", "J0_L3", "J0_R3", "J0_SELECT", "J0_START",
+  "J0_LSTICK_X", "J0_LSTICK_Y", "J0_RSTICK_X", "J0_RSTICK_Y",
 
   "J1_UP", "J1_DOWN", "J1_LEFT", "J1_RIGHT", "J1_X", "J1_Y", "J1_A", "J1_B",
   "J1_L", "J1_R", "J1_L2", "J1_R2", "J1_L3", "J1_R3", "J1_SELECT", "J1_START",
+  "J1_LSTICK_X", "J1_LSTICK_Y", "J1_RSTICK_X", "J1_RSTICK_Y",
 
   "SAVE1", "SAVE2", "SAVE3", "SAVE4", "SAVE5", "SAVE6", "SAVE7", "SAVE8", "SAVE9", "SAVE0",
   "LOAD1", "LOAD2", "LOAD3", "LOAD4", "LOAD5", "LOAD6", "LOAD7", "LOAD8", "LOAD9", "LOAD0",
@@ -170,6 +180,10 @@ bool KeyBinds::init(libretro::LoggerComponent* logger)
     _bindings[kJoy0R2] = { 0, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, Binding::Type::Axis, 0 };
     _bindings[kJoy0L3] = { 0, SDL_CONTROLLER_BUTTON_LEFTSTICK, Binding::Type::Button, 0 };
     _bindings[kJoy0R3] = { 0, SDL_CONTROLLER_BUTTON_RIGHTSTICK, Binding::Type::Button, 0 };
+    _bindings[kJoy0LeftAnalogX] = { 0, SDL_CONTROLLER_AXIS_LEFTX, Binding::Type::Axis, 0 };
+    _bindings[kJoy0LeftAnalogY] = { 0, SDL_CONTROLLER_AXIS_LEFTY, Binding::Type::Axis, 0 };
+    _bindings[kJoy0RightAnalogX] = { 0, SDL_CONTROLLER_AXIS_RIGHTX, Binding::Type::Axis, 0 };
+    _bindings[kJoy0RightAnalogY] = { 0, SDL_CONTROLLER_AXIS_RIGHTY, Binding::Type::Axis, 0 };
     _bindings[kJoy0Select] = { 0, SDL_CONTROLLER_BUTTON_BACK, Binding::Type::Button, 0 };
     _bindings[kJoy0Start] = { 0, SDL_CONTROLLER_BUTTON_START, Binding::Type::Button, 0 };
   }
@@ -391,6 +405,34 @@ KeyBinds::Action KeyBinds::translateButtonReleased(int button, unsigned* extra)
   }
 }
 
+KeyBinds::Action KeyBinds::translateAnalog(int button, Sint16 value, unsigned* extra)
+{
+  KeyBinds::Action action;
+  unsigned controller;
+
+  switch (button)
+  {
+    case kJoy0LeftAnalogX:  action = Action::kAxisLeftX;  controller = 0; break;
+    case kJoy0LeftAnalogY:  action = Action::kAxisLeftY;  controller = 0; break;
+    case kJoy0RightAnalogX: action = Action::kAxisRightX; controller = 0; break;
+    case kJoy0RightAnalogY: action = Action::kAxisRightY; controller = 0; break;
+    case kJoy1LeftAnalogX:  action = Action::kAxisLeftX;  controller = 1; break;
+    case kJoy1LeftAnalogY:  action = Action::kAxisLeftY;  controller = 1; break;
+    case kJoy1RightAnalogX: action = Action::kAxisRightX; controller = 1; break;
+    case kJoy1RightAnalogY: action = Action::kAxisRightY; controller = 1; break;
+
+    default:
+      return Action::kNothing;
+  }
+
+  /* if we pass -32768, it sometimes causes an overflow and acts like a positive value */
+  if (value == -32768)
+    value = -32767;
+
+  *extra = (((unsigned)value) & 0xFFFF) | (controller << 16);
+  return action;
+}
+
 KeyBinds::Action KeyBinds::translate(const SDL_KeyboardEvent* key, unsigned* extra)
 {
   if (key->repeat)
@@ -409,7 +451,7 @@ KeyBinds::Action KeyBinds::translate(const SDL_KeyboardEvent* key, unsigned* ext
   {
     if (_bindings[i].type == Binding::Type::Key)
     {
-      if (key->keysym.sym == _bindings[i].button && mod == _bindings[i].modifiers)
+      if ((uint32_t)key->keysym.sym == _bindings[i].button && mod == _bindings[i].modifiers)
       {
         if (key->state == SDL_PRESSED)
           return translateButtonPress(i, extra);
@@ -447,19 +489,48 @@ KeyBinds::Action KeyBinds::translate(const SDL_ControllerButtonEvent* cbutton, u
   return Action::kNothing;
 }
 
+static bool IsAnalog(int button)
+{
+  switch (button)
+  {
+    case kJoy0LeftAnalogX:
+    case kJoy0LeftAnalogY:
+    case kJoy0RightAnalogX:
+    case kJoy0RightAnalogY:
+    case kJoy1LeftAnalogX:
+    case kJoy1LeftAnalogY:
+    case kJoy1RightAnalogX:
+    case kJoy1RightAnalogY:
+      return true;
+
+    default:
+      return false;
+  }
+}
+
 void KeyBinds::translate(const SDL_ControllerAxisEvent* caxis, Input& input,
   Action* action1, unsigned* extra1, Action* action2, unsigned* extra2)
 {
   *action1 = *action2 = Action::kNothing;
 
   int threshold = static_cast<int>(32767 * input.getJoystickSensitivity(caxis->which));
+  int analogThreshold = threshold / 4;
   for (size_t i = 0; i < kMaxBindings; i++)
   {
     if (_bindings[i].type == Binding::Type::Axis)
     {
       if (caxis->axis == _bindings[i].button && caxis->which == _bindings[i].joystick_id)
       {
-        if ((_bindings[i].modifiers & 0xFF) == 0xFF) // negative axis
+        if (IsAnalog(i))
+        {
+          if (caxis->value > analogThreshold || caxis->value < -analogThreshold)
+            *action1 = translateAnalog(i, caxis->value, extra1);
+          else
+            *action1 = translateAnalog(i, 0, extra1);
+
+          break;
+        }
+        else if ((_bindings[i].modifiers & 0xFF) == 0xFF) // negative axis
         {
           if (caxis->value < -threshold)
             *action1 = translateButtonPress(i, extra1);
@@ -661,7 +732,6 @@ bool KeyBinds::deserializeBindings(const char* json)
     }
     else if (event == JSONSAX_STRING)
     {
-      int binding = 0;
       for (int i = 0; i < kMaxBindings; ++i)
       {
         if (ud->key == bindingNames[i])
@@ -799,7 +869,8 @@ public:
   const KeyBinds::Binding getButtonDescriptor() const { return _buttonDescriptor; }
 
   Input* _input = nullptr;
-  bool _isOpen;
+  bool _isOpen = false;
+  bool _isAnalog = false;
 
   bool show(HWND hParent)
   {
@@ -823,6 +894,9 @@ public:
             case WM_KEYDOWN:
             case WM_SYSKEYDOWN:
             {
+              if (_isAnalog)
+                break;
+
               const auto code = WindowsScanCodeToSDLScanCode(msg.lParam, msg.wParam);
               const auto sdlKey = SDL_GetKeyFromScancode(code);
               switch (sdlKey)
@@ -903,6 +977,25 @@ protected:
     _isOpen = false;
   }
 
+  bool MakeAnalog(KeyBinds::Binding& button)
+  {
+    if (button.type != KeyBinds::Binding::Type::Axis)
+      return false;
+
+    switch (button.button)
+    {
+      case SDL_CONTROLLER_AXIS_LEFTX:
+      case SDL_CONTROLLER_AXIS_LEFTY:
+      case SDL_CONTROLLER_AXIS_RIGHTX:
+      case SDL_CONTROLLER_AXIS_RIGHTY:
+        button.modifiers = 0;
+        return true;
+
+      default:
+        return false;
+    }
+  }
+
   INT_PTR dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override
   {
     switch (msg)
@@ -930,6 +1023,9 @@ protected:
           KeyBinds::Binding button = _input->captureButtonPress();
           if (button.type != KeyBinds::Binding::Type::None)
           {
+            if (_isAnalog && !MakeAnalog(button))
+              break;
+
             _buttonDescriptor = button;
             char buffer[32];
             KeyBinds::getBindingString(buffer, _buttonDescriptor);
@@ -951,7 +1047,7 @@ public:
     _bindings = bindings;
 
     const WORD WIDTH = 478;
-    const WORD HEIGHT = 144;
+    const WORD HEIGHT = 200;
 
     addButtonInput(0, 1, "L2", kJoy0L2 + base);
     addButtonInput(0, 9, "R2", kJoy0R2 + base);
@@ -967,6 +1063,13 @@ public:
     addButtonInput(3, 10, "A", kJoy0A + base);
     addButtonInput(4, 1, "Down", kJoy0Down + base);
     addButtonInput(4, 9, "B", kJoy0B + base);
+
+    addButtonInput(5, 1, "L3", kJoy0L3 + base);
+    addButtonInput(5, 9, "R3", kJoy0R3 + base);
+    addButtonInput(6, 0, "Left Analog X", kJoy0LeftAnalogX + base);
+    addButtonInput(6, 2, "Left Analog Y", kJoy0LeftAnalogY + base);
+    addButtonInput(6, 8, "Right Analog X", kJoy0RightAnalogX + base);
+    addButtonInput(6, 10, "Right Analog Y", kJoy0RightAnalogY + base);
 
     addButton("OK", IDOK, WIDTH - 55 - 50, HEIGHT - 14, 50, 14, true);
     addButton("Cancel", IDCANCEL, WIDTH - 50, HEIGHT - 14, 50, 14, false);
@@ -1081,6 +1184,7 @@ protected:
     ChangeInputDialog db;
     db.init(buffer);
     db._input = _input;
+    db._isAnalog = IsAnalog(button);
 
     GetDlgItemText(hwnd, 10000 + button, buffer, sizeof(buffer));
     db.addLabel(buffer, ChangeInputDialog::ID_LABEL, 0, 0, 100, 15);

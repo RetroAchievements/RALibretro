@@ -170,6 +170,9 @@ bool loadCores(Config* config, Logger* logger)
           ud->core->systems.insert(static_cast<System>(std::stoi(system)));
         }
         break;
+
+      default:
+        break;
     }
 
     return 0;
@@ -288,30 +291,6 @@ const char* getSystemName(System system)
   }
   
   return "?";
-}
-
-static bool romLoadedWithPadding(void* rom, size_t size, size_t max_size, int fill)
-{
-  uint8_t* data = (uint8_t*)malloc(max_size);
-
-  if (data != NULL)
-  {
-    if (size < max_size)
-    {
-      memcpy(data, rom, size);
-      memset(data + size, fill, max_size - size);
-    }
-    else
-    {
-      memcpy(data, rom, max_size);
-    }
-
-    RA_OnLoadNewRom(data, max_size);
-    free(data);
-    return true;
-  }
-
-  return false;
 }
 
 static bool romLoadSnes(void* rom, size_t size)
@@ -542,7 +521,7 @@ protected:
         continue;
 
       if (core.systems.find(system) != core.systems.end())
-        systemCores.insert_or_assign(core.name, &core);
+        systemCores.emplace(core.name, &core);
     }
 
     char buffer[64];
@@ -819,7 +798,7 @@ bool showCoresDialog(Config* config, Logger* logger)
 
     for (auto system : core.systems)
     {
-      allSystems.insert_or_assign(getSystemName(system), system);
+      allSystems.emplace(getSystemName(system), system);
       if (++systemCoreCounts[(int)system] > maxSystemCoreCount)
         maxSystemCoreCount = systemCoreCounts[(int)system];
     }

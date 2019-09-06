@@ -19,6 +19,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "components/Input.h"
 #include "libretro/Components.h"
 
 #include <unordered_map>
@@ -50,7 +51,9 @@ public:
 
   std::string serialize();
   void deserialize(const char* json);
-  void showDialog(const std::string& coreName);
+  void initializeInput(Input& input);
+
+  void showDialog(const std::string& coreName, Input& input);
 
 protected:
   static const char* s_getOption(int index, void* udata);
@@ -63,6 +66,8 @@ protected:
 
     std::vector<std::string> _options;
   };
+
+  static void initializeControllerVariable(Variable& variable, const char* name, const char* key, const std::map<std::string, unsigned>& names, unsigned selectedDevice);
 
   libretro::LoggerComponent* _logger;
 
