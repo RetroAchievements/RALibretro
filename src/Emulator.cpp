@@ -360,7 +360,7 @@ static bool romLoadPsx(Logger* logger, const std::string& path)
             ++exe_name_start;
 
           tmp = exe_name_start;
-          while (*tmp != '\n' && *tmp != ';' && *tmp != ' ')
+          while (*tmp != '\n' && *tmp != '\r' && *tmp != ';' && *tmp != ' ')
             ++tmp;
 
           exe_name.assign(exe_name_start, tmp - exe_name_start);
