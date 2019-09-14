@@ -104,6 +104,11 @@
     "extensions": "bin|gen|smd|md|sms",
     "systems": [1,11]
   },
+  "picodrive_libretro":{
+    "name": "PicoDrive",
+    "extensions": "bin",
+    "systems": [10]
+  },
   "prosystem_libretro":{
     "name": "ProSystem",
     "systems": [51]

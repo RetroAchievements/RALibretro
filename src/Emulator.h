@@ -36,6 +36,7 @@ enum class System
   kMasterSystem   = MasterSystem,
   kMegaDrive      = MegaDrive,
   kSegaCD         = SegaCD,
+  kSega32X        = Sega32X,
   kNintendo       = NES,
   kPCEngine       = PCEngine,
   kSuperNintendo  = SNES,

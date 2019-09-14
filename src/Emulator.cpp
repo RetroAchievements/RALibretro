@@ -273,6 +273,7 @@ const char* getSystemName(System system)
   case System::kMasterSystem:   return "Master System";
   case System::kMegaDrive:      return "Sega Genesis";
   case System::kSegaCD:         return "Sega CD";
+  case System::kSega32X:        return "Sega 32X";
   case System::kNintendo:       return "Nintendo Entertainment System";
   case System::kPCEngine:       return "PC Engine";
   case System::kSuperNintendo:  return "Super Nintendo Entertainment System";
@@ -695,7 +696,6 @@ protected:
       {
         core.filetime = util::fileTime(path);
         modified = true;
-        break;
       }
     }
 
