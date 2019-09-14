@@ -26,6 +26,84 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string.h>
 
+static void cdrom_determine_sector_size(cdrom_t& cdrom)
+{
+  // Attempt to determine the sector and header sizes. The CUE file may be lying.
+  // Look for the sync pattern using each of the supported sector sizes.
+  // Then check for the presence of "CD001", which is gauranteed to be in either the
+  // boot record or primary volume descriptor, one of which is always at sector 16.
+  const unsigned char sync_pattern[] = {
+    0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00
+  };
+
+  unsigned char header[32];
+  cdrom.sector_size = 0;
+
+  fseek(cdrom.fp, 16 * 2352, SEEK_SET);
+  fread(header, 1, sizeof(header), cdrom.fp);
+
+  if (memcmp(header, sync_pattern, 12) == 0)
+  {
+    cdrom.sector_size = 2352;
+
+    if (memcmp(&header[25], "CD001", 5) == 0)
+      cdrom.sector_header_size = 24;
+    else if (memcmp(&header[17], "CD001", 5) == 0)
+      cdrom.sector_header_size = 16;
+  }
+  else
+  {
+    fseek(cdrom.fp, 16 * 2336, SEEK_SET);
+    fread(header, 1, sizeof(header), cdrom.fp);
+
+    if (memcmp(header, sync_pattern, 12) == 0)
+    {
+      cdrom.sector_size = 2336;
+
+      if (memcmp(&header[25], "CD001", 5) == 0)
+        cdrom.sector_header_size = 24;
+      else if (memcmp(&header[17], "CD001", 5) == 0)
+        cdrom.sector_header_size = 16;
+    }
+    else
+    {
+      fseek(cdrom.fp, 16 * 2048, SEEK_SET);
+      fread(header, 1, sizeof(header), cdrom.fp);
+
+      if (memcmp(&header[1], "CD001", 5) == 0)
+      {
+        cdrom.sector_size = 2048;
+        cdrom.sector_header_size = 0;
+      }
+    }
+  }
+
+  /* no recognizable header - attempt to determine sector size from stream size */
+  if (cdrom.sector_size == 0)
+  {
+    fseek(cdrom.fp, 0, SEEK_END);
+    long size = ftell(cdrom.fp);
+    if ((size % 2352) == 0)
+    {
+      /* audio tracks use all 2352 bytes without a header */
+      cdrom.sector_size = 2352;
+      cdrom.sector_header_size = 0;
+    }
+    else if ((size % 2048) == 0)
+    {
+      /* cooked tracks eliminate all header/footer data */
+      cdrom.sector_size = 2048;
+      cdrom.sector_header_size = 0;
+    }
+    else if ((size % 2336) == 0)
+    {
+      /* MODE 2 format without 16-byte sync data */
+      cdrom.sector_size = 2336;
+      cdrom.sector_header_size = 8;
+    }
+  }
+}
+
 static bool cdrom_open_cue(cdrom_t& cdrom, const char* filename, int track, Logger* logger)
 {
   FILE* fp;
@@ -86,55 +164,7 @@ static bool cdrom_open_cue(cdrom_t& cdrom, const char* filename, int track, Logg
         while (*ptr == ' ')
           ++ptr;
 
-        // Attempt to determine the sector and header sizes. The CUE file may be lying.
-        // Look for the sync pattern using each of the supported sector sizes.
-        // Then check for the presence of "CD001", which is gauranteed to be in either the
-        // boot record or primary volume descriptor, one of which is always at sector 16.
-        const unsigned char sync_pattern[] = {
-            0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00
-        };
-
-        unsigned char header[32];
-        cdrom.sector_size = 0;
-
-        fseek(cdrom.fp, 16 * 2352, SEEK_SET);
-        fread(header, 1, sizeof(header), cdrom.fp);
-
-        if (memcmp(header, sync_pattern, 12) == 0)
-        {
-          cdrom.sector_size = 2352;
-
-          if (memcmp(&header[25], "CD001", 5) == 0)
-            cdrom.sector_header_size = 24;
-          else if (memcmp(&header[17], "CD001", 5) == 0)
-            cdrom.sector_header_size = 16;
-        }
-        else
-        {
-          fseek(cdrom.fp, 16 * 2336, SEEK_SET);
-          fread(header, 1, sizeof(header), cdrom.fp);
-
-          if (memcmp(header, sync_pattern, 12) == 0)
-          {
-            cdrom.sector_size = 2336;
-
-            if (memcmp(&header[25], "CD001", 5) == 0)
-              cdrom.sector_header_size = 24;
-            else if (memcmp(&header[17], "CD001", 5) == 0)
-              cdrom.sector_header_size = 16;
-          }
-          else
-          {
-            fseek(cdrom.fp, 16 * 2048, SEEK_SET);
-            fread(header, 1, sizeof(header), cdrom.fp);
-
-            if (memcmp(&header[1], "CD001", 5) == 0)
-            {
-              cdrom.sector_size = 2048;
-              cdrom.sector_header_size = 0;
-            }
-          }
-        }
+        cdrom_determine_sector_size(cdrom);
 
         // could not determine, which means we'll probably have more issues later
         // but use the CUE provided information anyway
@@ -246,10 +276,28 @@ static bool cdrom_open_m3u(cdrom_t& cdrom, const char* filename, int disc, int t
 bool cdrom_open(cdrom_t& cdrom, const char* filename, int disc, int track, Logger* logger)
 {
   int len = strlen(filename);
-  if (len > 4 && stricmp(&filename[len - 4], ".m3u") == 0)
-    return cdrom_open_m3u(cdrom, filename, disc, track, logger);
+  if (len > 4)
+  {
+    if (stricmp(&filename[len - 4], ".m3u") == 0)
+      return cdrom_open_m3u(cdrom, filename, disc, track, logger);
+    if (stricmp(&filename[len - 4], ".cue") == 0)
+      return cdrom_open_cue(cdrom, filename, track, logger);
+  }
 
-  return cdrom_open_cue(cdrom, filename, track, logger);
+  memset(&cdrom, 0, sizeof(cdrom_t));
+
+  cdrom.fp = util::openFile(logger, filename, "r");
+  if (!cdrom.fp)
+    return false;
+
+  cdrom_determine_sector_size(cdrom);
+  if (cdrom.sector_size == 0)
+  {
+    fclose(cdrom.fp);
+    return false;
+  }
+
+  return true;
 }
 
 void cdrom_close(cdrom_t& cdrom)
