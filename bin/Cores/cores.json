@@ -60,6 +60,11 @@
     "extensions": "gg|sg",
     "systems": [15]
   },
+  "genesis_plus_gx_libretro":{
+    "name": "Genesis Plus GX",
+    "extensions": "m3u|cue",
+    "systems": [9]
+  },
   "handy_libretro":{
     "name": "Handy",
     "systems": [13]

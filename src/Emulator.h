@@ -35,6 +35,7 @@ enum class System
   kAtariLynx      = Lynx,
   kMasterSystem   = MasterSystem,
   kMegaDrive      = MegaDrive,
+  kSegaCD         = SegaCD,
   kNintendo       = NES,
   kPCEngine       = PCEngine,
   kSuperNintendo  = SNES,

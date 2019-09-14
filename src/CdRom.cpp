@@ -266,7 +266,7 @@ static int cdrom_sector_start(cdrom_t& cdrom, int sector)
   return sector * cdrom.sector_size + cdrom.sector_header_size;
 }
 
-static void cdrom_seek_sector(cdrom_t& cdrom, int sector)
+void cdrom_seek_sector(cdrom_t& cdrom, int sector)
 {
   cdrom.sector_start = cdrom_sector_start(cdrom, sector);
   fseek(cdrom.fp, cdrom.sector_start, SEEK_SET);

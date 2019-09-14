@@ -35,6 +35,7 @@ struct cdrom_t
 bool cdrom_open(cdrom_t& cdrom, const char* filename, int disc, int track, Logger* logger);
 void cdrom_close(cdrom_t& cdrom);
 
+void cdrom_seek_sector(cdrom_t& cdrom, int sector);
 bool cdrom_seek_file(cdrom_t& cdrom, const char* filename);
 int cdrom_read(cdrom_t& cdrom, void* buffer, int num_bytes);
 

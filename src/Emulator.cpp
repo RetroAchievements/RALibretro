@@ -272,6 +272,7 @@ const char* getSystemName(System system)
   case System::kAtariLynx:      return "Atari Lynx";
   case System::kMasterSystem:   return "Master System";
   case System::kMegaDrive:      return "Sega Genesis";
+  case System::kSegaCD:         return "Sega CD";
   case System::kNintendo:       return "Nintendo Entertainment System";
   case System::kPCEngine:       return "PC Engine";
   case System::kSuperNintendo:  return "Super Nintendo Entertainment System";
@@ -424,6 +425,30 @@ static bool romLoadPsx(Logger* logger, const std::string& path)
   return (!exe_name.empty());
 }
 
+static bool romLoadSegaCd(Logger* logger, const std::string& path)
+{
+  cdrom_t cdrom;
+  unsigned char buffer[512];
+
+  if (!cdrom_open(cdrom, path.c_str(), 1, 1, logger))
+    return false;
+
+  // the first 512 bytes of sector 0 are a volume header and ROM header that uniquely identify the game.
+  // After that is an arbitrary amount of code that ensures the game is being run in the correct region.
+  // Then more arbitrary code follows that actually starts the boot process. Somewhere in there, the
+  // primary executable is loaded. In many cases, a single game will have multiple executables, so even
+  // if we could determine the primary one, it's just the tip of the iceberg. As such, we've decided that
+  // hashing the volume and ROM headers is sufficient for identifying the game, and we'll have to trust
+  // that our players aren't modifying anything else on the disc.
+  cdrom_seek_sector(cdrom, 0);
+  cdrom_read(cdrom, buffer, sizeof(buffer));
+
+  RA_ActivateDisc(buffer, sizeof(buffer));
+
+  cdrom_close(cdrom);
+  return true;
+}
+
 static bool romLoadArcade(const std::string& path)
 {
   std::string name = util::fileName(path);
@@ -475,7 +500,11 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
   case System::kPlayStation1:
     ok = romLoadPsx(logger, path);
     break;
-  
+
+  case System::kSegaCD:
+    ok = romLoadSegaCd(logger, path);
+    break;
+
   case System::kArcade:
     ok = romLoadArcade(path);
     break;
