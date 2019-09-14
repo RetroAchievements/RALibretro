@@ -464,14 +464,20 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
   switch (system)
   {
   case System::kAtari2600:
+  case System::kAtari7800:
+  case System::kColecovision:
   case System::kPCEngine:
   case System::kGameBoy:
   case System::kGameBoyColor:
   case System::kGameBoyAdvance:
+  case System::kNintendo64:
+  case System::kVirtualBoy:
   case System::kNeoGeoPocket:
   case System::kMasterSystem:
   case System::kMegaDrive:
-  case System::kAtari7800:
+  case System::kSega32X:
+  case System::kGameGear:
+  case System::kSG1000:
   default:
     RA_OnLoadNewRom((BYTE*)rom, size);
     ok = true;
