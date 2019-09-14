@@ -62,7 +62,7 @@
   },
   "genesis_plus_gx_libretro":{
     "name": "Genesis Plus GX",
-    "extensions": "m3u|cue",
+    "extensions": "cue",
     "systems": [9]
   },
   "handy_libretro":{
