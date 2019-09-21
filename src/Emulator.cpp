@@ -274,6 +274,7 @@ const char* getSystemName(System system)
   case System::kMegaDrive:      return "Sega Genesis";
   case System::kSegaCD:         return "Sega CD";
   case System::kSega32X:        return "Sega 32X";
+  case System::kSaturn:         return "Sega Saturn";
   case System::kNintendo:       return "Nintendo Entertainment System";
   case System::kPCEngine:       return "PC Engine";
   case System::kSuperNintendo:  return "Super Nintendo Entertainment System";
@@ -509,6 +510,7 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
     break;
 
   case System::kSegaCD:
+  case System::kSaturn:
     ok = romLoadSegaCd(logger, path);
     break;
 
