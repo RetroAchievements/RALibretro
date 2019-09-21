@@ -1590,6 +1590,9 @@ retro_proc_address_t libretro::Core::s_getProcAddress(const char* symbol)
 
 void libretro::Core::s_logCallback(enum retro_log_level level, const char *fmt, ...)
 {
+  if (!s_instance)
+    return;
+
   va_list args;
   va_start(args, fmt);
   s_instance->_logger->vprintf(level, fmt, args);
