@@ -60,6 +60,11 @@
     "extensions": "gg|sg",
     "systems": [15]
   },
+  "genesis_plus_gx_libretro":{
+    "name": "Genesis Plus GX",
+    "extensions": "cue|iso",
+    "systems": [9]
+  },
   "handy_libretro":{
     "name": "Handy",
     "systems": [13]
@@ -98,6 +103,11 @@
     "name": "PicoDrive",
     "extensions": "bin|gen|smd|md|sms",
     "systems": [1,11]
+  },
+  "picodrive_libretro":{
+    "name": "PicoDrive",
+    "extensions": "bin",
+    "systems": [10]
   },
   "prosystem_libretro":{
     "name": "ProSystem",
