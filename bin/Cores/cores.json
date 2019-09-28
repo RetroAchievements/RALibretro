@@ -129,5 +129,9 @@
   "vba_next_libretro":{
     "name": "VBA Next",
     "systems": [5]
+  },
+  "virtualjaguar_libretro":{
+    "name": "Virtual Jaguar",
+    "systems": [17]
   }
 }
