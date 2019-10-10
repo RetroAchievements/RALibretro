@@ -38,8 +38,9 @@ static void cdrom_determine_sector_size(cdrom_t& cdrom)
 
   unsigned char header[32];
   cdrom.sector_size = 0;
+  int toc_sector = cdrom.pregap_sectors + 16;
 
-  fseek(cdrom.fp, 16 * 2352, SEEK_SET);
+  fseek(cdrom.fp, toc_sector * 2352, SEEK_SET);
   fread(header, 1, sizeof(header), cdrom.fp);
 
   if (memcmp(header, sync_pattern, 12) == 0)
@@ -48,12 +49,12 @@ static void cdrom_determine_sector_size(cdrom_t& cdrom)
 
     if (memcmp(&header[25], "CD001", 5) == 0)
       cdrom.sector_header_size = 24;
-    else if (memcmp(&header[17], "CD001", 5) == 0)
+    else
       cdrom.sector_header_size = 16;
   }
   else
   {
-    fseek(cdrom.fp, 16 * 2336, SEEK_SET);
+    fseek(cdrom.fp, toc_sector * 2336, SEEK_SET);
     fread(header, 1, sizeof(header), cdrom.fp);
 
     if (memcmp(header, sync_pattern, 12) == 0)
@@ -62,12 +63,12 @@ static void cdrom_determine_sector_size(cdrom_t& cdrom)
 
       if (memcmp(&header[25], "CD001", 5) == 0)
         cdrom.sector_header_size = 24;
-      else if (memcmp(&header[17], "CD001", 5) == 0)
+      else
         cdrom.sector_header_size = 16;
     }
     else
     {
-      fseek(cdrom.fp, 16 * 2048, SEEK_SET);
+      fseek(cdrom.fp, toc_sector * 2048, SEEK_SET);
       fread(header, 1, sizeof(header), cdrom.fp);
 
       if (memcmp(&header[1], "CD001", 5) == 0)
@@ -107,8 +108,8 @@ static void cdrom_determine_sector_size(cdrom_t& cdrom)
 static bool cdrom_open_cue(cdrom_t& cdrom, const char* filename, int track, Logger* logger)
 {
   FILE* fp;
-  char buffer[1024], *file = buffer, *ptr, *ptr2;
-  int num;
+  char buffer[1024], *file = buffer, *ptr, *ptr2, *mode = buffer;
+  int current_track = 0;
 
   memset(&cdrom, 0, sizeof(cdrom_t));
 
@@ -127,13 +128,37 @@ static bool cdrom_open_cue(cdrom_t& cdrom, const char* filename, int track, Logg
     if (strncmp(ptr, "FILE ", 5) == 0)
     {
       file = ptr + 5;
+      current_track = 0;
     }
     else if (strncmp(ptr, "TRACK ", 6) == 0)
     {
       ptr += 6;
-      num = atoi(ptr);
-      if (num == track)
+      current_track = atoi(ptr);
+
+      while (*ptr != ' ')
+        ++ptr;
+      while (*ptr == ' ')
+        ++ptr;
+
+      mode = ptr;
+      if (track == 0 && strncmp(ptr, "MODE", 4) == 0)
+        track = current_track;
+    }
+    else if (current_track == track && strncmp(ptr, "INDEX ", 6) == 0)
+    {
+      ptr += 6;
+      int index = atoi(ptr);
+      if (index == 1)
       {
+        while (*ptr != ' ' && *ptr != '\n')
+          ++ptr;
+        while (*ptr == ' ')
+          ++ptr;
+
+        int m = 0, s = 0, f = 0;
+        sscanf_s(ptr, "%d:%d:%d", &m, &s, &f);
+        cdrom.pregap_sectors = ((m * 60) + s) * 75 + f;
+
         // open bin file
         ptr2 = file;
         if (*ptr2 == '"')
@@ -148,7 +173,7 @@ static bool cdrom_open_cue(cdrom_t& cdrom, const char* filename, int track, Logg
         {
           do
           {
-            ++ptr2;            
+            ++ptr2;
           } while (*ptr2 != '\n' && *ptr2 != ' ');
         }
         *ptr2 = '\0';
@@ -159,11 +184,6 @@ static bool cdrom_open_cue(cdrom_t& cdrom, const char* filename, int track, Logg
           return false;
 
         // determine frame size
-        while (*ptr != ' ')
-          ++ptr;
-        while (*ptr == ' ')
-          ++ptr;
-
         cdrom_determine_sector_size(cdrom);
 
         // could not determine, which means we'll probably have more issues later
@@ -311,7 +331,7 @@ void cdrom_close(cdrom_t& cdrom)
 
 static int cdrom_sector_start(cdrom_t& cdrom, int sector)
 {
-  return sector * cdrom.sector_size + cdrom.sector_header_size;
+  return (sector + cdrom.pregap_sectors) * cdrom.sector_size + cdrom.sector_header_size;
 }
 
 void cdrom_seek_sector(cdrom_t& cdrom, int sector)
@@ -390,6 +410,7 @@ int cdrom_read(cdrom_t& cdrom, void* buffer, int num_bytes)
     fread(buffer, 1, cdrom.sector_remaining, cdrom.fp);
     buffer = ((uint8_t*)buffer) + cdrom.sector_remaining;
     bytes_read += cdrom.sector_remaining;
+    num_bytes -= cdrom.sector_remaining;
     cdrom.sector_remaining = 2048;
     cdrom.sector_start += cdrom.sector_size;
     fseek(cdrom.fp, cdrom.sector_start, SEEK_SET);
