@@ -118,6 +118,11 @@
     "name": "ProSystem",
     "systems": [51]
   },
+    "mednafen_wswan_libretro":{
+    "name": "Beetle Cygne",
+    "extensions": "ws|wsc",
+    "systems": [53]
+  },
   "snes9x_libretro":{
     "name": "Snes9x",
     "systems": [3]
