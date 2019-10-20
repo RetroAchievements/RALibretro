@@ -118,7 +118,7 @@
     "name": "ProSystem",
     "systems": [51]
   },
-    "mednafen_wswan_libretro":{
+  "mednafen_wswan_libretro":{
     "name": "Beetle Cygne",
     "extensions": "ws|wsc",
     "systems": [53]
