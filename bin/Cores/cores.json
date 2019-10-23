@@ -119,7 +119,7 @@
     "systems": [51]
   },
   "mednafen_wswan_libretro":{
-    "name": "Beetle Cygne",
+    "name": "Mednafen WonderSwan",
     "extensions": "ws|wsc",
     "systems": [53]
   },
