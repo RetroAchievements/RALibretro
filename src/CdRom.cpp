@@ -110,6 +110,7 @@ static bool cdrom_open_cue(cdrom_t& cdrom, const char* filename, int track, Logg
   FILE* fp;
   char buffer[1024], *file = buffer, *ptr, *ptr2, *mode = buffer;
   int current_track = 0;
+  size_t num_read = 0;
 
   memset(&cdrom, 0, sizeof(cdrom_t));
 
@@ -117,7 +118,8 @@ static bool cdrom_open_cue(cdrom_t& cdrom, const char* filename, int track, Logg
   if (!fp)
     return false;
 
-  fread(buffer, 1, sizeof(buffer), fp);
+  num_read = fread(buffer, 1, sizeof(buffer), fp);
+  buffer[num_read] = 0;
   fclose(fp);
 
   for (ptr = buffer; *ptr; ++ptr)
