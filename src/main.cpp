@@ -20,7 +20,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <SDL.h>
 #include <SDL_syswm.h>
 
-#include <Application.h>
+#include "Application.h"
+#include "Util.h"
 
 extern Application app;
 

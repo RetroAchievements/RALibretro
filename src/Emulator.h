@@ -22,11 +22,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <set>
 #include <string>
 
-#include "libretro/Core.h"
-
 #include <RA_Interface.h>
-
-#include "Util.h"
 
 enum class System
 {

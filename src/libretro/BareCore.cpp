@@ -49,12 +49,14 @@ bool libretro::BareCore::load(libretro::LoggerComponent* logger, const char* pat
 
   _handle = dynlib_open(path);
 
+#ifdef _WINDOWS
   if (!_handle)
   {
     const std::wstring unicodePath = util::utf8ToUChar(path);
     if (unicodePath.length() != strlen(path))
       _handle = LoadLibraryW(unicodePath.c_str());
   }
+#endif
 
   if (_handle == NULL)
   {

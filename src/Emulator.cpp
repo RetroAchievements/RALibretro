@@ -19,6 +19,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Emulator.h"
 
+#include "Util.h"
+
 #include "components\Config.h"
 #include "components\Dialog.h"
 #include "components\Logger.h"

@@ -14,7 +14,7 @@ else ifeq ($(shell uname -s),Linux)
 endif
 
 INCLUDES=-Isrc -I./src/RAInterface -I./src/miniz
-DEFINES=-DOUTSIDE_SPEEX -DRANDOM_PREFIX=speex -DEXPORT= -D_USE_SSE2 -DFIXED_POINT
+DEFINES=-DOUTSIDE_SPEEX -DRANDOM_PREFIX=speex -DEXPORT= -D_USE_SSE2 -DFIXED_POINT -D_WINDOWS
 CCFLAGS=-Wall -m32 $(INCLUDES) $(DEFINES) `sdl2-config --cflags`
 CXXFLAGS=$(CCFLAGS) -std=c++11
 LDFLAGS=-m32

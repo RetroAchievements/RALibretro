@@ -6,6 +6,8 @@
 
 #include <md5\md5.h>
 
+#include <memory>
+
 // sneaky hackery - hijack RA_OnLoadNewRomm, RA_IdentifyRom, and RA_ActivateDisc
 std::string md5_hash_result;
 unsigned int RA_IdentifyRom(unsigned char* buffer, unsigned int bufferSize)

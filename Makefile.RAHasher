@@ -1,0 +1,56 @@
+# Toolset setup
+CC=gcc
+CXX=g++
+
+ifeq ($(OS),Windows_NT)
+    EXE=.exe
+endif
+
+INCLUDES=-Isrc -I./src/RAInterface -I./src/miniz
+DEFINES=-D_CONSOLE
+CCFLAGS=-Wall -m32 $(INCLUDES) $(DEFINES)
+CXXFLAGS=$(CCFLAGS) -std=c++11
+LDFLAGS=-m32
+
+
+ifneq ($(DEBUG),)
+  CFLAGS   += -O0 -g
+  CXXFLAGS += -O0 -g
+else
+  CFLAGS   += -O3
+  CXXFLAGS += -O3
+endif
+
+# main
+LIBS=
+OBJS=\
+	src/components/Logger.o \
+	src/miniz/miniz.o \
+	src/miniz/miniz_tdef.o \
+	src/miniz/miniz_tinfl.o \
+	src/miniz/miniz_zip.o \
+	src/md5/md5.o \
+	src/CdRom.o \
+	src/Hash.o \
+	src/Util.o \
+	src/RAHasher.o
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+%.o: %.c
+	$(CC) $(CCFLAGS) -c $< -o $@
+
+%.res: %.rc
+	$(RC) $< -O coff -o $@
+
+all: bin/RAHasher$(EXE)
+
+bin/RAHasher$(EXE): $(OBJS)
+	mkdir -p bin
+	$(CXX) $(LDFLAGS) -o $@ $+ $(LIBS)
+
+clean:
+	rm -f bin/RAHasher$(EXE) $(OBJS)
+
+.PHONY: clean FORCE

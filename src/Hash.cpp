@@ -19,6 +19,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "CdRom.h"
 #include "Hash.h"
+#include "Util.h"
 
 #define TAG "[HASH]"
 
