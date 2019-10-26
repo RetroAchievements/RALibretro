@@ -6,7 +6,7 @@ ifeq ($(OS),Windows_NT)
     EXE=.exe
 endif
 
-INCLUDES=-Isrc -I./src/RAInterface -I./src/miniz
+INCLUDES=-I./src -I./src/RAInterface -I./src/miniz
 DEFINES=-D_CONSOLE
 CCFLAGS=-Wall -m32 $(INCLUDES) $(DEFINES)
 CXXFLAGS=$(CCFLAGS) -std=c++11

@@ -86,20 +86,18 @@ FILE* util::openFile(Logger* logger, const std::string& path, const char* mode)
 {
   FILE* file;
 
+#ifdef _WINDOWS
   errno_t err;
+
   if (isAsciiOnly(path))
   {
     err = fopen_s(&file, path.c_str(), mode);
   }
   else
   {
-#ifdef _WINDOWS
     std::wstring unicodePath = util::utf8ToUChar(path);
     std::wstring unicodeMode = util::utf8ToUChar(mode);
     err = _wfopen_s(&file, unicodePath.c_str(), unicodeMode.c_str());
-#else
-    err = EINVAL;
-#endif
   }
 
   if (err)
@@ -109,6 +107,15 @@ FILE* util::openFile(Logger* logger, const std::string& path, const char* mode)
     logger->error(TAG "Error opening \"%s\": %s", path.c_str(), buffer);
     file = NULL;
   }
+#else
+  file = fopen(path.c_str(), mode);
+  if (errno)
+  {
+    char buffer[256];
+    logger->error(TAG "Error opening \"%s\": %s", path.c_str(), strerror_r(errno, buffer, sizeof(buffer)));
+    file = NULL;
+  }
+#endif
 
   return file;
 }
@@ -518,7 +525,11 @@ std::string util::extension(const std::string& path)
 std::string util::replaceFileName(const std::string& originalPath, const char* newFileName)
 {
   std::string newPath = originalPath;
+#ifdef _WIN32
   const auto ndx = newPath.find_last_of('\\');
+#else
+  const auto ndx = newPath.find_last_of('/');
+#endif
   if (ndx == std::string::npos)
     return newFileName;
 

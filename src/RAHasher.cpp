@@ -4,9 +4,10 @@
 #include "Hash.h"
 #include "Util.h"
 
-#include <md5\md5.h>
+#include <md5/md5.h>
 
 #include <memory>
+#include <string.h>
 
 // sneaky hackery - hijack RA_OnLoadNewRomm, RA_IdentifyRom, and RA_ActivateDisc
 std::string md5_hash_result;
@@ -60,7 +61,7 @@ static bool generateHash(Logger* logger, System system, const std::string& path)
       break;
 
     default:
-      if (path.length() > 4 && stricmp(&path[path.length() - 4], ".zip") == 0)
+      if (path.length() > 4 && strcasecmp(&path[path.length() - 4], ".zip") == 0)
       {
         std::string unzippedFileName;
         data = util::loadZippedFile(logger, path, &size, unzippedFileName);

@@ -25,8 +25,15 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 
 #ifdef _WINDOWS
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+ #define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+#endif
+
+#ifdef _WIN32
+ #define strcasecmp _stricmp
+ #define strncasecmp _strnicmp
+#else
+ #define sprintf_s sprintf
 #endif
 
 namespace util

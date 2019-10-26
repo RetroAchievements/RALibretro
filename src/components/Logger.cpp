@@ -19,6 +19,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Logger.h"
 
+#include <memory.h>
+
 bool Logger::init()
 {
   // Do compile-time checks for the line and buffer sizes.

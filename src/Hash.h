@@ -19,6 +19,17 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#ifndef _WINDOWS
+// prevent interface from attempting to define DLL functions that require Windows APIs
+#define RA_EXPORTS 
+
+// explicitly define APIs needed by hasher
+typedef unsigned char BYTE;
+void RA_ActivateGame(unsigned int nGameId);
+void RA_OnLoadNewRom(BYTE* pROMData, unsigned int nROMSize);
+
+#endif
+
 #include "Emulator.h"
 
 bool   romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size);
