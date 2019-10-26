@@ -56,6 +56,7 @@ OBJS=\
 	src/Git.o \
 	src/Gl.o \
 	src/GlUtil.o \
+	src/Hash.o \
 	src/KeyBinds.o \
 	src/main.o \
 	src/menu.res \

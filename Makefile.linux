@@ -28,7 +28,7 @@ OBJS=\
 	src/components/Logger.o src/components/Video.o src/speex/resample.o src/About.o \
   src/miniz/miniz.o src/miniz/miniz_tdef.o src/miniz/miniz_tinfl.o src/miniz/miniz_zip.o \
 	src/Application.o src/Emulator.o src/Fsm.o src/Git.o src/Gl.o src/GlUtil.o \
-	src/KeyBinds.o src/CdRom.o src/main.o src/menu.res src/Util.o
+	src/KeyBinds.o src/CdRom.o src/Hash.o src/main.o src/menu.res src/Util.o
 
 %.o: %.cpp
 	$(CXX) $(INCLUDES) $(DEFINES) $(CXXFLAGS) -c $< -o $@
