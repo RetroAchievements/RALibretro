@@ -86,7 +86,7 @@ FILE* util::openFile(Logger* logger, const std::string& path, const char* mode)
 {
   FILE* file;
 
-#ifdef _WINDOWS
+#ifdef _WIN32
   errno_t err;
 
   if (isAsciiOnly(path))
@@ -95,9 +95,13 @@ FILE* util::openFile(Logger* logger, const std::string& path, const char* mode)
   }
   else
   {
+#ifdef _WINDOWS
     std::wstring unicodePath = util::utf8ToUChar(path);
     std::wstring unicodeMode = util::utf8ToUChar(mode);
     err = _wfopen_s(&file, unicodePath.c_str(), unicodeMode.c_str());
+#else
+    err = EINVAL;
+#endif
   }
 
   if (err)

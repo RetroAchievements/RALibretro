@@ -24,11 +24,13 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #include <stddef.h>
 #include <string>
 
+// _WINDOWS says we're building _for_ Windows
 #ifdef _WINDOWS
  #define WIN32_LEAN_AND_MEAN
  #include <windows.h>
 #endif
 
+// _WIN32 says we're building _on_ Windows
 #ifdef _WIN32
  #define strcasecmp _stricmp
  #define strncasecmp _strnicmp
