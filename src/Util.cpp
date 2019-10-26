@@ -195,7 +195,7 @@ void* util::loadZippedFile(Logger* logger, const std::string& path, size_t* size
   }
 
   unzippedFileName = file_stat.m_filename;
-  logger->error(TAG "Read %zu bytes from \"%s\":\"%s\"", *size, path.c_str(), file_stat.m_filename);
+  logger->info(TAG "Read %zu bytes from \"%s\":\"%s\"", *size, path.c_str(), file_stat.m_filename);
   mz_zip_reader_end(&zip_archive);
   return data;
 }
@@ -280,6 +280,7 @@ void util::deleteFile(const std::string& path)
   }
 }
 
+#ifndef _CONSOLE // don't include in RAHasher
 bool util::downloadFile(Logger* logger, const std::string& url, const std::string& path)
 {
   bool bSuccess = false;
@@ -396,6 +397,7 @@ bool util::downloadFile(Logger* logger, const std::string& url, const std::strin
 
   return bSuccess;
 }
+#endif
 
 std::string util::jsonEscape(const std::string& str)
 {

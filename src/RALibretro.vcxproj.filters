@@ -117,6 +117,9 @@
     <ClCompile Include="CdRom.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Hash.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="About.h">

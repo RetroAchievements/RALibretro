@@ -19,11 +19,6 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Logger.h"
 
-#include <SDL_log.h>
-#include <windows.h>
-
-extern HWND g_mainWindow;
-
 bool Logger::init()
 {
   // Do compile-time checks for the line and buffer sizes.
