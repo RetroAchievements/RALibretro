@@ -277,7 +277,7 @@ static int cdrom_get_cd_names_m3u(const char* filename, char names[][128], int m
 int cdrom_get_cd_names(const char* filename, char names[][128], int max_names, Logger* logger)
 {
   int len = strlen(filename);
-  if (len > 4 && stricmp(&filename[len - 4], ".m3u") == 0)
+  if (len > 4 && strcasecmp(&filename[len - 4], ".m3u") == 0)
     return cdrom_get_cd_names_m3u(filename, names, max_names, logger);
 
   std::string filename_path = util::fileNameWithExtension(filename);
@@ -300,9 +300,9 @@ bool cdrom_open(cdrom_t& cdrom, const char* filename, int disc, int track, Logge
   int len = strlen(filename);
   if (len > 4)
   {
-    if (stricmp(&filename[len - 4], ".m3u") == 0)
+    if (strcasecmp(&filename[len - 4], ".m3u") == 0)
       return cdrom_open_m3u(cdrom, filename, disc, track, logger);
-    if (stricmp(&filename[len - 4], ".cue") == 0)
+    if (strcasecmp(&filename[len - 4], ".cue") == 0)
       return cdrom_open_cue(cdrom, filename, track, logger);
   }
 
@@ -385,7 +385,7 @@ bool cdrom_seek_file(cdrom_t& cdrom, const char* filename)
       return false;
 
     // filename is 33 bytes into the record and the format is "FILENAME;version" or "DIRECTORY"
-    if ((tmp[33 + filename_length] == ';' || tmp[33 + filename_length] == '\0') && !strnicmp((const char*)(tmp + 33), filename, filename_length))
+    if ((tmp[33 + filename_length] == ';' || tmp[33 + filename_length] == '\0') && !strncasecmp((const char*)(tmp + 33), filename, filename_length))
     {
       sector = tmp[2] | (tmp[3] << 8) | (tmp[4] << 16);
       cdrom_seek_sector(cdrom, sector);

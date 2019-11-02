@@ -26,10 +26,12 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <miniz_zip.h>
 
+#ifdef _WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #include <commdlg.h>
 #include <shlobj.h>
 #include <winhttp.h>
+#endif
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define STBI_MSC_SECURE_CRT
@@ -66,6 +68,7 @@ time_t util::fileTime(const std::string& path)
   }
   else
   {
+#ifdef _WINDOWS
     std::wstring unicodePath = util::utf8ToUChar(path);
 
     struct _stat filestat;
@@ -73,6 +76,9 @@ time_t util::fileTime(const std::string& path)
       return 0;
 
     return filestat.st_mtime;
+#else
+    return 0;
+#endif
   }
 }
 
@@ -80,16 +86,22 @@ FILE* util::openFile(Logger* logger, const std::string& path, const char* mode)
 {
   FILE* file;
 
+#ifdef _WIN32
   errno_t err;
+
   if (isAsciiOnly(path))
   {
     err = fopen_s(&file, path.c_str(), mode);
   }
   else
   {
+#ifdef _WINDOWS
     std::wstring unicodePath = util::utf8ToUChar(path);
     std::wstring unicodeMode = util::utf8ToUChar(mode);
     err = _wfopen_s(&file, unicodePath.c_str(), unicodeMode.c_str());
+#else
+    err = EINVAL;
+#endif
   }
 
   if (err)
@@ -99,6 +111,15 @@ FILE* util::openFile(Logger* logger, const std::string& path, const char* mode)
     logger->error(TAG "Error opening \"%s\": %s", path.c_str(), buffer);
     file = NULL;
   }
+#else
+  file = fopen(path.c_str(), mode);
+  if (errno)
+  {
+    char buffer[256];
+    logger->error(TAG "Error opening \"%s\": %s", path.c_str(), strerror_r(errno, buffer, sizeof(buffer)));
+    file = NULL;
+  }
+#endif
 
   return file;
 }
@@ -195,7 +216,7 @@ void* util::loadZippedFile(Logger* logger, const std::string& path, size_t* size
   }
 
   unzippedFileName = file_stat.m_filename;
-  logger->error(TAG "Read %zu bytes from \"%s\":\"%s\"", *size, path.c_str(), file_stat.m_filename);
+  logger->info(TAG "Read %zu bytes from \"%s\":\"%s\"", *size, path.c_str(), file_stat.m_filename);
   mz_zip_reader_end(&zip_archive);
   return data;
 }
@@ -275,11 +296,14 @@ void util::deleteFile(const std::string& path)
   }
   else
   {
+#ifdef _WINDOWS
     std::wstring unicodePath = util::utf8ToUChar(path);
     _wremove(unicodePath.c_str());
+#endif
   }
 }
 
+#ifndef _CONSOLE // don't include in RAHasher
 bool util::downloadFile(Logger* logger, const std::string& url, const std::string& path)
 {
   bool bSuccess = false;
@@ -396,6 +420,7 @@ bool util::downloadFile(Logger* logger, const std::string& url, const std::strin
 
   return bSuccess;
 }
+#endif
 
 std::string util::jsonEscape(const std::string& str)
 {
@@ -504,7 +529,11 @@ std::string util::extension(const std::string& path)
 std::string util::replaceFileName(const std::string& originalPath, const char* newFileName)
 {
   std::string newPath = originalPath;
+#ifdef _WIN32
   const auto ndx = newPath.find_last_of('\\');
+#else
+  const auto ndx = newPath.find_last_of('/');
+#endif
   if (ndx == std::string::npos)
     return newFileName;
 
@@ -512,6 +541,7 @@ std::string util::replaceFileName(const std::string& originalPath, const char* n
   return newPath;
 }
 
+#ifdef _WINDOWS
 std::string util::openFileDialog(HWND hWnd, const std::string& extensionsFilter)
 {
   std::wstring unicodeExtensionsFilter = util::utf8ToUChar(extensionsFilter);
@@ -589,6 +619,7 @@ std::string util::saveFileDialog(HWND hWnd, const std::string& extensionsFilter)
     return "";
   }
 }
+#endif
 
 const void* util::toRgb(Logger* logger, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format)
 {
@@ -843,6 +874,7 @@ const void* util::loadImage(Logger* logger, const std::string& path, unsigned* w
   return rgb888;
 }
 
+#ifdef _WINDOWS
 std::string util::ucharToUtf8(const std::wstring& unicodeString)
 {
   const auto len = unicodeString.length();
@@ -866,3 +898,4 @@ std::wstring util::utf8ToUChar(const std::string& utf8String)
 
   return wstr;
 }
+#endif

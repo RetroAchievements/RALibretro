@@ -17,55 +17,20 @@ You should have received a copy of the GNU General Public License
 along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <SDL.h>
-#include <SDL_syswm.h>
+#pragma once
 
-#include "Application.h"
-#include "Util.h"
+#ifndef _WINDOWS
+// prevent interface from attempting to define DLL functions that require Windows APIs
+#define RA_EXPORTS 
 
-extern Application app;
+// explicitly define APIs needed by hasher
+typedef unsigned char BYTE;
+void RA_ActivateGame(unsigned int nGameId);
+void RA_OnLoadNewRom(BYTE* pROMData, unsigned int nROMSize);
 
-bool isGameActive()
-{
-  return app.isGameActive();
-}
+#endif
 
-void getGameName(char name[], size_t len)
-{
-    std::string fileName = util::fileName(app.gameName());
-    strncpy(name, fileName.c_str(), len);
-    name[len - 1] = '\0';
-}
+#include "Emulator.h"
 
-void pause()
-{
-  app.pauseGame(true);
-}
-
-void resume()
-{
-  app.pauseGame(false);
-}
-
-void reset()
-{
-  app.resetGame();
-}
-
-void loadROM(const char* path)
-{
-  app.loadGame(path);
-}
-
-int main(int argc, char* argv[])
-{
-  bool ok = app.init("RALibretro", 640, 480);
-
-  if (ok)
-  {
-    app.run();
-	app.destroy();
-  }
-
-  return ok ? 0 : 1;
-}
+bool   romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size);
+void   romUnloaded(Logger* logger);

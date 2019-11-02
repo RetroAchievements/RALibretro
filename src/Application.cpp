@@ -30,6 +30,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "About.h"
 #include "CdRom.h"
 #include "KeyBinds.h"
+#include "Hash.h"
 #include "Util.h"
 
 #include "Gl.h"

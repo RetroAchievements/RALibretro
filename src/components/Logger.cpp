@@ -19,10 +19,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Logger.h"
 
-#include <SDL_log.h>
-#include <windows.h>
-
-extern HWND g_mainWindow;
+#include <memory.h>
 
 bool Logger::init()
 {

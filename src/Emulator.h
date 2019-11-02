@@ -22,11 +22,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <set>
 #include <string>
 
-#include "libretro/Core.h"
-
 #include <RA_Interface.h>
-
-#include "Util.h"
 
 enum class System
 {
@@ -69,8 +65,5 @@ void   getAvailableSystemCores(System system, std::set<std::string>& coreNames);
 int    encodeCoreName(const std::string& coreName, System system);
 const std::string& getCoreName(int encoded, System& system);
 const std::string* getCoreDeprecationMessage(const std::string& coreName);
-
-bool   romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size);
-void   romUnloaded(Logger* logger);
 
 bool   showCoresDialog(Config* config, Logger* logger);

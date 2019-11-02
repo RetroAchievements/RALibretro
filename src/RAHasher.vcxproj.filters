@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\md5">
+      <UniqueIdentifier>{4ea653d5-1cc2-4ca4-b75e-4e5ec8fe3ecd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\RALibRetro">
+      <UniqueIdentifier>{dbb91ad7-cb9c-4d0b-8000-4c52930b4044}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\miniz">
+      <UniqueIdentifier>{1e293426-6398-4c86-81b8-5e0004cc542d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="RAHasher.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="md5\md5.c">
+      <Filter>Source Files\md5</Filter>
+    </ClCompile>
+    <ClCompile Include="CdRom.cpp">
+      <Filter>Source Files\RALibRetro</Filter>
+    </ClCompile>
+    <ClCompile Include="Util.cpp">
+      <Filter>Source Files\RALibRetro</Filter>
+    </ClCompile>
+    <ClCompile Include="miniz\miniz.c">
+      <Filter>Source Files\miniz</Filter>
+    </ClCompile>
+    <ClCompile Include="miniz\miniz_tdef.c">
+      <Filter>Source Files\miniz</Filter>
+    </ClCompile>
+    <ClCompile Include="miniz\miniz_tinfl.c">
+      <Filter>Source Files\miniz</Filter>
+    </ClCompile>
+    <ClCompile Include="miniz\miniz_zip.c">
+      <Filter>Source Files\miniz</Filter>
+    </ClCompile>
+    <ClCompile Include="Hash.cpp">
+      <Filter>Source Files\RALibRetro</Filter>
+    </ClCompile>
+    <ClCompile Include="components\Logger.cpp">
+      <Filter>Source Files\RALibRetro</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

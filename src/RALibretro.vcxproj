@@ -89,9 +89,10 @@
       <Command>$(ProjectDir)..\etc\MakeGitCpp.bat</Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Command>copy /b/y $(ProjectDir)..\$(Configuration)\RALibretro.exe $(ProjectDir)..\bin</Command>
+      <Command>copy /b/y $(TargetPath) $(ProjectDir)..\bin</Command>
       <Outputs>$(ProjectDir)..\bin\RALibretro.exe</Outputs>
-      <Inputs>$(ProjectDir)..\$(Configuration)\RALibretro.exe</Inputs>
+      <Inputs>$(TargetPath)</Inputs>
+      <Message>Copying $(TargetFileName) to bin directory</Message>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -112,9 +113,10 @@
       <AdditionalDependencies>SDL2main.lib;SDL2.lib;dinput8.lib;winmm.lib;imm32.lib;version.lib;winhttp.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
-      <Command>copy /b/y $(ProjectDir)..\$(Configuration)\RALibretro.exe $(ProjectDir)..\bin</Command>
+      <Command>copy /b/y $(TargetPath) $(ProjectDir)..\bin</Command>
       <Outputs>$(ProjectDir)..\bin\RALibretro.exe</Outputs>
-      <Inputs>$(ProjectDir)..\$(Configuration)\RALibretro.exe</Inputs>
+      <Inputs>$(TargetPath)</Inputs>
+      <Message>Copying $(TargetFileName) to bin directory</Message>
     </CustomBuildStep>
     <PreBuildEvent>
       <Command>$(ProjectDir)..\etc\MakeGitCpp.bat</Command>
@@ -136,6 +138,7 @@
     <ClCompile Include="Git.cpp" />
     <ClCompile Include="Gl.cpp" />
     <ClCompile Include="GlUtil.cpp" />
+    <ClCompile Include="Hash.cpp" />
     <ClCompile Include="jsonsax\jsonsax.c" />
     <ClCompile Include="KeyBinds.cpp" />
     <ClCompile Include="libretro\BareCore.cpp" />
