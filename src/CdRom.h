@@ -30,6 +30,7 @@ struct cdrom_t
   int sector_start;
   int sector_remaining;
   int sector_header_size;
+  int pregap_sectors;
 };
 
 bool cdrom_open(cdrom_t& cdrom, const char* filename, int disc, int track, Logger* logger);

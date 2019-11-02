@@ -444,10 +444,45 @@ static bool romLoadSegaCd(Logger* logger, const std::string& path)
   // that our players aren't modifying anything else on the disc.
   cdrom_seek_sector(cdrom, 0);
   cdrom_read(cdrom, buffer, sizeof(buffer));
+  cdrom_close(cdrom);
 
   RA_ActivateDisc(buffer, sizeof(buffer));
 
+  return true;
+}
+
+static bool romLoadPcEngineCd(Logger* logger, const std::string& path)
+{
+  cdrom_t cdrom;
+  unsigned char buffer[128];
+
+  if (!cdrom_open(cdrom, path.c_str(), 1, 0, logger))
+    return false;
+
+  // the PC-Engine uses the second sector to specify boot information and program name.
+  // the string "PC Engine CD-ROM SYSTEM" should exist at 32 bytes into the sector
+  // http://shu.sheldows.com/shu/download/pcedocs/pce_cdrom.html
+  cdrom_seek_sector(cdrom, 1);
+  cdrom_read(cdrom, buffer, sizeof(buffer));
+
+  if (strncmp("PC Engine CD-ROM SYSTEM", (const char*)&buffer[32], 23) != 0)
+    return false;
+
+  // the first three bytes specify the sector of the program data, and the fourth byte
+  // is the number of sectors.
+  const unsigned int first_sector = buffer[0] * 65536 + buffer[1] * 256 + buffer[2];
+  const unsigned int num_sectors = buffer[3];
+  const unsigned int num_bytes = num_sectors * 2048;
+
+  unsigned char* program = (unsigned char*)malloc(num_bytes + 22);
+  memcpy(program, &buffer[106], 22);
+  cdrom_seek_sector(cdrom, first_sector);
+  cdrom_read(cdrom, program + 22, num_bytes);
   cdrom_close(cdrom);
+
+  RA_ActivateDisc(program, num_bytes + 22);
+
+  free(program);
   return true;
 }
 
@@ -467,7 +502,6 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
   case System::kAtari2600:
   case System::kAtari7800:
   case System::kColecovision:
-  case System::kPCEngine:
   case System::kGameBoy:
   case System::kGameBoyColor:
   case System::kGameBoyAdvance:
@@ -482,6 +516,18 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
   default:
     RA_OnLoadNewRom((BYTE*)rom, size);
     ok = true;
+    break;
+
+  case System::kPCEngine:
+    if (SDL_strcasecmp(util::extension(path).c_str(), ".cue") == 0)
+    {
+      ok = romLoadPcEngineCd(logger, path);
+    }
+    else
+    {
+      RA_OnLoadNewRom((BYTE*)rom, size);
+      ok = true;
+    }
     break;
 
   case System::kSuperNintendo:
