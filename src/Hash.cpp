@@ -59,6 +59,20 @@ static bool romLoadNes(void* rom, size_t size)
   return true;
 }
 
+static bool romLoadLynx(void* rom, size_t size)
+{
+  // if the file contains a header, ignore it
+  uint8_t* raw = (uint8_t*)rom;
+  if (!memcmp("LYNX", raw, 5))
+  {
+    raw += 0x0040;
+    size -= 0x0040;
+  }
+
+  RA_OnLoadNewRom(raw, size);
+  return true;
+}
+
 static bool romLoadPsx(Logger* logger, const std::string& path)
 {
   cdrom_t cdrom;
@@ -178,10 +192,45 @@ static bool romLoadSegaCd(Logger* logger, const std::string& path)
   // that our players aren't modifying anything else on the disc.
   cdrom_seek_sector(cdrom, 0);
   cdrom_read(cdrom, buffer, sizeof(buffer));
+  cdrom_close(cdrom);
 
   RA_ActivateDisc(buffer, sizeof(buffer));
 
+  return true;
+}
+
+static bool romLoadPcEngineCd(Logger* logger, const std::string& path)
+{
+  cdrom_t cdrom;
+  unsigned char buffer[128];
+
+  if (!cdrom_open(cdrom, path.c_str(), 1, 0, logger))
+    return false;
+
+  // the PC-Engine uses the second sector to specify boot information and program name.
+  // the string "PC Engine CD-ROM SYSTEM" should exist at 32 bytes into the sector
+  // http://shu.sheldows.com/shu/download/pcedocs/pce_cdrom.html
+  cdrom_seek_sector(cdrom, 1);
+  cdrom_read(cdrom, buffer, sizeof(buffer));
+
+  if (strncmp("PC Engine CD-ROM SYSTEM", (const char*)&buffer[32], 23) != 0)
+    return false;
+
+  // the first three bytes specify the sector of the program data, and the fourth byte
+  // is the number of sectors.
+  const unsigned int first_sector = buffer[0] * 65536 + buffer[1] * 256 + buffer[2];
+  const unsigned int num_sectors = buffer[3];
+  const unsigned int num_bytes = num_sectors * 2048;
+
+  unsigned char* program = (unsigned char*)malloc(num_bytes + 22);
+  memcpy(program, &buffer[106], 22);
+  cdrom_seek_sector(cdrom, first_sector);
+  cdrom_read(cdrom, program + 22, num_bytes);
   cdrom_close(cdrom);
+
+  RA_ActivateDisc(program, num_bytes + 22);
+
+  free(program);
   return true;
 }
 
@@ -198,75 +247,78 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
 
   switch (system)
   {
-  case System::kAtari2600:
-  case System::kAtari7800:
-  case System::kColecovision:
-  case System::kPCEngine:
-  case System::kGameBoy:
-  case System::kGameBoyColor:
-  case System::kGameBoyAdvance:
-  case System::kNintendo64:
-  case System::kVirtualBoy:
-  case System::kNeoGeoPocket:
-  case System::kMasterSystem:
-  case System::kMegaDrive:
-  case System::kSega32X:
-  case System::kGameGear:
-  case System::kSG1000:
-  default:
-    RA_OnLoadNewRom((BYTE*)rom, size);
-    ok = true;
-    break;
-
-  case System::kSuperNintendo:
-    ok = romLoadSnes(rom, size);
-    break;
-
-  case System::kNintendo:
-    ok = romLoadNes(rom, size);
-    break;
-
-  case System::kAtariLynx:
-    if (!memcmp("LYNX", (void *)rom, 5))
-    {
-      RA_OnLoadNewRom((BYTE*)rom + 0x0040, size - 0x0040);
-    }
-    else
-    {
+    case System::kAtari2600:
+    case System::kAtari7800:
+    case System::kAtariJaguar:
+    case System::kColecovision:
+    case System::kGameBoy:
+    case System::kGameBoyColor:
+    case System::kGameBoyAdvance:
+    case System::kNintendo64:
+    case System::kVirtualBoy:
+    case System::kNeoGeoPocket:
+    case System::kMasterSystem:
+    case System::kMegaDrive:
+    case System::kSega32X:
+    case System::kGameGear:
+    case System::kSG1000:
+    default:
       RA_OnLoadNewRom((BYTE*)rom, size);
-    }
+      ok = true;
+      break;
 
-    ok = true;
-    break;
+    case System::kPCEngine:
+      if (strcasecmp(util::extension(path).c_str(), ".cue") == 0)
+      {
+        ok = romLoadPcEngineCd(logger, path);
+      }
+      else
+      {
+        RA_OnLoadNewRom((BYTE*)rom, size);
+        ok = true;
+      }
+      break;
 
-  case System::kPlayStation1:
-    ok = romLoadPsx(logger, path);
-    break;
+    case System::kSuperNintendo:
+      ok = romLoadSnes(rom, size);
+      break;
 
-  case System::kSegaCD:
-  case System::kSaturn:
-    ok = romLoadSegaCd(logger, path);
-    break;
+    case System::kNintendo:
+      ok = romLoadNes(rom, size);
+      break;
 
-  case System::kArcade:
-    ok = romLoadArcade(path);
-    break;
+    case System::kAtariLynx:
+      ok = romLoadLynx(rom, size);
+      break;
+
+    case System::kPlayStation1:
+      ok = romLoadPsx(logger, path);
+      break;
+
+    case System::kSegaCD:
+    case System::kSaturn:
+      ok = romLoadSegaCd(logger, path);
+      break;
+
+    case System::kArcade:
+      ok = romLoadArcade(path);
+      break;
   }
 
   if (ok)
   {
     switch (system)
     {
-    case System::kPlayStation1:
-    case System::kSaturn:
-    case System::kSegaCD:
-      // these systems call RA_ActivateDisc and may be multi-disc systems
-      break;
+      case System::kPlayStation1:
+      case System::kSaturn:
+      case System::kSegaCD:
+        // these systems call RA_ActivateDisc and may be multi-disc systems
+        break;
 
-    default:
-      // all other systems should deactive any previously active disc
-      RA_DeactivateDisc();
-      break;
+      default:
+        // all other systems should deactive any previously active disc
+        RA_DeactivateDisc();
+        break;
     }
   }
 

@@ -267,6 +267,7 @@ const char* getSystemName(System system)
   {
   case System::kAtari2600:      return "Atari 2600";
   case System::kAtariLynx:      return "Atari Lynx";
+  case System::kAtariJaguar:    return "Atari Jaguar";
   case System::kMasterSystem:   return "Master System";
   case System::kMegaDrive:      return "Sega Genesis";
   case System::kSegaCD:         return "Sega CD";
