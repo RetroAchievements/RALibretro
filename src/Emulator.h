@@ -33,6 +33,7 @@ enum class System
   kNone           = UnknownConsoleID,
   kAtari2600      = Atari2600,
   kAtariLynx      = Lynx,
+  kAtariJaguar    = Jaguar,
   kMasterSystem   = MasterSystem,
   kMegaDrive      = MegaDrive,
   kSegaCD         = SegaCD,
