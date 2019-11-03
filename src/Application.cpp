@@ -51,6 +51,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #define TAG "[APP] "
 
+//#define DISPLAY_FRAMERATE 1
+
 HWND g_mainWindow;
 Application app;
 
@@ -169,8 +171,6 @@ bool Application::init(const char* title, int width, int height)
       goto error;
     }
   }
-
-  SDL_GL_SetSwapInterval(1);
 
   int major, minor;
   SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &major);
@@ -372,14 +372,28 @@ void Application::processEvents()
 
 void Application::runSmoothed()
 {
-  const unsigned int TARGET_FRAMES = (int)round(_core.getSystemAVInfo()->timing.fps);
-  const unsigned int SMOOTHING_FRAMES = 32;
+  const unsigned int TARGET_FRAMES = (int)round(_core.getSystemAVInfo()->timing.fps * 100);
+  const unsigned int SMOOTHING_FRAMES = 128;
   uint32_t frameMicroseconds[SMOOTHING_FRAMES];
   uint32_t totalMicroseconds;
   int frameIndex = 0;
   int nFaults = 0;
   int skippedFrames = 0;
   int totalSkippedFrames = 0;
+  SDL_DisplayMode displayMode;
+
+  // if the system wants to render more frames than the display is capable of, turn off vsync
+  {
+    int refreshRate = 60; // assume 60Hz if we can't get an actual value
+    if (SDL_GetCurrentDisplayMode(0, &displayMode) == 0 && displayMode.refresh_rate > 0)
+      refreshRate = displayMode.refresh_rate;
+
+    if (TARGET_FRAMES  / 100 > refreshRate)
+      SDL_GL_SetSwapInterval(0);
+
+    _logger.info(TAG "attempting to achieve %u.%02u fps (vsync %s)", TARGET_FRAMES / 100, TARGET_FRAMES % 100,
+      (SDL_GL_GetSwapInterval() == 1) ? "on" : "off");
+  }
 
   const auto tFirstFrameStart = std::chrono::steady_clock::now();
 
@@ -398,6 +412,7 @@ void Application::runSmoothed()
     frameMicroseconds[i] = (uint32_t)tFirstFrameElapsed.count();
   totalMicroseconds = frameMicroseconds[0] * SMOOTHING_FRAMES;
 
+  // our rolling window has been populated with data from the first frame, start the processing loop
   do
   {
     auto tFrameStart = std::chrono::steady_clock::now();
@@ -435,22 +450,43 @@ void Application::runSmoothed()
       frameIndex %= SMOOTHING_FRAMES;
 
       // if we're not reaching our target framerate, run some frames without rendering them
-      const unsigned int fps = (SMOOTHING_FRAMES * 1000000) / totalMicroseconds;
+      //   captured frames / total microseconds = n frames / second (1000000 micro seconds)
+      //   so: n fames = captured frames * 1000000 / total microseconds
+      // however, we're capturing hundreds of a frame per second, so we need to multiply the
+      // result by 100. this overflows the size of an int, so instead of multiplying by an
+      // additional 100, we divide total microseconds by 100.
+      const unsigned int fps = (SMOOTHING_FRAMES * 1000000) / (totalMicroseconds / 100);
 
       if (frameIndex == 0)
       {
-        _logger.debug("FPS: %u (%d/%d not rendered, %d faults)", fps, totalSkippedFrames, SMOOTHING_FRAMES, nFaults);
+#if DISPLAY_FRAMERATE
+        char buffer[256];
+        GetWindowText(g_mainWindow, buffer, sizeof(buffer));
+        char* ptr = buffer + strlen(buffer);
+        if (ptr[-3] == 'f' && ptr[-2] == 'p' && ptr[-1] == 's')
+        {
+          ptr -= 3;
+          while (*ptr != '-')
+            --ptr;
+          ptr--;
+        }
+
+        sprintf(ptr, " - %u.%02ufps", fps / 100, fps % 100);
+        SetWindowText(g_mainWindow, buffer);
+#endif
+        _logger.debug(TAG "FPS: %u.%02u (%d/%d not rendered, %d faults)", fps / 100, fps % 100, totalSkippedFrames, SMOOTHING_FRAMES, nFaults);
         totalSkippedFrames = 0;
       }
 
-      if (fps >= TARGET_FRAMES - 5)
+      if (fps >= TARGET_FRAMES - 2)
       {
-        // one good frame counters two bad ones
+        // one good frame counteracts two bad ones
         if (nFaults)
           --nFaults;
         if (nFaults)
           --nFaults;
 
+        // smoothing not necessary, return to outer loop
         break;
       }
 
@@ -464,13 +500,19 @@ void Application::runSmoothed()
       if (++skippedFrames == 4)
       {
         nFaults++;
-        if (nFaults == 100)
+        if (nFaults == 50)
         {
-          if (hardcore())
+          if (SDL_GL_GetSwapInterval() == 1)
+          {
+            // try turning off VSYNC to see if we can achieve the target framerate
+            _logger.info(TAG "disabling vsync");
+            SDL_GL_SetSwapInterval(0);
+          }
+          else if (hardcore())
           {
             _fsm.pauseGame();
 
-            MessageBox(g_mainWindow, "Your system doesn't appear to be able to run this core at the desired speed. Consider changing some of the settings for the core. Game has been paused.", "Performance Problem Detected", MB_OK);
+            MessageBox(g_mainWindow, "Game has been paused.\n\nYour system doesn't appear to be able to run this core at the desired speed. Consider changing some of the settings for the core.", "Performance Problem Detected", MB_OK);
           }
 
           nFaults = 0;
@@ -494,16 +536,8 @@ void Application::run()
     {
       case Fsm::State::GameRunning:
       {
-        if (_core.getPerformanceLevel() > 10)
-        {
-          runSmoothed();
-          continue;
-        }
-
-        // do one frame with audio
-        _core.step(true);
-        RA_DoAchievementsFrame();
-        break;
+        runSmoothed();
+        continue;
       }
 
       case Fsm::State::GamePaused:
@@ -923,6 +957,9 @@ bool Application::loadGame(const std::string& path)
   {
     free(data);
   }
+
+  // reset the vertical sync flag
+  SDL_GL_SetSwapInterval(1);
 
   if (_core.getNumDiscs() == 0)
   {
