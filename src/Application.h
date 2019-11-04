@@ -91,6 +91,7 @@ protected:
   // Helpers
   void        processEvents();
   void        runSmoothed();
+  void        runTurbo();
 
   void        loadGame();
   void        enableItems(const UINT* items, size_t count, UINT enable);
