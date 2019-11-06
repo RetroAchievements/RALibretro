@@ -407,7 +407,9 @@ void Application::runSmoothed()
   uint32_t totalMicroseconds;
   int frameIndex = 0;
   int nFaults = 0;
-  bool enableSmoothing = false;
+  int nRecoveries = 0;
+  bool canVsync = true;
+  bool vsyncOn = true;
 
   const unsigned int SMOOTHING_RATES = 1;
   int skipRates[SMOOTHING_RATES];
@@ -440,8 +442,12 @@ void Application::runSmoothed()
     if (SDL_GetCurrentDisplayMode(0, &displayMode) == 0 && displayMode.refresh_rate > 0)
       refreshRate = displayMode.refresh_rate;
 
-    if (TARGET_FRAMES  / 100 > refreshRate)
+    if (TARGET_FRAMES / 100 > refreshRate + 1) // allow 60.1Hz NES to vsync on 59.97 monitor
+    {
+      canVsync = false;
+      vsyncOn = false;
       SDL_GL_SetSwapInterval(0);
+    }
 
     _logger.info(TAG "attempting to achieve %u.%02u fps (vsync %s)", TARGET_FRAMES / 100, TARGET_FRAMES % 100,
       (SDL_GL_GetSwapInterval() == 1) ? "on" : "off");
@@ -567,7 +573,7 @@ void Application::runSmoothed()
     // additional 100, we divide totalMicroseconds by 100.
     const unsigned int fps = (SMOOTHING_FRAMES * 1000000) / (totalMicroseconds / 100);
     static_assert(SMOOTHING_FRAMES * 1000000 < ((1 << 32) - 1), "SMOOTHING_FRAMES multiplication exceeds sizeof(uint)");
-    skipFrame = enableSmoothing && (fps < TARGET_FRAMES - 200) ? SKIP_DROPPED : 0; // TARGET_FRAMES is in hundredths of fps
+    skipFrame = (fps < TARGET_FRAMES - 200) ? SKIP_DROPPED : 0; // TARGET_FRAMES is in hundredths of fps
 
     if (frameIndex == 0)
     {
@@ -587,7 +593,7 @@ void Application::runSmoothed()
       SetWindowText(g_mainWindow, buffer);
 #endif
 #ifdef DEBUG_FRAMERATE
-      _logger.info(TAG "FPS: rendered frames %s (vsync %s)", renders, (SDL_GL_GetSwapInterval() == 1) ? "on" : "off");
+      _logger.info(TAG "FPS: rendered frames %s (vsync %s %d)", renders, (SDL_GL_GetSwapInterval() == 1) ? "on" : "off", nRecoveries);
       _logger.info(TAG "FPS: %u.%02u (%d skipped, %d dropped, %d faults)", fps / 100, fps % 100, totalSkippedFrames, totalDroppedFrames, nFaults);
 #endif
 
@@ -599,8 +605,11 @@ void Application::runSmoothed()
           if (SDL_GL_GetSwapInterval() == 1)
           {
             // try turning off VSYNC to see if we can achieve the target framerate
-            _logger.info(TAG "disabling vsync");
+#ifdef DEBUG_FRAMERATE
+            _logger.info(TAG "FPS: disabling vsync");
+#endif
             SDL_GL_SetSwapInterval(0);
+            vsyncOn = false;
           }
           else if (hardcore())
           {
@@ -639,16 +648,33 @@ void Application::runSmoothed()
         {
           if (SDL_GL_GetSwapInterval() == 1)
           {
-            _logger.info(TAG "disabling vsync");
+#ifdef DEBUG_FRAMERATE
+            _logger.info(TAG "FPS: disabling vsync");
+#endif
             SDL_GL_SetSwapInterval(0);
+            vsyncOn = false;
           }
         }
 
         skipRate = SMOOTHING_FRAMES * 100 / totalDroppedFrames;
+
+        nRecoveries = 0;
       }
       else
       {
         skipRate = SMOOTHING_FRAMES * 100;
+
+        if (!vsyncOn && canVsync)
+        {
+          if (++nRecoveries == 5)
+          {
+#ifdef DEBUG_FRAMERATE
+            _logger.info(TAG "FPS: re-enabling vsync");
+#endif
+            SDL_GL_SetSwapInterval(1);
+            vsyncOn = true;
+          }
+        }
       }
 
       totalSkipRate -= skipRates[skipIndex];
@@ -673,7 +699,6 @@ void Application::runSmoothed()
 
       totalSkippedFrames = 0;
       totalDroppedFrames = 0;
-      enableSmoothing = true;
     }
 
     if (nextSkip > 0)
