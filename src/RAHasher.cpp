@@ -1,6 +1,7 @@
 // RAHasher.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
+#include "Git.h"
 #include "Hash.h"
 #include "Util.h"
 
@@ -87,7 +88,9 @@ static bool generateHash(Logger* logger, System system, const std::string& path)
 
 static void usage(const char* appname)
 {
-  printf("%s  [systemid] [filepath]\n", util::fileName(appname).c_str());
+  printf("RAHasher %s\n====================\n", git::getReleaseVersion());
+
+  printf("Usage: %s [systemid] [filepath]\n", util::fileName(appname).c_str());
   printf("\n");
   printf("  filepath     specifies the path to the game file\n");
   printf("  systemid     specifies the system id associated to the game (which hash algorithm to use)\n");

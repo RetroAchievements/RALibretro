@@ -175,6 +175,7 @@
   <ItemGroup>
     <ClCompile Include="CdRom.cpp" />
     <ClCompile Include="components\Logger.cpp" />
+    <ClCompile Include="Git.cpp" />
     <ClCompile Include="Hash.cpp" />
     <ClCompile Include="md5\md5.c" />
     <ClCompile Include="miniz\miniz.c" />
