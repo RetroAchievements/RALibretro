@@ -80,6 +80,7 @@ static bool romLoadPsx(Logger* logger, const std::string& path)
   std::string exe_name;
   uint8_t* exe_raw;
   int size, remaining;
+  bool success = false;
 
   if (!cdrom_open(cdrom, path.c_str(), 1, 1, logger))
     return false;
@@ -87,7 +88,10 @@ static bool romLoadPsx(Logger* logger, const std::string& path)
   // extract the "BOOT=executable" line from the "SYSTEM.CNF" file, then hash the contents of "executable"
   if (!cdrom_seek_file(cdrom, "SYSTEM.CNF"))
   {
-    logger->info(TAG "Failed to locate SYSTEM.CNF in %s", path.c_str());
+    if (cdrom_seek_file(cdrom, "PSX.EXE"))
+      exe_name = "PSX.EXE";
+    else
+      logger->info(TAG "Failed to locate SYSTEM.CNF in %s", path.c_str());
   }
   else
   {
@@ -111,7 +115,7 @@ static bool romLoadPsx(Logger* logger, const std::string& path)
             ++exe_name_start;
 
           tmp = exe_name_start;
-          while (*tmp != '\n' && *tmp != '\r' && *tmp != ';' && *tmp != ' ')
+          while (!isspace(*tmp) && *tmp != ';')
             ++tmp;
 
           exe_name.assign(exe_name_start, tmp - exe_name_start);
@@ -127,52 +131,53 @@ static bool romLoadPsx(Logger* logger, const std::string& path)
     {
       logger->info(TAG "Failed to locate BOOT directive in SYSTEM.CNF in %s", path.c_str());
     }
-    else
+    else if (!cdrom_seek_file(cdrom, exe_name.c_str()))
     {
-      if (!cdrom_seek_file(cdrom, exe_name.c_str()))
-      {
-        logger->info(TAG "Failed to locate %s in %s", exe_name.c_str(), path.c_str());
-      }
-      else
-      {
-        cdrom_read(cdrom, buffer, sizeof(buffer));
-
-        // the PSX-E header specifies the executable size as a 4-byte value 28 bytes into the header, which doesn't
-        // include the header itself. We want to include the header in the hash, so append another 2048 to that value.
-        size = (((uint8_t)buffer[31] << 24) | ((uint8_t)buffer[30] << 16) | ((uint8_t)buffer[29] << 8) | (uint8_t)buffer[28]) + 2048;
-
-        // there's also a few games that are use a singular engine and only differ via their data files. luckily, they have
-        // unique serial numbers, and use the serial number as the boot file in the standard way. include the boot file in the hash
-        size += exe_name.length();
-
-        exe_raw = (uint8_t*)malloc(size);
-        tmp = (char*)exe_raw;
-
-        memcpy(tmp, exe_name.c_str(), exe_name.length());
-        remaining = size - exe_name.length();
-        tmp += exe_name.length();
-
-        do
-        {
-          memcpy(tmp, buffer, sizeof(buffer));
-          remaining -= sizeof(buffer);
-
-          if (remaining <= 0)
-            break;
-
-          tmp += sizeof(buffer);
-          cdrom_read(cdrom, buffer, sizeof(buffer));
-        } while (true);
-
-        RA_ActivateDisc(exe_raw, size);
-        free(exe_raw);
-      }
+      logger->info(TAG "Failed to locate %s in %s", exe_name.c_str(), path.c_str());
+      exe_name.clear();
     }
+  }
+
+  if (!exe_name.empty())
+  {
+    cdrom_read(cdrom, buffer, sizeof(buffer));
+
+    // the PSX-E header specifies the executable size as a 4-byte value 28 bytes into the header, which doesn't
+    // include the header itself. We want to include the header in the hash, so append another 2048 to that value.
+    size = (((uint8_t)buffer[31] << 24) | ((uint8_t)buffer[30] << 16) | ((uint8_t)buffer[29] << 8) | (uint8_t)buffer[28]) + 2048;
+
+    // there's also a few games that are use a singular engine and only differ via their data files. luckily, they have
+    // unique serial numbers, and use the serial number as the boot file in the standard way. include the boot file in the hash
+    size += exe_name.length();
+
+    exe_raw = (uint8_t*)malloc(size);
+    tmp = (char*)exe_raw;
+
+    memcpy(tmp, exe_name.c_str(), exe_name.length());
+    remaining = size - exe_name.length();
+    tmp += exe_name.length();
+
+    do
+    {
+      memcpy(tmp, buffer, sizeof(buffer));
+      remaining -= sizeof(buffer);
+
+      if (remaining <= 0)
+        break;
+
+      tmp += sizeof(buffer);
+      cdrom_read(cdrom, buffer, sizeof(buffer));
+    } while (true);
+
+    RA_ActivateDisc(exe_raw, size);
+    free(exe_raw);
+
+    success = true;
   }
 
   cdrom_close(cdrom);
 
-  return (!exe_name.empty());
+  return success;
 }
 
 static bool romLoadSegaCd(Logger* logger, const std::string& path)
