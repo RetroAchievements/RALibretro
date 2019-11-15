@@ -256,6 +256,7 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
     case System::kAtari7800:
     case System::kAtariJaguar:
     case System::kColecovision:
+    case System::kPokemonMini:
     case System::kGameBoy:
     case System::kGameBoyColor:
     case System::kGameBoyAdvance:

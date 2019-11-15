@@ -114,6 +114,10 @@
     "extensions": "bin",
     "systems": [10]
   },
+  "pokemini_libretro":{
+    "name": "PokeMini",
+    "systems": [24]
+  },
   "prosystem_libretro":{
     "name": "ProSystem",
     "systems": [51]

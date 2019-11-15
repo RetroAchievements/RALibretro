@@ -48,6 +48,7 @@ enum class System
   kGameGear       = GameGear,
   kArcade         = Arcade,
   kAtari7800      = Atari7800,
+  kPokemonMini    = PokemonMini,
   kColecovision   = Colecovision,
   kSG1000         = SG1000,
   kWonderSwan     = WonderSwan
