@@ -31,6 +31,7 @@ OBJS=\
 	src/miniz/miniz_zip.o \
 	src/md5/md5.o \
 	src/CdRom.o \
+	src/Git.o \
 	src/Hash.o \
 	src/Util.o \
 	src/RAHasher.o
@@ -49,6 +50,9 @@ all: bin/RAHasher$(EXE)
 bin/RAHasher$(EXE): $(OBJS)
 	mkdir -p bin
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LIBS)
+
+src/Git.cpp: etc/Git.cpp.template FORCE
+	cat $< | sed s/GITFULLHASH/`git rev-parse HEAD | tr -d "\n"`/g | sed s/GITMINIHASH/`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`/g | sed s/GITRELEASE/`git describe --tags | sed s/\-.*//g | tr -d "\n"`/g > $@
 
 clean:
 	rm -f bin/RAHasher$(EXE) $(OBJS)

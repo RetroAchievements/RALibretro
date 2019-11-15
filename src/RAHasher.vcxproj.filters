@@ -54,5 +54,8 @@
     <ClCompile Include="components\Logger.cpp">
       <Filter>Source Files\RALibRetro</Filter>
     </ClCompile>
+    <ClCompile Include="Git.cpp">
+      <Filter>Source Files\RALibRetro</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
