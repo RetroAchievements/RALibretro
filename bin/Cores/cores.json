@@ -99,6 +99,10 @@
     "name": "Mednafen VB",
     "systems": [28]
   },
+  "mednafen_wswan_libretro":{
+    "name": "Mednafen WonderSwan",
+    "systems": [53]
+  },
   "mgba_libretro":{
     "name": "mGBA",
     "extensions": "gba",
@@ -121,11 +125,6 @@
   "prosystem_libretro":{
     "name": "ProSystem",
     "systems": [51]
-  },
-  "mednafen_wswan_libretro":{
-    "name": "Mednafen WonderSwan",
-    "extensions": "ws|wsc",
-    "systems": [53]
   },
   "snes9x_libretro":{
     "name": "Snes9x",
