@@ -17,6 +17,10 @@
     "name": "bsnes-mercury (Performance)",
     "systems": [3]
   },
+  "desmume_libretro":{
+    "name": "DeSmuME",
+    "systems": [18]
+  },
   "fbalpha_libretro":{
     "name": "FB Alpha",
     "extensions": "zip",

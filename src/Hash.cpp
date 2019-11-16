@@ -73,6 +73,67 @@ static bool romLoadLynx(void* rom, size_t size)
   return true;
 }
 
+static bool romLoadNintendoDS(Logger* logger, const std::string& path)
+{
+  unsigned char header[512];
+
+  FILE* file = util::openFile(logger, path, "rb");
+  if (!file)
+  {
+    logger->info(TAG "Failed to open %s", path.c_str());
+    return false;
+  }
+
+  if (fread(header, 1, sizeof(header), file) != 512)
+  {
+    logger->info(TAG "Failed to read header from %s", path.c_str());
+  }
+  else
+  {
+    BYTE* hash_buffer;
+    unsigned int hash_size, arm9_size, arm9_addr, arm7_size, arm7_addr;
+
+    arm9_addr = header[0x20] | (header[0x21] << 8) | (header[0x22] << 16) | (header[0x23] << 24);
+    arm9_size = header[0x2C] | (header[0x2D] << 8) | (header[0x2E] << 16) | (header[0x2F] << 24);
+    arm7_addr = header[0x30] | (header[0x31] << 8) | (header[0x32] << 16) | (header[0x33] << 24);
+    arm7_size = header[0x3C] | (header[0x3D] << 8) | (header[0x3E] << 16) | (header[0x3F] << 24);
+
+    hash_size = 0x160 + arm9_size + arm7_size;
+    if (hash_size > 16 * 1024 * 1024)
+    {
+      logger->info(TAG "arm9 code size (%u) + arm7 code size (%u) exceeds 16MB", arm9_size, arm7_size);
+    }
+    else
+    {
+      hash_buffer = (BYTE*)malloc(hash_size);
+      if (!hash_buffer)
+      {
+        logger->info(TAG "failed to allocate %u bytes", hash_size);
+      }
+      else
+      {
+        memcpy(hash_buffer, header, 0x160);
+
+        fseek(file, arm9_addr, SEEK_SET);
+        fread(&hash_buffer[0x160], 1, arm9_size, file);
+
+        fseek(file, arm7_addr, SEEK_SET);
+        fread(&hash_buffer[0x160 + arm9_size], 1, arm7_size, file);
+
+        fclose(file);
+
+        RA_OnLoadNewRom(hash_buffer, hash_size);
+
+        free(hash_buffer);
+        return true;
+      }
+    }
+  }
+
+  fclose(file);
+  return false;
+}
+
 static bool romLoadPsx(Logger* logger, const std::string& path)
 {
   cdrom_t cdrom;
@@ -248,6 +309,7 @@ static bool romLoadArcade(const std::string& path)
 
 bool romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size)
 {
+  void* local_rom = NULL;
   bool ok = false;
 
   switch (system)
@@ -269,6 +331,9 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
     case System::kGameGear:
     case System::kSG1000:
     default:
+      if (rom == NULL)
+        rom = local_rom = util::loadFile(logger, path, &size);
+
       RA_OnLoadNewRom((BYTE*)rom, size);
       ok = true;
       break;
@@ -280,20 +345,36 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
       }
       else
       {
+        if (rom == NULL)
+          rom = local_rom = util::loadFile(logger, path, &size);
+
         RA_OnLoadNewRom((BYTE*)rom, size);
         ok = true;
       }
       break;
 
     case System::kSuperNintendo:
+      if (rom == NULL)
+        rom = local_rom = util::loadFile(logger, path, &size);
+
       ok = romLoadSnes(rom, size);
       break;
 
     case System::kNintendo:
+      if (rom == NULL)
+        rom = local_rom = util::loadFile(logger, path, &size);
+
       ok = romLoadNes(rom, size);
       break;
 
+    case System::kNintendoDS:
+      ok = romLoadNintendoDS(logger, path);
+      break;
+
     case System::kAtariLynx:
+      if (rom == NULL)
+        rom = local_rom = util::loadFile(logger, path, &size);
+
       ok = romLoadLynx(rom, size);
       break;
 
@@ -327,6 +408,9 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
         break;
     }
   }
+
+  if (local_rom)
+    free(local_rom);
 
   return ok;
 }

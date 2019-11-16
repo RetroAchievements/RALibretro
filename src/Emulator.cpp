@@ -274,6 +274,7 @@ const char* getSystemName(System system)
   case System::kSega32X:        return "Sega 32X";
   case System::kSaturn:         return "Sega Saturn";
   case System::kNintendo:       return "Nintendo Entertainment System";
+  case System::kNintendoDS:     return "Nintendo DS";
   case System::kPCEngine:       return "PC Engine";
   case System::kSuperNintendo:  return "Super Nintendo Entertainment System";
   case System::kGameBoy:        return "Game Boy";
