@@ -116,6 +116,8 @@ protected:
   void        toggleFullscreen();
   void        handle(const SDL_SysWMEvent* syswm);
   void        handle(const SDL_WindowEvent* window);
+  void        handle(const SDL_MouseMotionEvent* motion);
+  void        handle(const SDL_MouseButtonEvent* button);
   void        handle(const KeyBinds::Action action, unsigned extra);
   void        buildSystemsMenu();
   void        loadConfiguration();

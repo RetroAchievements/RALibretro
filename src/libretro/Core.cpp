@@ -832,8 +832,7 @@ bool libretro::Core::getRumbleInterface(struct retro_rumble_interface* data) con
 
 bool libretro::Core::getInputDeviceCapabilities(uint64_t* data) const
 {
-  (void)data;
-  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
+  *data = (1 << RETRO_DEVICE_JOYPAD) | (1 << RETRO_DEVICE_ANALOG) | (1 << RETRO_DEVICE_MOUSE);
   return false;
 }
 

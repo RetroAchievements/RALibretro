@@ -60,6 +60,13 @@ public:
     kRightAxisY
   };
 
+  enum class MouseButton
+  {
+    kLeft,
+    kRight,
+    kMiddle,
+  };
+
   bool init(libretro::LoggerComponent* logger);
   void destroy() {}
   void reset();
@@ -69,6 +76,8 @@ public:
   void buttonEvent(int port, Button button, bool pressed);
   void axisEvent(int port, Axis axis, int16_t value);
   void processEvent(const SDL_Event* event);
+  void mouseButtonEvent(MouseButton button, bool pressed);
+  void mouseMoveEvent(int relative_x, int relative_y, int absolute_x, int absolute_y);
 
   virtual void setInputDescriptors(const struct retro_input_descriptor* descs, unsigned count) override;
 
@@ -117,6 +126,14 @@ protected:
     int16_t     _axis[4];
   };
 
+  struct MouseInfo
+  {
+    int16_t _absolute_x, _absolute_y;
+    int16_t _previous_x, _previous_y;
+    int16_t _relative_x, _relative_y;
+    bool _button[16];
+  };
+
   enum
   {
     kMaxPorts = 8
@@ -137,6 +154,7 @@ protected:
 
   uint64_t                    _ports;
   std::vector<ControllerInfo> _info[kMaxPorts];
+  MouseInfo                   _mouse;
 
   int _devices[kMaxPorts];
 };
