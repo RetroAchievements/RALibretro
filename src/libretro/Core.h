@@ -58,7 +58,6 @@ namespace libretro
     inline enum retro_pixel_format getPixelFormat()         const { return _pixelFormat; }
     inline bool                    getNeedsHardwareRender() const { return _needsHardwareRender; }
     inline bool                    getSupportsNoGame()      const { return _supportsNoGame; }
-    inline unsigned                getRotation()            const { return _rotation; }
     inline bool                    getSupportAchievements() const { return _supportAchievements; }
     inline void                    unloadGame()                   { _core.unloadGame(); }
 
@@ -210,7 +209,6 @@ namespace libretro
     unsigned                        _performanceLevel;
     enum retro_pixel_format         _pixelFormat;
     bool                            _supportsNoGame;
-    unsigned                        _rotation;
     bool                            _supportAchievements;
     
     unsigned                        _inputDescriptorsCount;

@@ -65,6 +65,8 @@ public:
   bool isGameActive();
   const std::string& gameName() const { return _gameFileName; }
 
+  void onRotationChanged(Video::Rotation oldRotation, Video::Rotation newRotation);
+
 protected:
   struct MemoryRegion
   {
