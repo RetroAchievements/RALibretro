@@ -91,14 +91,15 @@ static bool romLoadNintendoDS(Logger* logger, const std::string& path)
   else
   {
     BYTE* hash_buffer;
-    unsigned int hash_size, arm9_size, arm9_addr, arm7_size, arm7_addr;
+    unsigned int hash_size, arm9_size, arm9_addr, arm7_size, arm7_addr, icon_addr;
 
     arm9_addr = header[0x20] | (header[0x21] << 8) | (header[0x22] << 16) | (header[0x23] << 24);
     arm9_size = header[0x2C] | (header[0x2D] << 8) | (header[0x2E] << 16) | (header[0x2F] << 24);
     arm7_addr = header[0x30] | (header[0x31] << 8) | (header[0x32] << 16) | (header[0x33] << 24);
     arm7_size = header[0x3C] | (header[0x3D] << 8) | (header[0x3E] << 16) | (header[0x3F] << 24);
+    icon_addr = header[0x68] | (header[0x69] << 8) | (header[0x6A] << 16) | (header[0x6B] << 24);
 
-    hash_size = 0x160 + arm9_size + arm7_size;
+    hash_size = 0x160 + arm9_size + arm7_size + 0xA00;
     if (hash_size > 16 * 1024 * 1024)
     {
       logger->info(TAG "arm9 code size (%u) + arm7 code size (%u) exceeds 16MB", arm9_size, arm7_size);
@@ -119,6 +120,9 @@ static bool romLoadNintendoDS(Logger* logger, const std::string& path)
 
         fseek(file, arm7_addr, SEEK_SET);
         fread(&hash_buffer[0x160 + arm9_size], 1, arm7_size, file);
+
+        fseek(file, icon_addr, SEEK_SET);
+        fread(&hash_buffer[0x160 + arm9_size + arm7_size], 1, 0xA00, file);
 
         fclose(file);
 
