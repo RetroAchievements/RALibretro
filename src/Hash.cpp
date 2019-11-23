@@ -92,6 +92,16 @@ static bool romLoadNintendoDS(Logger* logger, const std::string& path)
   {
     BYTE* hash_buffer;
     unsigned int hash_size, arm9_size, arm9_addr, arm7_size, arm7_addr, icon_addr;
+    int offset = 0;
+
+    if (header[0] == 0x2E && header[1] == 0x00 && header[2] == 0x00 && header[3] == 0xEA &&
+      header[0xB0] == 0x44 && header[0xB1] == 0x46 && header[0xB2] == 0x96 && header[0xB3] == 0)
+    {
+      /* SuperCard header detected, ignore it */
+      offset = 512;
+      fseek(file, offset, SEEK_SET);
+      fread(header, 1, sizeof(header), file);
+    }
 
     arm9_addr = header[0x20] | (header[0x21] << 8) | (header[0x22] << 16) | (header[0x23] << 24);
     arm9_size = header[0x2C] | (header[0x2D] << 8) | (header[0x2E] << 16) | (header[0x2F] << 24);
@@ -115,13 +125,13 @@ static bool romLoadNintendoDS(Logger* logger, const std::string& path)
       {
         memcpy(hash_buffer, header, 0x160);
 
-        fseek(file, arm9_addr, SEEK_SET);
+        fseek(file, arm9_addr + offset, SEEK_SET);
         fread(&hash_buffer[0x160], 1, arm9_size, file);
 
-        fseek(file, arm7_addr, SEEK_SET);
+        fseek(file, arm7_addr + offset, SEEK_SET);
         fread(&hash_buffer[0x160 + arm9_size], 1, arm7_size, file);
 
-        fseek(file, icon_addr, SEEK_SET);
+        fseek(file, icon_addr + offset, SEEK_SET);
         fread(&hash_buffer[0x160 + arm9_size + arm7_size], 1, 0xA00, file);
 
         fclose(file);
