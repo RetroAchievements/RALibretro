@@ -345,6 +345,15 @@ void Application::processEvents()
         break;
       }
 
+      case SDL_MOUSEMOTION:
+        handle(&event.motion);
+        break;
+
+      case SDL_MOUSEBUTTONUP:
+      case SDL_MOUSEBUTTONDOWN:
+        handle(&event.button);
+        break;
+
       case SDL_SYSWMEVENT:
         handle(&event.syswm);
         break;
@@ -2435,6 +2444,30 @@ void Application::handle(const SDL_WindowEvent* window)
   if (window->event == SDL_WINDOWEVENT_SIZE_CHANGED)
   {
     _video.windowResized(window->data1, window->data2);
+  }
+}
+
+void Application::handle(const SDL_MouseMotionEvent* motion)
+{
+  if (_video.getViewWidth())
+  {
+    int rel_x = ((motion->x << 16) / _video.getWindowWidth()) - 32767;
+    int rel_y = ((motion->y << 16) / _video.getWindowHeight()) - 32767;
+    int abs_x = (motion->x * _video.getViewWidth()) / _video.getWindowWidth();
+    int abs_y = (motion->y * _video.getViewHeight()) / _video.getWindowHeight();
+
+    _input.mouseMoveEvent(rel_x, rel_y, abs_x, abs_y);
+  }
+}
+
+void Application::handle(const SDL_MouseButtonEvent* button)
+{
+  bool pressed = (button->state == SDL_PRESSED);
+  switch (button->button)
+  {
+    case SDL_BUTTON_LEFT:   _input.mouseButtonEvent(Input::MouseButton::kLeft, pressed); break;
+    case SDL_BUTTON_MIDDLE: _input.mouseButtonEvent(Input::MouseButton::kMiddle, pressed); break;
+    case SDL_BUTTON_RIGHT:  _input.mouseButtonEvent(Input::MouseButton::kRight, pressed); break;
   }
 }
 

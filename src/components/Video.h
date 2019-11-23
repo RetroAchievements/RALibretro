@@ -51,6 +51,12 @@ public:
   void deserialize(const char* json);
   void showDialog();
 
+  unsigned getWindowWidth() const { return _windowWidth; }
+  unsigned getWindowHeight() const { return _windowHeight; }
+
+  unsigned getViewWidth() const { return _viewWidth; }
+  unsigned getViewHeight() const { return _viewHeight; }
+
 protected:
   GLuint createProgram(GLint* pos, GLint* uv, GLint* tex);
   GLuint createVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv);

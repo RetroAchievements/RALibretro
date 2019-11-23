@@ -102,6 +102,8 @@ void Input::reset()
     Pad* pad = &pair.second;
     pad->_ports = 0;
   }
+
+  memset(&_mouse, 0, sizeof(_mouse));
 }
 
 void Input::addController(int which)
@@ -258,6 +260,29 @@ void Input::processEvent(const SDL_Event* event)
   }
 }
 
+void Input::mouseButtonEvent(MouseButton button, bool pressed)
+{
+  int rbutton;
+
+  switch (button)
+  {
+    case MouseButton::kLeft:   rbutton = RETRO_DEVICE_ID_MOUSE_LEFT; break;
+    case MouseButton::kRight:  rbutton = RETRO_DEVICE_ID_MOUSE_RIGHT; break;
+    case MouseButton::kMiddle: rbutton = RETRO_DEVICE_ID_MOUSE_MIDDLE; break;
+    default:                   return;
+  }
+
+  _mouse._button[rbutton] = pressed;
+}
+
+void Input::mouseMoveEvent(int relative_x, int relative_y, int absolute_x, int absolute_y)
+{
+  _mouse._relative_x = (int16_t)relative_x;
+  _mouse._relative_y = (int16_t)relative_y;
+  _mouse._absolute_x = (int16_t)absolute_x;
+  _mouse._absolute_y = (int16_t)absolute_y;
+}
+
 void Input::setInputDescriptors(const struct retro_input_descriptor* descs, unsigned count)
 {
   for (unsigned i = 0; i < count; descs++, i++)
@@ -366,6 +391,33 @@ int16_t Input::read(unsigned port, unsigned device, unsigned index, unsigned id)
 
       case RETRO_DEVICE_ANALOG:
         return _info[port][_devices[port]]._axis[index << 1 | id];
+
+      case RETRO_DEVICE_MOUSE:
+        switch (id)
+        {
+          case RETRO_DEVICE_ID_MOUSE_X:
+          {
+            int delta = (_mouse._absolute_x - _mouse._previous_x);
+            _mouse._previous_x = _mouse._absolute_x;
+            return (int16_t)delta;
+          }
+          case RETRO_DEVICE_ID_MOUSE_Y:
+          {
+            int delta = (_mouse._absolute_y - _mouse._previous_y);
+            _mouse._previous_y = _mouse._absolute_y;
+            return (int16_t)delta;
+          }
+          default: return _mouse._button[id];
+        }
+
+      case RETRO_DEVICE_POINTER:
+        switch (id)
+        {
+          case RETRO_DEVICE_ID_POINTER_X: return _mouse._relative_x;
+          case RETRO_DEVICE_ID_POINTER_Y: return _mouse._relative_y;
+          case RETRO_DEVICE_ID_POINTER_PRESSED: return _mouse._button[RETRO_DEVICE_ID_MOUSE_LEFT];
+          default: break;
+        }
     }
   }
 
