@@ -148,6 +148,16 @@ namespace
       (void)msg;
       (void)frames;
     }
+
+    virtual void setRotation(Rotation rotation) override
+    {
+      (void)rotation;
+    }
+
+    Rotation getRotation() const override
+    {
+      return Rotation::None;
+    }
   };
 
   class Audio: public libretro::AudioComponent
@@ -520,7 +530,6 @@ void libretro::Core::reset()
   _performanceLevel = 0;
   _pixelFormat = RETRO_PIXEL_FORMAT_UNKNOWN;
   _supportsNoGame = false;
-  _rotation = 0;
   _supportAchievements = false;
   _inputDescriptorsCount = 0;
   _inputDescriptors = NULL;
@@ -560,7 +569,7 @@ char* libretro::Core::strdup(const char* str)
 
 bool libretro::Core::setRotation(unsigned data)
 {
-  _rotation = data;
+  _video->setRotation((Video::Rotation)data);
   return true;
 }
 

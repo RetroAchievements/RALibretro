@@ -77,6 +77,11 @@ static void memoryWrite1(unsigned addr, unsigned value)
   app.memoryWrite(1, addr, value);
 }
 
+static void s_onRotationChanged(Video::Rotation oldRotation, Video::Rotation newRotation)
+{
+  app.onRotationChanged(oldRotation, newRotation);
+}
+
 Application::Application(): _fsm(*this)
 {
   _components.logger    = &_logger;
@@ -247,6 +252,7 @@ bool Application::init(const char* title, int width, int height)
   {
     goto error;
   }
+  _video.setRotationChangedHandler(s_onRotationChanged);
 
   inited = kVideoInited;
 
@@ -812,6 +818,18 @@ void Application::saveConfiguration()
     json += "\"x\":" + std::to_string(x) + ",\"y\":" + std::to_string(y);
 
     SDL_GetWindowSize(_window, &x, &y);
+    switch (_video.getRotation())
+    {
+      case Video::Rotation::Ninety:
+      case Video::Rotation::TwoSeventy:
+      {
+        int tmp = x;
+        x = y;
+        y = tmp;
+        break;
+      }
+    }
+
     json += ",\"w\":" + std::to_string(x) + ",\"h\":" + std::to_string(y);
 
     json += "}";
@@ -848,6 +866,8 @@ bool Application::loadCore(const std::string& coreName)
 {
   _config.reset();
   _input.reset();
+
+  _video.setRotation(Video::Rotation::None);
 
   if (!_core.init(&_components))
   {
@@ -1568,6 +1588,20 @@ bool Application::isGameActive()
   }
 }
 
+void Application::onRotationChanged(Video::Rotation oldRotation, Video::Rotation newRotation)
+{
+  /* rotation of 90 or 270 degrees requires resizing window */
+  if (((int)oldRotation ^ (int)newRotation) & 1)
+  {
+    int width = _video.getWindowWidth();
+    int height = _video.getWindowHeight();
+    SDL_SetWindowSize(_window, height, width);
+
+    /* immediately call windowResized as rotation may change again before the window message is processed */
+    _video.windowResized(height, width);
+  }
+}
+
 void Application::s_audioCallback(void* udata, Uint8* stream, int len)
 {
   Application* app = (Application*)udata;
@@ -2244,23 +2278,34 @@ std::string Application::serializeRecentList()
 
 void Application::resizeWindow(unsigned multiplier)
 {
-  Uint32 active = SDL_GetWindowFlags(_window) & SDL_WINDOW_FULLSCREEN_DESKTOP;
+  Uint32 fullscreen = SDL_GetWindowFlags(_window) & SDL_WINDOW_FULLSCREEN_DESKTOP;
   
-  if (!active)
+  if (!fullscreen)
   {
     unsigned width, height;
     enum retro_pixel_format format;
     _video.getFramebufferSize(&width, &height, &format);
-    SDL_SetWindowSize(_window, width * multiplier, height * multiplier);
+
+    switch (_video.getRotation())
+    {
+      default:
+        SDL_SetWindowSize(_window, width * multiplier, height * multiplier);
+        break;
+
+      case Video::Rotation::Ninety:
+      case Video::Rotation::TwoSeventy:
+        SDL_SetWindowSize(_window, height * multiplier, width * multiplier);
+        break;
+    }
   }
 }
 
 void Application::toggleFullscreen()
 {
-  Uint32 active = SDL_GetWindowFlags(_window) & SDL_WINDOW_FULLSCREEN_DESKTOP;
-  SDL_SetWindowFullscreen(_window, active ^ SDL_WINDOW_FULLSCREEN_DESKTOP);
+  Uint32 fullscreen = SDL_GetWindowFlags(_window) & SDL_WINDOW_FULLSCREEN_DESKTOP;
+  SDL_SetWindowFullscreen(_window, fullscreen ^ SDL_WINDOW_FULLSCREEN_DESKTOP);
   
-  if (active)
+  if (fullscreen)
   {
     SetMenu(g_mainWindow, _menu);
     SDL_ShowCursor(SDL_ENABLE);
@@ -2451,10 +2496,38 @@ void Application::handle(const SDL_MouseMotionEvent* motion)
 {
   if (_video.getViewWidth())
   {
-    int rel_x = ((motion->x << 16) / _video.getWindowWidth()) - 32767;
-    int rel_y = ((motion->y << 16) / _video.getWindowHeight()) - 32767;
-    int abs_x = (motion->x * _video.getViewWidth()) / _video.getWindowWidth();
-    int abs_y = (motion->y * _video.getViewHeight()) / _video.getWindowHeight();
+    int rel_x, rel_y, abs_x, abs_y;
+
+    switch (_video.getRotation())
+    {
+      default:
+        rel_x = ((motion->x << 16) / _video.getWindowWidth()) - 32767;
+        rel_y = ((motion->y << 16) / _video.getWindowHeight()) - 32767;
+        abs_x = (motion->x * _video.getViewWidth()) / _video.getWindowWidth();
+        abs_y = (motion->y * _video.getViewHeight()) / _video.getWindowHeight();
+        break;
+
+      case Video::Rotation::Ninety:
+        rel_x = 32767 - ((motion->y << 16) / _video.getWindowHeight());
+        rel_y = ((motion->x << 16) / _video.getWindowWidth()) - 32767;
+        abs_x = _video.getViewWidth() - ((motion->y * _video.getViewWidth()) / _video.getWindowHeight()) - 1;
+        abs_y = (motion->x * _video.getViewHeight()) / _video.getWindowWidth();
+        break;
+
+      case Video::Rotation::OneEighty:
+        rel_x = 32767 - ((motion->x << 16) / _video.getWindowWidth());
+        rel_y = 32767 - ((motion->y << 16) / _video.getWindowHeight());
+        abs_x = _video.getViewWidth() - ((motion->x * _video.getViewWidth()) / _video.getWindowWidth()) - 1;
+        abs_y = _video.getViewHeight() - ((motion->y * _video.getViewHeight()) / _video.getWindowHeight()) - 1;
+        break;
+
+      case Video::Rotation::TwoSeventy:
+        rel_x = ((motion->y << 16) / _video.getWindowHeight());
+        rel_y = 32767 - ((motion->x << 16) / _video.getWindowWidth());
+        abs_x = (motion->y * _video.getViewWidth()) / _video.getWindowHeight();
+        abs_y = _video.getViewWidth() - ((motion->x * _video.getViewHeight()) / _video.getWindowWidth()) - 1;
+        break;
+    }
 
     _input.mouseMoveEvent(rel_x, rel_y, abs_x, abs_y);
   }

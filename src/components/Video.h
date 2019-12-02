@@ -57,6 +57,12 @@ public:
   unsigned getViewWidth() const { return _viewWidth; }
   unsigned getViewHeight() const { return _viewHeight; }
 
+  void setRotation(Rotation rotation) override;
+  Rotation getRotation() const override { return _rotation; }
+
+  typedef void (*RotationHandler)(Rotation oldRotation, Rotation newRotation);
+  void setRotationChangedHandler(RotationHandler handler) { _rotationHandler = handler; }
+
 protected:
   GLuint createProgram(GLint* pos, GLint* uv, GLint* tex);
   GLuint createVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv);
@@ -80,6 +86,8 @@ protected:
   unsigned                _viewHeight;
   enum retro_pixel_format _pixelFormat;
   float                   _aspect;
+  Rotation                _rotation;
+  RotationHandler         _rotationHandler;
 
   bool                    _preserveAspect;
   bool                    _linearFilter;

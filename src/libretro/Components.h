@@ -131,6 +131,18 @@ namespace libretro
     virtual retro_proc_address_t getProcAddress(const char* symbol) = 0;
 
     virtual void showMessage(const char* msg, unsigned frames) = 0;
+
+    /* NOTE: these are counter-clockwise rotations per libretro.h */
+    enum class Rotation
+    {
+      None = 0,
+      Ninety = 1,
+      OneEighty = 2,
+      TwoSeventy = 3
+    };
+
+    virtual void setRotation(Rotation rotation) = 0;
+    virtual Rotation getRotation() const = 0;
   };
 
   /**

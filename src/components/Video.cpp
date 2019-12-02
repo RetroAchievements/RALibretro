@@ -42,6 +42,8 @@ bool Video::init(libretro::LoggerComponent* logger, Config* config)
 
   _vertexBuffer = 0;
   _texture = 0;
+  _rotation = Rotation::None;
+  _rotationHandler = NULL;
 
   _preserveAspect = false;
   _linearFilter = false;
@@ -378,9 +380,21 @@ void Video::deserialize(const char* json)
   });
 }
 
+static const char* s_getRotateOptions(int index, void* udata)
+{
+  switch (index)
+  {
+    case 0: return "None";
+    case 1: return "90";
+    case 2: return "180";
+    case 3: return "270";
+    default: return NULL;
+  }
+}
+
 void Video::showDialog()
 {
-  const WORD WIDTH = 280;
+  const WORD WIDTH = 140;
   const WORD LINE = 15;
 
   Dialog db;
@@ -388,9 +402,15 @@ void Video::showDialog()
 
   WORD y = 0;
 
-  db.addCheckbox("Preserve aspect ratio", 51001, 0, y, WIDTH / 2 - 5, 8, &_preserveAspect);
-  db.addCheckbox("Linear filtering", 51002, WIDTH / 2 + 5, y, WIDTH / 2 - 5, 8, &_linearFilter);
+  db.addCheckbox("Preserve aspect ratio", 51001, 0, y, WIDTH - 10, 8, &_preserveAspect);
+  y += LINE;
 
+  db.addCheckbox("Linear filtering", 51002, 0, y, WIDTH - 10, 8, &_linearFilter);
+  y += LINE;
+
+  int rotation = (int)_rotation;
+  db.addLabel("Screen Rotation", 51003, 0, y, 50, 8);
+  db.addCombobox(51004, 55, y - 2, WIDTH - 55, 12, 4, s_getRotateOptions, NULL, &rotation);
   y += LINE;
 
   db.addButton("OK", IDOK, WIDTH - 55 - 50, y, 50, 14, true);
@@ -411,13 +431,10 @@ void Video::showDialog()
       _texture = createTexture(_textureWidth, _textureHeight, _pixelFormat, _linearFilter);
     }
 
+    setRotation((Rotation)rotation);
+
     if (preserveAspect != _preserveAspect)
     {
-      if (_vertexBuffer != 0)
-      {
-        Gl::deleteBuffers(1, &_vertexBuffer);
-      }
-
       float texScaleX = (float)_viewWidth / (float)_textureWidth;
       float texScaleY = (float)_viewHeight / (float)_textureHeight;
 
@@ -425,6 +442,23 @@ void Video::showDialog()
       _vertexBuffer = createVertexBuffer(_windowWidth, _windowHeight, texScaleX, texScaleY, _posAttribute, _uvAttribute);
     }
   }
+}
+
+void Video::setRotation(Rotation rotation)
+{
+  if (rotation == _rotation)
+    return;
+
+  if (_rotationHandler)
+    _rotationHandler(_rotation, rotation);
+
+  _rotation = rotation;
+
+  float texScaleX = (float)_viewWidth / (float)_textureWidth;
+  float texScaleY = (float)_viewHeight / (float)_textureHeight;
+
+  Gl::deleteBuffers(1, &_vertexBuffer);
+  _vertexBuffer = createVertexBuffer(_windowWidth, _windowHeight, texScaleX, texScaleY, _posAttribute, _uvAttribute);
 }
 
 GLuint Video::createProgram(GLint* pos, GLint* uv, GLint* tex)
@@ -482,18 +516,51 @@ GLuint Video::createVertexBuffer(unsigned windowWidth, unsigned windowHeight, fl
     winScaleX = winScaleY = 1.0f;
   }
 
-  const VertexData vertexData[] = {
+  const VertexData vertexData0[] = {
     {-winScaleX, -winScaleY,      0.0f, texScaleY},
     {-winScaleX,  winScaleY,      0.0f,      0.0f},
     { winScaleX, -winScaleY, texScaleX, texScaleY},
     { winScaleX,  winScaleY, texScaleX,      0.0f}
   };
-  
+  const VertexData vertexData90[] = {
+    {-winScaleX, -winScaleY,      0.0f,      0.0f},
+    {-winScaleX,  winScaleY, texScaleX,      0.0f},
+    { winScaleX, -winScaleY,      0.0f, texScaleY},
+    { winScaleX,  winScaleY, texScaleX, texScaleY}
+  };
+  const VertexData vertexData180[] = {
+    {-winScaleX, -winScaleY, texScaleX,      0.0f},
+    {-winScaleX,  winScaleY, texScaleX, texScaleY},
+    { winScaleX, -winScaleY,      0.0f,      0.0f},
+    { winScaleX,  winScaleY,      0.0f, texScaleY}
+  };
+  const VertexData vertexData270[] = {
+    {-winScaleX, -winScaleY, texScaleX, texScaleY},
+    {-winScaleX,  winScaleY,      0.0f, texScaleY},
+    { winScaleX, -winScaleY, texScaleX,      0.0f},
+    { winScaleX,  winScaleY,      0.0f,      0.0f}
+  };
+
   GLuint vertexBuffer;
   Gl::genBuffers(1, &vertexBuffer);
 
   Gl::bindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-  Gl::bufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
+
+  switch (_rotation)
+  {
+    default:
+      Gl::bufferData(GL_ARRAY_BUFFER, sizeof(vertexData0), vertexData0, GL_STATIC_DRAW);
+      break;
+    case Rotation::Ninety:
+      Gl::bufferData(GL_ARRAY_BUFFER, sizeof(vertexData90), vertexData90, GL_STATIC_DRAW);
+      break;
+    case Rotation::OneEighty:
+      Gl::bufferData(GL_ARRAY_BUFFER, sizeof(vertexData180), vertexData180, GL_STATIC_DRAW);
+      break;
+    case Rotation::TwoSeventy:
+      Gl::bufferData(GL_ARRAY_BUFFER, sizeof(vertexData270), vertexData270, GL_STATIC_DRAW);
+      break;
+  }
   
   Gl::vertexAttribPointer(pos, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, x));
   Gl::vertexAttribPointer(uv, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, u));
