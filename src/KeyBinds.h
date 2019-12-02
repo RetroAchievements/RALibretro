@@ -68,6 +68,8 @@ public:
     kSetWindowSize3,
     kSetWindowSize4,
     kToggleFullscreen,
+    kRotateRight,
+    kRotateLeft,
 
     // Emulation speed
     kPauseToggle,
@@ -105,7 +107,7 @@ public:
     Type type;
     uint16_t modifiers;
   };
-  typedef std::array<Binding, 85> BindingList;
+  typedef std::array<Binding, 87> BindingList;
 
   static void getBindingString(char buffer[32], const KeyBinds::Binding& desc);
 
