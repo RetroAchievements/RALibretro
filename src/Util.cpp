@@ -549,27 +549,16 @@ std::string util::openFileDialog(HWND hWnd, const std::string& extensionsFilter)
   path[0] = 0;
 
   OPENFILENAMEW cfg;
+  memset(&cfg, 0, sizeof(cfg));
 
   cfg.lStructSize = sizeof(cfg);
   cfg.hwndOwner = hWnd;
-  cfg.hInstance = NULL;
   cfg.lpstrFilter = unicodeExtensionsFilter.c_str();
-  cfg.lpstrCustomFilter = NULL;
-  cfg.nMaxCustFilter = 0;
   cfg.nFilterIndex = 2;
   cfg.lpstrFile = path;
   cfg.nMaxFile = sizeof(path)/sizeof(path[0]);
-  cfg.lpstrFileTitle = NULL;
-  cfg.nMaxFileTitle = 0;
-  cfg.lpstrInitialDir = NULL;
   cfg.lpstrTitle = L"Load";
   cfg.Flags = OFN_FILEMUSTEXIST;
-  cfg.nFileOffset = 0;
-  cfg.nFileExtension = 0;
-  cfg.lpstrDefExt = NULL;
-  cfg.lCustData = 0;
-  cfg.lpfnHook = NULL;
-  cfg.lpTemplateName = NULL;
 
   if (GetOpenFileNameW(&cfg) == TRUE)
   {
@@ -588,27 +577,16 @@ std::string util::saveFileDialog(HWND hWnd, const std::string& extensionsFilter)
   path[0] = 0;
 
   OPENFILENAMEW cfg;
+  memset(&cfg, 0, sizeof(cfg));
 
   cfg.lStructSize = sizeof(cfg);
   cfg.hwndOwner = hWnd;
-  cfg.hInstance = NULL;
   cfg.lpstrFilter = unicodeExtensionsFilter.c_str();
-  cfg.lpstrCustomFilter = NULL;
-  cfg.nMaxCustFilter = 0;
   cfg.nFilterIndex = 2;
   cfg.lpstrFile = path;
   cfg.nMaxFile = sizeof(path)/sizeof(path[0]);
-  cfg.lpstrFileTitle = NULL;
-  cfg.nMaxFileTitle = 0;
-  cfg.lpstrInitialDir = NULL;
   cfg.lpstrTitle = L"Save";
   cfg.Flags = OFN_NOREADONLYRETURN | OFN_OVERWRITEPROMPT;
-  cfg.nFileOffset = 0;
-  cfg.nFileExtension = 0;
-  cfg.lpstrDefExt = NULL;
-  cfg.lCustData = 0;
-  cfg.lpfnHook = NULL;
-  cfg.lpTemplateName = NULL;
 
   if (GetSaveFileNameW(&cfg) == TRUE)
   {
