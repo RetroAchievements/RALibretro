@@ -39,7 +39,7 @@ main MENU
     {
         POPUP "Select Core"
         {
-            MENUITEM "No Systems Found", IDM_SYSTEM_FIRST
+            MENUITEM "No Systems Found", IDM_MANAGE_CORES
         }
         MENUITEM SEPARATOR
         MENUITEM "Load Game...", IDM_LOAD_GAME
