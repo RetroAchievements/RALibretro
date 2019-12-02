@@ -36,6 +36,7 @@ enum class System
   kSega32X        = Sega32X,
   kSaturn         = Saturn,
   kNintendo       = NES,
+  kNintendoDS     = DS,
   kPCEngine       = PCEngine,
   kSuperNintendo  = SNES,
   kGameBoy        = GB,

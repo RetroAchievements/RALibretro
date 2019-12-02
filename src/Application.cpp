@@ -1097,17 +1097,26 @@ bool Application::loadGame(const std::string& path)
 
   if (issupportedzip)
   {
+    /* user is loading a zip file, and the core supports it */
     size = 0;
     data = NULL;
   }
-  else 
+  else if (info->need_fullpath)
+  {
+    /* core wants the full path, don't load the data unless we need it to hash */
+    size = 0;
+    data = NULL;
+  }
+  else
   {
     if (iszip)
     {
+      /* core doesn't support zip files, unzip it into a buffer */
       data = util::loadZippedFile(&_logger, path, &size, unzippedFileName);
     }
     else
     {
+      /* load the file into a buffer so we can hash it */
       data = util::loadFile(&_logger, path, &size);
     }
 
@@ -1120,6 +1129,7 @@ bool Application::loadGame(const std::string& path)
 
   if (unzippedFileName.empty())
   {
+    /* did not extract a file from an archive, just use the original file name */
     unzippedFileName = util::fileNameWithExtension(path);
   }
 
