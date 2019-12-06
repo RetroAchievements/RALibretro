@@ -31,6 +31,9 @@
     <Filter Include="Source Files\RAInterface">
       <UniqueIdentifier>{32b33d66-cfa3-44be-839e-0cc44f28fb9d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\rhash">
+      <UniqueIdentifier>{f33813cb-a0fd-4f12-a236-85aae13cff32}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="About.cpp">
@@ -119,6 +122,15 @@
     </ClCompile>
     <ClCompile Include="Hash.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rcheevos\src\rhash\cdreader.c">
+      <Filter>Source Files\rhash</Filter>
+    </ClCompile>
+    <ClCompile Include="rcheevos\src\rhash\hash.c">
+      <Filter>Source Files\rhash</Filter>
+    </ClCompile>
+    <ClCompile Include="rcheevos\src\rhash\md5.c">
+      <Filter>Source Files\rhash</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -7,6 +7,8 @@
 
 #include <md5/md5.h>
 
+#include "rcheevos\include\rhash.h"
+
 #include <memory>
 #include <string.h>
 
@@ -116,6 +118,38 @@ public:
   }
 };
 
+std::unique_ptr<StdErrLogger> logger;
+
+static void rhash_log(const char* message)
+{
+  fprintf(stderr, "%s\n", message);
+}
+
+static void* rhash_file_open(const char* path)
+{
+  return util::openFile(logger.get(), path, "rb");
+}
+
+static void rhash_file_seek(void* file_handle, size_t offset, int origin)
+{
+  fseek((FILE*)file_handle, offset, origin);
+}
+
+static size_t rhash_file_tell(void* file_handle)
+{
+  return ftell((FILE*)file_handle);
+}
+
+static size_t rhash_file_read(void* file_handle, void* buffer, size_t requested_bytes)
+{
+  return fread(buffer, 1, requested_bytes, (FILE*)file_handle);
+}
+
+static void rhash_file_close(void* file_handle)
+{
+  fclose((FILE*)file_handle);
+}
+
 int main(int argc, char* argv[])
 {
   if (argc == 3)
@@ -125,10 +159,60 @@ int main(int argc, char* argv[])
 
     if (system != System::kNone && !file.empty())
     {
-      std::unique_ptr<StdErrLogger> logger(new StdErrLogger);
-      if (generateHash(logger.get(), system, file))
+      logger.reset(new StdErrLogger);
+
+      //if (generateHash(logger.get(), system, file))
+      //{
+      //  printf("%s\n", md5_hash_result.c_str());
+      //}
+
+      char hash[33];
+      rc_hash_init_error_message_callback(rhash_log);
+
+      std::string ext = util::extension(file);
+      if (system != System::kArcade && (int)system < 99 && ext.length() == 4 &&
+        tolower(ext[1]) == 'z' && tolower(ext[2]) == 'i' && tolower(ext[3]) == 'p')
       {
-        printf("%s\n", md5_hash_result.c_str());
+        std::string unzippedFilename;
+        size_t size;
+        void* data = util::loadZippedFile(logger.get(), file, &size, unzippedFilename);
+        if (data)
+        {
+          if (rc_hash_generate_from_buffer(hash, (int)system, (uint8_t*)data, size))
+          {
+            printf("%s\n", hash);
+          }
+
+          free(data);
+        }
+      }
+      else
+      {
+        struct rc_hash_filereader filereader;
+        filereader.open = rhash_file_open;
+        filereader.seek = rhash_file_seek;
+        filereader.tell = rhash_file_tell;
+        filereader.read = rhash_file_read;
+        filereader.close = rhash_file_close;
+        rc_hash_init_custom_filereader(&filereader);
+
+        rc_hash_init_default_cdreader();
+
+        if ((int)system >= 99)
+        {
+          rc_hash_iterator iterator;
+          rc_hash_initialize_iterator(&iterator, file.c_str(), NULL, 0);
+          while (rc_hash_iterate(hash, &iterator))
+            printf("%s\n", hash);
+          rc_hash_destroy_iterator(&iterator);
+        }
+        else
+        {
+          if (rc_hash_generate_from_file(hash, (int)system, file.c_str()))
+          {
+            printf("%s\n", hash);
+          }
+        }
       }
 
       return md5_hash_result.empty() ? 1 : 0;

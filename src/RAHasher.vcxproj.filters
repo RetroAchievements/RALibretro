@@ -13,22 +13,19 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\md5">
-      <UniqueIdentifier>{4ea653d5-1cc2-4ca4-b75e-4e5ec8fe3ecd}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\RALibRetro">
       <UniqueIdentifier>{dbb91ad7-cb9c-4d0b-8000-4c52930b4044}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\miniz">
       <UniqueIdentifier>{1e293426-6398-4c86-81b8-5e0004cc542d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\rhash">
+      <UniqueIdentifier>{4ea653d5-1cc2-4ca4-b75e-4e5ec8fe3ecd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RAHasher.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="md5\md5.c">
-      <Filter>Source Files\md5</Filter>
     </ClCompile>
     <ClCompile Include="CdRom.cpp">
       <Filter>Source Files\RALibRetro</Filter>
@@ -57,5 +54,19 @@
     <ClCompile Include="Git.cpp">
       <Filter>Source Files\RALibRetro</Filter>
     </ClCompile>
+    <ClCompile Include="rcheevos\src\rhash\md5.c">
+      <Filter>Source Files\rhash</Filter>
+    </ClCompile>
+    <ClCompile Include="rcheevos\src\rhash\hash.c">
+      <Filter>Source Files\rhash</Filter>
+    </ClCompile>
+    <ClCompile Include="rcheevos\src\rhash\cdreader.c">
+      <Filter>Source Files\rhash</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="rcheevos\include\rhash.h">
+      <Filter>Source Files\rhash</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
