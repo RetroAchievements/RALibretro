@@ -24,6 +24,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <SDL_events.h>
 
 #include <array>
+#include <map>
 
 class Input; // forward reference
 
@@ -87,6 +88,8 @@ public:
   void translate(const SDL_ControllerAxisEvent* caxis, Input& input,
     Action* action1, unsigned* extra1, Action* action2, unsigned* extra2);
 
+  void mapDevice(SDL_JoystickID originalID, SDL_JoystickID newID);
+
   void showControllerDialog(Input& input, int portId);
   void showHotKeyDialog(Input& input);
 
@@ -120,6 +123,9 @@ protected:
   KeyBinds::Action translateAnalog(int button, Sint16 value, unsigned* extra);
 
   BindingList _bindings;
+  SDL_JoystickID getBindingID(SDL_JoystickID id) const;
+
+  std::map<SDL_JoystickID, SDL_JoystickID> _bindingMap;
 
   unsigned _slot;
   bool _ff;

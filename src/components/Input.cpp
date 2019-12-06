@@ -106,7 +106,7 @@ void Input::reset()
   memset(&_mouse, 0, sizeof(_mouse));
 }
 
-void Input::addController(int which)
+SDL_JoystickID Input::addController(int which)
 {
   if (SDL_IsGameController(which))
   {
@@ -117,7 +117,7 @@ void Input::addController(int which)
     if (pad._controller == NULL)
     {
       _logger->error(TAG "Error opening the controller: %s", SDL_GetError());
-      return;
+      return -1;
     }
 
     pad._joystick = SDL_GameControllerGetJoystick(pad._controller);
@@ -126,7 +126,7 @@ void Input::addController(int which)
     {
       _logger->error(TAG "Error getting the joystick: %s", SDL_GetError());
       SDL_GameControllerClose(pad._controller);
-      return;
+      return -1;
     }
 
     pad._id = SDL_JoystickInstanceID(pad._joystick);
@@ -134,7 +134,7 @@ void Input::addController(int which)
     if (_pads.find(pad._id) != _pads.end())
     {
       SDL_GameControllerClose(pad._controller);
-      return;
+      return pad._id;
     }
 
     pad._controllerName = SDL_GameControllerName(pad._controller);
@@ -144,7 +144,21 @@ void Input::addController(int which)
 
     _pads.insert(std::make_pair(pad._id, pad));
     _logger->info(TAG "Controller %s (%s) added", pad._controllerName, pad._joystickName);
+
+    // make sure we're tracking the GUID
+    SDL_JoystickGUID guid = SDL_JoystickGetGUID(pad._joystick);
+    for (const auto& pair : _joystickGUIDs)
+    {
+      if (memcmp(pair.second.data, guid.data, sizeof(guid.data)) == 0)
+        return pad._id;
+    }
+
+    SDL_JoystickID nextID = (SDL_JoystickID)_joystickGUIDs.size();
+    _joystickGUIDs.insert(std::make_pair(nextID, guid));
+    return pad._id;
   }
+
+  return -1;
 }
 
 void Input::autoAssign()
@@ -246,12 +260,12 @@ void Input::axisEvent(int port, Axis axis, int16_t value)
   _info[port][_devices[port]]._axis[raxis] = value;
 }
 
-void Input::processEvent(const SDL_Event* event)
+void Input::processEvent(const SDL_Event* event, KeyBinds* keyBinds)
 {
   switch (event->type)
   {
   case SDL_CONTROLLERDEVICEADDED:
-    addController(event);
+    addController(event, keyBinds);
     break;
 
   case SDL_CONTROLLERDEVICEREMOVED:
@@ -476,9 +490,27 @@ KeyBinds::Binding Input::captureButtonPress()
   return desc;
 }
 
-void Input::addController(const SDL_Event* event)
+void Input::addController(const SDL_Event* event, KeyBinds* keyBinds)
 {
-  addController(event->cdevice.which);
+  SDL_JoystickID id = addController(event->cdevice.which);
+  if (id >= 0)
+  {
+    // check to see if the GUID was previously assigned an ID. if so, inform the keybinder of the mapping
+    auto pad = _pads.find(id);
+    if (pad != _pads.end())
+    {
+      auto guid = SDL_JoystickGetGUID(pad->second._joystick);
+      for (auto& pair = _joystickGUIDs.begin(); pair != _joystickGUIDs.end(); ++pair)
+      {
+        if (memcmp(pair->second.data, guid.data, sizeof(guid.data)) == 0)
+        {
+          if (pair->first != pad->second._id)
+            keyBinds->mapDevice(pair->first, pad->second._id);
+          break;
+        }
+      }
+    }
+  }
 }
 
 void Input::removeController(const SDL_Event* event)
@@ -490,6 +522,7 @@ void Input::removeController(const SDL_Event* event)
     Pad* pad = &it->second;
     _logger->info(TAG "Controller %s (%s) removed", pad->_controllerName, pad->_joystickName);
 
+    // cleanup
     SDL_GameControllerClose(pad->_controller);
     _pads.erase(it);
 

@@ -328,7 +328,7 @@ void Application::processEvents()
 
       case SDL_CONTROLLERDEVICEADDED:
       case SDL_CONTROLLERDEVICEREMOVED:
-        _input.processEvent(&event);
+        _input.processEvent(&event, &_keybinds);
         break;
 
       case SDL_CONTROLLERBUTTONUP:
