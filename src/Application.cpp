@@ -1154,6 +1154,10 @@ bool Application::loadGame(const std::string& path)
       free(data);
     }
 
+    // A failure in loadGame typically destroys the core.
+    if (_core.getSystemInfo()->library_name == NULL)
+      _fsm.unloadCore();
+
     return false;
   }
 
