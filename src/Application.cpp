@@ -274,7 +274,12 @@ bool Application::init(const char* title, int width, int height)
 
     SetMenu(g_mainWindow, _menu);
 
-    loadCores(&_config, &_logger);
+    if (!loadCores(&_config, &_logger))
+    {
+      MessageBox(g_mainWindow, "Could not open Cores\\cores.json.", "Initialization failed", MB_OK);
+      goto error;
+    }
+
     buildSystemsMenu();
     loadConfiguration();
 
