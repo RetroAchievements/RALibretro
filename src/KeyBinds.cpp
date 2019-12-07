@@ -118,6 +118,8 @@ enum
   kSetWindowSize3,
   kSetWindowSize4,
   kToggleFullscreen,
+  kRotateRight,
+  kRotateLeft,
 
   // Emulation speed
   kPauseToggle,
@@ -148,7 +150,7 @@ static const char* bindingNames[] = {
   "LOAD_SLOT", "SAVE_SLOT",
 
   "WINDOW_1X", "WINDOW_2X", "WINDOW_3X", "WINDOW_4X",
-  "TOGGLE_FULLSCREEN",
+  "TOGGLE_FULLSCREEN", "ROTATE_RIGHT", "ROTATE_LEFT",
 
   "SHOW_OVERLAY", "PAUSE", "FAST_FORWARD", "FAST_FORWARD_TOGGLE", "FRAME_ADVANCE",
 
@@ -247,6 +249,8 @@ bool KeyBinds::init(libretro::LoggerComponent* logger)
   _bindings[kSetWindowSize3] = { 0, SDLK_3, Binding::Type::Key, KMOD_ALT };
   _bindings[kSetWindowSize4] = { 0, SDLK_4, Binding::Type::Key, KMOD_ALT };
   _bindings[kToggleFullscreen] = { 0, SDLK_RETURN, Binding::Type::Key, KMOD_ALT };
+  _bindings[kRotateRight] = { 0, SDLK_r, Binding::Type::Key, KMOD_CTRL };
+  _bindings[kRotateLeft] = { 0, SDLK_r, Binding::Type::Key, KMOD_CTRL | KMOD_SHIFT };
 
   _bindings[kPauseToggle] = { 0, SDLK_ESCAPE, Binding::Type::Key, 0 };
   _bindings[kPauseToggleNoOvl] = { 0, SDLK_p, Binding::Type::Key, 0 };
@@ -344,6 +348,8 @@ KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
     case kSetWindowSize3:    return Action::kSetWindowSize3;
     case kSetWindowSize4:    return Action::kSetWindowSize4;
     case kToggleFullscreen:  return Action::kToggleFullscreen;
+    case kRotateRight:       return Action::kRotateRight;
+    case kRotateLeft:        return Action::kRotateLeft;
 
     // Emulation speed
     case kPauseToggleNoOvl:  return Action::kPauseToggleNoOvl;
@@ -1080,7 +1086,7 @@ public:
     _bindings = bindings;
 
     const WORD WIDTH = 357;
-    const WORD HEIGHT = 325;
+    const WORD HEIGHT = 350;
     char label[32];
 
     addButtonInput(0, 0, "Window Size 1x", kSetWindowSize1);
@@ -1088,14 +1094,16 @@ public:
     addButtonInput(2, 0, "Window Size 3x", kSetWindowSize3);
     addButtonInput(3, 0, "Window Size 4x", kSetWindowSize4);
     addButtonInput(4, 0, "Toggle Fullscreen", kToggleFullscreen);
+    addButtonInput(5, 0, "Rotate Right", kRotateRight);
+    addButtonInput(6, 0, "Rotate Left", kRotateLeft);
 
-    addButtonInput(5, 0, "Show Overlay", kPauseToggle);
-    addButtonInput(6, 0, "Pause", kPauseToggleNoOvl);
-    addButtonInput(7, 0, "Frame Advance", kStep);
-    addButtonInput(8, 0, "Fast Forward (Hold)", kFastForward);
-    addButtonInput(9, 0, "Fast Forward (Toggle)", kFastForwardToggle);
+    addButtonInput(7, 0, "Show Overlay", kPauseToggle);
+    addButtonInput(8, 0, "Pause", kPauseToggleNoOvl);
+    addButtonInput(9, 0, "Frame Advance", kStep);
+    addButtonInput(10, 0, "Fast Forward (Hold)", kFastForward);
+    addButtonInput(11, 0, "Fast Forward (Toggle)", kFastForwardToggle);
 
-    addButtonInput(10, 0, "Take Screenshot", kScreenshot);
+    addButtonInput(12, 0, "Take Screenshot", kScreenshot);
 
     for (int i = 0; i < 10; ++i)
     {

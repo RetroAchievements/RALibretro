@@ -2594,6 +2594,8 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
   case KeyBinds::Action::kSetWindowSize3:   resizeWindow(3); break;
   case KeyBinds::Action::kSetWindowSize4:   resizeWindow(4); break;
   case KeyBinds::Action::kToggleFullscreen: toggleFullscreen(); break;
+  case KeyBinds::Action::kRotateRight:      _video.setRotation((Video::Rotation)(((int)_video.getRotation() + 3) & 3)); break;
+  case KeyBinds::Action::kRotateLeft:       _video.setRotation((Video::Rotation)(((int)_video.getRotation() + 1) & 3)); break;
 
   // Emulation speed
   case KeyBinds::Action::kStep:
