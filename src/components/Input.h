@@ -71,11 +71,10 @@ public:
   void destroy() {}
   void reset();
 
-  void addController(int which);
   void autoAssign();
   void buttonEvent(int port, Button button, bool pressed);
   void axisEvent(int port, Axis axis, int16_t value);
-  void processEvent(const SDL_Event* event);
+  void processEvent(const SDL_Event* event, KeyBinds* keyBinds);
   void mouseButtonEvent(MouseButton button, bool pressed);
   void mouseMoveEvent(int relative_x, int relative_y, int absolute_x, int absolute_y);
 
@@ -139,7 +138,8 @@ protected:
     kMaxPorts = 8
   };
 
-  void addController(const SDL_Event* event);
+  SDL_JoystickID addController(int which);
+  void addController(const SDL_Event* event, KeyBinds* keyBinds);
   void removeController(const SDL_Event* event);
 
   static const char* s_getType(int index, void* udata);
@@ -151,6 +151,8 @@ protected:
 
   std::map<SDL_JoystickID, Pad> _pads;
   std::vector<Descriptor>       _descriptors;
+
+  std::map<SDL_JoystickID, SDL_JoystickGUID> _joystickGUIDs;
 
   uint64_t                    _ports;
   std::vector<ControllerInfo> _info[kMaxPorts];

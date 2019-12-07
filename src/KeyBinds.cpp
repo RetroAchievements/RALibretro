@@ -475,11 +475,13 @@ KeyBinds::Action KeyBinds::translate(const SDL_KeyboardEvent* key, unsigned* ext
 
 KeyBinds::Action KeyBinds::translate(const SDL_ControllerButtonEvent* cbutton, unsigned* extra)
 {
+  SDL_JoystickID bindingID = getBindingID(cbutton->which);
+
   for (size_t i = 0; i < kMaxBindings; i++)
   {
     if (_bindings[i].type == Binding::Type::Button)
     {
-      if (cbutton->button == _bindings[i].button && cbutton->which == _bindings[i].joystick_id)
+      if (cbutton->button == _bindings[i].button && bindingID == _bindings[i].joystick_id)
       {
         if (cbutton->state == SDL_PRESSED)
           return translateButtonPress(i, extra);
@@ -493,6 +495,29 @@ KeyBinds::Action KeyBinds::translate(const SDL_ControllerButtonEvent* cbutton, u
   }
 
   return Action::kNothing;
+}
+
+void KeyBinds::mapDevice(SDL_JoystickID originalID, SDL_JoystickID newID)
+{
+  for (auto pair = _bindingMap.begin(); pair != _bindingMap.end(); ++pair)
+  {
+    if (pair->second == originalID)
+    {
+      _bindingMap.erase(pair);
+      break;
+    }
+  }
+
+  _bindingMap.insert(std::make_pair(newID, originalID));
+}
+
+SDL_JoystickID KeyBinds::getBindingID(SDL_JoystickID id) const
+{
+  auto iter = _bindingMap.find(id);
+  if (iter != _bindingMap.end())
+    return iter->second;
+
+  return id;
 }
 
 static bool IsAnalog(int button)
@@ -517,6 +542,7 @@ static bool IsAnalog(int button)
 void KeyBinds::translate(const SDL_ControllerAxisEvent* caxis, Input& input,
   Action* action1, unsigned* extra1, Action* action2, unsigned* extra2)
 {
+  SDL_JoystickID bindingID = getBindingID(caxis->which);
   *action1 = *action2 = Action::kNothing;
 
   int threshold = static_cast<int>(32767 * input.getJoystickSensitivity(caxis->which));
@@ -525,7 +551,7 @@ void KeyBinds::translate(const SDL_ControllerAxisEvent* caxis, Input& input,
   {
     if (_bindings[i].type == Binding::Type::Axis)
     {
-      if (caxis->axis == _bindings[i].button && caxis->which == _bindings[i].joystick_id)
+      if (caxis->axis == _bindings[i].button && bindingID == _bindings[i].joystick_id)
       {
         if (IsAnalog(i))
         {
@@ -875,6 +901,7 @@ public:
   const KeyBinds::Binding getButtonDescriptor() const { return _buttonDescriptor; }
 
   Input* _input = nullptr;
+  std::map<SDL_JoystickID, SDL_JoystickID>* _bindingMap = nullptr;
   bool _isOpen = false;
   bool _isAnalog = false;
 
@@ -1033,6 +1060,11 @@ protected:
               break;
 
             _buttonDescriptor = button;
+
+            auto pair = _bindingMap->find(button.joystick_id);
+            if (pair != _bindingMap->end())
+              _buttonDescriptor.joystick_id = pair->second;
+
             char buffer[32];
             KeyBinds::getBindingString(buffer, _buttonDescriptor);
             SetDlgItemText(hwnd, ID_LABEL, buffer);
@@ -1132,6 +1164,7 @@ public:
   }
 
   Input* _input = nullptr;
+  std::map<SDL_JoystickID, SDL_JoystickID>* _bindingMap = nullptr;
 
   const KeyBinds::BindingList& getBindings() const { return _bindings; }
 
@@ -1192,6 +1225,7 @@ protected:
     ChangeInputDialog db;
     db.init(buffer);
     db._input = _input;
+    db._bindingMap = _bindingMap;
     db._isAnalog = IsAnalog(button);
 
     GetDlgItemText(hwnd, 10000 + button, buffer, sizeof(buffer));
@@ -1224,6 +1258,7 @@ void KeyBinds::showControllerDialog(Input& input, int port)
   InputDialog db;
   db.init(label);
   db._input = &input;
+  db._bindingMap = &_bindingMap;
 
   switch (port)
   {
@@ -1244,6 +1279,8 @@ void KeyBinds::showHotKeyDialog(Input& input)
   InputDialog db;
   db.init("Hot Keys");
   db._input = &input;
+  db._bindingMap = &_bindingMap;
+
   db.initHotKeyButtons(_bindings);
 
   if (db.show())
