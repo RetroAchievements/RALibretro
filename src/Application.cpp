@@ -884,6 +884,7 @@ bool Application::loadCore(const std::string& coreName)
   path += coreName;
   path += ".dll";
 
+  // open the core and fetch all the hooks
   if (!_core.loadCore(path.c_str()))
   {
     std::string message = "Could not load ";
@@ -892,12 +893,14 @@ bool Application::loadCore(const std::string& coreName)
     return false;
   }
 
+  // let the user know if the core is no longer supported
   const std::string* deprecationMessage = getCoreDeprecationMessage(coreName);
   if (deprecationMessage)
   {
     MessageBox(g_mainWindow, deprecationMessage->c_str(), "Warning", MB_OK | MB_ICONWARNING);
   }
 
+  // read the settings for the core
   size_t size;
   void* data = util::loadFile(&_logger, getCoreConfigPath(coreName), &size);
 
@@ -912,7 +915,7 @@ bool Application::loadCore(const std::string& coreName)
     Deserialize ud;
     ud.self = this;
 
-    jsonsax_parse( (char*)data, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+    jsonsax_parse((char*)data, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
     {
       auto ud = (Deserialize*)udata;
 
@@ -944,6 +947,16 @@ bool Application::loadCore(const std::string& coreName)
     _config.initializeInput(_input);
   }
 
+  // tell the core to startup (must be done after reading configs)
+  if (!_core.initCore())
+  {
+    std::string message = "Could not initialize ";
+    message += coreName;
+    MessageBox(g_mainWindow, message.c_str(), "Failed", MB_OK);
+    return false;
+  }
+
+  // success - perform bookkeeping
   _coreName = coreName;
 
   std::string coreDetail = coreName + "/";

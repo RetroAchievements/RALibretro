@@ -39,6 +39,7 @@ namespace libretro
   public:
     bool init(const Components* components);
     bool loadCore(const char* core_path);
+    bool initCore();
     bool loadGame(const char* game_path, void* data, size_t size);
 
     void destroy();
@@ -113,7 +114,6 @@ namespace libretro
     
   protected:
     // Initialization
-    bool initCore();
     bool initAV();
     void reset();
     
