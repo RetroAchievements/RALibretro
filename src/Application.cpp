@@ -1359,8 +1359,12 @@ moved_recent_item:
 
         if (layout[i].len != 0 && layout[i].ptr)
         {
-          registerMemoryRegion(&numBanks, 0, layout[i].ptr, layout[i].len);
+          registerMemoryRegion(&numBanks, 0, (uint8_t*)layout[i].ptr + layout[i].offset, layout[i].len);
           address = layout[i].start + layout[i].len;
+
+          // fixes a bug where the gambatte core attempts to pass GBC memory (that it doesn't have) for a GB game
+          if (address >= 0x10000 && _system == System::kGameBoy)
+            break;
         }
       }
 
