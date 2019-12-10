@@ -1250,8 +1250,6 @@ moved_recent_item:
     }
   }
 
-  static uint8_t _1k[1024] = {0};
-
   _memoryBanks[0].count = 0;
   _memoryBanks[1].count = 0;
   unsigned numBanks = 0;
@@ -1335,17 +1333,7 @@ moved_recent_item:
         if (layout[i].start > address)
         {
           size_t fill = layout[i].start - address;
-
-          while (fill > 1024)
-          {
-            registerMemoryRegion(&numBanks, 0, _1k, 1024);
-            fill -= 1024;
-          }
-
-          if (fill != 0)
-          {
-            registerMemoryRegion(&numBanks, 0, _1k, fill);
-          }
+          registerMemoryRegionUnchecked(&numBanks, 0, NULL, fill);
         }
 
         if (layout[i].len != 0 && layout[i].ptr)
@@ -1367,7 +1355,7 @@ moved_recent_item:
 
       for (unsigned i = 0; i < 64; i++)
       {
-        pointer[i] = _1k;
+        pointer[i] = NULL;
       }
 
       for (unsigned i = 0; i < mmap->num_descriptors; i++)
@@ -1386,7 +1374,7 @@ moved_recent_item:
 
       for (unsigned i = 0; i < 64; i++)
       {
-        registerMemoryRegion(&numBanks, 0, pointer[i], 1024);
+        registerMemoryRegionUnchecked(&numBanks, 0, pointer[i], 1024);
       }
     }
 
@@ -1416,6 +1404,61 @@ moved_recent_item:
     }
 
     break;
+
+  case System::kPCEngine:
+  {
+    const struct retro_memory_map* mmap = _core.getMemoryMap();
+    if (mmap == nullptr || mmap->num_descriptors == 0)
+    {
+      data = _core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
+      size = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
+      registerMemoryRegion(&numBanks, 0, data, size);
+    }
+    else
+    {
+      size_t banks[] = { 0x2000, 0x10000, 0x30000, 0x800 };
+      int bank_ids[] = { -1, -1, -1, -1 };
+
+      for (unsigned i = 0; i < mmap->num_descriptors; i++)
+      {
+        if (mmap->descriptors[i].start == 0x1F0000) // main system RAM
+          bank_ids[0] = i;
+        else if (mmap->descriptors[i].start == 0x100000) // CD-ROM peripheral RAM
+          bank_ids[1] = i;
+        else if (mmap->descriptors[i].start == 0x0D0000) // Super System Card RAM
+          bank_ids[2] = i;
+        else if (mmap->descriptors[i].start == 0x1EE000) // CD-ROM battery-backed RAM
+          bank_ids[3] = i;
+      }
+
+      for (int bank = 0; bank < sizeof(banks) / sizeof(banks[0]); ++bank)
+      {
+        if (bank_ids[bank] >= 0)
+        {
+          const retro_memory_descriptor* desc = &mmap->descriptors[bank_ids[bank]];
+          data = (uint8_t*)desc->ptr + desc->offset;
+          size = desc->len;
+
+          if (size > banks[bank])
+            size = banks[bank];
+
+          registerMemoryRegion(&numBanks, 0, data, size);
+
+          size = banks[bank] - size;
+        }
+        else
+        {
+          size = banks[bank];
+        }
+
+        if (size > 0)
+          registerMemoryRegionUnchecked(&numBanks, 0, NULL, size);
+      }
+    }
+
+    break;
+  }
+
   }
 
   for (unsigned bank = 0; bank < numBanks; bank++)
@@ -1833,19 +1876,22 @@ void Application::updateCDMenu(const char names[][128], int count, bool updateLa
 void Application::registerMemoryRegion(unsigned* max, unsigned bank, void* data, size_t size)
 {
   if (data != NULL && size != 0)
+    registerMemoryRegionUnchecked(max, bank, data, size);
+}
+
+void Application::registerMemoryRegionUnchecked(unsigned* max, unsigned bank, void* data, size_t size)
+{
+  MemoryBank* mb = _memoryBanks + bank;
+  mb->regions[mb->count].data = (uint8_t*)data;
+  mb->regions[mb->count].size = size;
+  mb->count++;
+
+  if ((bank + 1) > *max)
   {
-    MemoryBank* mb = _memoryBanks + bank;
-    mb->regions[mb->count].data = (uint8_t*)data;
-    mb->regions[mb->count].size = size;
-    mb->count++;
-
-    if ((bank + 1) > *max)
-    {
-      *max = bank + 1;
-    }
-
-    _logger.info(TAG "Registered %7zu bytes at 0x%08x on bank %u", size, data, bank);
+    *max = bank + 1;
   }
+
+  _logger.info(TAG "Registered %7zu bytes at 0x%08x on bank %u", size, data, bank);
 }
 
 std::string Application::getSRamPath()
