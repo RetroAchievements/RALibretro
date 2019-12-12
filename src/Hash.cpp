@@ -95,6 +95,13 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
     game_id = RA_IdentifyHash(hash);
     RA_ActivateGame(game_id);
   }
+  else
+  {
+    // could not generate hash, deactivate game, but return true to allow it to load
+    RA_ActivateGame(0);
+    RA_DeactivateDisc();
+    return true;
+  }
 
   switch (system)
   {

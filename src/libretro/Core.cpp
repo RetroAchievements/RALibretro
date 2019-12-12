@@ -1555,7 +1555,8 @@ void libretro::Core::logCallback(enum retro_log_level level, const char *fmt, va
 
 bool libretro::Core::s_environmentCallback(unsigned cmd, void* data)
 {
-  return s_instance->environmentCallback(cmd, data);
+  if (s_instance)
+    return s_instance->environmentCallback(cmd, data);
 }
 
 void libretro::Core::s_videoRefreshCallback(const void* data, unsigned width, unsigned height, size_t pitch)
