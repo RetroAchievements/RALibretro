@@ -109,10 +109,6 @@
     "name": "Mednafen WonderSwan",
     "systems": [53]
   },
-  "melonds_libretro":{
-    "name": "melonDS",
-    "systems": [18]
-  },
   "mgba_libretro":{
     "name": "mGBA",
     "extensions": "gba",
