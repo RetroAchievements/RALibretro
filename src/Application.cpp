@@ -1669,15 +1669,20 @@ bool Application::isGameActive()
 
 void Application::onRotationChanged(Video::Rotation oldRotation, Video::Rotation newRotation)
 {
-  /* rotation of 90 or 270 degrees requires resizing window */
-  if (((int)oldRotation ^ (int)newRotation) & 1)
-  {
-    int width = _video.getWindowWidth();
-    int height = _video.getWindowHeight();
-    SDL_SetWindowSize(_window, height, width);
+  const Uint32 fullscreen = SDL_GetWindowFlags(_window) & SDL_WINDOW_FULLSCREEN_DESKTOP;
 
-    /* immediately call windowResized as rotation may change again before the window message is processed */
-    _video.windowResized(height, width);
+  if (!fullscreen)
+  {
+    /* rotation of 90 or 270 degrees requires resizing window */
+    if (((int)oldRotation ^ (int)newRotation) & 1)
+    {
+      int width = _video.getWindowWidth();
+      int height = _video.getWindowHeight();
+      SDL_SetWindowSize(_window, height, width);
+
+      /* immediately call windowResized as rotation may change again before the window message is processed */
+      _video.windowResized(height, width);
+    }
   }
 }
 
