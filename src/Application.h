@@ -101,6 +101,7 @@ protected:
   void        enableRecent();
   void        updateCDMenu(const char names[][128], int count, bool updateLabels);
   void        registerMemoryRegion(unsigned* max, unsigned bank, void* data, size_t size);
+  void        registerMemoryRegionUnchecked(unsigned* max, unsigned bank, void* data, size_t size);
   std::string getSRamPath();
   std::string getStatePath(unsigned ndx);
   std::string getConfigPath();

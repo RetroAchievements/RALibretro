@@ -83,6 +83,7 @@
   },
   "mednafen_pce_fast_libretro":{
     "name": "Beetle PCE Fast",
+    "extensions": "pce|cue",
     "systems": [8]
   },
   "mednafen_psx_libretro":{
@@ -97,6 +98,7 @@
   },
   "mednafen_supergrafx_libretro":{
     "name": "Mednafen SuperGrafX",
+    "extensions": "pce|sgx|cue",
     "systems": [8]
   },
   "mednafen_vb_libretro":{
