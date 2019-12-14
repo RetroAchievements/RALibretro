@@ -285,7 +285,7 @@ bool libretro::Core::loadCore(const char* core_path)
     return false;
   }
 
-  return initCore();
+  return true;
 }
 
 bool libretro::Core::loadGame(const char* game_path, void* data, size_t size)
