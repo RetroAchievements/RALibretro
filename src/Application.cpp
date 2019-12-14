@@ -462,7 +462,7 @@ void Application::runSmoothed()
     if (SDL_GetCurrentDisplayMode(0, &displayMode) == 0 && displayMode.refresh_rate > 0)
       refreshRate = displayMode.refresh_rate;
 
-    if (TARGET_FRAMES / 100 > refreshRate + 1) // allow 60.1Hz NES to vsync on 59.97 monitor
+    if (TARGET_FRAMES / 100 > (unsigned)refreshRate + 1) // allow 60.1Hz NES to vsync on 59.97 monitor
     {
       canVsync = false;
       vsyncOn = false;
@@ -592,7 +592,7 @@ void Application::runSmoothed()
     // result by 100. this overflows the size of an int, so instead of multiplying by an
     // additional 100, we divide totalMicroseconds by 100.
     const unsigned int fps = (SMOOTHING_FRAMES * 1000000) / (totalMicroseconds / 100);
-    static_assert(SMOOTHING_FRAMES * 1000000 < ((1 << 32) - 1), "SMOOTHING_FRAMES multiplication exceeds sizeof(uint)");
+    static_assert(SMOOTHING_FRAMES * 1000000 <= 0xFFFFFFFFU, "SMOOTHING_FRAMES multiplication exceeds sizeof(uint)");
     skipFrame = (fps < TARGET_FRAMES - 200) ? SKIP_DROPPED : 0; // TARGET_FRAMES is in hundredths of fps
 
     if (frameIndex == 0)
@@ -664,7 +664,7 @@ void Application::runSmoothed()
       if (totalDroppedFrames > 0)
       {
         // if we dropped more than 25% of the frames this interval, try disabling VSYNC
-        if (totalDroppedFrames > SMOOTHING_FRAMES / 4)
+        if ((unsigned)totalDroppedFrames > SMOOTHING_FRAMES / 4)
         {
           if (SDL_GL_GetSwapInterval() == 1)
           {
@@ -833,6 +833,9 @@ void Application::saveConfiguration()
         y = tmp;
         break;
       }
+
+      default:
+        break;
     }
 
     json += ",\"w\":" + std::to_string(x) + ",\"h\":" + std::to_string(y);
@@ -1457,7 +1460,7 @@ moved_recent_item:
           bank_ids[3] = i;
       }
 
-      for (int bank = 0; bank < sizeof(banks) / sizeof(banks[0]); ++bank)
+      for (unsigned bank = 0; bank < sizeof(banks) / sizeof(banks[0]); ++bank)
       {
         if (bank_ids[bank] >= 0)
         {

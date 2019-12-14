@@ -500,7 +500,7 @@ void Input::addController(const SDL_Event* event, KeyBinds* keyBinds)
     if (pad != _pads.end())
     {
       auto guid = SDL_JoystickGetGUID(pad->second._joystick);
-      for (auto& pair = _joystickGUIDs.begin(); pair != _joystickGUIDs.end(); ++pair)
+      for (auto pair = _joystickGUIDs.begin(); pair != _joystickGUIDs.end(); ++pair)
       {
         if (memcmp(pair->second.data, guid.data, sizeof(guid.data)) == 0)
         {

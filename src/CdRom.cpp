@@ -108,7 +108,7 @@ static void cdrom_determine_sector_size(cdrom_t& cdrom)
 static bool cdrom_open_cue(cdrom_t& cdrom, const char* filename, int track, Logger* logger)
 {
   FILE* fp;
-  char buffer[1024], *file = buffer, *ptr, *ptr2, *mode = buffer;
+  char buffer[1024], *file = buffer, *ptr, *ptr2;
   int current_track = 0;
   size_t num_read = 0;
 
@@ -142,7 +142,6 @@ static bool cdrom_open_cue(cdrom_t& cdrom, const char* filename, int track, Logg
       while (*ptr == ' ')
         ++ptr;
 
-      mode = ptr;
       if (track == 0 && strncmp(ptr, "MODE", 4) == 0)
         track = current_track;
     }
