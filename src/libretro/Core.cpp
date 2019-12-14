@@ -27,6 +27,8 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 
+#include <RA_Interface.h>
+
 #define SAMPLE_COUNT 8192
 
 #define TAG "[COR] "
@@ -1219,9 +1221,8 @@ bool libretro::Core::setGeometry(const struct retro_game_geometry* data)
 
 bool libretro::Core::getUsername(const char** data) const
 {
-  (void)data;
-  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
-  return false;
+  *data = RA_UserName();
+  return true;
 }
 
 bool libretro::Core::getLanguage(unsigned* data) const
