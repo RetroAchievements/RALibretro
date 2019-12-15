@@ -25,6 +25,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 // explicitly define APIs needed by hasher
 typedef unsigned char BYTE;
+unsigned int RA_IdentifyHash(const char* sHash);
 void RA_ActivateGame(unsigned int nGameId);
 void RA_OnLoadNewRom(BYTE* pROMData, unsigned int nROMSize);
 

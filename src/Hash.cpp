@@ -38,8 +38,12 @@ extern void RA_DeactivateDisc();
 
 static void rhash_handle_error_message(const char* message)
 {
+#ifdef _WINDOWS
   extern HWND g_mainWindow;
   MessageBoxA(g_mainWindow, (LPCSTR)message, "Unable to identify game", MB_OK);
+#else
+  fprintf(stderr, "Unable to identify game");
+#endif
 }
 
 static Logger* g_logger = NULL;

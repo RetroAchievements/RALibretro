@@ -43,6 +43,7 @@ void RA_ActivateDisc(unsigned char* pExe, size_t nExeSize)
 }
 
 // provide dummy methods for other functions
+unsigned int RA_IdentifyHash(const char* sHash) { return 0U; }
 void RA_ActivateGame(unsigned int nGameId) {}
 void RA_DeactivateDisc() {}
 
