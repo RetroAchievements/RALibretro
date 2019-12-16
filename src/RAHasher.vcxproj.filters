@@ -27,9 +27,6 @@
     <ClCompile Include="RAHasher.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CdRom.cpp">
-      <Filter>Source Files\RALibRetro</Filter>
-    </ClCompile>
     <ClCompile Include="Util.cpp">
       <Filter>Source Files\RALibRetro</Filter>
     </ClCompile>
@@ -44,9 +41,6 @@
     </ClCompile>
     <ClCompile Include="miniz\miniz_zip.c">
       <Filter>Source Files\miniz</Filter>
-    </ClCompile>
-    <ClCompile Include="Hash.cpp">
-      <Filter>Source Files\RALibRetro</Filter>
     </ClCompile>
     <ClCompile Include="components\Logger.cpp">
       <Filter>Source Files\RALibRetro</Filter>

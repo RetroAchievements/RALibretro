@@ -203,10 +203,8 @@
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CdRom.cpp" />
     <ClCompile Include="components\Logger.cpp" />
     <ClCompile Include="Git.cpp" />
-    <ClCompile Include="Hash.cpp" />
     <ClCompile Include="miniz\miniz.c" />
     <ClCompile Include="miniz\miniz_tdef.c" />
     <ClCompile Include="miniz\miniz_tinfl.c" />

@@ -1557,6 +1557,8 @@ bool libretro::Core::s_environmentCallback(unsigned cmd, void* data)
 {
   if (s_instance)
     return s_instance->environmentCallback(cmd, data);
+
+  return false;
 }
 
 void libretro::Core::s_videoRefreshCallback(const void* data, unsigned width, unsigned height, size_t pitch)
