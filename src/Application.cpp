@@ -122,7 +122,7 @@ bool Application::init(const char* title, int width, int height)
 #if defined(_M_X64) || defined(__amd64__)
   _logger.info(TAG "RALibretro version %s-x64 starting", git::getReleaseVersion());
 #else
-  _logger.info(TAG "RALibretro version %s%s starting", git::getReleaseVersion());
+  _logger.info(TAG "RALibretro version %s starting", git::getReleaseVersion());
 #endif
   _logger.info(TAG "RALibretro commit hash is %s", git::getFullHash());
 

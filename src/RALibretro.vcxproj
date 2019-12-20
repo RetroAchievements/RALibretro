@@ -119,6 +119,10 @@
       <Inputs>$(TargetPath)</Inputs>
       <Message>Copying $(TargetFileName) to bin directory</Message>
     </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>xcopy /D /Q /Y $(ProjectDir)SDL2\lib\x86\SDL2.dll $(SolutionDir)bin\
+$(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)bin</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -146,6 +150,10 @@
     <PreBuildEvent>
       <Command>$(ProjectDir)..\etc\MakeGitCpp.bat</Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>xcopy /D /Q /Y $(ProjectDir)SDL2\lib\x86\SDL2.dll $(SolutionDir)bin\
+$(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)bin</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -174,7 +182,9 @@
       <Command>$(ProjectDir)..\etc\MakeGitCpp.bat</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy /D /Q /Y $(SolutionDir)\bin\Cores\cores.json $(SolutionDir)\bin64\Cores\</Command>
+      <Command>xcopy /D /Q /Y $(SolutionDir)bin\Cores\cores.json $(SolutionDir)bin64\Cores\
+xcopy /D /Q /Y $(ProjectDir)SDL2\lib\x64\SDL2.dll $(SolutionDir)bin64\
+$(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -204,7 +214,9 @@
       <Command>$(ProjectDir)..\etc\MakeGitCpp.bat</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy /D /Q /Y $(SolutionDir)\bin\Cores\cores.json $(SolutionDir)\bin64\Cores\</Command>
+      <Command>xcopy /D /Q /Y $(SolutionDir)bin\Cores\cores.json $(SolutionDir)bin64\Cores\
+xcopy /D /Q /Y $(ProjectDir)SDL2\lib\x64\SDL2.dll $(SolutionDir)bin64\
+$(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
