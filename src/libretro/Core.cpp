@@ -380,13 +380,9 @@ void libretro::Core::step(bool generate_audio)
 
   _samplesCount = 0;
 
-  do
-  {
-    _core.run();
-  }
-  while (_samplesCount == 0);
+  _core.run();
   
-  if (generate_audio)
+  if (generate_audio && _samplesCount > 0)
   {
     _audio->mix(_samples, _samplesCount / 2);
   }
