@@ -332,7 +332,7 @@ void Config::showDialog(const std::string& coreName, Input& input)
     for (auto& var : _variables)
     {
       db.addLabel(var._name.c_str(), x, y + 2, HEADER_WIDTH - 5, 8);
-      db.addCombobox(50000 + id, x + HEADER_WIDTH + 5, y, VALUE_WIDTH, LINE_HEIGHT, 5,
+      db.addCombobox(50000 + id, x + HEADER_WIDTH + 5, y, VALUE_WIDTH, LINE_HEIGHT, 100,
         s_getOption, (void*)& var._options, &var._selected);
 
       if (++id < _variables.size())

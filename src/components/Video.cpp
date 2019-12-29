@@ -410,7 +410,7 @@ void Video::showDialog()
 
   int rotation = (int)_rotation;
   db.addLabel("Screen Rotation", 51003, 0, y, 50, 8);
-  db.addCombobox(51004, 55, y - 2, WIDTH - 55, 12, 4, s_getRotateOptions, NULL, &rotation);
+  db.addCombobox(51004, 55, y - 2, WIDTH - 55, 12, 100, s_getRotateOptions, NULL, &rotation);
   y += LINE;
 
   db.addButton("OK", IDOK, WIDTH - 55 - 50, y, 50, 14, true);

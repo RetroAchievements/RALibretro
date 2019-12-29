@@ -140,9 +140,9 @@ void Dialog::addButton(const char* caption, DWORD id, WORD x, WORD y, WORD w, WO
   update(x, y, w, h);
 }
 
-void Dialog::addCombobox(DWORD id, WORD x, WORD y, WORD w, WORD h, WORD lines, GetOption get_option, void* udata, int* selected)
+void Dialog::addCombobox(DWORD id, WORD x, WORD y, WORD w, WORD h, WORD maxDropDownHeight, GetOption get_option, void* udata, int* selected)
 {
-  writeDlgItemTemplateEx(0, 0, CBS_DROPDOWNLIST | WS_TABSTOP | WS_CHILD | WS_VISIBLE, x, y, w, h * lines, id, 0x0085FFFF, "", 0);
+  writeDlgItemTemplateEx(0, 0, CBS_DROPDOWNLIST | WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_VSCROLL, x, y, w, maxDropDownHeight, id, 0x0085FFFF, "", 0);
 
   ControlData cd;
   cd._type = kCombobox;
