@@ -114,6 +114,12 @@
     "extensions": "gba",
     "systems": [5]
   },
+  "pcsx_rearmed_libretro":{
+    "name": "PCSX-ReARMed",
+    "extensions": "m3u|cue",
+    "systems": [12],
+    "platforms": "win64"
+  },
   "picodrive_libretro":{
     "name": "PicoDrive",
     "extensions": "bin|gen|smd|md|sms",

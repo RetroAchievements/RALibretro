@@ -151,6 +151,19 @@ bool loadCores(Config* config, Logger* logger)
             ud->core->extensions = std::string(str, num);
           else if (ud->key == "deprecated")
             ud->core->deprecationMessage = std::string(str, num);
+          else if (ud->key == "platforms")
+          {
+            std::string value = std::string(str, num);
+#if defined(_M_X64) || defined(__amd64__)
+            if (value.find("win64") == std::string::npos)
+#else
+            if (value.find("win32") == std::string::npos)
+#endif
+            {
+              s_coreInfos.pop_back();
+              ud->core = nullptr;
+            }
+          }
         }
         break;
 
