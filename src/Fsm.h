@@ -33,7 +33,6 @@ public:
 
   bool loadCore(const_string core);
   bool loadGame(const_string path);
-  bool loadRecent(const_string core, const_string path);
   bool normal();
   bool pauseGame();
   bool pauseGameNoOvl();

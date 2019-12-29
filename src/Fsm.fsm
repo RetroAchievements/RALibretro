@@ -73,8 +73,6 @@ fsm Fsm {
       }
     }
 
-    loadRecent(const_string core, const_string path) => loadCore(core) => loadGame(path);
-
     quit() => Quit;
   }
 
@@ -92,8 +90,6 @@ fsm Fsm {
         forbid;
       }
     }
-
-    loadRecent(const_string core, const_string path) => unloadCore() => loadCore(core) => loadGame(path);
 
     quit() => unloadCore() => quit();
   }
@@ -129,8 +125,6 @@ fsm Fsm {
 
     loadGame(const_string path) => unloadGame() => loadGame(path);
 
-    loadRecent(const_string core, const_string path) => unloadGame() => loadRecent(core, path);
-
     quit() => unloadGame() => quit();
   }
 
@@ -157,8 +151,6 @@ fsm Fsm {
 
     loadGame(const_string path) => unloadGame() => loadGame(path);
 
-    loadRecent(const_string core, const_string path) => unloadGame() => loadRecent(core, path);
-
     quit() => unloadGame() => quit();
   }
 
@@ -184,8 +176,6 @@ fsm Fsm {
     loadCore(const_string core) => unloadGame() => unloadCore() => loadCore(core);
 
     loadGame(const_string path) => unloadGame() => loadGame(path);
-
-    loadRecent(const_string core, const_string path) => unloadGame() => loadRecent(core, path);
 
     quit() => unloadGame() => quit();
   }
@@ -222,8 +212,6 @@ fsm Fsm {
     loadCore(const_string core) => unloadGame() => unloadCore() => loadCore(core);
 
     loadGame(const_string path) => unloadGame() => loadGame(path);
-
-    loadRecent(const_string core, const_string path) => unloadGame() => loadRecent(core, path);
 
     quit() => unloadGame() => quit();
   }
