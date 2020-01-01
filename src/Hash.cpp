@@ -33,7 +33,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #define TAG "[HASH]"
 
 //  Manages multi-disc games
-extern void RA_ActivateDisc(unsigned char* pExe, size_t nExeSize);
+extern void RA_ActivateDisc(int loadedGame);
 extern void RA_DeactivateDisc();
 
 static void rhash_handle_error_message(const char* message)
@@ -74,7 +74,7 @@ static void rhash_file_close(void* file_handle)
 
 bool romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size)
 {
-  unsigned int game_id = 0;
+  unsigned int gameId = 0;
   char hash[33];
   struct rc_hash_filereader filereader;
 
@@ -94,12 +94,7 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
   if (!rom || !rc_hash_generate_from_buffer(hash, (int)system, (uint8_t*)rom, size))
     rc_hash_generate_from_file(hash, (int)system, path.c_str());
 
-  if (hash[0])
-  {
-    game_id = RA_IdentifyHash(hash);
-    RA_ActivateGame(game_id);
-  }
-  else
+  if (!hash[0])
   {
     // could not generate hash, deactivate game, but return true to allow it to load
     RA_ActivateGame(0);
@@ -107,21 +102,26 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
     return true;
   }
 
+  gameId = RA_IdentifyHash(hash);
+
   switch (system)
   {
     case System::kPlayStation1:
     case System::kSaturn:
     case System::kSegaCD:
-      // these systems call RA_ActivateDisc and may be multi-disc systems
+      // these systems may be multi-disc systems - only call RA_ActivateGame if the game id changes
+      RA_ActivateDisc(gameId);
       break;
 
     default:
       // all other systems should deactive any previously active disc
       RA_DeactivateDisc();
+      RA_ActivateGame(gameId);
       break;
   }
 
-  return (game_id != 0);
+  // return true to allow the game to load, even if it's not associated to achievements
+  return true;
 }
 
 void romUnloaded(Logger* logger)

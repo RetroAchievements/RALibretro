@@ -114,9 +114,8 @@ void RA_Init(HWND hWnd)
   RA_UpdateAppTitle("");
 }
 
-void RA_ActivateDisc(unsigned char* pExe, size_t nExeSize)
+void RA_ActivateDisc(int loadedGame)
 {
-  int loadedGame = RA_IdentifyRom(pExe, nExeSize);
   if (loadedGame != g_activeGame)
   {
     g_activeGame = loadedGame;
