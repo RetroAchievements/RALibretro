@@ -13,7 +13,7 @@ else ifeq ($(shell uname -s),Linux)
     STATICLIBS=-static-libstdc++ 
 endif
 
-INCLUDES=-Isrc -I./src/RAInterface -I./src/miniz
+INCLUDES=-Isrc -I./src/RAInterface -I./src/miniz -I./src/rcheevos/include
 DEFINES=-DOUTSIDE_SPEEX -DRANDOM_PREFIX=speex -DEXPORT= -D_USE_SSE2 -DFIXED_POINT -D_WINDOWS
 CCFLAGS=-Wall -m32 $(INCLUDES) $(DEFINES) `sdl2-config --cflags`
 CXXFLAGS=$(CCFLAGS) -std=c++11
@@ -47,6 +47,9 @@ OBJS=\
 	src/miniz/miniz_tdef.o \
 	src/miniz/miniz_tinfl.o \
 	src/miniz/miniz_zip.o \
+	src/rcheevos/src/rhash/cdreader.o \
+	src/rcheevos/src/rhash/md5.o \
+	src/rcheevos/src/rhash/hash.o \
 	src/speex/resample.o \
 	src/About.o \
 	src/Application.o \
