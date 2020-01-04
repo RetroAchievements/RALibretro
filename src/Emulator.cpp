@@ -633,7 +633,7 @@ bool showCoresDialog(Config* config, Logger* logger)
   WORD y = 0;
 
   int selectedCoreIndex = 0;
-  db.addCombobox(50000, 0, 0, 200, 16, db.numSystems, s_getCoreName, &db, &selectedCoreIndex);
+  db.addCombobox(50000, 0, 0, 200, 16, 120, s_getCoreName, &db, &selectedCoreIndex);
   y += 20;
 
   db.addLabel("Local", 170, y, 50, 14);
