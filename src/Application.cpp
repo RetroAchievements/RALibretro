@@ -2438,7 +2438,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       if (_fsm.loadCore(recent.coreName))
       {
         _system = recent.system;
-        _fsm.loadRecent(recent.coreName, recent.path);
+        _fsm.loadGame(recent.path);
       }
       break;
     }
