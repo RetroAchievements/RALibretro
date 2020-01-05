@@ -285,21 +285,6 @@ void Config::initializeControllerVariable(Variable& variable, const char* name, 
   }
 }
 
-void Config::initializeInput(Input& input)
-{
-  Variable controllerVariable;
-
-  for (unsigned i = 2; i > 0; --i)
-  {
-    controllerVariable._key = "__controller" + std::to_string(i);
-    controllerVariable._name = "Controller " + std::to_string(i);
-
-    input.getControllerNames(i - 1, controllerVariable._options, controllerVariable._selected);
-    if (controllerVariable._options.size() > 1)
-      _variables.insert(_variables.begin(), controllerVariable);
-  }
-}
-
 void Config::showDialog(const std::string& coreName, Input& input)
 {
   const WORD HEADER_WIDTH = 90;
@@ -314,7 +299,21 @@ void Config::showDialog(const std::string& coreName, Input& input)
   WORD x = 0;
   WORD y = 0;
 
-  if (_variables.empty())
+  std::vector<Variable> variables;
+  Variable controllerVariable;
+
+  for (unsigned i = 2; i > 0; --i)
+  {
+    controllerVariable._key = "__controller" + std::to_string(i);
+    controllerVariable._name = "Controller " + std::to_string(i);
+
+    controllerVariable._options.clear();
+    input.getControllerNames(i - 1, controllerVariable._options, controllerVariable._selected);
+    if (controllerVariable._options.size() > 1)
+      variables.insert(variables.begin(), controllerVariable);
+  }
+
+  if (_variables.empty() && variables.empty())
   {
     db.addLabel("No settings", 0, 0, HEADER_WIDTH + VALUE_WIDTH, LINE_HEIGHT);
     y = LINE_HEIGHT;
@@ -325,17 +324,19 @@ void Config::showDialog(const std::string& coreName, Input& input)
     WORD row = 0;
     WORD id = 0;
 
-    // evenly distribute the variables across multiple columns so no more than MAX_ROWS rows exist
-    const WORD columns = ((WORD)_variables.size() + MAX_ROWS - 1) / MAX_ROWS;
-    const WORD rows = ((WORD)_variables.size() + columns - 1) / columns;
+    variables.insert(variables.end(), _variables.begin(), _variables.end());
 
-    for (auto& var : _variables)
+    // evenly distribute the variables across multiple columns so no more than MAX_ROWS rows exist
+    const WORD columns = ((WORD)variables.size() + MAX_ROWS - 1) / MAX_ROWS;
+    const WORD rows = ((WORD)variables.size() + columns - 1) / columns;
+
+    for (auto& var : variables)
     {
       db.addLabel(var._name.c_str(), x, y + 2, HEADER_WIDTH - 5, 8);
       db.addCombobox(50000 + id, x + HEADER_WIDTH + 5, y, VALUE_WIDTH, LINE_HEIGHT, 100,
         s_getOption, (void*)& var._options, &var._selected);
 
-      if (++id < _variables.size())
+      if (++id < variables.size())
       {
         if (++row == rows)
         {
@@ -362,7 +363,7 @@ void Config::showDialog(const std::string& coreName, Input& input)
 
   if (_updated)
   {
-    for (auto& var : _variables)
+    for (auto& var : variables)
     {
       if (var._key.length() == 13 && SDL_strncmp(var._key.c_str(), "__controller", 12) == 0)
       {

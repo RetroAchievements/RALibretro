@@ -51,7 +51,6 @@ public:
 
   std::string serialize();
   void deserialize(const char* json);
-  void initializeInput(Input& input);
 
   void showDialog(const std::string& coreName, Input& input);
 

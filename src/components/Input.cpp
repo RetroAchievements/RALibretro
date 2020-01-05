@@ -323,18 +323,40 @@ void Input::setInputDescriptors(const struct retro_input_descriptor* descs, unsi
 
 void Input::setControllerInfo(const struct retro_controller_info* rinfo, unsigned count)
 {
-  for (unsigned port = 0; port < count; rinfo++, port++)
-  {
-    for (unsigned i = 0; i < rinfo->num_types; i++)
-    {
-      ControllerInfo info;
-      info._description = rinfo->types[i].desc;
-      info._id = rinfo->types[i].id;
+  ControllerInfo none;
+  none._description = "None";
+  none._id = RETRO_DEVICE_NONE;
+  memset(none._state, 0, sizeof(none._state));
 
-      if ((info._id & RETRO_DEVICE_MASK) == RETRO_DEVICE_JOYPAD ||
-          (info._id & RETRO_DEVICE_MASK) == RETRO_DEVICE_ANALOG)
+  ControllerInfo retropad;
+  retropad._description = "RetroPad";
+  retropad._id = RETRO_DEVICE_JOYPAD;
+  memset(retropad._state, 0, sizeof(retropad._state));
+
+  _ports = 0;
+
+  for (unsigned port = 0; port < kMaxPorts; rinfo++, port++)
+  {
+    _info[port].clear();
+    _info[port].push_back(none);
+    _info[port].push_back(retropad);
+
+    if (port < count)
+    {
+      for (unsigned i = 0; i < rinfo->num_types; i++)
       {
-        if (port < kMaxPorts)
+        if (rinfo->types[i].id == RETRO_DEVICE_JOYPAD)
+        {
+          _info[port].at(1)._description = rinfo->types[i].desc;
+          continue;
+        }
+
+        ControllerInfo info;
+        info._description = rinfo->types[i].desc;
+        info._id = rinfo->types[i].id;
+
+        if ((info._id & RETRO_DEVICE_MASK) == RETRO_DEVICE_JOYPAD ||
+          (info._id & RETRO_DEVICE_MASK) == RETRO_DEVICE_ANALOG)
         {
           memset(info._state, 0, sizeof(info._state));
           memset(info._axis, 0, sizeof(info._axis));
@@ -342,13 +364,14 @@ void Input::setControllerInfo(const struct retro_controller_info* rinfo, unsigne
           _info[port].push_back(info);
           _ports |= 1ULL << port;
         }
-        else
-        {
-          _logger->warn(TAG "Port %u above %d limit", port + 1, kMaxPorts);
-        }
       }
     }
+
+    if (_devices[port] > _info[port].size())
+      _devices[port] = 0;
   }
+
+  _updated = true;
 }
 
 void Input::getControllerNames(unsigned port, std::vector<std::string>& names, int& selectedIndex) const
@@ -371,6 +394,7 @@ void Input::getControllerNames(unsigned port, std::vector<std::string>& names, i
 void Input::setSelectedControllerIndex(unsigned port, int selectedIndex)
 {
   _devices[port] = selectedIndex;
+  _updated = true;
 }
 
 bool Input::ctrlUpdated()
@@ -587,6 +611,8 @@ void Input::deserialize(const char* json)
     
     return 0;
   });
+
+  _updated = true;
 }
 
 const char* Input::s_getType(int index, void* udata)

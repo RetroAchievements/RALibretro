@@ -950,8 +950,6 @@ bool Application::loadCore(const std::string& coreName)
     });
 
     free(data);
-
-    _config.initializeInput(_input);
   }
 
   // tell the core to startup (must be done after reading configs)
