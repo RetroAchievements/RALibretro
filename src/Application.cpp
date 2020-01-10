@@ -1488,6 +1488,56 @@ moved_recent_item:
     break;
   }
 
+  case System::kSegaCD:
+  {
+    const struct retro_memory_map* mmap = _core.getMemoryMap();
+    if (mmap == nullptr || mmap->num_descriptors == 0)
+    {
+      data = _core.getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
+      size = _core.getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
+      registerMemoryRegion(&numBanks, 0, data, size);
+    }
+    else
+    {
+      size_t banks[] = { 0x10000, 0x80000 };
+      int bank_ids[2] = { -1, -1 };
+
+      for (unsigned i = 0; i < mmap->num_descriptors; i++)
+      {
+        if (mmap->descriptors[i].start == 0xFF0000) // 68000 RAM
+          bank_ids[0] = i;
+        else if (mmap->descriptors[i].start == 0x80020000) // CD-ROM RAM (virtual address)
+          bank_ids[1] = i;
+      }
+
+      for (unsigned bank = 0; bank < sizeof(banks) / sizeof(banks[0]); ++bank)
+      {
+        if (bank_ids[bank] >= 0)
+        {
+          const retro_memory_descriptor* desc = &mmap->descriptors[bank_ids[bank]];
+          data = (uint8_t*)desc->ptr + desc->offset;
+          size = desc->len;
+
+          if (size > banks[bank])
+            size = banks[bank];
+
+          registerMemoryRegion(&numBanks, 0, data, size);
+
+          size = banks[bank] - size;
+        }
+        else
+        {
+          size = banks[bank];
+        }
+
+        if (size > 0)
+          registerMemoryRegionUnchecked(&numBanks, 0, NULL, size);
+      }
+    }
+
+    break;
+  }
+
   }
 
   for (unsigned bank = 0; bank < numBanks; bank++)
