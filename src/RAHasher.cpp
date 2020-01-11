@@ -7,7 +7,7 @@
 
 #include <md5/md5.h>
 
-#include "rcheevos\include\rhash.h"
+#include "rcheevos/include/rhash.h"
 
 #include <memory>
 #include <string.h>
