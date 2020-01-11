@@ -6,7 +6,7 @@ ifeq ($(OS),Windows_NT)
     EXE=.exe
 endif
 
-INCLUDES=-I./src -I./src/RAInterface -I./src/miniz
+INCLUDES=-I./src -I./src/RAInterface -I./src/miniz -I./src/rcheevos/include
 DEFINES=-D_CONSOLE
 CCFLAGS=-Wall -m32 $(INCLUDES) $(DEFINES)
 CXXFLAGS=$(CCFLAGS) -std=c++11
@@ -29,10 +29,10 @@ OBJS=\
 	src/miniz/miniz_tdef.o \
 	src/miniz/miniz_tinfl.o \
 	src/miniz/miniz_zip.o \
-	src/md5/md5.o \
-	src/CdRom.o \
+	src/rcheevos/src/rhash/cdreader.o \
+	src/rcheevos/src/rhash/hash.o \
+	src/rcheevos/src/rhash/md5.o \
 	src/Git.o \
-	src/Hash.o \
 	src/Util.o \
 	src/RAHasher.o
 

@@ -4,7 +4,7 @@ CC=i686-w64-mingw32-gcc
 CXX=i686-w64-mingw32-g++
 RC=i686-w64-mingw32-windres
 
-INCLUDES=-Isrc -I./src/RAInterface -I./src/miniz
+INCLUDES=-Isrc -I./src/RAInterface -I./src/miniz -I./src/rcheevos/include
 DEFINES=-DOUTSIDE_SPEEX -DRANDOM_PREFIX=speex -DEXPORT= -D_USE_SSE2 -DFIXED_POINT
 CFLAGS=-Wall -m32
 
@@ -26,7 +26,8 @@ OBJS=\
 	src/RA_Implementation.o src/RAInterface/RA_Interface.o src/components/Audio.o \
 	src/components/Config.o src/components/Dialog.o src/components/Input.o \
 	src/components/Logger.o src/components/Video.o src/speex/resample.o src/About.o \
-  src/miniz/miniz.o src/miniz/miniz_tdef.o src/miniz/miniz_tinfl.o src/miniz/miniz_zip.o \
+	src/miniz/miniz.o src/miniz/miniz_tdef.o src/miniz/miniz_tinfl.o src/miniz/miniz_zip.o \
+	src/rcheevos/src/rhash/cdreader.o src/rcheevos/src/rhash/hash.o src/rcheevos/src/rhash/md5.o \
 	src/Application.o src/Emulator.o src/Fsm.o src/Git.o src/Gl.o src/GlUtil.o \
 	src/KeyBinds.o src/CdRom.o src/Hash.o src/main.o src/menu.res src/Util.o
 

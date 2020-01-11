@@ -23,21 +23,4 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdio.h>
 
-struct cdrom_t
-{
-  FILE* fp;
-  int sector_size;
-  int sector_start;
-  int sector_remaining;
-  int sector_header_size;
-  int pregap_sectors;
-};
-
-bool cdrom_open(cdrom_t& cdrom, const char* filename, int disc, int track, Logger* logger);
-void cdrom_close(cdrom_t& cdrom);
-
-void cdrom_seek_sector(cdrom_t& cdrom, int sector);
-bool cdrom_seek_file(cdrom_t& cdrom, const char* filename);
-int cdrom_read(cdrom_t& cdrom, void* buffer, int num_bytes);
-
 int cdrom_get_cd_names(const char* filename, char names[][128], int max_names, Logger* logger);

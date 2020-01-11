@@ -99,7 +99,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)RAInterface;$(ProjectDir)miniz</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)RAInterface;$(ProjectDir)miniz;$(ProjectDir)rcheevos\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -152,7 +152,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)RAInterface;$(ProjectDir)miniz</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)RAInterface;$(ProjectDir)miniz;$(ProjectDir)rcheevos\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -203,17 +203,23 @@
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CdRom.cpp" />
     <ClCompile Include="components\Logger.cpp" />
     <ClCompile Include="Git.cpp" />
-    <ClCompile Include="Hash.cpp" />
-    <ClCompile Include="md5\md5.c" />
     <ClCompile Include="miniz\miniz.c" />
     <ClCompile Include="miniz\miniz_tdef.c" />
     <ClCompile Include="miniz\miniz_tinfl.c" />
     <ClCompile Include="miniz\miniz_zip.c" />
     <ClCompile Include="RAHasher.cpp" />
+    <ClCompile Include="rcheevos\src\rhash\cdreader.c" />
+    <ClCompile Include="rcheevos\src\rhash\hash.c">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rhash</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rhash</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="rcheevos\src\rhash\md5.c" />
     <ClCompile Include="Util.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="rcheevos\include\rhash.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
