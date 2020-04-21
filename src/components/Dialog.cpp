@@ -355,7 +355,7 @@ INT_PTR CALLBACK Dialog::s_dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM
   case WM_CLOSE:
     self = (Dialog*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     self->markClosed(hwnd);
-    DestroyWindow(hwnd);
+    EndDialog(hwnd, IDCANCEL);
     return TRUE;
   }
 
