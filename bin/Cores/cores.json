@@ -29,7 +29,6 @@
   },
   "fbneo_libretro":{
     "name": "FinalBurn Neo",
-    "extensions": "zip|7z",
     "systems": [27]
   },
   "fceumm_libretro":{
