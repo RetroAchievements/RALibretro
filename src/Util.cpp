@@ -24,7 +24,9 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <errno.h>
 #include <string.h>
 
+#ifndef NO_MINIZ
 #include <miniz_zip.h>
+#endif
 
 #ifdef _WINDOWS
 #define WIN32_LEAN_AND_MEAN
@@ -157,6 +159,7 @@ void* util::loadFile(Logger* logger, const std::string& path, size_t* size)
   return data;
 }
 
+#ifndef NO_MINIZ
 void* util::loadZippedFile(Logger* logger, const std::string& path, size_t* size, std::string& unzippedFileName)
 {
   mz_bool status;
@@ -249,6 +252,7 @@ bool util::unzipFile(Logger* logger, const std::string& zipPath, const std::stri
 
   return status;
 }
+#endif
 
 std::string util::loadFile(Logger* logger, const std::string& path)
 {

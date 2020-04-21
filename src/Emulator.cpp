@@ -22,8 +22,12 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "Util.h"
 
 #include "components\Config.h"
-#include "components\Dialog.h"
 #include "components\Logger.h"
+
+#ifdef _WINDOWS
+#include "components\Dialog.h"
+#include <RA_Interface.h>
+#endif
 
 #include <jsonsax\jsonsax.h>
 
@@ -313,6 +317,8 @@ const char* getSystemName(System system)
   
   return "?";
 }
+
+#ifdef _WINDOWS
 
 class CoreDialog : public Dialog
 {
@@ -656,3 +662,5 @@ bool showCoresDialog(Config* config, Logger* logger)
 
   return db.modified;
 }
+
+#endif

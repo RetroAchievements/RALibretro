@@ -19,9 +19,13 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "components/Input.h"
+#ifdef _WINDOWS
+ #include "components/Input.h"
+#endif
+
 #include "libretro/Components.h"
 
+#include <map>
 #include <unordered_map>
 
 class Config: public libretro::ConfigComponent
@@ -52,7 +56,9 @@ public:
   std::string serialize();
   void deserialize(const char* json);
 
+#ifdef _WINDOWS
   void showDialog(const std::string& coreName, Input& input);
+#endif
 
 protected:
   static const char* s_getOption(int index, void* udata);

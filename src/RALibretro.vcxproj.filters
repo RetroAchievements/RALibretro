@@ -34,30 +34,15 @@
     <Filter Include="Source Files\rhash">
       <UniqueIdentifier>{f33813cb-a0fd-4f12-a236-85aae13cff32}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\components">
+      <UniqueIdentifier>{2bcecd49-e2e4-41ba-96ea-7b083991da9a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="About.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Application.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="components\Audio.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="components\Config.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="components\Dialog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="components\Input.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="components\Logger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="components\Video.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Emulator.cpp">
@@ -131,6 +116,24 @@
     </ClCompile>
     <ClCompile Include="rcheevos\src\rhash\md5.c">
       <Filter>Source Files\rhash</Filter>
+    </ClCompile>
+    <ClCompile Include="components\Audio.cpp">
+      <Filter>Source Files\components</Filter>
+    </ClCompile>
+    <ClCompile Include="components\Config.cpp">
+      <Filter>Source Files\components</Filter>
+    </ClCompile>
+    <ClCompile Include="components\Dialog.cpp">
+      <Filter>Source Files\components</Filter>
+    </ClCompile>
+    <ClCompile Include="components\Input.cpp">
+      <Filter>Source Files\components</Filter>
+    </ClCompile>
+    <ClCompile Include="components\Logger.cpp">
+      <Filter>Source Files\components</Filter>
+    </ClCompile>
+    <ClCompile Include="components\Video.cpp">
+      <Filter>Source Files\components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

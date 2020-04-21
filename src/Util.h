@@ -44,8 +44,12 @@ namespace util
   FILE*       openFile(Logger* logger, const std::string& path, const char* mode);
   std::string loadFile(Logger* logger, const std::string& path);
   void*       loadFile(Logger* logger, const std::string& path, size_t* size);
+
+#ifndef NO_MINIZ
   void*       loadZippedFile(Logger* logger, const std::string& path, size_t* size, std::string& unzippedFileName);
   bool        unzipFile(Logger* logger, const std::string& zipPath, const std::string& archiveFileName, const std::string& unzippedPath);
+#endif
+
   bool        saveFile(Logger* logger, const std::string& path, const void* data, size_t size);
   void        deleteFile(const std::string& path);
 

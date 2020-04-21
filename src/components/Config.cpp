@@ -19,7 +19,6 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Config.h"
 
-#include "Dialog.h"
 #include "Util.h"
 #include "jsonsax/jsonsax.h"
 
@@ -36,12 +35,15 @@ bool Config::init(libretro::LoggerComponent* logger)
 {
   _logger = logger;
 
+#ifdef _WINDOWS
   HMODULE hModule = GetModuleHandleW(NULL);
   WCHAR path[MAX_PATH + 1];
   DWORD len = GetModuleFileNameW(hModule, path, sizeof(path) / sizeof(path[0]) - 1);
   path[len] = 0;
 
   _rootFolder = util::ucharToUtf8(path);
+#endif
+
   size_t index = _rootFolder.find_last_of('\\');
   if (index != std::string::npos)
   {
@@ -285,6 +287,7 @@ void Config::initializeControllerVariable(Variable& variable, const char* name, 
   }
 }
 
+#ifdef _WINDOWS
 void Config::showDialog(const std::string& coreName, Input& input)
 {
   const WORD HEADER_WIDTH = 90;
@@ -377,6 +380,7 @@ void Config::showDialog(const std::string& coreName, Input& input)
     }
   }
 }
+#endif
 
 const char* Config::s_getOption(int index, void* udata)
 {
