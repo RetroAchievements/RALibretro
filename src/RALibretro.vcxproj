@@ -247,6 +247,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     <ClCompile Include="miniz\miniz_zip.c" />
     <ClCompile Include="RAInterface\RA_Interface.cpp" />
     <ClCompile Include="RA_Implementation.cpp" />
+    <ClCompile Include="rcheevos\src\rcheevos\consoleinfo.c" />
     <ClCompile Include="rcheevos\src\rhash\cdreader.c" />
     <ClCompile Include="rcheevos\src\rhash\hash.c">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rhash</ObjectFileName>

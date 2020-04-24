@@ -284,38 +284,7 @@ const std::string* getCoreDeprecationMessage(const std::string& coreName)
 
 const char* getSystemName(System system)
 {
-  switch (system)
-  {
-  case System::kAtari2600:      return "Atari 2600";
-  case System::kAtariLynx:      return "Atari Lynx";
-  case System::kAtariJaguar:    return "Atari Jaguar";
-  case System::kMasterSystem:   return "Master System";
-  case System::kMegaDrive:      return "Sega Genesis";
-  case System::kSegaCD:         return "Sega CD";
-  case System::kSega32X:        return "Sega 32X";
-  case System::kSaturn:         return "Sega Saturn";
-  case System::kNintendo:       return "Nintendo Entertainment System";
-  case System::kNintendoDS:     return "Nintendo DS";
-  case System::kPCEngine:       return "PC Engine";
-  case System::kSuperNintendo:  return "Super Nintendo Entertainment System";
-  case System::kGameBoy:        return "Game Boy";
-  case System::kGameBoyColor:   return "Game Boy Color";
-  case System::kGameBoyAdvance: return "Game Boy Advance";
-  case System::kNintendo64:     return "Nintendo 64";
-  case System::kPlayStation1:   return "PlayStation";
-  case System::kNeoGeoPocket:   return "Neo Geo Pocket";
-  case System::kVirtualBoy:     return "Virtual Boy";
-  case System::kGameGear:       return "Game Gear";
-  case System::kArcade:         return "Arcade";
-  case System::kAtari7800:      return "Atari 7800";
-  case System::kPokemonMini:    return "Pokemon Mini";
-  case System::kColecovision:   return "Colecovision";
-  case System::kSG1000:         return "SG-1000";
-  case System::kWonderSwan:     return "WonderSwan";
-  default:                      break;
-  }
-  
-  return "?";
+  return rc_console_name(static_cast<int>(system));
 }
 
 #ifdef _WINDOWS

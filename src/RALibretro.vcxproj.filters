@@ -37,6 +37,9 @@
     <Filter Include="Source Files\components">
       <UniqueIdentifier>{2bcecd49-e2e4-41ba-96ea-7b083991da9a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\rcheevos">
+      <UniqueIdentifier>{f03f66d3-40a1-4a92-8840-586859a3b6b5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="About.cpp">
@@ -134,6 +137,9 @@
     </ClCompile>
     <ClCompile Include="components\Video.cpp">
       <Filter>Source Files\components</Filter>
+    </ClCompile>
+    <ClCompile Include="rcheevos\src\rcheevos\consoleinfo.c">
+      <Filter>Source Files\rcheevos</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
