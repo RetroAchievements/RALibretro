@@ -141,6 +141,9 @@
     <ClCompile Include="rcheevos\src\rcheevos\consoleinfo.c">
       <Filter>Source Files\rcheevos</Filter>
     </ClCompile>
+    <ClCompile Include="Memory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="About.h">
@@ -204,6 +207,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GlUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rcheevos\include\rconsoles.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rcheevos\include\rcheevos.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

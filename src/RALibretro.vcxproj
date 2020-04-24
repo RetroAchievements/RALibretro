@@ -241,6 +241,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     <ClCompile Include="libretro\BareCore.cpp" />
     <ClCompile Include="libretro\Core.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Memory.cpp" />
     <ClCompile Include="miniz\miniz.c" />
     <ClCompile Include="miniz\miniz_tdef.c" />
     <ClCompile Include="miniz\miniz_tinfl.c" />
@@ -280,6 +281,8 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     <ClInclude Include="libretro\Components.h" />
     <ClInclude Include="libretro\Core.h" />
     <ClInclude Include="libretro\libretro.h" />
+    <ClInclude Include="rcheevos\include\rcheevos.h" />
+    <ClInclude Include="rcheevos\include\rconsoles.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
   <ItemGroup>
