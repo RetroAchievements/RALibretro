@@ -2127,25 +2127,34 @@ void Application::loadState(const std::string& path)
   enum retro_pixel_format format;
   _video.getFramebufferSize(&width, &height, &format);
 
-  const void* pixels = util::loadImage(&_logger, path + ".png", &width, &height, &pitch);
-
+  unsigned image_width, image_height;
+  const void* pixels = util::loadImage(&_logger, path + ".png", &image_width, &image_height, &pitch);
   if (pixels == NULL)
   {
     _logger.error(TAG "Error loading savestate screenshot");
     return;
   }
 
-  const void* converted = util::fromRgb(&_logger, pixels, width, height, &pitch, format);
-
-  if (converted == NULL)
+  /* if the widths aren't the same, the stride differs and we can't just load the pixels */
+  if (image_width == width)
   {
-    free((void*)pixels);
-    _logger.error(TAG "Error converting savestate screenshot to the framebuffer format");
-    return;
+    const void* converted = util::fromRgb(&_logger, pixels, image_width, image_height, &pitch, format);
+    if (converted == NULL)
+    {
+      _logger.error(TAG "Error converting savestate screenshot to the framebuffer format");
+    }
+    else
+    {
+      /* prevent frame buffer corruption */
+      if (height > image_height)
+        height = image_height;
+
+      _video.setFramebuffer(converted, width, height, pitch);
+
+      free((void*)converted);
+    }
   }
 
-  _video.setFramebuffer(converted, width, height, pitch);
-  free((void*)converted);
   free((void*)pixels);
 }
 
