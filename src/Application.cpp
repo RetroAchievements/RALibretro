@@ -2779,6 +2779,10 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
   case KeyBinds::Action::kScreenshot:
     screenshot();
     break;
+
+  case KeyBinds::Action::kKeyboardInput:
+    _input.keyboardEvent(static_cast<enum retro_key>(extra >> 8), static_cast<bool>(extra & 0xFF));
+    break;
   }
 }
 

@@ -104,6 +104,8 @@ void Input::reset()
   }
 
   memset(&_mouse, 0, sizeof(_mouse));
+
+  _keyboard._keys.fill(false);
 }
 
 SDL_JoystickID Input::addController(int which)
@@ -297,6 +299,12 @@ void Input::mouseMoveEvent(int relative_x, int relative_y, int absolute_x, int a
   _mouse._absolute_y = (int16_t)absolute_y;
 }
 
+void Input::keyboardEvent(enum retro_key key, bool pressed)
+{
+  if (key < RETROK_LAST)
+    _keyboard._keys[key] = pressed;
+}
+
 void Input::setInputDescriptors(const struct retro_input_descriptor* descs, unsigned count)
 {
   for (unsigned i = 0; i < count; descs++, i++)
@@ -456,6 +464,9 @@ int16_t Input::read(unsigned port, unsigned device, unsigned index, unsigned id)
           case RETRO_DEVICE_ID_POINTER_PRESSED: return _mouse._button[RETRO_DEVICE_ID_MOUSE_LEFT];
           default: break;
         }
+
+      case RETRO_DEVICE_KEYBOARD:
+        return id < RETROK_LAST ? static_cast<int16_t>(_keyboard._keys[id]) : 0;
     }
   }
 
