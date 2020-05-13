@@ -117,7 +117,11 @@ bool Video::setGeometry(unsigned width, unsigned height, float aspect, enum retr
 
 void Video::refresh(const void* data, unsigned width, unsigned height, size_t pitch)
 {
-  if (data != NULL && data != RETRO_HW_FRAME_BUFFER_VALID)
+  if (data == NULL)
+  {
+    _logger->debug(TAG "Refresh not performed, data is NULL");
+  }
+  else if (data != RETRO_HW_FRAME_BUFFER_VALID)
   {
     bool updateVertexBuffer = false;
     unsigned textureWidth = pitch;
@@ -133,9 +137,7 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
     if (textureWidth != _textureWidth || height != _textureHeight)
     {
       if (_texture != 0)
-      {
         Gl::deleteTextures(1, &_texture);
-      }
 
       _texture = createTexture(textureWidth, height, _pixelFormat, _linearFilter);
 
@@ -182,21 +184,6 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
       _vertexBuffer = createVertexBuffer(_windowWidth, _windowHeight, texScaleX, texScaleY, _posAttribute, _uvAttribute);
     }
   }
-  else
-  {
-    if (data == NULL)
-    {
-      _logger->debug(TAG "Refresh not performed, data is NULL");
-    }
-    else if (data == RETRO_HW_FRAME_BUFFER_VALID)
-    {
-      _logger->debug(TAG "Refresh not performed, data is RETRO_HW_FRAME_BUFFER_VALID");
-    }
-    else
-    {
-      _logger->debug(TAG "Refresh not performed, unknown reason");
-    }
-  }
 }
 
 bool Video::supportsContext(enum retro_hw_context_type type)
@@ -207,7 +194,7 @@ bool Video::supportsContext(enum retro_hw_context_type type)
 
 uintptr_t Video::getCurrentFramebuffer()
 {
-  return 0;
+  return _texture;
 }
 
 retro_proc_address_t Video::getProcAddress(const char* symbol)
@@ -228,10 +215,15 @@ void Video::windowResized(unsigned width, unsigned height)
   _windowHeight = height;
   Gl::viewport(0, 0, width, height);
 
-  float texScaleX = (float)_viewWidth / (float)_textureWidth;
-  float texScaleY = (float)_viewHeight / (float)_textureHeight;
+  if (_viewWidth != 0 && _textureWidth != 0 && _viewHeight != 0 && _textureHeight != 0)
+  {
+    float texScaleX = (float)_viewWidth / (float)_textureWidth;
+    float texScaleY = (float)_viewHeight / (float)_textureHeight;
 
-  createVertexBuffer(width, height, texScaleX, texScaleY, _posAttribute, _uvAttribute);
+    Gl::deleteBuffers(1, &_vertexBuffer);
+    _vertexBuffer = createVertexBuffer(_windowWidth, _windowHeight, texScaleX, texScaleY, _posAttribute, _uvAttribute);
+  }
+
   _logger->debug(TAG "Window resized to %u x %u", width, height);
 }
 
