@@ -131,6 +131,9 @@ enum
   // Screenshot
   kScreenshot,
 
+  // Game Focus
+  kGameFocusToggle,
+
   kMaxBindings
 };
 
@@ -155,6 +158,8 @@ static const char* bindingNames[] = {
   "SHOW_OVERLAY", "PAUSE", "FAST_FORWARD", "FAST_FORWARD_TOGGLE", "FRAME_ADVANCE",
 
   "SCREENSHOT",
+
+  "GAME_FOCUS_TOGGLE"
 };
 static_assert(sizeof(bindingNames) / sizeof(bindingNames[0]) == kMaxBindings, "bindingNames does not contain an appropriate number of elements");
 
@@ -165,6 +170,7 @@ bool KeyBinds::init(libretro::LoggerComponent* logger)
   _logger = logger;
   _slot = 1;
   _ff = false;
+  _gameFocus = false;
 
   if (SDL_NumJoysticks() > 0)
   {
@@ -259,6 +265,8 @@ bool KeyBinds::init(libretro::LoggerComponent* logger)
   _bindings[kStep] = { 0, SDLK_SEMICOLON, Binding::Type::Key, 0 };
 
   _bindings[kScreenshot] = { 0, SDLK_PRINTSCREEN, Binding::Type::Key, 0 };
+
+  _bindings[kGameFocusToggle] = { 0, SDLK_SCROLLLOCK, Binding::Type::Key, 0 };
 
    // TODO: load persisted
 
@@ -361,6 +369,9 @@ KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
     // Screenshot
     case kScreenshot:        return Action::kScreenshot;
 
+    // Game Focus
+    case kGameFocusToggle:   _gameFocus = !_gameFocus; return Action::kNothing;
+
     default:                 return Action::kNothing;
   }
 }
@@ -439,6 +450,157 @@ KeyBinds::Action KeyBinds::translateAnalog(int button, Sint16 value, unsigned* e
   return action;
 }
 
+KeyBinds::Action KeyBinds::translateKeyboardInput(SDL_Keycode kcode, bool pressed, unsigned* extra) const
+{
+  enum retro_key rkey = RETROK_UNKNOWN;
+  switch (kcode)
+  {
+    case SDLK_BACKSPACE:    rkey = RETROK_BACKSPACE; break;
+    case SDLK_TAB:          rkey = RETROK_TAB; break;
+    case SDLK_CLEAR:        rkey = RETROK_CLEAR; break;
+    case SDLK_RETURN:       rkey = RETROK_RETURN; break;
+    case SDLK_PAUSE:        rkey = RETROK_PAUSE; break;
+    case SDLK_ESCAPE:       rkey = RETROK_ESCAPE; break;
+    case SDLK_SPACE:        rkey = RETROK_SPACE; break;
+    case SDLK_EXCLAIM:      rkey = RETROK_EXCLAIM; break;
+    case SDLK_QUOTEDBL:     rkey = RETROK_QUOTEDBL; break;
+    case SDLK_HASH:         rkey = RETROK_HASH; break;
+    case SDLK_DOLLAR:       rkey = RETROK_DOLLAR; break;
+    case SDLK_AMPERSAND:    rkey = RETROK_AMPERSAND; break;
+    case SDLK_QUOTE:        rkey = RETROK_QUOTE; break;
+    case SDLK_LEFTPAREN:    rkey = RETROK_LEFTPAREN; break;
+    case SDLK_RIGHTPAREN:   rkey = RETROK_RIGHTPAREN; break;
+    case SDLK_ASTERISK:     rkey = RETROK_ASTERISK; break;
+    case SDLK_PLUS:         rkey = RETROK_PLUS; break;
+    case SDLK_COMMA:        rkey = RETROK_COMMA; break;
+    case SDLK_MINUS:        rkey = RETROK_MINUS; break;
+    case SDLK_PERIOD:       rkey = RETROK_PERIOD; break;
+    case SDLK_SLASH:        rkey = RETROK_SLASH; break;
+    case SDLK_0:            rkey = RETROK_0; break;
+    case SDLK_1:            rkey = RETROK_1; break;
+    case SDLK_2:            rkey = RETROK_2; break;
+    case SDLK_3:            rkey = RETROK_3; break;
+    case SDLK_4:            rkey = RETROK_4; break;
+    case SDLK_5:            rkey = RETROK_5; break;
+    case SDLK_6:            rkey = RETROK_6; break;
+    case SDLK_7:            rkey = RETROK_7; break;
+    case SDLK_8:            rkey = RETROK_8; break;
+    case SDLK_9:            rkey = RETROK_9; break;
+    case SDLK_COLON:        rkey = RETROK_COLON; break;
+    case SDLK_SEMICOLON:    rkey = RETROK_SEMICOLON; break;
+    case SDLK_LESS:         rkey = RETROK_OEM_102; break;
+    case SDLK_EQUALS:       rkey = RETROK_EQUALS; break;
+    case SDLK_GREATER:      rkey = RETROK_GREATER; break;
+    case SDLK_QUESTION:     rkey = RETROK_QUESTION; break;
+    case SDLK_AT:           rkey = RETROK_AT; break;
+    case SDLK_LEFTBRACKET:  rkey = RETROK_LEFTBRACKET; break;
+    case SDLK_BACKSLASH:    rkey = RETROK_BACKSLASH; break;
+    case SDLK_RIGHTBRACKET: rkey = RETROK_RIGHTBRACKET; break;
+    case SDLK_CARET:        rkey = RETROK_CARET; break;
+    case SDLK_UNDERSCORE:   rkey = RETROK_UNDERSCORE; break;
+    case SDLK_BACKQUOTE:    rkey = RETROK_BACKQUOTE; break;
+    case SDLK_a:            rkey = RETROK_a; break;
+    case SDLK_b:            rkey = RETROK_b; break;
+    case SDLK_c:            rkey = RETROK_c; break;
+    case SDLK_d:            rkey = RETROK_d; break;
+    case SDLK_e:            rkey = RETROK_e; break;
+    case SDLK_f:            rkey = RETROK_f; break;
+    case SDLK_g:            rkey = RETROK_g; break;
+    case SDLK_h:            rkey = RETROK_h; break;
+    case SDLK_i:            rkey = RETROK_i; break;
+    case SDLK_j:            rkey = RETROK_j; break;
+    case SDLK_k:            rkey = RETROK_k; break;
+    case SDLK_l:            rkey = RETROK_l; break;
+    case SDLK_m:            rkey = RETROK_m; break;
+    case SDLK_n:            rkey = RETROK_n; break;
+    case SDLK_o:            rkey = RETROK_o; break;
+    case SDLK_p:            rkey = RETROK_p; break;
+    case SDLK_q:            rkey = RETROK_q; break;
+    case SDLK_r:            rkey = RETROK_r; break;
+    case SDLK_s:            rkey = RETROK_s; break;
+    case SDLK_t:            rkey = RETROK_t; break;
+    case SDLK_u:            rkey = RETROK_u; break;
+    case SDLK_v:            rkey = RETROK_v; break;
+    case SDLK_w:            rkey = RETROK_w; break;
+    case SDLK_x:            rkey = RETROK_x; break;
+    case SDLK_y:            rkey = RETROK_y; break;
+    case SDLK_z:            rkey = RETROK_z; break;
+    case SDLK_DELETE:       rkey = RETROK_DELETE; break;
+
+    case SDLK_KP_0:         rkey = RETROK_KP0; break;
+    case SDLK_KP_1:         rkey = RETROK_KP1; break;
+    case SDLK_KP_2:         rkey = RETROK_KP2; break;
+    case SDLK_KP_3:         rkey = RETROK_KP3; break;
+    case SDLK_KP_4:         rkey = RETROK_KP4; break;
+    case SDLK_KP_5:         rkey = RETROK_KP5; break;
+    case SDLK_KP_6:         rkey = RETROK_KP6; break;
+    case SDLK_KP_7:         rkey = RETROK_KP7; break;
+    case SDLK_KP_8:         rkey = RETROK_KP8; break;
+    case SDLK_KP_9:         rkey = RETROK_KP9; break;
+    case SDLK_KP_PERIOD:    rkey = RETROK_KP_PERIOD; break;
+    case SDLK_KP_DIVIDE:    rkey = RETROK_KP_DIVIDE; break;
+    case SDLK_KP_MULTIPLY:  rkey = RETROK_KP_MULTIPLY; break;
+    case SDLK_KP_MINUS:     rkey = RETROK_KP_MINUS; break;
+    case SDLK_KP_PLUS:      rkey = RETROK_KP_PLUS; break;
+    case SDLK_KP_ENTER:     rkey = RETROK_KP_ENTER; break;
+    case SDLK_KP_EQUALS:    rkey = RETROK_KP_EQUALS; break;
+
+    case SDLK_UP:           rkey = RETROK_UP; break;
+    case SDLK_DOWN:         rkey = RETROK_DOWN; break;
+    case SDLK_RIGHT:        rkey = RETROK_RIGHT; break;
+    case SDLK_LEFT:         rkey = RETROK_LEFT; break;
+    case SDLK_INSERT:       rkey = RETROK_INSERT; break;
+    case SDLK_HOME:         rkey = RETROK_HOME; break;
+    case SDLK_END:          rkey = RETROK_END; break;
+    case SDLK_PAGEUP:       rkey = RETROK_PAGEUP; break;
+    case SDLK_PAGEDOWN:     rkey = RETROK_PAGEDOWN; break;
+
+    case SDLK_F1:           rkey = RETROK_F1; break;
+    case SDLK_F2:           rkey = RETROK_F2; break;
+    case SDLK_F3:           rkey = RETROK_F3; break;
+    case SDLK_F4:           rkey = RETROK_F4; break;
+    case SDLK_F5:           rkey = RETROK_F5; break;
+    case SDLK_F6:           rkey = RETROK_F6; break;
+    case SDLK_F7:           rkey = RETROK_F7; break;
+    case SDLK_F8:           rkey = RETROK_F8; break;
+    case SDLK_F9:           rkey = RETROK_F9; break;
+    case SDLK_F10:          rkey = RETROK_F10; break;
+    case SDLK_F11:          rkey = RETROK_F11; break;
+    case SDLK_F12:          rkey = RETROK_F12; break;
+    case SDLK_F13:          rkey = RETROK_F13; break;
+    case SDLK_F14:          rkey = RETROK_F14; break;
+    case SDLK_F15:          rkey = RETROK_F15; break;
+
+    case SDLK_NUMLOCKCLEAR: rkey = RETROK_NUMLOCK; break;
+    case SDLK_CAPSLOCK:     rkey = RETROK_CAPSLOCK; break;
+    case SDLK_SCROLLLOCK:   rkey = RETROK_SCROLLOCK; break;
+    case SDLK_RSHIFT:       rkey = RETROK_RSHIFT; break;
+    case SDLK_LSHIFT:       rkey = RETROK_LSHIFT; break;
+    case SDLK_RCTRL:        rkey = RETROK_RCTRL; break;
+    case SDLK_LCTRL:        rkey = RETROK_LCTRL; break;
+    case SDLK_RALT:         rkey = RETROK_RALT; break;
+    case SDLK_LALT:         rkey = RETROK_LALT; break;
+    // case ?:              rkey = RETROK_RMETA; break;
+    // case ?:              rkey = RETROK_LMETA; break;
+    case SDLK_LGUI:         rkey = RETROK_LSUPER; break;
+    case SDLK_RGUI:         rkey = RETROK_RSUPER; break;
+    case SDLK_MODE:         rkey = RETROK_MODE; break;
+    // case SDLK_COMPOSE:   rkey = RETROK_COMPOSE; break;
+
+    case SDLK_HELP:         rkey = RETROK_HELP; break;
+    case SDLK_PRINTSCREEN:  rkey = RETROK_PRINT; break;
+    case SDLK_SYSREQ:       rkey = RETROK_SYSREQ; break;
+    // case SDLK_BREAK:     rkey = RETROK_BREAK; break;
+    case SDLK_MENU:         rkey = RETROK_MENU; break;
+    case SDLK_POWER:        rkey = RETROK_POWER; break;
+    // case SDLK_EURO:      rkey = RETROK_EURO; break;
+    case SDLK_UNDO:         rkey = RETROK_UNDO; break;
+  };
+
+  *extra = static_cast<unsigned>((rkey << 8) | static_cast<char>(pressed));
+  return Action::kKeyboardInput;
+}
+
 KeyBinds::Action KeyBinds::translate(const SDL_KeyboardEvent* key, unsigned* extra)
 {
   if (key->repeat)
@@ -453,24 +615,42 @@ KeyBinds::Action KeyBinds::translate(const SDL_KeyboardEvent* key, unsigned* ext
   if (mod & KMOD_ALT)   mod |= KMOD_ALT;
   if (mod & KMOD_GUI)   mod |= KMOD_GUI;
 
-  for (size_t i = 0; i < kMaxBindings; i++)
+  if (_gameFocus)
   {
-    if (_bindings[i].type == Binding::Type::Key)
+    // in game focus mode all keyboard-bound hotkeys are disabled
+    // with the exception of the game focus toggle itself
+    if (_bindings[kGameFocusToggle].type == Binding::Type::Key
+      && (uint32_t)key->keysym.sym == _bindings[kGameFocusToggle].button
+      && mod == _bindings[kGameFocusToggle].modifiers)
     {
-      if ((uint32_t)key->keysym.sym == _bindings[i].button && mod == _bindings[i].modifiers)
+      if (key->state == SDL_PRESSED)
+        return translateButtonPress(kGameFocusToggle, extra);
+
+      return Action::kNothing;
+    }
+  }
+  else
+  {
+    for (size_t i = 0; i < kMaxBindings; i++)
+    {
+      if (_bindings[i].type == Binding::Type::Key)
       {
-        if (key->state == SDL_PRESSED)
-          return translateButtonPress(i, extra);
+        if ((uint32_t)key->keysym.sym == _bindings[i].button && mod == _bindings[i].modifiers)
+        {
+          if (key->state == SDL_PRESSED)
+            return translateButtonPress(i, extra);
 
-        if (key->state == SDL_RELEASED)
-          return translateButtonReleased(i, extra);
+          if (key->state == SDL_RELEASED)
+            return translateButtonReleased(i, extra);
 
-        break;
+          return Action::kNothing;
+        }
       }
     }
   }
 
-  return Action::kNothing;
+  // if the key is not consumed as an hotkey, handle it as keyboard input
+  return translateKeyboardInput(key->keysym.sym, key->state == SDL_PRESSED, extra);
 }
 
 KeyBinds::Action KeyBinds::translate(const SDL_ControllerButtonEvent* cbutton, unsigned* extra)
@@ -1118,7 +1298,7 @@ public:
     _bindings = bindings;
 
     const WORD WIDTH = 357;
-    const WORD HEIGHT = 350;
+    const WORD HEIGHT = 376;
     char label[32];
 
     addButtonInput(0, 0, "Window Size 1x", kSetWindowSize1);
@@ -1136,6 +1316,8 @@ public:
     addButtonInput(11, 0, "Fast Forward (Toggle)", kFastForwardToggle);
 
     addButtonInput(12, 0, "Take Screenshot", kScreenshot);
+
+    addButtonInput(13, 0, "Game Focus", kGameFocusToggle);
 
     for (int i = 0; i < 10; ++i)
     {

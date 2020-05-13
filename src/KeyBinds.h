@@ -79,7 +79,10 @@ public:
     kStep,
 
     // Screenshot
-    kScreenshot
+    kScreenshot,
+
+    // Keyboard
+    kKeyboardInput  // (extra = key << 8 | pressed)
   };
 
   bool init(libretro::LoggerComponent* logger);
@@ -110,7 +113,7 @@ public:
     Type type;
     uint16_t modifiers;
   };
-  typedef std::array<Binding, 87> BindingList;
+  typedef std::array<Binding, 88> BindingList;
 
   static void getBindingString(char buffer[32], const KeyBinds::Binding& desc);
 
@@ -123,6 +126,7 @@ protected:
   KeyBinds::Action translateButtonPress(int button, unsigned* extra);
   KeyBinds::Action translateButtonReleased(int button, unsigned* extra);
   KeyBinds::Action translateAnalog(int button, Sint16 value, unsigned* extra);
+  KeyBinds::Action translateKeyboardInput(SDL_Keycode kcode, bool pressed, unsigned* extra) const;
 
   BindingList _bindings;
   SDL_JoystickID getBindingID(SDL_JoystickID id) const;
@@ -131,5 +135,6 @@ protected:
 
   unsigned _slot;
   bool _ff;
+  bool _gameFocus;
 };
 
