@@ -1,1 +1,3 @@
 *.bat text eol=crlf
+*.cpp text eol=lf
+*.h text eol=lf
