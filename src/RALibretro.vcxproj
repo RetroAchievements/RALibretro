@@ -192,7 +192,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)miniz;$(ProjectDir)RAInterface;$(ProjectDir)rcheevos\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
       <OmitFramePointers>false</OmitFramePointers>
-      <PreprocessorDefinitions>LOG_TO_FILE;_WIN64;_DEBUG;_WINDOWS;OUTSIDE_SPEEX;RANDOM_PREFIX=speex;_USE_SSE2;FIXED_POINT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LOG_TO_FILE;_WIN64;NDEBUG;_WINDOWS;OUTSIDE_SPEEX;RANDOM_PREFIX=speex;_USE_SSE2;FIXED_POINT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
