@@ -122,7 +122,7 @@ protected:
   {
     std::string _description;
     unsigned    _id;
-    bool        _state[16];
+    int16_t     _state;
     int16_t     _axis[4];
   };
 

@@ -169,6 +169,7 @@ namespace libretro
     bool getCurrentSoftwareFramebuffer(struct retro_framebuffer* data) const;
     bool getHWRenderInterface(const struct retro_hw_render_interface** data) const;
     bool setSupportAchievements(bool data);
+    bool getInputBitmasks(bool* data);
 
     // Callbacks
     bool                 environmentCallback(unsigned cmd, void* data);
