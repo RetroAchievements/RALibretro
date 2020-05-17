@@ -471,11 +471,6 @@ bool libretro::Core::initAV()
 {
   InstanceSetter instance_setter(this);
 
-  if (_needsHardwareRender)
-  {
-    _hardwareRenderCallback.context_reset();
-  }
-
   _core.setVideoRefresh(s_videoRefreshCallback);
   _core.setAudioSampleBatch(s_audioSampleBatchCallback);
   _core.setAudioSample(s_audioSampleCallback);
@@ -508,6 +503,11 @@ bool libretro::Core::initAV()
   if (!_audio->setRate(_systemAVInfo.timing.sample_rate))
   {
     goto error;
+  }
+
+  if (_needsHardwareRender)
+  {
+    _hardwareRenderCallback.context_reset();
   }
   
   return true;
