@@ -29,7 +29,7 @@ class Memory
 {
 public:
   bool init(libretro::LoggerComponent* logger);
-  void attachToCore(libretro::Core* core, System system);
+  void attachToCore(libretro::Core* core, int consoleId);
 
 protected:
   void registerMemoryRegion(int type, uint8_t* data, size_t size, const char* description);

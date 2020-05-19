@@ -72,7 +72,7 @@ static void rhash_file_close(void* file_handle)
   fclose((FILE*)file_handle);
 }
 
-bool romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size)
+bool romLoaded(Logger* logger, int system, const std::string& path, void* rom, size_t size)
 {
   unsigned int gameId = 0;
   char hash[33];
@@ -91,7 +91,7 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
   rc_hash_init_default_cdreader();
 
   hash[0] = '\0';
-  if (!rom || !rc_hash_generate_from_buffer(hash, (int)system, (uint8_t*)rom, size))
+  if (!rom || !rc_hash_generate_from_buffer(hash, system, (uint8_t*)rom, size))
     rc_hash_generate_from_file(hash, (int)system, path.c_str());
 
   if (!hash[0])
@@ -106,9 +106,14 @@ bool romLoaded(Logger* logger, System system, const std::string& path, void* rom
 
   switch (system)
   {
-    case System::kPlayStation1:
-    case System::kSaturn:
-    case System::kSegaCD:
+    case RC_CONSOLE_APPLE_II:
+    case RC_CONSOLE_3DO:
+    case RC_CONSOLE_MSX:
+    case RC_CONSOLE_PC8800:
+    case RC_CONSOLE_PC_ENGINE:
+    case RC_CONSOLE_PLAYSTATION:
+    case RC_CONSOLE_SATURN:
+    case RC_CONSOLE_SEGA_CD:
       // these systems may be multi-disc systems - only call RA_ActivateGame if the game id changes
       RA_ActivateDisc(gameId);
       break;

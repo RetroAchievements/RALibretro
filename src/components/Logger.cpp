@@ -106,7 +106,7 @@ void Logger::vprintf(enum retro_log_level level, const char* fmt, va_list args)
 
     meta[0] = level;
     meta[1] = length & 0xff;
-    meta[2] = length >> 8;
+    meta[2] = (unsigned char)(length >> 8);
 
     write(meta, 3);
     write(line, length);

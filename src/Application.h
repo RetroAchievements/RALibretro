@@ -71,7 +71,7 @@ protected:
   {
     std::string path;
     std::string coreName;
-    System system;
+    int system;
   };
 
   // Called by SDL from the audio thread
@@ -116,7 +116,7 @@ protected:
   bool lastHardcore;
 
   std::string _coreName;
-  System   _system;
+  int         _system;
 
   SDL_Window*       _window;
   SDL_AudioSpec     _audioSpec;

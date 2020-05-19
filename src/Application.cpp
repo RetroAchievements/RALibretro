@@ -1596,7 +1596,7 @@ void Application::updateCDMenu(const char names[][128], int count, bool updateLa
         }
         else
         {
-          sprintf(buffer, "Disc %d", (i + 1));
+          sprintf(buffer, "Disc %d", (int)(i + 1));
           info.dwTypeData = buffer;
         }
       }
@@ -1844,14 +1844,14 @@ void Application::aboutDialog()
 
 void Application::buildSystemsMenu()
 {
-  std::set<System> availableSystems;
+  std::set<int> availableSystems;
   getAvailableSystems(availableSystems);
   if (availableSystems.empty())
     return;
 
   // use map to sort labels
   std::set<std::string> systemCores;
-  std::map<std::string, System> systemMap;
+  std::map<std::string, int> systemMap;
   std::map<std::string, int> systemItems;
   for (auto system : availableSystems)
     systemMap.emplace(getSystemName(system), system);
@@ -1864,7 +1864,7 @@ void Application::buildSystemsMenu()
 
   for (const auto& pair : systemMap)
   {
-    System system = pair.second;
+    int system = pair.second;
     systemCores.clear();
     getAvailableSystemCores(system, systemCores);
     if (systemCores.empty())
@@ -1956,7 +1956,7 @@ void Application::loadConfiguration()
           }
           else if (event == JSONSAX_NUMBER && ud->key == "system")
           {
-            ud->item.system = (System)strtoul(str, NULL, 10);
+            ud->item.system = strtoul(str, NULL, 10);
           }
           else if (event == JSONSAX_OBJECT && num == 0)
           {
@@ -2256,7 +2256,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       }
       else if (cmd >= IDM_SYSTEM_FIRST && cmd <= IDM_SYSTEM_LAST)
       {
-        System system;
+        int system;
         const std::string& coreName = getCoreName(cmd - IDM_SYSTEM_FIRST, system);
         if (_fsm.loadCore(coreName))
           _system = system;

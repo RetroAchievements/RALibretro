@@ -111,13 +111,13 @@ bool Memory::init(libretro::LoggerComponent* logger)
   return true;
 }
 
-void Memory::attachToCore(libretro::Core* core, System system)
+void Memory::attachToCore(libretro::Core* core, int consoleId)
 {
   g_memoryRegionCount = 0;
   g_memoryTotalSize = 0;
   RA_ClearMemoryBanks();
 
-  const rc_memory_regions_t* regions = rc_console_memory_regions(static_cast<int>(system));
+  const rc_memory_regions_t* regions = rc_console_memory_regions(consoleId);
   if (regions == NULL || regions->num_regions == 0)
   {
     initializeWithoutRegions(core);
