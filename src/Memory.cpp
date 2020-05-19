@@ -111,6 +111,13 @@ bool Memory::init(libretro::LoggerComponent* logger)
   return true;
 }
 
+void Memory::destroy()
+{
+  g_memoryRegionCount = 0;
+  g_memoryTotalSize = 0;
+  RA_ClearMemoryBanks();
+}
+
 void Memory::attachToCore(libretro::Core* core, int consoleId)
 {
   g_memoryRegionCount = 0;
@@ -189,7 +196,7 @@ void Memory::initializeFromMemoryMap(const rc_memory_regions_t* regions, const r
     while (regionSize > 0)
     {
       const struct retro_memory_descriptor* desc = getDescriptor(mmap, realAddress);
-      if (!desc)
+      if (!desc || !desc->ptr)
       {
         if (region->type != RC_MEMORY_TYPE_UNUSED)
           _logger->info(TAG "Could not map region starting at $%06X", realAddress - region->real_address + region->start_address);

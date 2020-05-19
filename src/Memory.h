@@ -29,6 +29,8 @@ class Memory
 {
 public:
   bool init(libretro::LoggerComponent* logger);
+  void destroy();
+
   void attachToCore(libretro::Core* core, int consoleId);
 
 protected:

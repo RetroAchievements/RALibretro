@@ -1294,6 +1294,7 @@ void Application::unloadCore()
 
   util::saveFile(&_logger, getCoreConfigPath(_coreName), json.c_str(), json.length());
 
+  _memory.destroy();
   _core.destroy();
 }
 
