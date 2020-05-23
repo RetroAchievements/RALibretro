@@ -716,7 +716,7 @@ void util::saveImage(Logger* logger, const std::string& path, const void* data, 
   free((void*)pixels);
 }
 
-const void* util::fromRgb(Logger* logger, const void* data, unsigned width, unsigned height, unsigned* pitch, enum retro_pixel_format format)
+void* util::fromRgb(Logger* logger, const void* data, unsigned width, unsigned height, unsigned* pitch, enum retro_pixel_format format)
 {
   void* pixels;
 
@@ -827,7 +827,7 @@ const void* util::fromRgb(Logger* logger, const void* data, unsigned width, unsi
   return pixels;
 }
 
-const void* util::loadImage(Logger* logger, const std::string& path, unsigned* width, unsigned* height, unsigned* pitch)
+void* util::loadImage(Logger* logger, const std::string& path, unsigned* width, unsigned* height, unsigned* pitch)
 {
   FILE* f = util::openFile(logger, path, "rb");
   if (!f)

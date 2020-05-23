@@ -111,10 +111,12 @@ namespace
   class Video: public libretro::VideoComponent
   {
   public:
-    virtual bool setGeometry(unsigned width, unsigned height, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback) override
+    virtual bool setGeometry(unsigned width, unsigned height, unsigned maxWidth, unsigned maxHeight, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback) override
     {
       (void)width;
       (void)height;
+      (void)maxWidth;
+      (void)maxHeight;
       (void)pixelFormat;
       (void)hwRenderCallback;
       return false;
@@ -471,11 +473,6 @@ bool libretro::Core::initAV()
 {
   InstanceSetter instance_setter(this);
 
-  if (_needsHardwareRender)
-  {
-    _hardwareRenderCallback.context_reset();
-  }
-
   _core.setVideoRefresh(s_videoRefreshCallback);
   _core.setAudioSampleBatch(s_audioSampleBatchCallback);
   _core.setAudioSample(s_audioSampleCallback);
@@ -500,7 +497,7 @@ bool libretro::Core::initAV()
 
   const struct retro_hw_render_callback* cb = _needsHardwareRender ? &_hardwareRenderCallback : NULL;
 
-  if (!_video->setGeometry(_systemAVInfo.geometry.base_width, _systemAVInfo.geometry.base_height, _systemAVInfo.geometry.aspect_ratio, _pixelFormat, cb))
+  if (!_video->setGeometry(_systemAVInfo.geometry.base_width, _systemAVInfo.geometry.base_height, _systemAVInfo.geometry.max_width, _systemAVInfo.geometry.max_height, _systemAVInfo.geometry.aspect_ratio, _pixelFormat, cb))
   {
     goto error;
   }
@@ -508,6 +505,11 @@ bool libretro::Core::initAV()
   if (!_audio->setRate(_systemAVInfo.timing.sample_rate))
   {
     goto error;
+  }
+
+  if (_needsHardwareRender)
+  {
+    _hardwareRenderCallback.context_reset();
   }
   
   return true;
@@ -910,7 +912,7 @@ bool libretro::Core::setSystemAVInfo(const struct retro_system_av_info* data)
 
   const struct retro_hw_render_callback* cb = _needsHardwareRender ? &_hardwareRenderCallback : NULL;
 
-  if (!_video->setGeometry(_systemAVInfo.geometry.base_width, _systemAVInfo.geometry.base_height, _systemAVInfo.geometry.aspect_ratio, _pixelFormat, cb))
+  if (!_video->setGeometry(_systemAVInfo.geometry.base_width, _systemAVInfo.geometry.base_height, _systemAVInfo.geometry.max_width, _systemAVInfo.geometry.max_height, _systemAVInfo.geometry.aspect_ratio, _pixelFormat, cb))
   {
     return false;
   }
@@ -1207,7 +1209,7 @@ bool libretro::Core::setGeometry(const struct retro_game_geometry* data)
 
   const struct retro_hw_render_callback* cb = _needsHardwareRender ? &_hardwareRenderCallback : NULL;
 
-  if (!_video->setGeometry(_systemAVInfo.geometry.base_width, _systemAVInfo.geometry.base_height, _systemAVInfo.geometry.aspect_ratio, _pixelFormat, cb))
+  if (!_video->setGeometry(_systemAVInfo.geometry.base_width, _systemAVInfo.geometry.base_height, _systemAVInfo.geometry.max_width, _systemAVInfo.geometry.max_height, _systemAVInfo.geometry.aspect_ratio, _pixelFormat, cb))
   {
     return false;
   }

@@ -50,6 +50,10 @@ bool Video::init(libretro::LoggerComponent* logger, Config* config)
 
   _program = createProgram(&_posAttribute, &_uvAttribute, &_texUniform);
 
+  _hw.enabled = false;
+  _hw.frameBuffer = _hw.renderBuffer = 0;
+  _hw.callback = nullptr;
+
   if (!Gl::ok())
   {
     destroy();
@@ -78,6 +82,18 @@ void Video::destroy()
     Gl::deleteProgram(_program);
     _program = 0;
   }
+
+  if (_hw.frameBuffer != 0)
+  {
+    Gl::deleteFramebuffers(1, &_hw.frameBuffer);
+    _hw.frameBuffer = 0;
+  }
+
+  if (_hw.renderBuffer != 0)
+  {
+    Gl::deleteRenderbuffers(1, &_hw.renderBuffer);
+    _hw.renderBuffer = 0;
+  }
 }
 
 void Video::draw()
@@ -96,22 +112,29 @@ void Video::draw()
     Gl::uniform1i(_texUniform, 0);
 
     Gl::drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    Gl::bindTexture(GL_TEXTURE_2D, 0);
+    Gl::disableVertexAttribArray(_posAttribute);
+    Gl::disableVertexAttribArray(_uvAttribute);
+    Gl::useProgram(0);
   }
 }
 
-bool Video::setGeometry(unsigned width, unsigned height, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback)
+bool Video::setGeometry(unsigned width, unsigned height, unsigned maxWidth, unsigned maxHeight, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback)
 {
-  (void)hwRenderCallback;
+  bool hardwareRender = hwRenderCallback != nullptr;
+  if (!hardwareRender && _hw.enabled)
+    postHwRenderReset();
 
-  if (pixelFormat != _pixelFormat && _texture != 0)
-  {
-    _textureWidth = _textureHeight = 0;
-  }
+  _hw.enabled = hardwareRender;
+  _hw.callback = hwRenderCallback;
+
+  if (!ensureFramebuffer(maxWidth, maxHeight, pixelFormat, _linearFilter))
+    return false;
 
   _aspect = aspect;
-  _pixelFormat = pixelFormat;
 
-  _logger->debug(TAG "Geometry set to %u x %u (1:%f)", width, height, aspect);
+  _logger->debug(TAG "Geometry set to %u x %u (max %u x %u) (1:%f)", width, height, maxWidth, maxHeight, aspect);
   return true;
 }
 
@@ -119,68 +142,45 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
 {
   if (data != NULL && data != RETRO_HW_FRAME_BUFFER_VALID)
   {
-    bool updateVertexBuffer = false;
-    unsigned textureWidth = pitch;
-
-    switch (_pixelFormat)
-    {
-    case RETRO_PIXEL_FORMAT_XRGB8888: textureWidth /= 4; break;
-    case RETRO_PIXEL_FORMAT_RGB565:   // fallthrough
-    case RETRO_PIXEL_FORMAT_0RGB1555: // fallthrough
-    default:                          textureWidth /= 2; break;
-    }
-
-    if (textureWidth != _textureWidth || height != _textureHeight)
-    {
-      if (_texture != 0)
-      {
-        Gl::deleteTextures(1, &_texture);
-      }
-
-      _texture = createTexture(textureWidth, height, _pixelFormat, _linearFilter);
-
-      _textureWidth = textureWidth;
-      _textureHeight = height;
-
-      updateVertexBuffer = true;
-    }
-
     Gl::bindTexture(GL_TEXTURE_2D, _texture);
 
+    unsigned rowLength = pitch;
+    switch (_pixelFormat)
+    {
+    case RETRO_PIXEL_FORMAT_XRGB8888: rowLength /= 4; break;
+    case RETRO_PIXEL_FORMAT_RGB565:   // fallthrough
+    case RETRO_PIXEL_FORMAT_0RGB1555: // fallthrough
+    default:                          rowLength /= 2; break;
+    }
+
+    Gl::pixelStorei(GL_UNPACK_ROW_LENGTH, rowLength);
     switch (_pixelFormat)
     {
     case RETRO_PIXEL_FORMAT_XRGB8888:
-      Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureWidth, height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, data);
+      Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, data);
       break;
       
     case RETRO_PIXEL_FORMAT_RGB565:
-      Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureWidth, height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, data);
+      Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, data);
       break;
       
     case RETRO_PIXEL_FORMAT_0RGB1555:
     default:
-      Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureWidth, height, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, data);
+      Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, data);
       break;
     }
 
-    _logger->debug(TAG "Texture refreshed with %u x %u pixels", textureWidth, height);
+    Gl::pixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    Gl::bindTexture(GL_TEXTURE_2D, 0);
 
-    if (width != _viewWidth || height != _viewHeight)
-    {
-      _viewWidth = width;
-      _viewHeight = height;
+    _logger->debug(TAG "Texture refreshed with %u x %u pixels", width, height);
 
-      updateVertexBuffer = true;
-    }
-
-    if (updateVertexBuffer)
-    {
-      float texScaleX = (float)_viewWidth / (float)_textureWidth;
-      float texScaleY = (float)_viewHeight / (float)_textureHeight;
-
-      Gl::deleteBuffers(1, &_vertexBuffer);
-      _vertexBuffer = createVertexBuffer(_windowWidth, _windowHeight, texScaleX, texScaleY, _posAttribute, _uvAttribute);
-    }
+    ensureView(width, height, _windowWidth, _windowHeight, _preserveAspect, _rotation);
+  }
+  else if (_hw.enabled && data == RETRO_HW_FRAME_BUFFER_VALID)
+  {
+    postHwRenderReset();
+    ensureView(width, height, _windowWidth, _windowHeight, _preserveAspect, _rotation);
   }
   else
   {
@@ -201,13 +201,20 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
 
 bool Video::supportsContext(enum retro_hw_context_type type)
 {
-  (void)type;
+  switch (type)
+  {
+    case RETRO_HW_CONTEXT_OPENGL:
+    case RETRO_HW_CONTEXT_OPENGL_CORE:
+      return true;
+  }
+
   return false;
 }
 
 uintptr_t Video::getCurrentFramebuffer()
 {
-  return 0;
+  _logger->debug(TAG "getCurrentFramebuffer() => %u", _hw.frameBuffer);
+  return _hw.frameBuffer;
 }
 
 retro_proc_address_t Video::getProcAddress(const char* symbol)
@@ -224,14 +231,8 @@ void Video::showMessage(const char* msg, unsigned frames)
 
 void Video::windowResized(unsigned width, unsigned height)
 {
-  _windowWidth = width;
-  _windowHeight = height;
   Gl::viewport(0, 0, width, height);
-
-  float texScaleX = (float)_viewWidth / (float)_textureWidth;
-  float texScaleY = (float)_viewHeight / (float)_textureHeight;
-
-  createVertexBuffer(width, height, texScaleX, texScaleY, _posAttribute, _uvAttribute);
+  ensureView(_viewWidth, _viewHeight, width, height, _preserveAspect, _rotation);
   _logger->debug(TAG "Window resized to %u x %u", width, height);
 }
 
@@ -261,10 +262,24 @@ void Video::getFramebufferSize(unsigned* width, unsigned* height, enum retro_pix
   *format = _pixelFormat;
 }
 
+static void verticalFlipRawTexture(uint8_t *data, unsigned height, unsigned pitch)
+{
+  uint8_t *swapSpace = (uint8_t*)malloc(pitch);
+  for (uint8_t *top = data, *bottom = (data + ((height - 1) * pitch));
+    top < bottom;
+    top += pitch, bottom -= pitch)
+  {
+    memcpy(swapSpace, top, pitch);
+    memcpy(top, bottom, pitch);
+    memcpy(bottom, swapSpace, pitch);
+  }
+  free(swapSpace);
+}
+
 const void* Video::getFramebuffer(unsigned* width, unsigned* height, unsigned* pitch, enum retro_pixel_format* format)
 {
   unsigned bpp = _pixelFormat == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 2;
-  void* pixels = malloc(_textureWidth * _textureHeight * bpp);
+  uint8_t* pixels = (uint8_t*)malloc(_textureWidth * _textureHeight * bpp);
 
   if (pixels == NULL)
   {
@@ -289,6 +304,9 @@ const void* Video::getFramebuffer(unsigned* width, unsigned* height, unsigned* p
     break;
   }
 
+  if (_hw.enabled && _hw.callback->bottom_left_origin)
+    verticalFlipRawTexture(pixels, _textureHeight, _textureWidth * bpp);
+
   *width = _viewWidth;
   *height = _viewHeight;
   *pitch = _textureWidth * bpp;
@@ -297,9 +315,13 @@ const void* Video::getFramebuffer(unsigned* width, unsigned* height, unsigned* p
   return pixels;
 }
 
-void Video::setFramebuffer(const void* pixels, unsigned width, unsigned height, unsigned pitch)
+void Video::setFramebuffer(void* pixels, unsigned width, unsigned height, unsigned pitch)
 {
-  auto p = (const uint8_t*)pixels;
+  auto p = (uint8_t*)pixels;
+
+  if (_hw.enabled && _hw.callback->bottom_left_origin)
+    verticalFlipRawTexture(p, height, pitch);
+
   Gl::bindTexture(GL_TEXTURE_2D, _texture);
 
   switch (_pixelFormat)
@@ -402,10 +424,12 @@ void Video::showDialog()
 
   WORD y = 0;
 
-  db.addCheckbox("Preserve aspect ratio", 51001, 0, y, WIDTH - 10, 8, &_preserveAspect);
+  bool preserveAspect = _preserveAspect;
+  db.addCheckbox("Preserve aspect ratio", 51001, 0, y, WIDTH - 10, 8, &preserveAspect);
   y += LINE;
 
-  db.addCheckbox("Linear filtering", 51002, 0, y, WIDTH - 10, 8, &_linearFilter);
+  bool linearFilter = _linearFilter;
+  db.addCheckbox("Linear filtering", 51002, 0, y, WIDTH - 10, 8, &linearFilter);
   y += LINE;
 
   int rotation = (int)_rotation;
@@ -416,49 +440,16 @@ void Video::showDialog()
   db.addButton("OK", IDOK, WIDTH - 55 - 50, y, 50, 14, true);
   db.addButton("Cancel", IDCANCEL, WIDTH - 50, y, 50, 14, false);
 
-  bool preserveAspect = _preserveAspect;
-  bool linearFilter = _linearFilter;
-
   if (db.show())
   {
-    if (linearFilter != _linearFilter)
-    {
-      if (_texture != 0)
-      {
-        Gl::deleteTextures(1, &_texture);
-      }
-
-      _texture = createTexture(_textureWidth, _textureHeight, _pixelFormat, _linearFilter);
-    }
-
-    setRotation((Rotation)rotation);
-
-    if (preserveAspect != _preserveAspect)
-    {
-      float texScaleX = (float)_viewWidth / (float)_textureWidth;
-      float texScaleY = (float)_viewHeight / (float)_textureHeight;
-
-      Gl::deleteBuffers(1, &_vertexBuffer);
-      _vertexBuffer = createVertexBuffer(_windowWidth, _windowHeight, texScaleX, texScaleY, _posAttribute, _uvAttribute);
-    }
+    ensureFramebuffer(_textureWidth, _textureHeight, _pixelFormat, linearFilter);
+    ensureView(_viewWidth, _viewHeight, _windowWidth, _windowHeight, preserveAspect, static_cast<Rotation>(rotation));
   }
 }
 
 void Video::setRotation(Rotation rotation)
 {
-  if (rotation == _rotation)
-    return;
-
-  if (_rotationHandler)
-    _rotationHandler(_rotation, rotation);
-
-  _rotation = rotation;
-
-  float texScaleX = (float)_viewWidth / (float)_textureWidth;
-  float texScaleY = (float)_viewHeight / (float)_textureHeight;
-
-  Gl::deleteBuffers(1, &_vertexBuffer);
-  _vertexBuffer = createVertexBuffer(_windowWidth, _windowHeight, texScaleX, texScaleY, _posAttribute, _uvAttribute);
+  ensureView(_viewWidth, _viewHeight, _windowWidth, _windowHeight, _preserveAspect, rotation);
 }
 
 GLuint Video::createProgram(GLint* pos, GLint* uv, GLint* tex)
@@ -514,6 +505,14 @@ GLuint Video::createVertexBuffer(unsigned windowWidth, unsigned windowHeight, fl
   else
   {
     winScaleX = winScaleY = 1.0f;
+  }
+
+  if (_hw.enabled && _hw.callback->bottom_left_origin)
+  {
+    if (_rotation == Rotation::Ninety || _rotation == Rotation::TwoSeventy)
+      winScaleX = -winScaleX;
+    else
+      winScaleY = -winScaleY;
   }
 
   const VertexData vertexData0[] = {
@@ -597,4 +596,113 @@ GLuint Video::createTexture(unsigned width, unsigned height, retro_pixel_format 
 
   _logger->debug(TAG "Texture created with dimensions %u x %u (%s, %s)", width, height, format, linear ? "linear" : "nearest");
   return texture;
+}
+
+bool Video::ensureFramebuffer(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linearFilter)
+{
+  if (_texture == 0
+    || (_hw.enabled && _hw.frameBuffer == 0)
+    || width > _textureWidth || height > _textureHeight
+    || pixelFormat != _pixelFormat
+    || linearFilter != _linearFilter)
+  {
+    if (_texture != 0)
+    {
+      Gl::deleteTextures(1, &_texture);
+    }
+
+    _texture = createTexture(width, height, pixelFormat, linearFilter);
+    if (_texture == 0)
+    {
+      _logger->error(TAG " ensure framebuffer: failed to create texture %u x %u (%d)", width, height, pixelFormat);
+      return false;
+    }
+
+    _textureWidth = width;
+    _textureHeight = height;
+    _pixelFormat = pixelFormat;
+    _linearFilter = linearFilter;
+
+    if (_hw.frameBuffer != 0)
+    {
+      Gl::deleteRenderbuffers(1, &_hw.renderBuffer);
+      Gl::deleteFramebuffers(1, &_hw.frameBuffer);
+      _hw.renderBuffer = _hw.frameBuffer = 0;
+    }
+
+    if (_hw.enabled)
+    {
+      _hw.frameBuffer = GlUtil::createFramebuffer(&_hw.renderBuffer, width, height, _texture, _hw.callback->depth, _hw.callback->stencil);
+      if (_hw.frameBuffer == 0)
+      {
+        _logger->error(TAG " ensure framebuffer: failed to create hardware render framebuffer %u x %u", width, height);
+        return false;
+      }
+    }
+
+    // force the view to be updated as well
+    _viewWidth = _viewHeight = 0;
+  }
+
+  return true;
+}
+
+bool Video::ensureView(unsigned width, unsigned height, unsigned windowWidth, unsigned windowHeight, bool preserveAspect, Rotation rotation)
+{
+  if (width != _viewWidth || height != _viewHeight
+    || windowWidth != _windowWidth || windowHeight != _windowHeight
+    || preserveAspect != _preserveAspect
+    || rotation != _rotation)
+  {
+    _preserveAspect = preserveAspect;
+
+    if (rotation != _rotation)
+    {
+      if (_rotationHandler)
+        _rotationHandler(_rotation, rotation);
+      _rotation = rotation;
+    }
+
+    if (_vertexBuffer != 0)
+      Gl::deleteBuffers(1, &_vertexBuffer);
+
+    float texScaleX = (float)width / (float)_textureWidth;
+    float texScaleY = (float)height / (float)_textureHeight;
+
+    _vertexBuffer = createVertexBuffer(windowWidth, windowHeight, texScaleX, texScaleY, _posAttribute, _uvAttribute);
+    if (_vertexBuffer == 0)
+    {
+      _logger->error(TAG " failed to ensure view: %u x %u", width, height);
+      return false;
+    }
+
+    _viewWidth = width;
+    _viewHeight = height;
+
+    _windowWidth = windowWidth;
+    _windowHeight = windowHeight;
+  }
+
+  return true;
+}
+
+void Video::postHwRenderReset() const
+{
+  // when hardware rendering, the core may leave behind OpenGL
+  // state that interferes with our own software rendering
+
+  Gl::getError();  // clear the error flag, it's not ours
+
+  Gl::disable(GL_SCISSOR_TEST);
+  Gl::disable(GL_DEPTH_TEST);
+  Gl::disable(GL_CULL_FACE);
+  Gl::disable(GL_DITHER);
+  Gl::disable(GL_STENCIL_TEST);
+  Gl::disable(GL_BLEND);
+  Gl::blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  Gl::blendEquation(GL_FUNC_ADD);
+  Gl::clearColor(0.0, 0.0, 0.0, 1.0);
+
+  Gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
+  Gl::viewport(0, 0, _windowWidth, _windowHeight);
 }

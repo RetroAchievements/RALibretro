@@ -2127,7 +2127,7 @@ void Application::loadState(const std::string& path)
   enum retro_pixel_format format;
   _video.getFramebufferSize(&width, &height, &format);
 
-  const void* pixels = util::loadImage(&_logger, path + ".png", &width, &height, &pitch);
+  void* pixels = util::loadImage(&_logger, path + ".png", &width, &height, &pitch);
 
   if (pixels == NULL)
   {
@@ -2135,7 +2135,7 @@ void Application::loadState(const std::string& path)
     return;
   }
 
-  const void* converted = util::fromRgb(&_logger, pixels, width, height, &pitch, format);
+  void* converted = util::fromRgb(&_logger, pixels, width, height, &pitch, format);
 
   if (converted == NULL)
   {

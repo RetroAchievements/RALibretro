@@ -16,6 +16,7 @@ static PFNGLBINDBUFFERPROC s_glBindBuffer;
 static PFNGLBUFFERDATAPROC s_glBufferData;
 static PFNGLVERTEXATTRIBPOINTERPROC s_glVertexAttribPointer;
 static PFNGLENABLEVERTEXATTRIBARRAYPROC s_glEnableVertexAttribArray;
+static PFNGLDISABLEVERTEXATTRIBARRAYPROC s_glDisableVertexAttribArray;
 
 static PFNGLCREATESHADERPROC s_glCreateShader;
 static PFNGLDELETESHADERPROC s_glDeleteShader;
@@ -49,6 +50,8 @@ static PFNGLGENRENDERBUFFERSPROC s_glGenRenderbuffers;
 static PFNGLDELETERENDERBUFFERSPROC s_glDeleteRenderbuffers;
 static PFNGLBINDRENDERBUFFERPROC s_glBindRenderbuffer;
 static PFNGLRENDERBUFFERSTORAGEPROC s_glRenderbufferStorage;
+
+static PFNGLBLENDEQUATIONEXTPROC s_glBlendEquationEXT;
 
 static void* getProcAddress(const char* symbol)
 {
@@ -114,6 +117,7 @@ void Gl::init(libretro::LoggerComponent* logger)
   s_glBufferData = (PFNGLBUFFERDATAPROC)getProcAddress("glBufferData");
   s_glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)getProcAddress("glVertexAttribPointer");
   s_glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC)getProcAddress("glEnableVertexAttribArray");
+  s_glDisableVertexAttribArray = (PFNGLDISABLEVERTEXATTRIBARRAYPROC)getProcAddress("glDisableVertexAttribArray");
 
   s_glCreateShader = (PFNGLCREATESHADERPROC)getProcAddress("glCreateShader");
   s_glDeleteShader = (PFNGLDELETESHADERPROC)getProcAddress("glDeleteShader");
@@ -147,11 +151,25 @@ void Gl::init(libretro::LoggerComponent* logger)
 
   s_glGenRenderbuffers = (PFNGLGENRENDERBUFFERSPROC)getProcAddress("glGenRenderbuffers");
   s_glDeleteRenderbuffers = (PFNGLDELETERENDERBUFFERSPROC)getProcAddress("glDeleteRenderbuffers");
+
+  s_glBlendEquationEXT = (PFNGLBLENDEQUATIONEXTPROC)getProcAddress("glBlendEquationEXT");
 }
 
 bool Gl::ok()
 {
   return s_ok;
+}
+
+GLenum Gl::getError()
+{
+  return glGetError();
+}
+
+void Gl::getIntegerv(GLenum pname, GLint *params)
+{
+  if (!s_ok) return;
+  glGetIntegerv(pname, params);
+  check(__FUNCTION__);
 }
 
 void Gl::genTextures(GLsizei n, GLuint* textures)
@@ -210,6 +228,13 @@ void Gl::getTexImage(GLenum target, GLint level, GLenum format, GLenum type, GLv
   check(__FUNCTION__);
 }
 
+void Gl::pixelStorei(GLenum pname, GLint param)
+{
+  if (!s_ok) return;
+  glPixelStorei(pname, param);
+  check(__FUNCTION__);
+}
+
 void Gl::genBuffers(GLsizei n, GLuint* buffers)
 {
   if (!s_ok || s_glGenBuffers == NULL) return;
@@ -249,6 +274,13 @@ void Gl::enableVertexAttribArray(GLuint index)
 {
   if (!s_ok || s_glEnableVertexAttribArray == NULL) return;
   s_glEnableVertexAttribArray(index);
+  check(__FUNCTION__);
+}
+
+void Gl::disableVertexAttribArray(GLuint index)
+{
+  if (!s_ok || s_glDisableVertexAttribArray == NULL) return;
+  s_glDisableVertexAttribArray(index);
   check(__FUNCTION__);
 }
 
@@ -492,6 +524,13 @@ void Gl::blendFunc(GLenum sfactor, GLenum dfactor)
 {
   if (!s_ok) return;
   glBlendFunc(sfactor, dfactor);
+  check(__FUNCTION__);
+}
+
+void Gl::blendEquation(GLenum mode)
+{
+  if (!s_ok || !s_glBlendEquationEXT) return;
+  s_glBlendEquationEXT(mode);
   check(__FUNCTION__);
 }
 
