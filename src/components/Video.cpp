@@ -490,13 +490,31 @@ GLuint Video::createVertexBuffer(unsigned windowWidth, unsigned windowHeight, fl
 
   if (_preserveAspect)
   {
-    unsigned h = windowHeight;
-    unsigned w = (unsigned)(windowHeight * _aspect);
-
-    if (w > windowWidth)
+    unsigned w, h;
+    switch (_rotation)
     {
-      w = windowWidth;
-      h = (unsigned)(windowWidth / _aspect);
+      default:
+      case Rotation::None:
+      case Rotation::OneEighty:
+        h = windowHeight;
+        w = (unsigned)(windowHeight * _aspect);
+        if (w > windowWidth)
+        {
+          w = windowWidth;
+          h = (unsigned)(windowWidth / _aspect);
+        }
+        break;
+
+      case Rotation::Ninety:
+      case Rotation::TwoSeventy:
+        w = windowWidth;
+        h = (unsigned)(windowWidth * _aspect);
+        if (h > windowHeight)
+        {
+          h = windowHeight;
+          w = (unsigned)(windowHeight / _aspect);
+        }
+        break;
     }
 
     winScaleX = (float)w / (float)windowWidth;
