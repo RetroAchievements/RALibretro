@@ -140,7 +140,11 @@ bool Video::setGeometry(unsigned width, unsigned height, unsigned maxWidth, unsi
 
 void Video::refresh(const void* data, unsigned width, unsigned height, size_t pitch)
 {
-  if (data != NULL && data != RETRO_HW_FRAME_BUFFER_VALID)
+  if (data == NULL)
+  {
+    _logger->debug(TAG "Refresh not performed, data is NULL");
+  }
+  else if (data != RETRO_HW_FRAME_BUFFER_VALID)
   {
     Gl::bindTexture(GL_TEXTURE_2D, _texture);
 
@@ -181,21 +185,6 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
   {
     postHwRenderReset();
     ensureView(width, height, _windowWidth, _windowHeight, _preserveAspect, _rotation);
-  }
-  else
-  {
-    if (data == NULL)
-    {
-      _logger->debug(TAG "Refresh not performed, data is NULL");
-    }
-    else if (data == RETRO_HW_FRAME_BUFFER_VALID)
-    {
-      _logger->debug(TAG "Refresh not performed, data is RETRO_HW_FRAME_BUFFER_VALID");
-    }
-    else
-    {
-      _logger->debug(TAG "Refresh not performed, unknown reason");
-    }
   }
 }
 
@@ -667,6 +656,13 @@ bool Video::ensureFramebuffer(unsigned width, unsigned height, retro_pixel_forma
 
 bool Video::ensureView(unsigned width, unsigned height, unsigned windowWidth, unsigned windowHeight, bool preserveAspect, Rotation rotation)
 {
+  if (_texture == 0)
+  {
+    _windowWidth = windowWidth;
+    _windowHeight = windowHeight;
+    return true;
+  }
+
   if (width != _viewWidth || height != _viewHeight
     || windowWidth != _windowWidth || windowHeight != _windowHeight
     || preserveAspect != _preserveAspect

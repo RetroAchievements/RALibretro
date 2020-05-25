@@ -81,12 +81,12 @@ void Input::reset()
   ControllerInfo none;
   none._description = "None";
   none._id = RETRO_DEVICE_NONE;
-  memset(none._state, 0, sizeof(none._state));
+  none._state = 0;
 
   ControllerInfo retropad;
   retropad._description = "RetroPad";
   retropad._id = RETRO_DEVICE_JOYPAD;
-  memset(retropad._state, 0, sizeof(retropad._state));
+  retropad._state = 0;
 
   for (unsigned i = 0; i < kMaxPorts; i++)
   {
@@ -104,6 +104,8 @@ void Input::reset()
   }
 
   memset(&_mouse, 0, sizeof(_mouse));
+
+  _keyboard._keys.fill(false);
 }
 
 SDL_JoystickID Input::addController(int which)
@@ -241,7 +243,10 @@ void Input::buttonEvent(int port, Button button, bool pressed)
     default:              return;
   }
 
-  _info[port][_devices[port]]._state[rbutton] = pressed;
+  if (pressed)
+    _info[port][_devices[port]]._state |= (1 << rbutton);
+  else
+    _info[port][_devices[port]]._state &= ~(1 << rbutton);
 }
 
 void Input::axisEvent(int port, Axis axis, int16_t value)
@@ -297,6 +302,12 @@ void Input::mouseMoveEvent(int relative_x, int relative_y, int absolute_x, int a
   _mouse._absolute_y = (int16_t)absolute_y;
 }
 
+void Input::keyboardEvent(enum retro_key key, bool pressed)
+{
+  if (key < RETROK_LAST)
+    _keyboard._keys[key] = pressed;
+}
+
 void Input::setInputDescriptors(const struct retro_input_descriptor* descs, unsigned count)
 {
   for (unsigned i = 0; i < count; descs++, i++)
@@ -326,12 +337,12 @@ void Input::setControllerInfo(const struct retro_controller_info* rinfo, unsigne
   ControllerInfo none;
   none._description = "None";
   none._id = RETRO_DEVICE_NONE;
-  memset(none._state, 0, sizeof(none._state));
+  none._state = 0;
 
   ControllerInfo retropad;
   retropad._description = "RetroPad";
   retropad._id = RETRO_DEVICE_JOYPAD;
-  memset(retropad._state, 0, sizeof(retropad._state));
+  retropad._state = 0;
 
   _ports = 0;
 
@@ -358,7 +369,7 @@ void Input::setControllerInfo(const struct retro_controller_info* rinfo, unsigne
         if ((info._id & RETRO_DEVICE_MASK) == RETRO_DEVICE_JOYPAD ||
           (info._id & RETRO_DEVICE_MASK) == RETRO_DEVICE_ANALOG)
         {
-          memset(info._state, 0, sizeof(info._state));
+          info._state = 0;
           memset(info._axis, 0, sizeof(info._axis));
 
           _info[port].push_back(info);
@@ -425,7 +436,10 @@ int16_t Input::read(unsigned port, unsigned device, unsigned index, unsigned id)
     switch (device)
     {
       case RETRO_DEVICE_JOYPAD:
-        return _info[port][_devices[port]]._state[id] ? 32767 : 0;
+        if (id == RETRO_DEVICE_ID_JOYPAD_MASK)
+          return _info[port][_devices[port]]._state;
+
+        return (_info[port][_devices[port]]._state >> id) & 1;
 
       case RETRO_DEVICE_ANALOG:
         return _info[port][_devices[port]]._axis[index << 1 | id];
@@ -456,6 +470,9 @@ int16_t Input::read(unsigned port, unsigned device, unsigned index, unsigned id)
           case RETRO_DEVICE_ID_POINTER_PRESSED: return _mouse._button[RETRO_DEVICE_ID_MOUSE_LEFT];
           default: break;
         }
+
+      case RETRO_DEVICE_KEYBOARD:
+        return id < RETROK_LAST ? static_cast<int16_t>(_keyboard._keys[id]) : 0;
     }
   }
 

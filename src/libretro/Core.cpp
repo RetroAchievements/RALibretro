@@ -841,7 +841,12 @@ bool libretro::Core::getRumbleInterface(struct retro_rumble_interface* data) con
 
 bool libretro::Core::getInputDeviceCapabilities(uint64_t* data) const
 {
-  *data = (1 << RETRO_DEVICE_JOYPAD) | (1 << RETRO_DEVICE_ANALOG) | (1 << RETRO_DEVICE_MOUSE);
+  *data = (
+    (1 << RETRO_DEVICE_JOYPAD)
+    | (1 << RETRO_DEVICE_ANALOG)
+    | (1 << RETRO_DEVICE_MOUSE)
+    | (1 << RETRO_DEVICE_KEYBOARD)
+  );
   return false;
 }
 
@@ -1249,6 +1254,15 @@ bool libretro::Core::setSupportAchievements(bool data)
   return true;
 }
 
+bool libretro::Core::getInputBitmasks(bool* data)
+{
+  // The documentation says the parameter is a [bool * that indicates whether or not the
+  // frontend supports input bitmasks being returned by retro_input_state_t], but in
+  // practice, the parameter is ignored and the core just looks at the return value.
+  (void)data;
+  return true;
+}
+
 static void getEnvName(char* name, size_t size, unsigned cmd)
 {
   static const char* names[] =
@@ -1263,7 +1277,7 @@ static void getEnvName(char* name, size_t size, unsigned cmd)
     "SHUTDOWN",
     "SET_PERFORMANCE_LEVEL",
     "GET_SYSTEM_DIRECTORY",
-    "SET_PIXEL_FORMAT",
+    "SET_PIXEL_FORMAT",                        // 10
     "SET_INPUT_DESCRIPTORS",
     "SET_KEYBOARD_CALLBACK",
     "SET_DISK_CONTROL_INTERFACE",
@@ -1273,7 +1287,7 @@ static void getEnvName(char* name, size_t size, unsigned cmd)
     "GET_VARIABLE_UPDATE",
     "SET_SUPPORT_NO_GAME",
     "GET_LIBRETRO_PATH",
-    "20",
+    "20",                                      // 20
     "SET_FRAME_TIME_CALLBACK",
     "SET_AUDIO_CALLBACK",
     "GET_RUMBLE_INTERFACE",
@@ -1283,7 +1297,7 @@ static void getEnvName(char* name, size_t size, unsigned cmd)
     "GET_LOG_INTERFACE",
     "GET_PERF_INTERFACE",
     "GET_LOCATION_INTERFACE",
-    "GET_CORE_ASSETS_DIRECTORY",
+    "GET_CORE_ASSETS_DIRECTORY",               // 30
     "GET_SAVE_DIRECTORY",
     "SET_SYSTEM_AV_INFO",
     "SET_PROC_ADDRESS_CALLBACK",
@@ -1293,14 +1307,25 @@ static void getEnvName(char* name, size_t size, unsigned cmd)
     "SET_GEOMETRY",
     "GET_USERNAME",
     "GET_LANGUAGE",
-    "GET_CURRENT_SOFTWARE_FRAMEBUFFER",
+    "GET_CURRENT_SOFTWARE_FRAMEBUFFER",        // 40
     "GET_HW_RENDER_INTERFACE",
     "SET_SUPPORT_ACHIEVEMENTS",
     "SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE",
     "SET_SERIALIZATION_QUIRKS",
     "GET_VFS_INTERFACE",
     "GET_LED_INTERFACE",
-    "GET_AUDIO_VIDEO_ENABLE"
+    "GET_AUDIO_VIDEO_ENABLE",
+    "GET_MIDI_INTERFACE",
+    "GET_FASTFORWARDING",
+    "GET_TARGET_REFRESH_RATE",                 // 50
+    "GET_INPUT_BITMASKS",
+    "GET_CORE_OPTIONS_VERSION",
+    "SET_CORE_OPTIONS",
+    "SET_CORE_OPTIONS_INTL",
+    "SET_CORE_OPTIONS_DISPLAY",
+    "GET_PREFERRED_HW_RENDER",
+    "GET_DISK_CONTROL_INTERFACE_VERSION",
+    "SET_DISK_CONTROL_EXT_INTERFACE",
   };
 
   cmd &= ~(RETRO_ENVIRONMENT_EXPERIMENTAL | RETRO_ENVIRONMENT_PRIVATE);
@@ -1481,12 +1506,16 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
     ret = setSupportAchievements(*(bool*)data);
     break;
 
+  case RETRO_ENVIRONMENT_GET_INPUT_BITMASKS:
+    ret = getInputBitmasks((bool*)data);
+    break;
+
   default:
     cmd &= ~(RETRO_ENVIRONMENT_EXPERIMENTAL | RETRO_ENVIRONMENT_PRIVATE);
 
     if ((_calls[cmd / 8] & (1 << (cmd & 7))) == 0)
     {
-      _logger->error(TAG "Unimplemented env call: %s (%u)", name, cmd);
+      _logger->error(TAG "Unimplemented env call: %s", name, cmd);
       _calls[cmd / 8] |= 1 << (cmd & 7);
     }
 

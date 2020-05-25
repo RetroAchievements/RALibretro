@@ -3,7 +3,7 @@ root = true
 
 # * here means any file type
 [*]
-end_of_line          = crlf
+end_of_line          = lf
 insert_final_newline = true
 
 # latin1 is a type of ASCII, should work with mbcs

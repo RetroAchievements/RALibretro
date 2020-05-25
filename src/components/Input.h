@@ -77,6 +77,7 @@ public:
   void processEvent(const SDL_Event* event, KeyBinds* keyBinds);
   void mouseButtonEvent(MouseButton button, bool pressed);
   void mouseMoveEvent(int relative_x, int relative_y, int absolute_x, int absolute_y);
+  void keyboardEvent(enum retro_key key, bool pressed);
 
   virtual void setInputDescriptors(const struct retro_input_descriptor* descs, unsigned count) override;
 
@@ -121,7 +122,7 @@ protected:
   {
     std::string _description;
     unsigned    _id;
-    bool        _state[16];
+    int16_t     _state;
     int16_t     _axis[4];
   };
 
@@ -131,6 +132,11 @@ protected:
     int16_t _previous_x, _previous_y;
     int16_t _relative_x, _relative_y;
     bool _button[16];
+  };
+
+  struct KeyboardInfo
+  {
+    std::array<bool, RETROK_LAST> _keys;
   };
 
   enum
@@ -157,6 +163,7 @@ protected:
   uint64_t                    _ports;
   std::vector<ControllerInfo> _info[kMaxPorts];
   MouseInfo                   _mouse;
+  KeyboardInfo                _keyboard;
 
   int _devices[kMaxPorts];
 };
