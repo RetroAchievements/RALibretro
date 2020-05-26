@@ -20,6 +20,10 @@ else ifeq ($(shell uname -s),Linux)
     CXX=i686-w64-mingw32-g++
     RC=i686-w64-mingw32-windres
     STATICLIBS=-static-libstdc++ 
+
+    #TODO: determine ARCH
+    ARCH=-m32
+    OUTDIR=bin
 endif
 
 INCLUDES=-Isrc -I./src/RAInterface -I./src/miniz -I./src/rcheevos/include
