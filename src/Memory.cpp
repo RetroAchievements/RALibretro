@@ -138,7 +138,7 @@ void Memory::attachToCore(libretro::Core* core, int consoleId)
       initializeFromUnmappedMemory(regions, core);
   }
 
-  RA_InstallMemoryBank(0, memoryRead, memoryWrite, g_memoryTotalSize);
+  RA_InstallMemoryBank(0, (void*)memoryRead, (void*)memoryWrite, g_memoryTotalSize);
 }
 
 void Memory::initializeWithoutRegions(libretro::Core* core)
