@@ -14,6 +14,9 @@ static PFNGLGENBUFFERSPROC s_glGenBuffers;
 static PFNGLDELETEBUFFERSPROC s_glDeleteBuffers;
 static PFNGLBINDBUFFERPROC s_glBindBuffer;
 static PFNGLBUFFERDATAPROC s_glBufferData;
+static PFNGLGENVERTEXARRAYSPROC s_glGenVertexArrays;
+static PFNGLDELETEVERTEXARRAYSPROC s_glDeleteVertexArrays;
+static PFNGLBINDVERTEXARRAYPROC s_glBindVertexArray;
 static PFNGLVERTEXATTRIBPOINTERPROC s_glVertexAttribPointer;
 static PFNGLENABLEVERTEXATTRIBARRAYPROC s_glEnableVertexAttribArray;
 static PFNGLDISABLEVERTEXATTRIBARRAYPROC s_glDisableVertexAttribArray;
@@ -115,6 +118,9 @@ void Gl::init(libretro::LoggerComponent* logger)
   s_glDeleteBuffers = (PFNGLDELETEBUFFERSPROC)getProcAddress("glDeleteBuffers");
   s_glBindBuffer = (PFNGLBINDBUFFERPROC)getProcAddress("glBindBuffer");
   s_glBufferData = (PFNGLBUFFERDATAPROC)getProcAddress("glBufferData");
+  s_glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC)getProcAddress("glGenVertexArrays");
+  s_glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC)getProcAddress("glDeleteVertexArrays");
+  s_glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)getProcAddress("glBindVertexArray");
   s_glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)getProcAddress("glVertexAttribPointer");
   s_glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC)getProcAddress("glEnableVertexAttribArray");
   s_glDisableVertexAttribArray = (PFNGLDISABLEVERTEXATTRIBARRAYPROC)getProcAddress("glDisableVertexAttribArray");
@@ -260,6 +266,27 @@ void Gl::bufferData(GLenum target, GLsizeiptr size, const GLvoid* data, GLenum u
 {
   if (!s_ok || s_glBufferData == NULL) return;
   s_glBufferData(target, size, data, usage);
+  check(__FUNCTION__);
+}
+
+void Gl::genVertexArray(GLsizei n, GLuint *arrays)
+{
+  if (!s_ok || s_glGenVertexArrays == NULL) return;
+  s_glGenVertexArrays(n, arrays);
+  check(__FUNCTION__);
+}
+
+void Gl::deleteVertexArrays(GLsizei n, const GLuint *arrays)
+{
+  if (!s_ok || s_glDeleteVertexArrays == NULL) return;
+  s_glDeleteVertexArrays(n, arrays);
+  check(__FUNCTION__);
+}
+
+void Gl::bindVertexArray(GLuint array)
+{
+  if (!s_ok || s_glBindVertexArray == NULL) return;
+  s_glBindVertexArray(array);
   check(__FUNCTION__);
 }
 

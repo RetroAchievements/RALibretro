@@ -65,7 +65,7 @@ public:
 
 protected:
   GLuint createProgram(GLint* pos, GLint* uv, GLint* tex);
-  GLuint createVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv);
+  bool ensureVertexArray(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv);
   GLuint createTexture(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linear);
   bool ensureFramebuffer(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linearFilter);
   bool ensureView(unsigned width, unsigned height, unsigned windowWidth, unsigned windowHeight, bool preserveAspect, Rotation rotation);
@@ -78,6 +78,7 @@ protected:
   GLint                   _posAttribute;
   GLint                   _uvAttribute;
   GLint                   _texUniform;
+  GLuint                  _vertexArray;
   GLuint                  _vertexBuffer;
   GLuint                  _texture;
 

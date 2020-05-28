@@ -26,6 +26,9 @@ namespace Gl
   void deleteBuffers(GLsizei n, const GLuint* buffers);
   void bindBuffer(GLenum target, GLuint buffer);
   void bufferData(GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage);
+  void genVertexArray(GLsizei n, GLuint *arrays);
+  void deleteVertexArrays(GLsizei n, const GLuint *arrays);
+  void bindVertexArray(GLuint array);
   void vertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* pointer);
   void enableVertexAttribArray(GLuint index);
   void disableVertexAttribArray(GLuint index);

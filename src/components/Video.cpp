@@ -40,7 +40,7 @@ bool Video::init(libretro::LoggerComponent* logger, Config* config)
   _textureWidth = _textureHeight = 0;
   _viewWidth = _viewHeight = 0;
 
-  _vertexBuffer = 0;
+  _vertexArray = _vertexBuffer = 0;
   _texture = 0;
   _rotation = Rotation::None;
   _rotationHandler = NULL;
@@ -69,6 +69,12 @@ void Video::destroy()
   {
     Gl::deleteTextures(1, &_texture);
     _texture = 0;
+  }
+
+  if (_vertexArray != 0)
+  {
+    Gl::deleteVertexArrays(1, &_vertexArray);
+    _vertexArray = 0;
   }
 
   if (_vertexBuffer != 0)
@@ -104,8 +110,7 @@ void Video::draw()
 
     Gl::useProgram(_program);
 
-    Gl::enableVertexAttribArray(_posAttribute);
-    Gl::enableVertexAttribArray(_uvAttribute);
+    Gl::bindVertexArray(_vertexArray);
 
     Gl::activeTexture(GL_TEXTURE0);
     Gl::bindTexture(GL_TEXTURE_2D, _texture);
@@ -114,8 +119,7 @@ void Video::draw()
     Gl::drawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     Gl::bindTexture(GL_TEXTURE_2D, 0);
-    Gl::disableVertexAttribArray(_posAttribute);
-    Gl::disableVertexAttribArray(_uvAttribute);
+    Gl::bindVertexArray(0);
     Gl::useProgram(0);
   }
 }
@@ -468,7 +472,7 @@ GLuint Video::createProgram(GLint* pos, GLint* uv, GLint* tex)
   return program;
 }
 
-GLuint Video::createVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv)
+bool Video::ensureVertexArray(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv)
 {
   struct VertexData
   {
@@ -547,10 +551,20 @@ GLuint Video::createVertexBuffer(unsigned windowWidth, unsigned windowHeight, fl
     { winScaleX,  winScaleY,      0.0f,      0.0f}
   };
 
-  GLuint vertexBuffer;
-  Gl::genBuffers(1, &vertexBuffer);
+  if (_vertexArray != 0)
+    Gl::deleteVertexArrays(1, &_vertexArray);
+  if (_vertexBuffer != 0)
+    Gl::deleteBuffers(1, &_vertexBuffer);
 
-  Gl::bindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+  Gl::genVertexArray(1, &_vertexArray);
+  if (_vertexArray == 0)
+    return false;
+  Gl::bindVertexArray(_vertexArray);
+
+  Gl::genBuffers(1, &_vertexBuffer);
+  if (_vertexBuffer == 0)
+    return false;
+  Gl::bindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
 
   switch (_rotation)
   {
@@ -567,12 +581,16 @@ GLuint Video::createVertexBuffer(unsigned windowWidth, unsigned windowHeight, fl
       Gl::bufferData(GL_ARRAY_BUFFER, sizeof(vertexData270), vertexData270, GL_STATIC_DRAW);
       break;
   }
-  
+
+  Gl::enableVertexAttribArray(pos);
   Gl::vertexAttribPointer(pos, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, x));
+  Gl::enableVertexAttribArray(uv);
   Gl::vertexAttribPointer(uv, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, u));
 
+  Gl::bindVertexArray(0);
+  
   _logger->debug(TAG "Vertices updated with window scale %f x %f and texture scale %f x %f", winScaleX, winScaleY, texScaleX, texScaleY);
-  return vertexBuffer;
+  return true;
 }
 
 GLuint Video::createTexture(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linear)
@@ -677,14 +695,10 @@ bool Video::ensureView(unsigned width, unsigned height, unsigned windowWidth, un
       _rotation = rotation;
     }
 
-    if (_vertexBuffer != 0)
-      Gl::deleteBuffers(1, &_vertexBuffer);
-
     float texScaleX = (float)width / (float)_textureWidth;
     float texScaleY = (float)height / (float)_textureHeight;
 
-    _vertexBuffer = createVertexBuffer(windowWidth, windowHeight, texScaleX, texScaleY, _posAttribute, _uvAttribute);
-    if (_vertexBuffer == 0)
+    if (!ensureVertexArray(windowWidth, windowHeight, texScaleX, texScaleY, _posAttribute, _uvAttribute))
     {
       _logger->error(TAG " failed to ensure view: %u x %u", width, height);
       return false;
