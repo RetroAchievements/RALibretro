@@ -118,6 +118,15 @@ namespace libretro
   };
 
   /**
+   * A component that provides access to the video context.
+   */
+  class VideoContextComponent
+  {
+  public:
+    virtual void swapBuffers() = 0;
+  };
+
+  /**
    * A Video component.
    */
   class VideoComponent
@@ -187,11 +196,12 @@ namespace libretro
 
   struct Components
   {
-    LoggerComponent*    logger;
-    ConfigComponent*    config;
-    VideoComponent*     video;
-    AudioComponent*     audio;
-    InputComponent*     input;
-    AllocatorComponent* allocator;
+    LoggerComponent*       logger;
+    ConfigComponent*       config;
+    VideoContextComponent* videoContext;
+    VideoComponent*        video;
+    AudioComponent*        audio;
+    InputComponent*        input;
+    AllocatorComponent*    allocator;
   };
 }

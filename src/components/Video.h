@@ -25,33 +25,10 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <SDL_opengl.h>
 
-class VideoContext
-{
-public:
-  virtual void swapBuffers() = 0;
-};
-
-template<typename SwapBuffersF>
-class VideoContextImpl: public VideoContext
-{
-public:
-  VideoContextImpl(SwapBuffersF swapBuffers) : _swapBuffers(swapBuffers) {}
-  void swapBuffers() override { _swapBuffers(); }
-
-protected:
-  SwapBuffersF _swapBuffers;
-};
-
-template<typename SwapBuffersF>
-auto makeVideoContext(SwapBuffersF swapBuffers)
-{
-  return std::make_unique<VideoContextImpl<SwapBuffersF>>(swapBuffers);
-}
-
 class Video: public libretro::VideoComponent
 {
 public:
-  bool init(libretro::LoggerComponent* logger, Config* config, std::unique_ptr<VideoContext> context);
+  bool init(libretro::LoggerComponent* logger, libretro::VideoContextComponent* ctx, Config* config);
   void destroy();
 
   virtual void setEnabled(bool enabled) override;
@@ -98,8 +75,8 @@ protected:
   void postHwRenderReset() const;
 
   libretro::LoggerComponent* _logger;
+  libretro::VideoContextComponent* _ctx;
   Config* _config;
-  std::unique_ptr<VideoContext> _ctx;
 
   bool                    _enabled;
 

@@ -195,6 +195,7 @@ namespace libretro
     
     LoggerComponent*                _logger;
     ConfigComponent*                _config;
+    VideoContextComponent*          _videoContext;
     VideoComponent*                 _video;
     AudioComponent*                 _audio;
     InputComponent*                 _input;

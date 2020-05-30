@@ -30,11 +30,11 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #define TAG "[VID] "
 
-bool Video::init(libretro::LoggerComponent* logger, Config* config, std::unique_ptr<VideoContext> ctx)
+bool Video::init(libretro::LoggerComponent* logger, libretro::VideoContextComponent *ctx, Config* config)
 {
   _logger = logger;
+  _ctx = ctx;
   _config = config;
-  _ctx = std::move(ctx);
 
   _enabled = true;
 

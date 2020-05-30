@@ -84,12 +84,13 @@ static void s_onRotationChanged(Video::Rotation oldRotation, Video::Rotation new
 
 Application::Application(): _fsm(*this)
 {
-  _components.logger    = &_logger;
-  _components.config    = &_config;
-  _components.video     = &_video;
-  _components.audio     = &_audio;
-  _components.input     = &_input;
-  _components.allocator = &_allocator;
+  _components.logger       = &_logger;
+  _components.config       = &_config;
+  _components.videoContext = &_videoContext;
+  _components.video        = &_video;
+  _components.audio        = &_audio;
+  _components.input        = &_input;
+  _components.allocator    = &_allocator;
 }
 
 bool Application::init(const char* title, int width, int height)
@@ -108,6 +109,7 @@ bool Application::init(const char* title, int width, int height)
     kAudioInited,
     kInputInited,
     kKeyBindsInited,
+    kVideoContextInited,
     kVideoInited
   }
   inited = kNothingInited;
@@ -252,9 +254,14 @@ bool Application::init(const char* title, int width, int height)
 
   inited = kKeyBindsInited;
 
-  if (!_video.init(&_logger, &_config, makeVideoContext(
-    [&]() { SDL_GL_SwapWindow(_window); }
-  )))
+  if (!_videoContext.init(&_logger, _window))
+  {
+    goto error;
+  }
+
+  inited = kVideoContextInited;
+
+  if (!_video.init(&_logger, &_videoContext, &_config))
   {
     goto error;
   }
@@ -304,19 +311,20 @@ bool Application::init(const char* title, int width, int height)
 error:
   switch (inited)
   {
-  case kVideoInited:       _video.destroy();
-  case kKeyBindsInited:    _keybinds.destroy();
-  case kInputInited:       _input.destroy();
-  case kAudioInited:       _audio.destroy();
-  case kFifoInited:        _fifo.destroy();
-  case kAudioDeviceInited: SDL_CloseAudioDevice(_audioDev);
-  case kGlInited:          // nothing to undo
-  case kWindowInited:      SDL_DestroyWindow(_window);
-  case kSdlInited:         SDL_Quit();
-  case kAllocatorInited:   _allocator.destroy();
-  case kConfigInited:      _config.destroy();
-  case kLoggerInited:      _logger.destroy();
-  case kNothingInited:     break;
+  case kVideoInited:        _video.destroy();
+  case kVideoContextInited: _videoContext.destroy();
+  case kKeyBindsInited:     _keybinds.destroy();
+  case kInputInited:        _input.destroy();
+  case kAudioInited:        _audio.destroy();
+  case kFifoInited:         _fifo.destroy();
+  case kAudioDeviceInited:  SDL_CloseAudioDevice(_audioDev);
+  case kGlInited:           // nothing to undo
+  case kWindowInited:       SDL_DestroyWindow(_window);
+  case kSdlInited:          SDL_Quit();
+  case kAllocatorInited:    _allocator.destroy();
+  case kConfigInited:       _config.destroy();
+  case kLoggerInited:       _logger.destroy();
+  case kNothingInited:      break;
   }
 
   _coreName.clear();

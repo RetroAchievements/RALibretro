@@ -108,6 +108,14 @@ namespace
     }
   };
 
+  class VideoContext : public libretro::VideoContextComponent
+  {
+  public:
+    virtual void swapBuffers() override
+    {
+    }
+  };
+
   class Video: public libretro::VideoComponent
   {
   public:
@@ -238,12 +246,13 @@ namespace
 }
 
 // Instances of the dummy components to use in CoreWrap instances by default
-static Logger    s_logger;
-static Config    s_config;
-static Video     s_video;
-static Audio     s_audio;
-static Input     s_input;
-static Allocator s_allocator;
+static Logger       s_logger;
+static Config       s_config;
+static VideoContext s_videoContext;
+static Video        s_video;
+static Audio        s_audio;
+static Input        s_input;
+static Allocator    s_allocator;
 
 // Helper function for the memory map interface
 static bool preprocessMemoryDescriptors(struct retro_memory_descriptor* descriptors, unsigned num_descriptors);
@@ -252,21 +261,23 @@ bool libretro::Core::init(const Components* components)
 {
   InstanceSetter instance_setter(this);
 
-  _logger    = &s_logger;
-  _config    = &s_config;
-  _video     = &s_video;
-  _audio     = &s_audio;
-  _input     = &s_input;
-  _allocator = &s_allocator;
+  _logger       = &s_logger;
+  _config       = &s_config;
+  _videoContext = &s_videoContext;
+  _video        = &s_video;
+  _audio        = &s_audio;
+  _input        = &s_input;
+  _allocator    = &s_allocator;
 
   if (components != NULL)
   {
-    if (components->logger != NULL)    _logger    = components->logger;
-    if (components->config != NULL)    _config    = components->config;
-    if (components->video != NULL)     _video     = components->video;
-    if (components->audio != NULL)     _audio     = components->audio;
-    if (components->input != NULL)     _input     = components->input;
-    if (components->allocator != NULL) _allocator = components->allocator;
+    if (components->logger != NULL)       _logger       = components->logger;
+    if (components->config != NULL)       _config       = components->config;
+    if (components->videoContext != NULL) _videoContext = components->videoContext;
+    if (components->video != NULL)        _video        = components->video;
+    if (components->audio != NULL)        _audio        = components->audio;
+    if (components->input != NULL)        _input        = components->input;
+    if (components->allocator != NULL)    _allocator    = components->allocator;
   }
 
   reset();

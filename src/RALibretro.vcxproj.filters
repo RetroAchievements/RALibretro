@@ -132,6 +132,9 @@
     <ClCompile Include="rcheevos\src\rhash\md5.c">
       <Filter>Source Files\rhash</Filter>
     </ClCompile>
+    <ClCompile Include="components\VideoContext.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="About.h">
@@ -195,6 +198,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GlUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="components\VideoContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
