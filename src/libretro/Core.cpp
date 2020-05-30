@@ -111,6 +111,11 @@ namespace
   class Video: public libretro::VideoComponent
   {
   public:
+    virtual void setEnabled(bool enabled) override
+    {
+      (void)enabled;
+    }
+
     virtual bool setGeometry(unsigned width, unsigned height, unsigned maxWidth, unsigned maxHeight, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback) override
     {
       (void)width;
@@ -362,7 +367,7 @@ void libretro::Core::destroy()
   reset();
 }
 
-void libretro::Core::step(bool generate_audio)
+void libretro::Core::step(bool generateVideo, bool generateAudio)
 {
   InstanceSetter instance_setter(this);
 
@@ -380,11 +385,13 @@ void libretro::Core::step(bool generate_audio)
     }
   }
 
+  _video->setEnabled(generateVideo);
+
   _samplesCount = 0;
 
   _core.run();
   
-  if (generate_audio && _samplesCount > 0)
+  if (generateAudio && _samplesCount > 0)
   {
     _audio->mix(_samples, _samplesCount / 2);
   }

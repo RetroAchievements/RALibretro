@@ -252,7 +252,9 @@ bool Application::init(const char* title, int width, int height)
 
   inited = kKeyBindsInited;
 
-  if (!_video.init(&_logger, &_config))
+  if (!_video.init(&_logger, &_config, makeVideoContext(
+    [&]() { SDL_GL_SwapWindow(_window); }
+  )))
   {
     goto error;
   }
@@ -399,16 +401,16 @@ void Application::runTurbo()
 {
   const auto tTurboStart = std::chrono::steady_clock::now();
 
-  // do five frames without audio
-  for (int i = 0; i < 5; i++)
+  // do four frames without video or audio
+  for (int i = 0; i < 4; i++)
   {
-    _core.step(false);
+    _core.step(false, false);
     RA_DoAchievementsFrame();
   }
 
-  // render
-  _video.draw();
-  SDL_GL_SwapWindow(_window);
+  // do a final frame with video and no audio
+  _core.step(true, false);
+  RA_DoAchievementsFrame();
 
   const auto tTurboEnd = std::chrono::steady_clock::now();
   const auto tTurboElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(tTurboEnd - tTurboStart);
@@ -483,12 +485,8 @@ void Application::runSmoothed()
   constexpr int STARTUP_FRAMES = 2;
   for (int i = 0; i < STARTUP_FRAMES; ++i)
   {
-    _core.step(true);
+    _core.step(true, true);
     RA_DoAchievementsFrame();
-
-    // render it
-    _video.draw();
-    SDL_GL_SwapWindow(_window);
   }
 
   const auto tFirstFrameEnd = std::chrono::steady_clock::now();
@@ -526,14 +524,10 @@ void Application::runSmoothed()
     }
 
     // state is running - do one frame with audio
-    _core.step(true);
-    RA_DoAchievementsFrame();
-
     if (!skipFrame)
     {
       // render it
-      _video.draw();
-      SDL_GL_SwapWindow(_window);
+      _core.step(true, true);
 
       skippedFrames = 0;
 
@@ -558,14 +552,20 @@ void Application::runSmoothed()
         skippedFrames = 0;
 
         // render it
-        _video.draw();
-        SDL_GL_SwapWindow(_window);
+        _core.step(true, true);
 
 #ifdef DEBUG_FRAMERATE
         renders[frameIndex] = 'F';
 #endif
       }
+      else
+      {
+        // dont render it
+        _core.step(false, true);
+      }
     }
+
+    RA_DoAchievementsFrame();
 
     const auto tFrameEnd = std::chrono::steady_clock::now();
     const auto tFrameElapsed = std::chrono::duration_cast<std::chrono::microseconds>(tFrameEnd - tFrameStart);
@@ -741,6 +741,8 @@ void Application::runSmoothed()
 
 void Application::run()
 {
+  _video.clear();
+
   do
   {
     // handle any pending events
@@ -762,7 +764,7 @@ void Application::run()
 
       case Fsm::State::FrameStep:
         // do one frame without audio
-        _core.step(false);
+        _core.step(true, false);
         RA_DoAchievementsFrame();
 
         // set state to GamePaused
@@ -777,10 +779,6 @@ void Application::run()
       case Fsm::State::Quit:
         return;
     }
-
-    // render
-    _video.draw();
-    SDL_GL_SwapWindow(_window);
 
     // handle overlay navigation
     if (RA_IsOverlayFullyVisible())
@@ -1609,6 +1607,7 @@ void Application::resetGame()
   if (isGameActive())
   {
     _core.resetGame();
+    _video.clear();
     RA_OnReset();
   }
 }
@@ -1635,6 +1634,8 @@ bool Application::unloadGame()
   }
 
   romUnloaded(&_logger);
+
+  _video.clear();
 
   return true;
 }

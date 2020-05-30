@@ -25,13 +25,39 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <SDL_opengl.h>
 
+class VideoContext
+{
+public:
+  virtual void swapBuffers() = 0;
+};
+
+template<typename SwapBuffersF>
+class VideoContextImpl: public VideoContext
+{
+public:
+  VideoContextImpl(SwapBuffersF swapBuffers) : _swapBuffers(swapBuffers) {}
+  void swapBuffers() override { _swapBuffers(); }
+
+protected:
+  SwapBuffersF _swapBuffers;
+};
+
+template<typename SwapBuffersF>
+auto makeVideoContext(SwapBuffersF swapBuffers)
+{
+  return std::make_unique<VideoContextImpl<SwapBuffersF>>(swapBuffers);
+}
+
 class Video: public libretro::VideoComponent
 {
 public:
-  bool init(libretro::LoggerComponent* logger, Config* config);
+  bool init(libretro::LoggerComponent* logger, Config* config, std::unique_ptr<VideoContext> context);
   void destroy();
 
-  void draw();
+  virtual void setEnabled(bool enabled) override;
+
+  void clear();
+  void draw(bool force = false);
 
   virtual bool setGeometry(unsigned width, unsigned height, unsigned maxWidth, unsigned maxHeight, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback) override;
   virtual void refresh(const void* data, unsigned width, unsigned height, size_t pitch) override;
@@ -73,6 +99,9 @@ protected:
 
   libretro::LoggerComponent* _logger;
   Config* _config;
+  std::unique_ptr<VideoContext> _ctx;
+
+  bool                    _enabled;
 
   GLuint                  _program;
   GLint                   _posAttribute;

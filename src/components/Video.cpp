@@ -30,10 +30,13 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #define TAG "[VID] "
 
-bool Video::init(libretro::LoggerComponent* logger, Config* config)
+bool Video::init(libretro::LoggerComponent* logger, Config* config, std::unique_ptr<VideoContext> ctx)
 {
   _logger = logger;
   _config = config;
+  _ctx = std::move(ctx);
+
+  _enabled = true;
 
   _pixelFormat = RETRO_PIXEL_FORMAT_UNKNOWN;
   _windowWidth = _windowHeight = 0;
@@ -102,10 +105,34 @@ void Video::destroy()
   }
 }
 
-void Video::draw()
+void Video::setEnabled(bool enabled)
 {
-  if (_texture != 0)
+  _enabled = enabled;
+}
+
+void Video::clear()
+{
+  if (_hw.frameBuffer != 0)
   {
+    Gl::bindFramebuffer(GL_FRAMEBUFFER, _hw.frameBuffer);
+    Gl::clearColor(0.0, 0.0, 0.0, 1.0);
+    Gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  }
+
+  Gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
+  Gl::clearColor(0.0, 0.0, 0.0, 1.0);
+  Gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  _ctx->swapBuffers();
+}
+
+void Video::draw(bool force)
+{
+  if (_texture != 0 && (force || _enabled))
+  {
+    Gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
+    Gl::viewport(0, 0, _windowWidth, _windowHeight);
+    Gl::clearColor(0.0, 0.0, 0.0, 1.0);
     Gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     Gl::useProgram(_program);
@@ -121,6 +148,8 @@ void Video::draw()
     Gl::bindTexture(GL_TEXTURE_2D, 0);
     Gl::bindVertexArray(0);
     Gl::useProgram(0);
+
+    _ctx->swapBuffers();
   }
 }
 
@@ -184,11 +213,13 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
     _logger->debug(TAG "Texture refreshed with %u x %u pixels", width, height);
 
     ensureView(width, height, _windowWidth, _windowHeight, _preserveAspect, _rotation);
+    draw();
   }
   else if (_hw.enabled && data == RETRO_HW_FRAME_BUFFER_VALID)
   {
     postHwRenderReset();
     ensureView(width, height, _windowWidth, _windowHeight, _preserveAspect, _rotation);
+    draw();
   }
 }
 
@@ -226,6 +257,7 @@ void Video::windowResized(unsigned width, unsigned height)
 {
   Gl::viewport(0, 0, width, height);
   ensureView(_viewWidth, _viewHeight, width, height, _preserveAspect, _rotation);
+  draw(true);
   _logger->debug(TAG "Window resized to %u x %u", width, height);
 }
 
@@ -344,6 +376,8 @@ void Video::setFramebuffer(void* pixels, unsigned width, unsigned height, unsign
 
     break;
   }
+
+  draw(true);
 }
 
 std::string Video::serialize()
@@ -632,9 +666,7 @@ bool Video::ensureFramebuffer(unsigned width, unsigned height, retro_pixel_forma
     || linearFilter != _linearFilter)
   {
     if (_texture != 0)
-    {
       Gl::deleteTextures(1, &_texture);
-    }
 
     _texture = createTexture(width, height, pixelFormat, linearFilter);
     if (_texture == 0)
@@ -730,7 +762,4 @@ void Video::postHwRenderReset() const
   Gl::blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   Gl::blendEquation(GL_FUNC_ADD);
   Gl::clearColor(0.0, 0.0, 0.0, 1.0);
-
-  Gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
-  Gl::viewport(0, 0, _windowWidth, _windowHeight);
 }
