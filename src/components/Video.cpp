@@ -330,7 +330,7 @@ const void* Video::getFramebuffer(unsigned* width, unsigned* height, unsigned* p
   }
 
   if (_hw.enabled && _hw.callback->bottom_left_origin)
-    verticalFlipRawTexture(pixels, _textureHeight, _textureWidth * bpp);
+    verticalFlipRawTexture(pixels, _viewHeight, _textureWidth * bpp);
 
   *width = _viewWidth;
   *height = _viewHeight;
