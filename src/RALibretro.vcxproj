@@ -259,6 +259,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     </ClCompile>
     <ClCompile Include="rcheevos\src\rhash\md5.c" />
     <ClCompile Include="speex\resample.c" />
+    <ClCompile Include="States.cpp" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>

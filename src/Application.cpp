@@ -288,6 +288,11 @@ bool Application::init(const char* title, int width, int height)
     goto error;
   }
 
+  if (!_states.init(&_logger, &_config, &_video))
+  {
+    goto error;
+  }
+
   SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
   _coreName.clear();
   _validSlots = 0;
@@ -1204,6 +1209,8 @@ bool Application::loadGame(const std::string& path)
     free(data);
   }
 
+  _states.setGame(_gameFileName, _coreName, &_core);
+
   // reset the vertical sync flag
   SDL_GL_SetSwapInterval(1);
 
@@ -1277,10 +1284,7 @@ moved_recent_item:
 
   for (unsigned ndx = 1; ndx <= 10; ndx++)
   {
-    std::string path = getStatePath(ndx);
-    struct stat statbuf;
-
-    if (stat(path.c_str(), &statbuf) == 0)
+    if (_states.existsState(ndx))
     {
       _validSlots |= 1 << ndx;
     }
@@ -1627,27 +1631,12 @@ void Application::updateCDMenu(const char names[][128], int count, bool updateLa
 
 std::string Application::getSRamPath()
 {
-  std::string path = _config.getSaveDirectory();
-  path += _gameFileName;
-  path += ".sram";
-  return path;
+  return _states.getSRamPath();
 }
 
 std::string Application::getStatePath(unsigned ndx)
 {
-  std::string path = _config.getSaveDirectory();
-  path += _gameFileName;
-
-  path += "-";
-  path += _coreName;
-  
-  char index[16];
-  sprintf(index, ".%03u", ndx);
-
-  path += index;
-  path += ".state";
-
-  return path;
+  return _states.getStatePath(ndx);
 }
 
 std::string Application::getConfigPath()
@@ -1681,50 +1670,13 @@ std::string Application::getScreenshotPath()
 
 void Application::saveState(const std::string& path)
 {
-  _logger.info(TAG "Saving state to %s", path.c_str());
-  
-  size_t size = _core.serializeSize();
-  void* data = malloc(size);
-
-  if (data == NULL)
-  {
-    _logger.error(TAG "Out of memory allocating %lu bytes for the game state", size);
-    return;
-  }
-
-  if (!_core.serialize(data, size))
-  {
-    free(data);
-    return;
-  }
-
-  unsigned width, height, pitch;
-  enum retro_pixel_format format;
-  const void* pixels = _video.getFramebuffer(&width, &height, &pitch, &format);
-
-  if (pixels == NULL)
-  {
-    free(data);
-    return;
-  }
-
-  if (!util::saveFile(&_logger, path.c_str(), data, size))
-  {
-    free((void*)pixels);
-    free(data);
-    return;
-  }
-
-  util::saveImage(&_logger, path + ".png", pixels, width, height, pitch, format);
-  RA_OnSaveState(path.c_str());
-
-  free((void*)pixels);
-  free(data);
+  _states.saveState(path);
 }
 
 void Application::saveState(unsigned ndx)
 {
-  saveState(getStatePath(ndx));
+  _states.saveState(ndx);
+
   _validSlots |= 1 << ndx;
   enableSlots();
 }
@@ -1748,59 +1700,10 @@ void Application::saveState()
 
 void Application::loadState(const std::string& path)
 {
-  if (!RA_WarnDisableHardcore("load a state"))
+  if (_states.loadState(path))
   {
-    _logger.warn(TAG "Hardcore mode is active, can't load state");
-    return;
+    updateCDMenu(NULL, 0, false);
   }
-
-  size_t size;
-  void* data = util::loadFile(&_logger, path.c_str(), &size);
-
-  if (data == NULL)
-  {
-    return;
-  }
-
-  _core.unserialize(data, size);
-  free(data);
-  RA_OnLoadState(path.c_str());
-
-  updateCDMenu(NULL, 0, false);
-
-  unsigned width, height, pitch;
-  enum retro_pixel_format format;
-  _video.getFramebufferSize(&width, &height, &format);
-
-  unsigned image_width, image_height;
-  void* pixels = util::loadImage(&_logger, path + ".png", &image_width, &image_height, &pitch);
-  if (pixels == NULL)
-  {
-    _logger.error(TAG "Error loading savestate screenshot");
-    return;
-  }
-
-  /* if the widths aren't the same, the stride differs and we can't just load the pixels */
-  if (image_width == width)
-  {
-    void* converted = util::fromRgb(&_logger, pixels, image_width, image_height, &pitch, format);
-    if (converted == NULL)
-    {
-      _logger.error(TAG "Error converting savestate screenshot to the framebuffer format");
-    }
-    else
-    {
-      /* prevent frame buffer corruption */
-      if (height > image_height)
-        height = image_height;
-
-      _video.setFramebuffer(converted, width, height, pitch);
-
-      free((void*)converted);
-    }
-  }
-
-  free((void*)pixels);
 }
 
 void Application::loadState(unsigned ndx)
@@ -1810,7 +1713,10 @@ void Application::loadState(unsigned ndx)
     return;
   }
 
-  loadState(getStatePath(ndx));
+  if (_states.loadState(ndx))
+  {
+    updateCDMenu(NULL, 0, false);
+  }
 }
 
 void Application::loadState()
