@@ -113,6 +113,10 @@
     "extensions": "gba",
     "systems": [5]
   },
+  "opera_libretro":{
+    "name": "Opera",
+    "systems": [43]
+  },
   "pcsx_rearmed_libretro":{
     "name": "PCSX-ReARMed",
     "extensions": "m3u|cue",
