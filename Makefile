@@ -6,18 +6,31 @@ ifeq ($(OS),Windows_NT)
     CC=gcc
     CXX=g++
     RC=windres
+
+    ifeq ($(findstring MINGW64, $(shell uname)), MINGW64)
+        ARCH=-m64
+        OUTDIR=bin64
+    else
+        ARCH=-m32
+        OUTDIR=bin
+    endif
+
 else ifeq ($(shell uname -s),Linux)
     CC=i686-w64-mingw32-gcc
     CXX=i686-w64-mingw32-g++
     RC=i686-w64-mingw32-windres
     STATICLIBS=-static-libstdc++ 
+
+    #TODO: determine ARCH
+    ARCH=-m32
+    OUTDIR=bin
 endif
 
 INCLUDES=-Isrc -I./src/RAInterface -I./src/miniz -I./src/rcheevos/include
 DEFINES=-DOUTSIDE_SPEEX -DRANDOM_PREFIX=speex -DEXPORT= -D_USE_SSE2 -DFIXED_POINT -D_WINDOWS
-CCFLAGS=-Wall -m32 $(INCLUDES) $(DEFINES) `sdl2-config --cflags`
+CCFLAGS=-Wall $(ARCH) $(INCLUDES) $(DEFINES) `sdl2-config --cflags`
 CXXFLAGS=$(CCFLAGS) -std=c++11
-LDFLAGS=-m32
+LDFLAGS=$(ARCH)
 
 
 ifneq ($(DEBUG),)
@@ -43,10 +56,12 @@ OBJS=\
 	src/components/Input.o \
 	src/components/Logger.o \
 	src/components/Video.o \
+	src/components/VideoContext.o \
 	src/miniz/miniz.o \
 	src/miniz/miniz_tdef.o \
 	src/miniz/miniz_tinfl.o \
 	src/miniz/miniz_zip.o \
+	src/rcheevos/src/rcheevos/consoleinfo.o \
 	src/rcheevos/src/rhash/cdreader.o \
 	src/rcheevos/src/rhash/md5.o \
 	src/rcheevos/src/rhash/hash.o \
@@ -62,6 +77,7 @@ OBJS=\
 	src/Hash.o \
 	src/KeyBinds.o \
 	src/main.o \
+	src/Memory.o \
 	src/menu.res \
 	src/Util.o
 
@@ -74,27 +90,27 @@ OBJS=\
 %.res: %.rc
 	$(RC) $< -O coff -o $@
 
-all: bin/RALibretro.exe
+all: $(OUTDIR)/RALibretro.exe
 
-bin/RALibretro.exe: $(OBJS)
-	mkdir -p bin
+$(OUTDIR)/RALibretro.exe: $(OBJS)
+	mkdir -p $(OUTDIR)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LIBS)
 
 src/Git.cpp: etc/Git.cpp.template FORCE
 	cat $< | sed s/GITFULLHASH/`git rev-parse HEAD | tr -d "\n"`/g | sed s/GITMINIHASH/`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`/g | sed s/GITRELEASE/`git describe --tags | sed s/\-.*//g | tr -d "\n"`/g > $@
 
 zip:
-	rm -f bin/RALibretro-*.zip RALibretro-*.zip
-	zip -9 RALibretro-`git describe | tr -d "\n"`.zip bin/RALibretro.exe
+	rm -f $(OUTDIR)/RALibretro-*.zip RALibretro-*.zip
+	zip -9 RALibretro-`git describe | tr -d "\n"`.zip $(OUTDIR)/RALibretro.exe
 
 clean:
-	rm -f bin/RALibretro $(OBJS) bin/RALibretro-*.zip RALibretro-*.zip
+	rm -f $(OUTDIR)/RALibretro $(OBJS) $(OUTDIR)/RALibretro-*.zip RALibretro-*.zip
 
 pack:
-ifeq ("", "$(wildcard bin/RALibretro.exe)")
-	echo '"bin/RALibretro.exe" not found!'
+ifeq ("", "$(wildcard $(OUTDIR)/RALibretro.exe)")
+	echo '"$(OUTDIR)/RALibretro.exe" not found!'
 else
-	rm -f bin/RALibretro-*.zip RALibretro-*.zip
+	rm -f $(OUTDIR)/RALibretro-*.zip RALibretro-*.zip
 	zip -9r RALibretro-pack-`git describe | tr -d "\n"`.zip bin
 endif
 

@@ -22,8 +22,12 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "Util.h"
 
 #include "components\Config.h"
-#include "components\Dialog.h"
 #include "components\Logger.h"
+
+#ifdef _WINDOWS
+#include "components\Dialog.h"
+#include <RA_Interface.h>
+#endif
 
 #include <jsonsax\jsonsax.h>
 
@@ -44,14 +48,14 @@ struct CoreInfo
   std::string filename;
   std::string extensions;
   std::string deprecationMessage;
-  std::set<System> systems;
+  std::set<int> systems;
   time_t filetime;
   time_t servertime;
 };
 
 static std::vector<CoreInfo> s_coreInfos;
 
-static const CoreInfo* getCoreInfo(const std::string& coreName, System system)
+static const CoreInfo* getCoreInfo(const std::string& coreName, int system)
 {
   for (const auto& coreInfo : s_coreInfos)
   {
@@ -65,13 +69,13 @@ static const CoreInfo* getCoreInfo(const std::string& coreName, System system)
   return NULL;
 }
 
-const std::string& getEmulatorName(const std::string& coreName, System system)
+const std::string& getEmulatorName(const std::string& coreName, int system)
 {
   const auto* coreInfo = getCoreInfo(coreName, system);
   return (coreInfo != NULL) ? coreInfo->name : coreName;
 }
 
-const char* getEmulatorExtensions(const std::string& coreName, System system)
+const char* getEmulatorExtensions(const std::string& coreName, int system)
 {
   const auto* coreInfo = getCoreInfo(coreName, system);
   if (coreInfo != NULL && !coreInfo->extensions.empty())
@@ -181,7 +185,7 @@ bool loadCores(Config* config, Logger* logger)
         if (ud->inSystems && ud->core != NULL)
         {
           std::string system = std::string(str, num);
-          ud->core->systems.insert(static_cast<System>(std::stoi(system)));
+          ud->core->systems.insert(static_cast<int>(std::stoi(system)));
         }
         break;
 
@@ -196,7 +200,7 @@ bool loadCores(Config* config, Logger* logger)
   return true;
 }
 
-void getAvailableSystems(std::set<System>& systems)
+void getAvailableSystems(std::set<int>& systems)
 {
   for (const auto& core : s_coreInfos)
   {
@@ -208,7 +212,7 @@ void getAvailableSystems(std::set<System>& systems)
   }
 }
 
-void getAvailableSystemCores(System system, std::set<std::string>& coreNames)
+void getAvailableSystemCores(int system, std::set<std::string>& coreNames)
 {
   for (const auto& core : s_coreInfos)
   {
@@ -217,7 +221,7 @@ void getAvailableSystemCores(System system, std::set<std::string>& coreNames)
   }
 }
 
-int encodeCoreName(const std::string& coreName, System system)
+int encodeCoreName(const std::string& coreName, int system)
 {
   for (size_t i = 0; i < s_coreInfos.size(); ++i)
   {
@@ -237,7 +241,7 @@ int encodeCoreName(const std::string& coreName, System system)
   return 0;
 }
 
-const std::string& getCoreName(int encoded, System& system)
+const std::string& getCoreName(int encoded, int& system)
 {
   size_t i = encoded % 100;
   size_t j = encoded / 100;
@@ -278,46 +282,17 @@ const std::string* getCoreDeprecationMessage(const std::string& coreName)
   return NULL;
 }
 
-const char* getSystemName(System system)
+const char* getSystemName(int system)
 {
-  switch (system)
-  {
-  case System::kAtari2600:      return "Atari 2600";
-  case System::kAtariLynx:      return "Atari Lynx";
-  case System::kAtariJaguar:    return "Atari Jaguar";
-  case System::kMasterSystem:   return "Master System";
-  case System::kMegaDrive:      return "Sega Genesis";
-  case System::kSegaCD:         return "Sega CD";
-  case System::kSega32X:        return "Sega 32X";
-  case System::kSaturn:         return "Sega Saturn";
-  case System::kNintendo:       return "Nintendo Entertainment System";
-  case System::kNintendoDS:     return "Nintendo DS";
-  case System::kPCEngine:       return "PC Engine";
-  case System::kSuperNintendo:  return "Super Nintendo Entertainment System";
-  case System::kGameBoy:        return "Game Boy";
-  case System::kGameBoyColor:   return "Game Boy Color";
-  case System::kGameBoyAdvance: return "Game Boy Advance";
-  case System::kNintendo64:     return "Nintendo 64";
-  case System::kPlayStation1:   return "PlayStation";
-  case System::kNeoGeoPocket:   return "Neo Geo Pocket";
-  case System::kVirtualBoy:     return "Virtual Boy";
-  case System::kGameGear:       return "Game Gear";
-  case System::kArcade:         return "Arcade";
-  case System::kAtari7800:      return "Atari 7800";
-  case System::kPokemonMini:    return "Pokemon Mini";
-  case System::kColecovision:   return "Colecovision";
-  case System::kSG1000:         return "SG-1000";
-  case System::kWonderSwan:     return "WonderSwan";
-  default:                      break;
-  }
-  
-  return "?";
+  return rc_console_name(system);
 }
+
+#ifdef _WINDOWS
 
 class CoreDialog : public Dialog
 {
 public:
-  System systemIds[NumConsoleIDs];
+  int systemIds[128];
   int numSystems = 0;
   std::vector<std::string> coreNames;
   Config* config;
@@ -333,7 +308,7 @@ protected:
     if (selectedIndex < 0)
       return;
 
-    const System system = systemIds[selectedIndex];
+    const int system = systemIds[selectedIndex];
 
     std::map<std::string, const CoreInfo*> systemCores;
     for (const auto& core : s_coreInfos)
@@ -606,7 +581,7 @@ bool showCoresDialog(Config* config, Logger* logger)
 
   getCoreSystemTimes(config, logger);
 
-  std::map<std::string, System> allSystems;
+  std::map<std::string, int> allSystems;
   int systemCoreCounts[NumConsoleIDs];
   memset(systemCoreCounts, 0, sizeof(systemCoreCounts));
   int maxSystemCoreCount = 0;
@@ -656,3 +631,5 @@ bool showCoresDialog(Config* config, Logger* logger)
 
   return db.modified;
 }
+
+#endif

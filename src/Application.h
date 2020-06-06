@@ -37,6 +37,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Emulator.h"
 #include "KeyBinds.h"
+#include "Memory.h"
 
 class Application
 {
@@ -61,31 +62,17 @@ public:
   void printf(const char* fmt, ...);
 
   // RA_Integration
-  unsigned char memoryRead(unsigned bank, unsigned addr);
-  void memoryWrite(unsigned bank, unsigned addr, unsigned value);
   bool isGameActive();
   const std::string& gameName() const { return _gameFileName; }
 
   void onRotationChanged(Video::Rotation oldRotation, Video::Rotation newRotation);
 
 protected:
-  struct MemoryRegion
-  {
-    uint8_t* data;
-    size_t size;
-  };
-
-  struct MemoryBank
-  {
-    MemoryRegion regions[64];
-    size_t count;
-  };
-
   struct RecentItem
   {
     std::string path;
     std::string coreName;
-    System system;
+    int system;
   };
 
   // Called by SDL from the audio thread
@@ -101,8 +88,6 @@ protected:
   void        enableSlots();
   void        enableRecent();
   void        updateCDMenu(const char names[][128], int count, bool updateLabels);
-  void        registerMemoryRegion(unsigned* max, unsigned bank, void* data, size_t size);
-  void        registerMemoryRegionUnchecked(unsigned* max, unsigned bank, void* data, size_t size);
   std::string getSRamPath();
   std::string getStatePath(unsigned ndx);
   std::string getConfigPath();
@@ -132,7 +117,7 @@ protected:
   bool lastHardcore;
 
   std::string _coreName;
-  System   _system;
+  int         _system;
 
   SDL_Window*       _window;
   SDL_AudioSpec     _audioSpec;
@@ -145,6 +130,7 @@ protected:
   Video        _video;
   Audio        _audio;
   Input        _input;
+  Memory       _memory;
 
   KeyBinds _keybinds;
   std::vector<RecentItem> _recentList;
@@ -157,8 +143,6 @@ protected:
   std::string _gamePath;
   std::string _gameFileName;
   unsigned    _validSlots;
-
-  MemoryBank _memoryBanks[2];
 
   HMENU _menu;
   HMENU _cdRomMenu;

@@ -34,30 +34,18 @@
     <Filter Include="Source Files\rhash">
       <UniqueIdentifier>{f33813cb-a0fd-4f12-a236-85aae13cff32}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\components">
+      <UniqueIdentifier>{2bcecd49-e2e4-41ba-96ea-7b083991da9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\rcheevos">
+      <UniqueIdentifier>{f03f66d3-40a1-4a92-8840-586859a3b6b5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="About.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Application.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="components\Audio.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="components\Config.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="components\Dialog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="components\Input.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="components\Logger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="components\Video.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Emulator.cpp">
@@ -132,7 +120,31 @@
     <ClCompile Include="rcheevos\src\rhash\md5.c">
       <Filter>Source Files\rhash</Filter>
     </ClCompile>
+    <ClCompile Include="components\Audio.cpp">
+      <Filter>Source Files\components</Filter>
+    </ClCompile>
+    <ClCompile Include="components\Config.cpp">
+      <Filter>Source Files\components</Filter>
+    </ClCompile>
+    <ClCompile Include="components\Dialog.cpp">
+      <Filter>Source Files\components</Filter>
+    </ClCompile>
+    <ClCompile Include="components\Input.cpp">
+      <Filter>Source Files\components</Filter>
+    </ClCompile>
+    <ClCompile Include="components\Logger.cpp">
+      <Filter>Source Files\components</Filter>
+    </ClCompile>
+    <ClCompile Include="components\Video.cpp">
+      <Filter>Source Files\components</Filter>
+    </ClCompile>
     <ClCompile Include="components\VideoContext.cpp">
+      <Filter>Source Files\components</Filter>
+    </ClCompile>
+    <ClCompile Include="rcheevos\src\rcheevos\consoleinfo.c">
+      <Filter>Source Files\rcheevos</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -162,6 +174,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="components\Video.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="components\VideoContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dynlib\dynlib.h">
@@ -200,7 +215,10 @@
     <ClInclude Include="GlUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="components\VideoContext.h">
+    <ClInclude Include="rcheevos\include\rconsoles.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rcheevos\include\rcheevos.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

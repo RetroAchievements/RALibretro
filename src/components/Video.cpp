@@ -230,9 +230,10 @@ bool Video::supportsContext(enum retro_hw_context_type type)
     case RETRO_HW_CONTEXT_OPENGL:
     case RETRO_HW_CONTEXT_OPENGL_CORE:
       return true;
-  }
 
-  return false;
+    default:
+      return false;
+  }
 }
 
 uintptr_t Video::getCurrentFramebuffer()

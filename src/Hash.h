@@ -33,5 +33,5 @@ void RA_OnLoadNewRom(BYTE* pROMData, unsigned int nROMSize);
 
 #include "Emulator.h"
 
-bool   romLoaded(Logger* logger, System system, const std::string& path, void* rom, size_t size);
+bool   romLoaded(Logger* logger, int consoleId, const std::string& path, void* rom, size_t size);
 void   romUnloaded(Logger* logger);

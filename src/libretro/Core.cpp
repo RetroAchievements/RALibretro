@@ -27,7 +27,9 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef _WINDOWS
 #include <RA_Interface.h>
+#endif
 
 #define SAMPLE_COUNT 8192
 
@@ -1243,8 +1245,12 @@ bool libretro::Core::setGeometry(const struct retro_game_geometry* data)
 
 bool libretro::Core::getUsername(const char** data) const
 {
+#ifdef _WINDOWS
   *data = RA_UserName();
   return true;
+#else
+  return false;
+#endif
 }
 
 bool libretro::Core::getLanguage(unsigned* data) const
