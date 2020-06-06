@@ -404,6 +404,7 @@ void libretro::Core::step(bool generateVideo, bool generateAudio)
   
   if (generateAudio && _samplesCount > 0)
   {
+    // _samples are 2-channel (stereo)
     _audio->mix(_samples, _samplesCount / 2);
   }
 }

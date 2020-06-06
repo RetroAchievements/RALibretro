@@ -220,6 +220,9 @@ bool Application::init(const char* title, int width, int height)
     goto error;
   }
 
+  _logger.info(TAG "Initialized audio device. %d channels@%dHz (format:%04X, silence:%d, samples:%d, padding:%d, size:%d)",
+    _audioSpec.channels, _audioSpec.freq, _audioSpec.format, _audioSpec.silence, _audioSpec.samples, _audioSpec.padding, _audioSpec.size);
+
   inited = kAudioDeviceInited;
 
   if (!_fifo.init(_audioSpec.size * 4))
@@ -233,7 +236,7 @@ bool Application::init(const char* title, int width, int height)
   SDL_PauseAudioDevice(_audioDev, 0);
 
   // Initialize the rest of the components
-  if (!_audio.init(&_logger, (double)_audioSpec.freq, &_fifo))
+  if (!_audio.init(&_logger, (double)_audioSpec.freq, _audioSpec.channels, &_fifo))
   {
     goto error;
   }

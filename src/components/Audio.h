@@ -52,7 +52,7 @@ protected:
 class Audio: public libretro::AudioComponent
 {
 public:
-  bool init(libretro::LoggerComponent* logger, double sample_rate, Fifo* fifo);
+  bool init(libretro::LoggerComponent* logger, double sample_rate, int channels, Fifo* fifo);
   void destroy();
 
   virtual bool setRate(double rate) override;
@@ -63,8 +63,8 @@ protected:
 
   double _sampleRate;
   double _coreRate;
+  int _channels;
 
-  double _rateControlDelta;
   double _currentRatio;
   double _originalRatio;
   SpeexResamplerState* _resampler;
