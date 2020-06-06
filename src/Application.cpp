@@ -1154,6 +1154,11 @@ bool Application::loadGame(const std::string& path)
   {
     loaded = _core.loadGame(path.c_str(), NULL, 0);
   }
+  else if (iszip)
+  {
+    std::string zipPsuedoPath = path + '#' + unzippedFileName;
+    loaded = _core.loadGame(zipPsuedoPath.c_str(), data, size);
+  }
   else
   {
     loaded = _core.loadGame(path.c_str(), data, size);
