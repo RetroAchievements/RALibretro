@@ -229,6 +229,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     <ClCompile Include="components\Input.cpp" />
     <ClCompile Include="components\Logger.cpp" />
     <ClCompile Include="components\Video.cpp" />
+    <ClCompile Include="components\VideoContext.cpp" />
     <ClCompile Include="dynlib\dynlib.c" />
     <ClCompile Include="Emulator.cpp" />
     <ClCompile Include="Fsm.cpp" />
@@ -268,6 +269,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     <ClInclude Include="components\Input.h" />
     <ClInclude Include="components\Logger.h" />
     <ClInclude Include="components\Video.h" />
+    <ClInclude Include="components\VideoContext.h" />
     <ClInclude Include="dynlib\dynlib.h" />
     <ClInclude Include="Emulator.h" />
     <ClInclude Include="Fsm.h" />

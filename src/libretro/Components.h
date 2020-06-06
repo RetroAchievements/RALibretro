@@ -118,12 +118,23 @@ namespace libretro
   };
 
   /**
+   * A component that provides access to the video context.
+   */
+  class VideoContextComponent
+  {
+  public:
+    virtual void swapBuffers() = 0;
+  };
+
+  /**
    * A Video component.
    */
   class VideoComponent
   {
   public:
-    virtual bool setGeometry(unsigned width, unsigned height, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback) = 0;
+    virtual void setEnabled(bool enabled) = 0;
+
+    virtual bool setGeometry(unsigned width, unsigned height, unsigned maxWidth, unsigned maxHeight, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback) = 0;
     virtual void refresh(const void* data, unsigned width, unsigned height, size_t pitch) = 0;
 
     virtual bool                 supportsContext(enum retro_hw_context_type type) = 0;
@@ -185,11 +196,12 @@ namespace libretro
 
   struct Components
   {
-    LoggerComponent*    logger;
-    ConfigComponent*    config;
-    VideoComponent*     video;
-    AudioComponent*     audio;
-    InputComponent*     input;
-    AllocatorComponent* allocator;
+    LoggerComponent*       logger;
+    ConfigComponent*       config;
+    VideoContextComponent* videoContext;
+    VideoComponent*        video;
+    AudioComponent*        audio;
+    InputComponent*        input;
+    AllocatorComponent*    allocator;
   };
 }

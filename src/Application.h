@@ -32,6 +32,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "components/Config.h"
 #include "components/Input.h"
 #include "components/Logger.h"
+#include "components/VideoContext.h"
 #include "components/Video.h"
 
 #include "Emulator.h"
@@ -137,12 +138,13 @@ protected:
   SDL_AudioSpec     _audioSpec;
   SDL_AudioDeviceID _audioDev;
 
-  Fifo   _fifo;
-  Logger _logger;
-  Config _config;
-  Video  _video;
-  Audio  _audio;
-  Input  _input;
+  Fifo         _fifo;
+  Logger       _logger;
+  Config       _config;
+  VideoContext _videoContext;
+  Video        _video;
+  Audio        _audio;
+  Input        _input;
 
   KeyBinds _keybinds;
   std::vector<RecentItem> _recentList;
