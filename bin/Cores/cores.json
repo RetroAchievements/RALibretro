@@ -113,6 +113,10 @@
     "extensions": "gba",
     "systems": [5]
   },
+  "parallel_n64_libretro":{
+    "name": "ParaLLEl N64",
+    "systems": [2],
+  },
   "pcsx_rearmed_libretro":{
     "name": "PCSX-ReARMed",
     "extensions": "m3u|cue",
