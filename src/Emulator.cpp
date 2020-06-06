@@ -166,6 +166,7 @@ bool loadCores(Config* config, Logger* logger)
             {
               s_coreInfos.pop_back();
               ud->core = nullptr;
+              ud->inCore = 0; /* setting core to null will prevent this from happening naturally at the end of the object */
             }
           }
         }
