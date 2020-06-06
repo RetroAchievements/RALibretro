@@ -138,6 +138,9 @@
     <ClCompile Include="components\Video.cpp">
       <Filter>Source Files\components</Filter>
     </ClCompile>
+    <ClCompile Include="components\VideoContext.cpp">
+      <Filter>Source Files\components</Filter>
+    </ClCompile>
     <ClCompile Include="rcheevos\src\rcheevos\consoleinfo.c">
       <Filter>Source Files\rcheevos</Filter>
     </ClCompile>
@@ -171,6 +174,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="components\Video.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="components\VideoContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dynlib\dynlib.h">

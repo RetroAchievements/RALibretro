@@ -378,7 +378,7 @@ void Input::setControllerInfo(const struct retro_controller_info* rinfo, unsigne
       }
     }
 
-    if (_devices[port] > _info[port].size())
+    if (_devices[port] > (int)_info[port].size())
       _devices[port] = 0;
   }
 

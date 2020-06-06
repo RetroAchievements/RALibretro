@@ -64,12 +64,13 @@ static void s_onRotationChanged(Video::Rotation oldRotation, Video::Rotation new
 
 Application::Application(): _fsm(*this)
 {
-  _components.logger    = &_logger;
-  _components.config    = &_config;
-  _components.video     = &_video;
-  _components.audio     = &_audio;
-  _components.input     = &_input;
-  _components.allocator = &_allocator;
+  _components.logger       = &_logger;
+  _components.config       = &_config;
+  _components.videoContext = &_videoContext;
+  _components.video        = &_video;
+  _components.audio        = &_audio;
+  _components.input        = &_input;
+  _components.allocator    = &_allocator;
 }
 
 bool Application::init(const char* title, int width, int height)
@@ -88,6 +89,7 @@ bool Application::init(const char* title, int width, int height)
     kAudioInited,
     kInputInited,
     kKeyBindsInited,
+    kVideoContextInited,
     kVideoInited
   }
   inited = kNothingInited;
@@ -198,6 +200,9 @@ bool Application::init(const char* title, int width, int height)
     goto error;
   }
 
+  _logger.info(TAG "Initialized audio device. %d channels@%dHz (format:%04X, silence:%d, samples:%d, padding:%d, size:%d)",
+    _audioSpec.channels, _audioSpec.freq, _audioSpec.format, _audioSpec.silence, _audioSpec.samples, _audioSpec.padding, _audioSpec.size);
+
   inited = kAudioDeviceInited;
 
   if (!_fifo.init(_audioSpec.size * 4))
@@ -211,7 +216,7 @@ bool Application::init(const char* title, int width, int height)
   SDL_PauseAudioDevice(_audioDev, 0);
 
   // Initialize the rest of the components
-  if (!_audio.init(&_logger, (double)_audioSpec.freq, &_fifo))
+  if (!_audio.init(&_logger, (double)_audioSpec.freq, _audioSpec.channels, &_fifo))
   {
     goto error;
   }
@@ -232,7 +237,14 @@ bool Application::init(const char* title, int width, int height)
 
   inited = kKeyBindsInited;
 
-  if (!_video.init(&_logger, &_config))
+  if (!_videoContext.init(&_logger, _window))
+  {
+    goto error;
+  }
+
+  inited = kVideoContextInited;
+
+  if (!_video.init(&_logger, &_videoContext, &_config))
   {
     goto error;
   }
@@ -287,19 +299,20 @@ bool Application::init(const char* title, int width, int height)
 error:
   switch (inited)
   {
-  case kVideoInited:       _video.destroy();
-  case kKeyBindsInited:    _keybinds.destroy();
-  case kInputInited:       _input.destroy();
-  case kAudioInited:       _audio.destroy();
-  case kFifoInited:        _fifo.destroy();
-  case kAudioDeviceInited: SDL_CloseAudioDevice(_audioDev);
-  case kGlInited:          // nothing to undo
-  case kWindowInited:      SDL_DestroyWindow(_window);
-  case kSdlInited:         SDL_Quit();
-  case kAllocatorInited:   _allocator.destroy();
-  case kConfigInited:      _config.destroy();
-  case kLoggerInited:      _logger.destroy();
-  case kNothingInited:     break;
+  case kVideoInited:        _video.destroy();
+  case kVideoContextInited: _videoContext.destroy();
+  case kKeyBindsInited:     _keybinds.destroy();
+  case kInputInited:        _input.destroy();
+  case kAudioInited:        _audio.destroy();
+  case kFifoInited:         _fifo.destroy();
+  case kAudioDeviceInited:  SDL_CloseAudioDevice(_audioDev);
+  case kGlInited:           // nothing to undo
+  case kWindowInited:       SDL_DestroyWindow(_window);
+  case kSdlInited:          SDL_Quit();
+  case kAllocatorInited:    _allocator.destroy();
+  case kConfigInited:       _config.destroy();
+  case kLoggerInited:       _logger.destroy();
+  case kNothingInited:      break;
   }
 
   _coreName.clear();
@@ -384,16 +397,16 @@ void Application::runTurbo()
 {
   const auto tTurboStart = std::chrono::steady_clock::now();
 
-  // do five frames without audio
-  for (int i = 0; i < 5; i++)
+  // do four frames without video or audio
+  for (int i = 0; i < 4; i++)
   {
-    _core.step(false);
+    _core.step(false, false);
     RA_DoAchievementsFrame();
   }
 
-  // render
-  _video.draw();
-  SDL_GL_SwapWindow(_window);
+  // do a final frame with video and no audio
+  _core.step(true, false);
+  RA_DoAchievementsFrame();
 
   const auto tTurboEnd = std::chrono::steady_clock::now();
   const auto tTurboElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(tTurboEnd - tTurboStart);
@@ -468,12 +481,8 @@ void Application::runSmoothed()
   constexpr int STARTUP_FRAMES = 2;
   for (int i = 0; i < STARTUP_FRAMES; ++i)
   {
-    _core.step(true);
+    _core.step(true, true);
     RA_DoAchievementsFrame();
-
-    // render it
-    _video.draw();
-    SDL_GL_SwapWindow(_window);
   }
 
   const auto tFirstFrameEnd = std::chrono::steady_clock::now();
@@ -511,14 +520,10 @@ void Application::runSmoothed()
     }
 
     // state is running - do one frame with audio
-    _core.step(true);
-    RA_DoAchievementsFrame();
-
     if (!skipFrame)
     {
       // render it
-      _video.draw();
-      SDL_GL_SwapWindow(_window);
+      _core.step(true, true);
 
       skippedFrames = 0;
 
@@ -543,14 +548,20 @@ void Application::runSmoothed()
         skippedFrames = 0;
 
         // render it
-        _video.draw();
-        SDL_GL_SwapWindow(_window);
+        _core.step(true, true);
 
 #ifdef DEBUG_FRAMERATE
         renders[frameIndex] = 'F';
 #endif
       }
+      else
+      {
+        // dont render it
+        _core.step(false, true);
+      }
     }
+
+    RA_DoAchievementsFrame();
 
     const auto tFrameEnd = std::chrono::steady_clock::now();
     const auto tFrameElapsed = std::chrono::duration_cast<std::chrono::microseconds>(tFrameEnd - tFrameStart);
@@ -726,6 +737,8 @@ void Application::runSmoothed()
 
 void Application::run()
 {
+  _video.clear();
+
   do
   {
     // handle any pending events
@@ -747,7 +760,7 @@ void Application::run()
 
       case Fsm::State::FrameStep:
         // do one frame without audio
-        _core.step(false);
+        _core.step(true, false);
         RA_DoAchievementsFrame();
 
         // set state to GamePaused
@@ -762,10 +775,6 @@ void Application::run()
       case Fsm::State::Quit:
         return;
     }
-
-    // render
-    _video.draw();
-    SDL_GL_SwapWindow(_window);
 
     // handle overlay navigation
     if (RA_IsOverlayFullyVisible())
@@ -1303,6 +1312,7 @@ void Application::resetGame()
   if (isGameActive())
   {
     _core.resetGame();
+    _video.clear();
     RA_OnReset();
   }
 }
@@ -1329,6 +1339,8 @@ bool Application::unloadGame()
   }
 
   romUnloaded(&_logger);
+
+  _video.clear();
 
   return true;
 }
@@ -1761,7 +1773,7 @@ void Application::loadState(const std::string& path)
   _video.getFramebufferSize(&width, &height, &format);
 
   unsigned image_width, image_height;
-  const void* pixels = util::loadImage(&_logger, path + ".png", &image_width, &image_height, &pitch);
+  void* pixels = util::loadImage(&_logger, path + ".png", &image_width, &image_height, &pitch);
   if (pixels == NULL)
   {
     _logger.error(TAG "Error loading savestate screenshot");
@@ -1771,7 +1783,7 @@ void Application::loadState(const std::string& path)
   /* if the widths aren't the same, the stride differs and we can't just load the pixels */
   if (image_width == width)
   {
-    const void* converted = util::fromRgb(&_logger, pixels, image_width, image_height, &pitch, format);
+    void* converted = util::fromRgb(&_logger, pixels, image_width, image_height, &pitch, format);
     if (converted == NULL)
     {
       _logger.error(TAG "Error converting savestate screenshot to the framebuffer format");

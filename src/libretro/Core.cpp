@@ -110,13 +110,28 @@ namespace
     }
   };
 
+  class VideoContext : public libretro::VideoContextComponent
+  {
+  public:
+    virtual void swapBuffers() override
+    {
+    }
+  };
+
   class Video: public libretro::VideoComponent
   {
   public:
-    virtual bool setGeometry(unsigned width, unsigned height, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback) override
+    virtual void setEnabled(bool enabled) override
+    {
+      (void)enabled;
+    }
+
+    virtual bool setGeometry(unsigned width, unsigned height, unsigned maxWidth, unsigned maxHeight, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback) override
     {
       (void)width;
       (void)height;
+      (void)maxWidth;
+      (void)maxHeight;
       (void)pixelFormat;
       (void)hwRenderCallback;
       return false;
@@ -233,12 +248,13 @@ namespace
 }
 
 // Instances of the dummy components to use in CoreWrap instances by default
-static Logger    s_logger;
-static Config    s_config;
-static Video     s_video;
-static Audio     s_audio;
-static Input     s_input;
-static Allocator s_allocator;
+static Logger       s_logger;
+static Config       s_config;
+static VideoContext s_videoContext;
+static Video        s_video;
+static Audio        s_audio;
+static Input        s_input;
+static Allocator    s_allocator;
 
 // Helper function for the memory map interface
 static bool preprocessMemoryDescriptors(struct retro_memory_descriptor* descriptors, unsigned num_descriptors);
@@ -247,21 +263,23 @@ bool libretro::Core::init(const Components* components)
 {
   InstanceSetter instance_setter(this);
 
-  _logger    = &s_logger;
-  _config    = &s_config;
-  _video     = &s_video;
-  _audio     = &s_audio;
-  _input     = &s_input;
-  _allocator = &s_allocator;
+  _logger       = &s_logger;
+  _config       = &s_config;
+  _videoContext = &s_videoContext;
+  _video        = &s_video;
+  _audio        = &s_audio;
+  _input        = &s_input;
+  _allocator    = &s_allocator;
 
   if (components != NULL)
   {
-    if (components->logger != NULL)    _logger    = components->logger;
-    if (components->config != NULL)    _config    = components->config;
-    if (components->video != NULL)     _video     = components->video;
-    if (components->audio != NULL)     _audio     = components->audio;
-    if (components->input != NULL)     _input     = components->input;
-    if (components->allocator != NULL) _allocator = components->allocator;
+    if (components->logger != NULL)       _logger       = components->logger;
+    if (components->config != NULL)       _config       = components->config;
+    if (components->videoContext != NULL) _videoContext = components->videoContext;
+    if (components->video != NULL)        _video        = components->video;
+    if (components->audio != NULL)        _audio        = components->audio;
+    if (components->input != NULL)        _input        = components->input;
+    if (components->allocator != NULL)    _allocator    = components->allocator;
   }
 
   reset();
@@ -362,7 +380,7 @@ void libretro::Core::destroy()
   reset();
 }
 
-void libretro::Core::step(bool generate_audio)
+void libretro::Core::step(bool generateVideo, bool generateAudio)
 {
   InstanceSetter instance_setter(this);
 
@@ -380,12 +398,15 @@ void libretro::Core::step(bool generate_audio)
     }
   }
 
+  _video->setEnabled(generateVideo);
+
   _samplesCount = 0;
 
   _core.run();
   
-  if (generate_audio && _samplesCount > 0)
+  if (generateAudio && _samplesCount > 0)
   {
+    // _samples are 2-channel (stereo)
     _audio->mix(_samples, _samplesCount / 2);
   }
 }
@@ -497,7 +518,7 @@ bool libretro::Core::initAV()
 
   const struct retro_hw_render_callback* cb = _needsHardwareRender ? &_hardwareRenderCallback : NULL;
 
-  if (!_video->setGeometry(_systemAVInfo.geometry.base_width, _systemAVInfo.geometry.base_height, _systemAVInfo.geometry.aspect_ratio, _pixelFormat, cb))
+  if (!_video->setGeometry(_systemAVInfo.geometry.base_width, _systemAVInfo.geometry.base_height, _systemAVInfo.geometry.max_width, _systemAVInfo.geometry.max_height, _systemAVInfo.geometry.aspect_ratio, _pixelFormat, cb))
   {
     goto error;
   }
@@ -917,7 +938,7 @@ bool libretro::Core::setSystemAVInfo(const struct retro_system_av_info* data)
 
   const struct retro_hw_render_callback* cb = _needsHardwareRender ? &_hardwareRenderCallback : NULL;
 
-  if (!_video->setGeometry(_systemAVInfo.geometry.base_width, _systemAVInfo.geometry.base_height, _systemAVInfo.geometry.aspect_ratio, _pixelFormat, cb))
+  if (!_video->setGeometry(_systemAVInfo.geometry.base_width, _systemAVInfo.geometry.base_height, _systemAVInfo.geometry.max_width, _systemAVInfo.geometry.max_height, _systemAVInfo.geometry.aspect_ratio, _pixelFormat, cb))
   {
     return false;
   }
@@ -1214,7 +1235,7 @@ bool libretro::Core::setGeometry(const struct retro_game_geometry* data)
 
   const struct retro_hw_render_callback* cb = _needsHardwareRender ? &_hardwareRenderCallback : NULL;
 
-  if (!_video->setGeometry(_systemAVInfo.geometry.base_width, _systemAVInfo.geometry.base_height, _systemAVInfo.geometry.aspect_ratio, _pixelFormat, cb))
+  if (!_video->setGeometry(_systemAVInfo.geometry.base_width, _systemAVInfo.geometry.base_height, _systemAVInfo.geometry.max_width, _systemAVInfo.geometry.max_height, _systemAVInfo.geometry.aspect_ratio, _pixelFormat, cb))
   {
     return false;
   }

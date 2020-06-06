@@ -44,7 +44,7 @@ namespace libretro
 
     void destroy();
     
-    void step(bool generate_audio);
+    void step(bool generateVideo, bool generateAudio);
 
     unsigned getApiVersion();
     unsigned getRegion();
@@ -195,6 +195,7 @@ namespace libretro
     
     LoggerComponent*                _logger;
     ConfigComponent*                _config;
+    VideoContextComponent*          _videoContext;
     VideoComponent*                 _video;
     AudioComponent*                 _audio;
     InputComponent*                 _input;

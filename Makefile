@@ -56,6 +56,7 @@ OBJS=\
 	src/components/Input.o \
 	src/components/Logger.o \
 	src/components/Video.o \
+	src/components/VideoContext.o \
 	src/miniz/miniz.o \
 	src/miniz/miniz_tdef.o \
 	src/miniz/miniz_tinfl.o \

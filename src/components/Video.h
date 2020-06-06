@@ -28,12 +28,15 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 class Video: public libretro::VideoComponent
 {
 public:
-  bool init(libretro::LoggerComponent* logger, Config* config);
+  bool init(libretro::LoggerComponent* logger, libretro::VideoContextComponent* ctx, Config* config);
   void destroy();
 
-  void draw();
+  virtual void setEnabled(bool enabled) override;
 
-  virtual bool setGeometry(unsigned width, unsigned height, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback) override;
+  void clear();
+  void draw(bool force = false);
+
+  virtual bool setGeometry(unsigned width, unsigned height, unsigned maxWidth, unsigned maxHeight, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback) override;
   virtual void refresh(const void* data, unsigned width, unsigned height, size_t pitch) override;
 
   virtual bool                 supportsContext(enum retro_hw_context_type type) override;
@@ -45,7 +48,7 @@ public:
   void windowResized(unsigned width, unsigned height);
   void getFramebufferSize(unsigned* width, unsigned* height, enum retro_pixel_format* format);
   const void* getFramebuffer(unsigned* width, unsigned* height, unsigned* pitch, enum retro_pixel_format* format);
-  void setFramebuffer(const void* pixels, unsigned width, unsigned height, unsigned pitch);
+  void setFramebuffer(void* pixels, unsigned width, unsigned height, unsigned pitch);
 
   std::string serialize();
   void deserialize(const char* json);
@@ -65,16 +68,23 @@ public:
 
 protected:
   GLuint createProgram(GLint* pos, GLint* uv, GLint* tex);
-  GLuint createVertexBuffer(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv);
+  bool ensureVertexArray(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv);
   GLuint createTexture(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linear);
+  bool ensureFramebuffer(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linearFilter);
+  bool ensureView(unsigned width, unsigned height, unsigned windowWidth, unsigned windowHeight, bool preserveAspect, Rotation rotation);
+  void postHwRenderReset() const;
 
   libretro::LoggerComponent* _logger;
+  libretro::VideoContextComponent* _ctx;
   Config* _config;
+
+  bool                    _enabled;
 
   GLuint                  _program;
   GLint                   _posAttribute;
   GLint                   _uvAttribute;
   GLint                   _texUniform;
+  GLuint                  _vertexArray;
   GLuint                  _vertexBuffer;
   GLuint                  _texture;
 
@@ -91,5 +101,12 @@ protected:
 
   bool                    _preserveAspect;
   bool                    _linearFilter;
+
+  struct {
+    bool enabled;
+    GLuint frameBuffer;
+    GLuint renderBuffer;
+    const retro_hw_render_callback *callback;
+  }                       _hw;
 };
 

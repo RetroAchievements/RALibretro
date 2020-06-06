@@ -376,6 +376,16 @@ void Config::showDialog(const std::string& coreName, Input& input)
       else
       {
         _selections[var._key] = var._options[var._selected];
+
+        // remember the selection for next time
+        for (auto& actualVar : _variables)
+        {
+          if (actualVar._key == var._key)
+          {
+            actualVar._selected = var._selected;
+            break;
+          }
+        }
       }
     }
   }
