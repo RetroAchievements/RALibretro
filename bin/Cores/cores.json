@@ -90,6 +90,11 @@
     "extensions": "m3u|cue",
     "systems": [12]
   },
+  "mednafen_psx_hw_libretro":{
+    "name": "Beetle PSX HW",
+    "extensions": "m3u|cue",
+    "systems": [12]
+  },
   "mednafen_saturn_libretro":{
     "name": "Beetle Saturn",
     "extensions": "m3u|cue",
