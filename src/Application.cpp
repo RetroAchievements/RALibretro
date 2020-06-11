@@ -1352,6 +1352,13 @@ bool Application::unloadGame()
 
   _video.clear();
 
+  _gamePath.clear();
+  _gameFileName.clear();
+  _states.setGame(_gameFileName, 0, _coreName, &_core);
+
+  _validSlots = 0;
+  enableSlots();
+
   return true;
 }
 
@@ -2139,6 +2146,10 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       _video.showDialog();
       break;
     
+    case IDM_SAVING_CONFIG:
+      _states.showDialog();
+      break;
+
     case IDM_WINDOW_1X:
     case IDM_WINDOW_2X:
     case IDM_WINDOW_3X:

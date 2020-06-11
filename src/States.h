@@ -46,6 +46,8 @@ public:
   std::string serializeSettings() const;
   bool        deserializeSettings(const char* json);
 
+  void        showDialog();
+
 protected:
   enum Path
   {
@@ -57,6 +59,9 @@ protected:
   };
   Path _sramPath = Path::Saves;
   Path _statePath = Path::Saves;
+
+  static const States::Path States::_sramPaths[];
+  static const States::Path States::_statePaths[];
 
   Logger* _logger;
   Config* _config;
@@ -74,7 +79,4 @@ private:
 
   std::string getSRamPath(Path path) const;
   std::string getStatePath(unsigned ndx, Path path) const;
-
-  static const States::Path States::_savePaths[];
-  static const States::Path States::_statePaths[];
 };

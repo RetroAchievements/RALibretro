@@ -38,6 +38,8 @@ along with RALibRetro.  If not, see <http://www.gnu.org/licenses/>.
 
 #define TAG "[SAV] "
 
+extern HWND g_mainWindow;
+
 bool States::init(Logger* logger, Config* config, Video* video)
 {
   _logger = logger;
@@ -252,7 +254,7 @@ bool States::existsState(unsigned ndx)
   return util::exists(path);
 }
 
-const States::Path States::_savePaths[] =
+const States::Path States::_sramPaths[] =
 {
   (States::Path)(States::Path::Saves),
   (States::Path)(States::Path::Saves | States::Path::Core),
@@ -281,8 +283,6 @@ const States::Path States::_statePaths[] =
   (States::Path)(States::Path::State | States::Path::System | States::Path::Core | States::Path::Game),
 };
 
-extern HWND g_mainWindow;
-
 void States::migrateFiles()
 {
   Path testPath;
@@ -292,9 +292,9 @@ void States::migrateFiles()
   if (!util::exists(sramPath))
   {
     testPath = _sramPath;
-    for (int i = 0; i < sizeof(_savePaths) / sizeof(_savePaths[0]); ++i)
+    for (int i = 0; i < sizeof(_sramPaths) / sizeof(_sramPaths[0]); ++i)
     {
-      std::string path = getSRamPath(_savePaths[i]);
+      std::string path = getSRamPath(_sramPaths[i]);
       if (util::exists(path))
       {
         testPath = (Path)i;
@@ -457,4 +457,118 @@ bool States::deserializeSettings(const char* json)
   });
 
   return (res == JSONSAX_OK);
+}
+
+/* helper class to access protected data in class via static callback function */
+class StatesPathAccessor : public States
+{
+public:
+  int getSramPathOption(int index)
+  {
+    if (index >= sizeof(_sramPaths) / sizeof(_sramPaths[0]))
+      return -1;
+
+    return _sramPaths[index];
+  }
+
+  int getStatePathOption(int index)
+  {
+    if (index >= sizeof(_statePaths) / sizeof(_statePaths[0]))
+      return -1;
+
+    return _statePaths[index];
+  }
+};
+
+static std::string s_pathOptions[16];
+
+const char* s_getSramPathOptions(int index, void* udata)
+{
+  StatesPathAccessor accessor;
+  index = accessor.getSramPathOption(index);
+  if (index < 0)
+    return NULL;
+
+  return s_pathOptions[index].c_str();
+}
+
+const char* s_getStatePathOptions(int index, void* udata)
+{
+  StatesPathAccessor accessor;
+  index = accessor.getStatePathOption(index);
+  if (index < 0)
+    return NULL;
+
+  return s_pathOptions[index].c_str();
+}
+
+void States::showDialog()
+{
+  if (!_gameFileName.empty())
+  {
+    MessageBox(g_mainWindow, "Saving settings cannot be changed with a game loaded.", "RALibRetro", MB_OK);
+    return;
+  }
+
+  const WORD WIDTH = 180;
+  const WORD LINE = 15;
+
+  Dialog db;
+  db.init("Saving Settings");
+
+  if (s_pathOptions[0].empty())
+  {
+    for (unsigned i = 0; i < sizeof(s_pathOptions) / sizeof(s_pathOptions[0]); ++i)
+    {
+      std::string& option = s_pathOptions[i];
+      if (i & States::Path::State)
+        option = "States";
+      else
+        option = "Saves";
+
+      if (i & States::Path::System)
+        option += "\\[System]";
+      if (i & States::Path::Core)
+        option += "\\[Core]";
+      if (i & States::Path::Game)
+        option += "\\[Game]";
+    }
+  }
+
+  WORD y = 0;
+
+  int sramPath = 0;
+  for (int i = 0; i < sizeof(_sramPaths) / sizeof(_sramPaths[0]); ++i)
+  {
+    if (_sramPaths[i] == _sramPath)
+    {
+      sramPath = i;
+      break;
+    }
+  }
+  db.addLabel("SRAM Path", 51001, 0, y, 50, 8);
+  db.addCombobox(51002, 55, y - 2, WIDTH - 55, 12, 140, s_getSramPathOptions, NULL, &sramPath);
+  y += LINE;
+
+  int statePath = 0;
+  for (int i = 0; i < sizeof(_statePaths) / sizeof(_statePaths[0]); ++i)
+  {
+    if (_statePaths[i] == _statePath)
+    {
+      statePath = i;
+      break;
+    }
+  }
+  db.addLabel("Save State Path", 51003, 0, y, 50, 8);
+  db.addCombobox(51004, 55, y - 2, WIDTH - 55, 12, 140, s_getStatePathOptions, NULL, &statePath);
+  y += LINE;
+
+  db.addButton("OK", IDOK, WIDTH - 55 - 50, y, 50, 14, true);
+  db.addButton("Cancel", IDCANCEL, WIDTH - 50, y, 50, 14, false);
+
+  if (db.show())
+  {
+    _sramPath = _sramPaths[sramPath];
+    _statePath = _statePaths[statePath];
+  }
 }
