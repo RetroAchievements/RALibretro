@@ -30,24 +30,51 @@ class States
 public:
   bool init(Logger* logger, Config* config, Video* video);
 
-  void setGame(const std::string& gameFileName, const std::string& coreName, libretro::Core* core);
+  void setGame(const std::string& gameFileName, int system, const std::string& coreName, libretro::Core* core);
 
-  std::string getSRamPath();
-  std::string getStatePath(unsigned ndx);
+  std::string getSRamPath() const;
+  std::string getStatePath(unsigned ndx) const;
 
   void        saveState(const std::string& path);
   void        saveState(unsigned ndx);
   bool        loadState(const std::string& path);
   bool        loadState(unsigned ndx);
 
+  void        migrateFiles();
   bool        existsState(unsigned ndx);
 
+  std::string serializeSettings() const;
+  bool        deserializeSettings(const char* json);
+
 protected:
+  enum Path
+  {
+    Saves = 0x00,
+    State = 0x01,
+    System = 0x02,
+    Core = 0x04,
+    Game = 0x08
+  };
+  Path _sramPath = Path::Saves;
+  Path _statePath = Path::Saves;
+
   Logger* _logger;
   Config* _config;
   Video* _video;
 
   std::string _gameFileName;
+  int _system;
   std::string _coreName;
   libretro::Core* _core;
+
+private:
+  std::string buildPath(Path path) const;
+  static std::string encodePath(Path path);
+  static Path decodePath(const std::string& shorthand);
+
+  std::string getSRamPath(Path path) const;
+  std::string getStatePath(unsigned ndx, Path path) const;
+
+  static const States::Path States::_savePaths[];
+  static const States::Path States::_statePaths[];
 };

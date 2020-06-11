@@ -41,6 +41,8 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 namespace util
 {
   time_t      fileTime(const std::string& path);
+  bool        exists(const std::string& path);
+
   FILE*       openFile(Logger* logger, const std::string& path, const char* mode);
   std::string loadFile(Logger* logger, const std::string& path);
   void*       loadFile(Logger* logger, const std::string& path, size_t* size);
@@ -64,6 +66,9 @@ namespace util
   std::string fileNameWithExtension(const std::string& path);
   std::string extension(const std::string& path);
   std::string replaceFileName(const std::string& originalPath, const char* newFileName);
+
+  std::string directory(const std::string& path);
+  void        ensureDirectoryExists(const std::string& path);
 
 #ifdef _WINDOWS
   std::string openFileDialog(HWND hWnd, const std::string& extensionsFilter);

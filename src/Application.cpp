@@ -810,6 +810,10 @@ void Application::saveConfiguration()
   json += ",\"bindings\":";
   json += _keybinds.serializeBindings();
 
+  // saves
+  json += ",\"saves\":";
+  json += _states.serializeSettings();
+
   // window position
   const Uint32 flags = SDL_GetWindowFlags(_window);
   if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
@@ -1209,7 +1213,7 @@ bool Application::loadGame(const std::string& path)
     free(data);
   }
 
-  _states.setGame(_gameFileName, _coreName, &_core);
+  _states.setGame(_gameFileName, _system, _coreName, &_core);
 
   // reset the vertical sync flag
   SDL_GL_SetSwapInterval(1);
@@ -1281,6 +1285,8 @@ moved_recent_item:
   _memory.attachToCore(&_core, _system);
 
   _validSlots = 0;
+
+  _states.migrateFiles();
 
   for (unsigned ndx = 1; ndx <= 10; ndx++)
   {
@@ -1935,6 +1941,13 @@ void Application::loadConfiguration()
       else if (ud->key == "bindings" && event == JSONSAX_OBJECT)
       {
         if (!ud->self->_keybinds.deserializeBindings(str))
+        {
+          return -1;
+        }
+      }
+      else if (ud->key == "saves" && event == JSONSAX_OBJECT)
+      {
+        if (!ud->self->_states.deserializeSettings(str))
         {
           return -1;
         }

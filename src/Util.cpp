@@ -84,6 +84,11 @@ time_t util::fileTime(const std::string& path)
   }
 }
 
+bool util::exists(const std::string& path)
+{
+  return util::fileTime(path) != 0;
+}
+
 FILE* util::openFile(Logger* logger, const std::string& path, const char* mode)
 {
   FILE* file;
@@ -543,6 +548,29 @@ std::string util::replaceFileName(const std::string& originalPath, const char* n
 
   newPath.replace(newPath.begin() + ndx + 1, newPath.end(), newFileName);
   return newPath;
+}
+
+std::string util::directory(const std::string& path)
+{
+  std::string newPath = path;
+#ifdef _WIN32
+  const auto ndx = newPath.find_last_of('\\');
+#else
+  const auto ndx = newPath.find_last_of('/');
+#endif
+  if (ndx != std::string::npos)
+    newPath.erase(ndx, path.length() - ndx);
+
+  return newPath;
+}
+
+void util::ensureDirectoryExists(const std::string& directory)
+{
+  if (!util::exists(directory))
+  {
+    /* warning: this requires a full path */
+    SHCreateDirectoryEx(NULL, directory.c_str(), NULL);
+  }
 }
 
 #ifdef _WINDOWS

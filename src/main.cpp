@@ -59,7 +59,7 @@ void loadROM(const char* path)
 
 int main(int argc, char* argv[])
 {
-  bool ok = app.init("RALibretro", 640, 480);
+  bool ok = app.init("RALibRetro", 640, 480);
 
   if (ok)
   {
