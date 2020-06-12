@@ -68,7 +68,10 @@ namespace util
   std::string replaceFileName(const std::string& originalPath, const char* newFileName);
 
   std::string directory(const std::string& path);
+
+#ifdef _WINDOWS
   void        ensureDirectoryExists(const std::string& path);
+#endif
 
 #ifdef _WINDOWS
   std::string openFileDialog(HWND hWnd, const std::string& extensionsFilter);

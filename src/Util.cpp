@@ -564,6 +564,7 @@ std::string util::directory(const std::string& path)
   return newPath;
 }
 
+#ifdef _WINDOWS
 void util::ensureDirectoryExists(const std::string& directory)
 {
   if (!util::exists(directory))
@@ -572,6 +573,7 @@ void util::ensureDirectoryExists(const std::string& directory)
     SHCreateDirectoryEx(NULL, directory.c_str(), NULL);
   }
 }
+#endif
 
 #ifdef _WINDOWS
 std::string util::openFileDialog(HWND hWnd, const std::string& extensionsFilter)
