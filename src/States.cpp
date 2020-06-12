@@ -56,35 +56,32 @@ void States::setGame(const std::string& gameFileName, int system, const std::str
   _system = system;
   _coreName = coreName;
   _core = core;
+
+  _config->setSaveDirectory(buildPath(_sramPath));
 }
 
 std::string States::buildPath(Path path) const
 {
-  std::string savePath;
+  std::string savePath = _config->getRootFolder();
 
   if (path & Path::State)
-  {
-    savePath = _config->getRootFolder();
     savePath += "States\\";
-  }
   else
-  {
-    savePath = _config->getSaveDirectory();
-  }
+    savePath += "Saves\\";
 
-  if (path & Path::System)
+  if ((path & Path::System) && _system)
   {
     savePath += rc_console_name(_system);
     savePath += '\\';
   }
 
-  if (path & Path::Core)
+  if ((path & Path::Core) && _core->getSystemInfo()->library_name)
   {
     savePath += _core->getSystemInfo()->library_name;
     savePath += '\\';
   }
 
-  if (path & Path::Game)
+  if ((path & Path::Game) && !_gameFileName.empty())
     savePath += util::fileName(_gameFileName) + "\\";
 
   return savePath;
@@ -328,11 +325,15 @@ void States::migrateFiles()
   }
 
   testPath = _statePath;
-  for (unsigned ndx = 1; ndx <= 10; ndx++)
+  for (int i = 0; i < sizeof(_statePaths) / sizeof(_statePaths[0]); ++i)
   {
-    for (int i = 0; i < sizeof(_statePaths) / sizeof(_statePaths[0]); ++i)
+    std::string statePath = buildPath(_statePaths[i]);
+    if (!util::exists(statePath))
+      continue;
+
+    for (unsigned ndx = 1; ndx <= 10; ndx++)
     {
-      std::string statePath = getStatePath(ndx, _statePaths[i]);
+      statePath = getStatePath(ndx, _statePaths[i]);
       if (util::exists(statePath))
       {
         testPath = _statePaths[i];

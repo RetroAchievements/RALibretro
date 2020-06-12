@@ -884,6 +884,9 @@ bool Application::loadCore(const std::string& coreName)
 
   _video.setRotation(Video::Rotation::None);
 
+  /* attempt to update save path before loading the core - some cores get the save directory before loading a game */
+  _states.setGame("", _system, coreName, &_core);
+
   if (!_core.init(&_components))
   {
     return false;
@@ -1159,6 +1162,9 @@ bool Application::loadGame(const std::string& path)
     unzippedFileName = util::fileNameWithExtension(path);
   }
 
+  /* must update save path before loading the game */
+  _states.setGame(unzippedFileName, _system, _coreName, &_core);
+
   if (info->need_fullpath)
   {
     loaded = _core.loadGame(path.c_str(), NULL, 0);
@@ -1212,8 +1218,6 @@ bool Application::loadGame(const std::string& path)
   {
     free(data);
   }
-
-  _states.setGame(_gameFileName, _system, _coreName, &_core);
 
   // reset the vertical sync flag
   SDL_GL_SetSwapInterval(1);
@@ -2063,11 +2067,11 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     case IDM_LOAD_RECENT_10:
     {
       const auto& recent = _recentList[cmd - IDM_LOAD_RECENT_1];
+      _system = recent.system;
       if (_fsm.loadCore(recent.coreName))
-      {
-        _system = recent.system;
         _fsm.loadGame(recent.path);
-      }
+      else
+        _system = 0;
       break;
     }
     
@@ -2199,10 +2203,9 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       }
       else if (cmd >= IDM_SYSTEM_FIRST && cmd <= IDM_SYSTEM_LAST)
       {
-        int system;
-        const std::string& coreName = getCoreName(cmd - IDM_SYSTEM_FIRST, system);
-        if (_fsm.loadCore(coreName))
-          _system = system;
+        const std::string& coreName = getCoreName(cmd - IDM_SYSTEM_FIRST, _system);
+        if (!_fsm.loadCore(coreName))
+          _system = 0;
       }
 
       break;
