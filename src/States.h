@@ -60,8 +60,8 @@ protected:
   Path _sramPath = Path::Saves;
   Path _statePath = Path::Saves;
 
-  static const States::Path States::_sramPaths[];
-  static const States::Path States::_statePaths[];
+  static const States::Path _sramPaths[];
+  static const States::Path _statePaths[];
 
   Logger* _logger;
   Config* _config;

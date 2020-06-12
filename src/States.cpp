@@ -289,7 +289,7 @@ void States::migrateFiles()
   if (!util::exists(sramPath))
   {
     testPath = _sramPath;
-    for (int i = 0; i < sizeof(_sramPaths) / sizeof(_sramPaths[0]); ++i)
+    for (unsigned i = 0; i < sizeof(_sramPaths) / sizeof(_sramPaths[0]); ++i)
     {
       std::string path = getSRamPath(_sramPaths[i]);
       if (util::exists(path))
@@ -325,7 +325,7 @@ void States::migrateFiles()
   }
 
   testPath = _statePath;
-  for (int i = 0; i < sizeof(_statePaths) / sizeof(_statePaths[0]); ++i)
+  for (unsigned i = 0; i < sizeof(_statePaths) / sizeof(_statePaths[0]); ++i)
   {
     std::string statePath = buildPath(_statePaths[i]);
     if (!util::exists(statePath))
@@ -360,7 +360,7 @@ void States::migrateFiles()
           newPath = getStatePath(ndx, _statePath);
           if (util::exists(oldPath))
           {
-            auto res = MoveFile(oldPath.c_str(), newPath.c_str());
+            MoveFile(oldPath.c_str(), newPath.c_str());
 
             std::string oldRap = oldPath + ".rap";
             std::string newRap = newPath + ".rap";
@@ -466,7 +466,7 @@ class StatesPathAccessor : public States
 public:
   int getSramPathOption(int index)
   {
-    if (index >= sizeof(_sramPaths) / sizeof(_sramPaths[0]))
+    if ((unsigned)index >= sizeof(_sramPaths) / sizeof(_sramPaths[0]))
       return -1;
 
     return _sramPaths[index];
@@ -474,7 +474,7 @@ public:
 
   int getStatePathOption(int index)
   {
-    if (index >= sizeof(_statePaths) / sizeof(_statePaths[0]))
+    if ((unsigned)index >= sizeof(_statePaths) / sizeof(_statePaths[0]))
       return -1;
 
     return _statePaths[index];
@@ -539,7 +539,7 @@ void States::showDialog()
   WORD y = 0;
 
   int sramPath = 0;
-  for (int i = 0; i < sizeof(_sramPaths) / sizeof(_sramPaths[0]); ++i)
+  for (unsigned i = 0; i < sizeof(_sramPaths) / sizeof(_sramPaths[0]); ++i)
   {
     if (_sramPaths[i] == _sramPath)
     {
@@ -552,7 +552,7 @@ void States::showDialog()
   y += LINE;
 
   int statePath = 0;
-  for (int i = 0; i < sizeof(_statePaths) / sizeof(_statePaths[0]); ++i)
+  for (unsigned i = 0; i < sizeof(_statePaths) / sizeof(_statePaths[0]); ++i)
   {
     if (_statePaths[i] == _statePath)
     {
