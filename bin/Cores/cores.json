@@ -149,6 +149,10 @@
     "name": "VBA Next",
     "systems": [5]
   },
+  "vecx_libretro": {
+    "name": "VecX",
+    "systems": [46]
+  },
   "virtualjaguar_libretro":{
     "name": "Virtual Jaguar",
     "systems": [17]
