@@ -94,6 +94,17 @@ FILE* util::openFile(Logger* logger, const std::string& path, const char* mode)
   if (isAsciiOnly(path))
   {
     err = fopen_s(&file, path.c_str(), mode);
+#ifdef _WINDOWS
+    if (err == EACCES)
+    {
+      /* fopen_s doesn't allow sharing files. if we're just reading, try again in sharing mode */
+      if (mode[0] == 'r' && (!mode[1] || mode[1] == 'b'))
+      {
+        file = _fsopen(path.c_str(), mode, _SH_DENYNO);
+        err = (file) ? 0 : errno;
+      }
+    }
+#endif
   }
   else
   {
@@ -101,6 +112,15 @@ FILE* util::openFile(Logger* logger, const std::string& path, const char* mode)
     std::wstring unicodePath = util::utf8ToUChar(path);
     std::wstring unicodeMode = util::utf8ToUChar(mode);
     err = _wfopen_s(&file, unicodePath.c_str(), unicodeMode.c_str());
+    if (err == EACCES)
+    {
+      /* _wfopen_s doesn't allow sharing files. if we're just reading, try again in sharing mode */
+      if (mode[0] == 'r' && (!mode[1] || mode[1] == 'b'))
+      {
+        file = _wfsopen(unicodePath.c_str(), unicodeMode.c_str(), _SH_DENYNO);
+        err = (file) ? 0 : errno;
+      }
+    }
 #else
     err = EINVAL;
 #endif
