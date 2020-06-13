@@ -9,6 +9,11 @@
     "extensions": "sg",
     "systems": [33]
   },
+  "bluemsx_libretro":{
+    "name": "blueMSX",
+    "extensions": "dsk|cas|mx1|mx2|rom|ri|m3u",
+    "systems": [29]
+  },
   "bsnes_mercury_balanced_libretro":{
     "name": "bsnes-mercury (Balanced)",
     "systems": [3]
