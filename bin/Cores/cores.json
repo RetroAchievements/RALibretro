@@ -123,6 +123,10 @@
     "extensions": "gba",
     "systems": [5]
   },
+  "opera_libretro":{
+    "name": "Opera",
+    "systems": [43]
+  },
   "parallel_n64_libretro":{
     "name": "ParaLLEl N64",
     "systems": [2],

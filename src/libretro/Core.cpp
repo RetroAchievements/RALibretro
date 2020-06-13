@@ -317,12 +317,6 @@ bool libretro::Core::loadGame(const char* game_path, void* data, size_t size)
     _logger->error(TAG "Can't load game data without a ROM path");
     goto error;
   }
-
-  if (_supportsNoGame)
-  {
-    _logger->error(TAG "Core doesn't take a content to run");
-    goto error;
-  }
   
   retro_game_info game;
   game.path = game_path;
@@ -351,6 +345,7 @@ bool libretro::Core::loadGame(const char* game_path, void* data, size_t size)
     for (unsigned i = 0; i < count; i++, info++)
     {
       _core.setControllerPortDevice(i, RETRO_DEVICE_NONE);
+      _ports[i] = RETRO_DEVICE_NONE;
     }
   }
   
@@ -1538,7 +1533,7 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
   default:
     cmd &= ~(RETRO_ENVIRONMENT_EXPERIMENTAL | RETRO_ENVIRONMENT_PRIVATE);
 
-    if ((_calls[cmd / 8] & (1 << (cmd & 7))) == 0)
+    if ((cmd < sizeof(_calls) * 8) && (_calls[cmd / 8] & (1 << (cmd & 7))) == 0)
     {
       _logger->error(TAG "Unimplemented env call: %s", name, cmd);
       _calls[cmd / 8] |= 1 << (cmd & 7);
