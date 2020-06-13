@@ -9,6 +9,11 @@
     "extensions": "sg",
     "systems": [33]
   },
+  "bluemsx_libretro":{
+    "name": "blueMSX",
+    "extensions": "dsk|cas|mx1|mx2|rom|ri|m3u",
+    "systems": [29]
+  },
   "bsnes_mercury_balanced_libretro":{
     "name": "bsnes-mercury (Balanced)",
     "systems": [3]
@@ -90,6 +95,11 @@
     "extensions": "m3u|cue",
     "systems": [12]
   },
+  "mednafen_psx_hw_libretro":{
+    "name": "Beetle PSX HW",
+    "extensions": "m3u|cue",
+    "systems": [12]
+  },
   "mednafen_saturn_libretro":{
     "name": "Beetle Saturn",
     "extensions": "m3u|cue",
@@ -116,6 +126,10 @@
   "opera_libretro":{
     "name": "Opera",
     "systems": [43]
+  },
+  "parallel_n64_libretro":{
+    "name": "ParaLLEl N64",
+    "systems": [2],
   },
   "pcsx_rearmed_libretro":{
     "name": "PCSX-ReARMed",
@@ -152,6 +166,10 @@
   "vba_next_libretro":{
     "name": "VBA Next",
     "systems": [5]
+  },
+  "vecx_libretro": {
+    "name": "VecX",
+    "systems": [46]
   },
   "virtualjaguar_libretro":{
     "name": "Virtual Jaguar",
