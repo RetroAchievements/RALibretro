@@ -167,6 +167,21 @@
     "name": "VBA Next",
     "systems": [5]
   },
+  "vbam_libretro":{
+    "name": "Mednafen VBA-M",
+    "extensions": "gb",
+    "systems": [4]
+  },
+  "vbam_libretro":{
+    "name": "Mednafen VBA-M",
+    "extensions": "gbc",
+    "systems": [5]
+  },
+  "vbam_libretro":{
+    "name": "Mednafen VBA-M",
+    "extensions": "gba",
+    "systems": [6]
+  },
   "vecx_libretro": {
     "name": "VecX",
     "systems": [46]
