@@ -623,12 +623,6 @@ void libretro::Core::setCurrentDiscIndex(unsigned index)
     _diskControlInterface->set_image_index(index);
 }
 
-bool libretro::Core::shutdown()
-{
-  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
-  return false;
-}
-
 bool libretro::Core::setPerformanceLevel(unsigned data)
 {
   _logger->info(TAG "Performance level %u reported", data);
@@ -702,13 +696,6 @@ bool libretro::Core::setInputDescriptors(const struct retro_input_descriptor* da
   }
 
   _input->setInputDescriptors(_inputDescriptors, _inputDescriptorsCount);
-  return true;
-}
-
-bool libretro::Core::setKeyboardCallback(const struct retro_keyboard_callback* data)
-{
-  (void)data;
-  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
   return true;
 }
 
@@ -834,27 +821,6 @@ bool libretro::Core::getLibretroPath(const char** data) const
   return true;
 }
 
-bool libretro::Core::setFrameTimeCallback(const struct retro_frame_time_callback* data)
-{
-  (void)data;
-  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
-  return false;
-}
-
-bool libretro::Core::setAudioCallback(const struct retro_audio_callback* data)
-{
-  (void)data;
-  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
-  return false;
-}
-
-bool libretro::Core::getRumbleInterface(struct retro_rumble_interface* data) const
-{
-  (void)data;
-  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
-  return false;
-}
-
 bool libretro::Core::getInputDeviceCapabilities(uint64_t* data) const
 {
   *data = (
@@ -866,38 +832,10 @@ bool libretro::Core::getInputDeviceCapabilities(uint64_t* data) const
   return false;
 }
 
-bool libretro::Core::getSensorInterface(struct retro_sensor_interface* data) const
-{
-  (void)data;
-  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
-  return false;
-}
-
-bool libretro::Core::getCameraInterface(struct retro_camera_callback* data) const
-{
-  (void)data;
-  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
-  return false;
-}
-
 bool libretro::Core::getLogInterface(struct retro_log_callback* data) const
 {
   data->log = s_logCallback;
   return true;
-}
-
-bool libretro::Core::getPerfInterface(struct retro_perf_callback* data) const
-{
-  (void)data;
-  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
-  return false;
-}
-
-bool libretro::Core::getLocationInterface(struct retro_location_callback* data) const
-{
-  (void)data;
-  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
-  return false;
 }
 
 bool libretro::Core::getCoreAssetsDirectory(const char** data) const
@@ -939,13 +877,6 @@ bool libretro::Core::setSystemAVInfo(const struct retro_system_av_info* data)
   }
 
   return true;
-}
-
-bool libretro::Core::setProcAddressCallback(const struct retro_get_proc_address_interface* data)
-{
-  (void)data;
-  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
-  return false;
 }
 
 bool libretro::Core::setSubsystemInfo(const struct retro_subsystem_info* data)
@@ -1254,20 +1185,6 @@ bool libretro::Core::getLanguage(unsigned* data) const
   return true;
 }
 
-bool libretro::Core::getCurrentSoftwareFramebuffer(struct retro_framebuffer* data) const
-{
-  (void)data;
-  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
-  return false;
-}
-
-bool libretro::Core::getHWRenderInterface(const struct retro_hw_render_interface** data) const
-{
-  (void)data;
-  _logger->error(TAG "%s isn't implemented", __FUNCTION__);
-  return false;
-}
-
 bool libretro::Core::setSupportAchievements(bool data)
 {
   _supportAchievements = data;
@@ -1348,7 +1265,7 @@ static void getEnvName(char* name, size_t size, unsigned cmd)
     "SET_DISK_CONTROL_EXT_INTERFACE",
   };
 
-  cmd &= ~(RETRO_ENVIRONMENT_EXPERIMENTAL | RETRO_ENVIRONMENT_PRIVATE);
+  cmd &= ~RETRO_ENVIRONMENT_EXPERIMENTAL;
 
   if (cmd < sizeof(names) / sizeof(names[0]))
   {
@@ -1386,10 +1303,6 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
     ret = setMessage((const struct retro_message*)data);
     break;
 
-  case RETRO_ENVIRONMENT_SHUTDOWN:
-    ret = shutdown();
-    break;
-
   case RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL:
     ret = setPerformanceLevel(*(unsigned*)data);
     break;
@@ -1404,10 +1317,6 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
 
   case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS:
     ret = setInputDescriptors((const struct retro_input_descriptor*)data);
-    break;
-
-  case RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK:
-    ret = setKeyboardCallback((const struct retro_keyboard_callback*)data);
     break;
 
   case RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE:
@@ -1438,40 +1347,12 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
     ret = getLibretroPath((const char**)data);
     break;
 
-  case RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK:
-    ret = setFrameTimeCallback((const struct retro_frame_time_callback*)data);
-    break;
-
-  case RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK:
-    ret = setAudioCallback((const struct retro_audio_callback*)data);
-    break;
-
-  case RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE:
-    ret = getRumbleInterface((struct retro_rumble_interface*)data);
-    break;
-
   case RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES:
     ret = getInputDeviceCapabilities((uint64_t*)data);
     break;
 
-  case RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE:
-    ret = getSensorInterface((struct retro_sensor_interface*)data);
-    break;
-
-  case RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE:
-    ret = getCameraInterface((struct retro_camera_callback*)data);
-    break;
-
   case RETRO_ENVIRONMENT_GET_LOG_INTERFACE:
     ret = getLogInterface((struct retro_log_callback*)data);
-    break;
-
-  case RETRO_ENVIRONMENT_GET_PERF_INTERFACE:
-    ret = getPerfInterface((struct retro_perf_callback*)data);
-    break;
-
-  case RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE:
-    ret = getLocationInterface((struct retro_location_callback*)data);
     break;
 
   case RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY:
@@ -1484,10 +1365,6 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
 
   case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO:
     ret = setSystemAVInfo((const struct retro_system_av_info*)data);
-    break;
-
-  case RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK:
-    ret = setProcAddressCallback((const struct retro_get_proc_address_interface*)data);
     break;
 
   case RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO:
@@ -1514,14 +1391,6 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
     ret = getLanguage((unsigned*)data);
     break;
 
-  case RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER:
-    ret = getCurrentSoftwareFramebuffer((struct retro_framebuffer*)data);
-    break;
-
-  case RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE:
-    ret = getHWRenderInterface((const struct retro_hw_render_interface**)data);
-    break;
-
   case RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS:
     ret = setSupportAchievements(*(bool*)data);
     break;
@@ -1531,12 +1400,23 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
     break;
 
   default:
-    cmd &= ~(RETRO_ENVIRONMENT_EXPERIMENTAL | RETRO_ENVIRONMENT_PRIVATE);
+    /* we don't care about private events */
+    if (cmd & RETRO_ENVIRONMENT_PRIVATE)
+      return false;
 
-    if ((cmd < sizeof(_calls) * 8) && (_calls[cmd / 8] & (1 << (cmd & 7))) == 0)
+    cmd &= ~RETRO_ENVIRONMENT_EXPERIMENTAL;
+    if (cmd < sizeof(_calls) * 8)
     {
-      _logger->error(TAG "Unimplemented env call: %s", name, cmd);
-      _calls[cmd / 8] |= 1 << (cmd & 7);
+      /* only log the unimplemented error once per core */
+      if ((_calls[cmd / 8] & (1 << (cmd & 7))) == 0)
+      {
+        _logger->error(TAG "Unimplemented env call: %s", name);
+        _calls[cmd / 8] |= 1 << (cmd & 7);
+      }
+    }
+    else
+    {
+      _logger->debug(TAG "Unimplemented env call: %s", name);
     }
 
     return false;
