@@ -102,8 +102,10 @@ int main(int argc, char* argv[])
     file = argv[3];
   }
 
-  if (system != 0 && !file.empty())
+  if (consoleId != 0 && !file.empty())
   {
+    file = util::fullPath(file);
+
     logger.reset(new StdErrLogger);
 
     rc_hash_init_error_message_callback(rhash_log_error);

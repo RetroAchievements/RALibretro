@@ -500,6 +500,28 @@ std::string util::jsonUnescape(const std::string& str)
   return res;
 }
 
+std::string util::fullPath(const std::string& path)
+{
+#ifdef _WIN32
+ #ifdef _WINDOWS
+  std::wstring unicodePath = util::utf8ToUChar(path);
+  wchar_t fullPath[_MAX_PATH];
+  if (_wfullpath(fullPath, unicodePath.c_str(), sizeof(fullPath) / sizeof(fullPath[0])))
+    return util::ucharToUtf8(std::wstring(fullPath));
+ #else
+  char fullPath[_MAX_PATH];
+  if (_fullpath(fullPath, path.c_str(), sizeof(fullPath) / sizeof(fullPath[0])))
+    return std::string(fullPath);
+ #endif
+#else
+  char fullPath[PATH_MAX];
+  if (realpath(path.c_str(), fullPath))
+    return std::string(fullPath);
+#endif
+
+  return path;
+}
+
 std::string util::fileNameWithExtension(const std::string& path)
 {
   const char* str = path.c_str();

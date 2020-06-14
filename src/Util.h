@@ -60,6 +60,7 @@ namespace util
   std::string jsonEscape(const std::string& str);
   std::string jsonUnescape(const std::string& str);
 
+  std::string fullPath(const std::string& path);
   std::string fileName(const std::string& path);
   std::string fileNameWithExtension(const std::string& path);
   std::string extension(const std::string& path);
