@@ -158,6 +158,63 @@ void Config::setVariables(const struct retro_variable* variables, unsigned count
   _updated = true;
 }
 
+void Config::setVariables(const struct retro_core_option_definition* options, unsigned count)
+{
+  _variables.clear();
+
+  for (unsigned i = 0; i < count; options++, i++)
+  {
+    Variable var;
+    var._key = options->key;
+    var._name = options->desc;
+    var._selected = 0;
+
+    bool hasLabels = false;
+    for (unsigned j = 0; options->values[j].value != NULL; j++)
+    {
+      if (options->values[j].label)
+      {
+        hasLabels = true;
+        break;
+      }
+    }
+
+    for (unsigned j = 0; options->values[j].value != NULL; j++)
+    {
+      const char* value = options->values[j].value;
+      if (hasLabels)
+      {
+        const char* label = options->values[j].label;
+        if (label == NULL)
+          label = value;
+
+        var._labels.push_back(label);
+      }
+
+      var._options.push_back(value);
+    }
+
+    const auto& found = _selections.find(var._key);
+
+    if (found != _selections.cend())
+    {
+      for (size_t i = 0; i < var._options.size(); i++)
+      {
+        if (var._options[i] == found->second)
+        {
+          var._selected = i;
+          _logger->info(TAG "Variable %s found in selections, set to \"%s\"", var._key.c_str(), found->second.c_str());
+          break;
+        }
+      }
+    }
+
+    _variables.push_back(var);
+  }
+
+  _updated = true;
+}
+
 bool Config::varUpdated()
 {
   bool updated = _updated;
@@ -335,9 +392,13 @@ void Config::showDialog(const std::string& coreName, Input& input)
 
     for (auto& var : variables)
     {
+      const auto* options = &var._options;
+      if (!var._labels.empty())
+        options = &var._labels;
+
       db.addLabel(var._name.c_str(), x, y + 2, HEADER_WIDTH - 5, 8);
       db.addCombobox(50000 + id, x + HEADER_WIDTH + 5, y, VALUE_WIDTH, LINE_HEIGHT, 100,
-        s_getOption, (void*)& var._options, &var._selected);
+        s_getOption, (void*)options, &var._selected);
 
       if (++id < variables.size())
       {

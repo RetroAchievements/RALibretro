@@ -40,6 +40,7 @@ public:
   virtual const char* getSystemPath() override;
 
   virtual void setVariables(const struct retro_variable* variables, unsigned count) override;
+  virtual void setVariables(const struct retro_core_option_definition* options, unsigned count) override;
   virtual bool varUpdated() override;
   virtual const char* getVariable(const char* variable) override;
 
@@ -70,6 +71,7 @@ protected:
     int         _selected;
 
     std::vector<std::string> _options;
+    std::vector<std::string> _labels;
   };
 
   static void initializeControllerVariable(Variable& variable, const char* name, const char* key, const std::map<std::string, unsigned>& names, unsigned selectedDevice);

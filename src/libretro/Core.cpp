@@ -98,6 +98,12 @@ namespace
       (void)count;
     }
 
+    virtual void setVariables(const struct retro_core_option_definition* options, unsigned count) override
+    {
+      (void)options;
+      (void)count;
+    }
+
     virtual bool varUpdated() override
     {
       return false;
@@ -549,8 +555,6 @@ void libretro::Core::reset()
   _supportAchievements = false;
   _inputDescriptorsCount = 0;
   _inputDescriptors = NULL;
-  _variablesCount = 0;
-  _variables = 0;
   memset(&_hardwareRenderCallback, 0, sizeof(_hardwareRenderCallback));
   _needsHardwareRender = false;
   memset(&_systemInfo, 0, sizeof(_systemInfo));
@@ -774,45 +778,16 @@ bool libretro::Core::getVariable(struct retro_variable* data)
 
 bool libretro::Core::setVariables(const struct retro_variable* data)
 {
-  struct retro_variable* var;
-
-  for (var = (struct retro_variable*)data; var->key != NULL; var++)
-  {
-    // Just count.
-  }
-
-  _variablesCount = var - data;
-  _variables = alloc<struct retro_variable>(_variablesCount);
-
-  if (_variables == NULL)
-  {
-    return false;
-  }
-
-  memcpy(_variables, data, _variablesCount * sizeof(*_variables));
-  var = _variables;
-
-  for (unsigned i = 0; i < _variablesCount; i++, var++)
-  {
-    var->key = strdup(var->key);
-    var->value = strdup(var->value);
-
-    if (var->key == NULL || var->value == NULL)
-    {
-      return false;
-    }
-  }
+  const struct retro_variable* var;
+  unsigned count = 0;
 
   _logger->debug(TAG "retro_variable");
-  
-  var = _variables;
-
-  for (unsigned i = 0; i < _variablesCount; i++, var++)
-  {
+  for (var = data; var->key != NULL; var++)
     _logger->debug(TAG "  %s: %s", var->key, var->value);
-  }
 
-  _config->setVariables(_variables, _variablesCount);
+  count = var - data;
+  _config->setVariables(data, count);
+
   return true;
 }
 
@@ -1283,6 +1258,32 @@ bool libretro::Core::getInputBitmasks(bool* data)
   return true;
 }
 
+bool libretro::Core::getCoreOptionsVersion(unsigned* data) const
+{
+  *data = 1;
+  return true;
+}
+
+bool libretro::Core::setCoreOptions(const struct retro_core_option_definition* data)
+{
+  const struct retro_core_option_definition* option;
+  unsigned count;
+
+  _logger->debug(TAG "retro_options");
+  for (option = data; option->key != NULL; option++)
+    _logger->debug(TAG "  %s: %s", option->key, option->desc);
+
+  count = option - data;
+  _config->setVariables(data, count);
+
+  return true;
+}
+
+bool libretro::Core::setCoreOptionsIntl(const struct retro_core_options_intl* data)
+{
+  return setCoreOptions(data->us);
+}
+
 static void getEnvName(char* name, size_t size, unsigned cmd)
 {
   static const char* names[] =
@@ -1528,6 +1529,18 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
 
   case RETRO_ENVIRONMENT_GET_INPUT_BITMASKS:
     ret = getInputBitmasks((bool*)data);
+    break;
+
+  case RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION:
+    ret = getCoreOptionsVersion((unsigned*)data);
+    break;
+
+  case RETRO_ENVIRONMENT_SET_CORE_OPTIONS:
+    ret = setCoreOptions((const struct retro_core_option_definition*)data);
+    break;
+
+  case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL:
+    ret = setCoreOptionsIntl((const struct retro_core_options_intl*)data);
     break;
 
   default:

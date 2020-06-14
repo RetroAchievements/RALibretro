@@ -74,12 +74,6 @@ namespace libretro
       return _inputDescriptors;
     }
 
-    inline const struct retro_variable* getVariables(unsigned* count) const
-    {
-      *count = _variablesCount;
-      return _variables;
-    }
-
     inline const struct retro_subsystem_info* getSubsystemInfo(unsigned* count) const
     {
       *count = _subsystemInfoCount;
@@ -170,6 +164,9 @@ namespace libretro
     bool getHWRenderInterface(const struct retro_hw_render_interface** data) const;
     bool setSupportAchievements(bool data);
     bool getInputBitmasks(bool* data);
+    bool getCoreOptionsVersion(unsigned* data) const;
+    bool setCoreOptions(const struct retro_core_option_definition* data);
+    bool setCoreOptionsIntl(const struct retro_core_options_intl* data);
 
     // Callbacks
     bool                 environmentCallback(unsigned cmd, void* data);
@@ -215,10 +212,7 @@ namespace libretro
     
     unsigned                        _inputDescriptorsCount;
     struct retro_input_descriptor*  _inputDescriptors;
-    
-    unsigned                        _variablesCount;
-    struct retro_variable*          _variables;
-    
+
     struct retro_hw_render_callback _hardwareRenderCallback;
     bool                            _needsHardwareRender;
     
