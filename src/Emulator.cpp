@@ -298,6 +298,7 @@ public:
   std::vector<std::string> coreNames;
   Config* config;
   Logger* logger;
+  const std::string* loadedCore;
   bool modified = false;
 
 protected:
@@ -492,10 +493,22 @@ protected:
         {
           if (cmd >= 51400)
           {
+            if (coreNames[cmd - 51400] == *loadedCore)
+            {
+              MessageBox(hwnd, "Cannot delete active core", "Error", MB_OK);
+              return 0;
+            }
+
             deleteCore(hwnd, coreNames[cmd - 51400]);
           }
           else
           {
+            if (coreNames[cmd - 51300] == *loadedCore)
+            {
+              MessageBox(hwnd, "Cannot update active core", "Error", MB_OK);
+              return 0;
+            }
+
             HWND hUpdate = GetDlgItem(hwnd, cmd);
             SetWindowText(hUpdate, "Downloading...");
             EnableWindow(hwnd, FALSE);
@@ -573,12 +586,13 @@ static void getCoreSystemTimes(Config* config, Logger* logger)
   }
 }
 
-bool showCoresDialog(Config* config, Logger* logger)
+bool showCoresDialog(Config* config, Logger* logger, const std::string& loadedCore)
 {
   CoreDialog db;
   db.init("Manage Cores");
   db.config = config;
   db.logger = logger;
+  db.loadedCore = &loadedCore;
 
   getCoreSystemTimes(config, logger);
 

@@ -2167,7 +2167,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       break;
 
     case IDM_MANAGE_CORES:
-      if (showCoresDialog(&_config, &_logger))
+      if (showCoresDialog(&_config, &_logger, _coreName))
         buildSystemsMenu();
       break;
 
