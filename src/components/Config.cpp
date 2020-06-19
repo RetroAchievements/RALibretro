@@ -208,7 +208,7 @@ void Config::setVariables(const struct retro_core_option_definition* options, un
         }
       }
     }
-    else
+    else if (options->default_value != NULL)
     {
       for (size_t i = 0; i < var._options.size(); i++)
       {
