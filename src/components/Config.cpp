@@ -208,6 +208,18 @@ void Config::setVariables(const struct retro_core_option_definition* options, un
         }
       }
     }
+    else
+    {
+      for (size_t i = 0; i < var._options.size(); i++)
+      {
+        if (var._options[i] == options->default_value)
+        {
+          var._selected = i;
+          _logger->info(TAG "Variable %s not found in selections, using default \"%s\"", var._key.c_str(), options->default_value);
+          break;
+        }
+      }
+    }
 
     _variables.push_back(var);
   }
