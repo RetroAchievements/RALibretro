@@ -134,12 +134,10 @@ namespace libretro
     bool getOverscan(bool* data) const;
     bool getCanDupe(bool* data) const;
     bool setMessage(const struct retro_message* data);
-    bool shutdown();
     bool setPerformanceLevel(unsigned data);
     bool getSystemDirectory(const char** data) const;
     bool setPixelFormat(enum retro_pixel_format data);
     bool setInputDescriptors(const struct retro_input_descriptor* data);
-    bool setKeyboardCallback(const struct retro_keyboard_callback* data);
     bool setDiskControlInterface(const struct retro_disk_control_callback* data);
     bool setHWRender(struct retro_hw_render_callback* data);
     bool getVariable(struct retro_variable* data);
@@ -147,27 +145,17 @@ namespace libretro
     bool getVariableUpdate(bool* data);
     bool setSupportNoGame(bool data);
     bool getLibretroPath(const char** data) const;
-    bool setFrameTimeCallback(const struct retro_frame_time_callback* data);
-    bool setAudioCallback(const struct retro_audio_callback* data);
-    bool getRumbleInterface(struct retro_rumble_interface* data) const;
     bool getInputDeviceCapabilities(uint64_t* data) const;
-    bool getSensorInterface(struct retro_sensor_interface* data) const;
-    bool getCameraInterface(struct retro_camera_callback* data) const;
     bool getLogInterface(struct retro_log_callback* data) const;
-    bool getPerfInterface(struct retro_perf_callback* data) const;
-    bool getLocationInterface(struct retro_location_callback* data) const;
     bool getCoreAssetsDirectory(const char** data) const;
     bool getSaveDirectory(const char** data) const;
     bool setSystemAVInfo(const struct retro_system_av_info* data);
-    bool setProcAddressCallback(const struct retro_get_proc_address_interface* data);
     bool setSubsystemInfo(const struct retro_subsystem_info* data);
     bool setControllerInfo(const struct retro_controller_info* data);
     bool setMemoryMaps(const struct retro_memory_map* data);
     bool setGeometry(const struct retro_game_geometry* data);
     bool getUsername(const char** data) const;
     bool getLanguage(unsigned* data) const;
-    bool getCurrentSoftwareFramebuffer(struct retro_framebuffer* data) const;
-    bool getHWRenderInterface(const struct retro_hw_render_interface** data) const;
     bool setSupportAchievements(bool data);
     bool getInputBitmasks(bool* data);
 
@@ -236,6 +224,6 @@ namespace libretro
 
     struct retro_memory_map         _memoryMap;
 
-    uint8_t                         _calls[256 / 8];
+    uint8_t                         _calls[128 / 8];
   };
 }
