@@ -288,6 +288,11 @@ bool Application::init(const char* title, int width, int height)
     goto error;
   }
 
+  if (!_states.init(&_logger, &_config, &_video))
+  {
+    goto error;
+  }
+
   SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
   _coreName.clear();
   _validSlots = 0;
@@ -805,6 +810,10 @@ void Application::saveConfiguration()
   json += ",\"bindings\":";
   json += _keybinds.serializeBindings();
 
+  // saves
+  json += ",\"saves\":";
+  json += _states.serializeSettings();
+
   // window position
   const Uint32 flags = SDL_GetWindowFlags(_window);
   if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
@@ -874,6 +883,9 @@ bool Application::loadCore(const std::string& coreName)
   _input.reset();
 
   _video.setRotation(Video::Rotation::None);
+
+  /* attempt to update save path before loading the core - some cores get the save directory before loading a game */
+  _states.setGame("", _system, coreName, &_core);
 
   if (!_core.init(&_components))
   {
@@ -1150,6 +1162,9 @@ bool Application::loadGame(const std::string& path)
     unzippedFileName = util::fileNameWithExtension(path);
   }
 
+  /* must update save path before loading the game */
+  _states.setGame(unzippedFileName, _system, _coreName, &_core);
+
   if (info->need_fullpath)
   {
     loaded = _core.loadGame(path.c_str(), NULL, 0);
@@ -1280,12 +1295,11 @@ moved_recent_item:
 
   _validSlots = 0;
 
+  _states.migrateFiles();
+
   for (unsigned ndx = 1; ndx <= 10; ndx++)
   {
-    std::string path = getStatePath(ndx);
-    struct stat statbuf;
-
-    if (stat(path.c_str(), &statbuf) == 0)
+    if (_states.existsState(ndx))
     {
       _validSlots |= 1 << ndx;
     }
@@ -1346,6 +1360,13 @@ bool Application::unloadGame()
   romUnloaded(&_logger);
 
   _video.clear();
+
+  _gamePath.clear();
+  _gameFileName.clear();
+  _states.setGame(_gameFileName, 0, _coreName, &_core);
+
+  _validSlots = 0;
+  enableSlots();
 
   return true;
 }
@@ -1632,27 +1653,12 @@ void Application::updateCDMenu(const char names[][128], int count, bool updateLa
 
 std::string Application::getSRamPath()
 {
-  std::string path = _config.getSaveDirectory();
-  path += _gameFileName;
-  path += ".sram";
-  return path;
+  return _states.getSRamPath();
 }
 
 std::string Application::getStatePath(unsigned ndx)
 {
-  std::string path = _config.getSaveDirectory();
-  path += _gameFileName;
-
-  path += "-";
-  path += _coreName;
-  
-  char index[16];
-  sprintf(index, ".%03u", ndx);
-
-  path += index;
-  path += ".state";
-
-  return path;
+  return _states.getStatePath(ndx);
 }
 
 std::string Application::getConfigPath()
@@ -1686,50 +1692,13 @@ std::string Application::getScreenshotPath()
 
 void Application::saveState(const std::string& path)
 {
-  _logger.info(TAG "Saving state to %s", path.c_str());
-  
-  size_t size = _core.serializeSize();
-  void* data = malloc(size);
-
-  if (data == NULL)
-  {
-    _logger.error(TAG "Out of memory allocating %lu bytes for the game state", size);
-    return;
-  }
-
-  if (!_core.serialize(data, size))
-  {
-    free(data);
-    return;
-  }
-
-  unsigned width, height, pitch;
-  enum retro_pixel_format format;
-  const void* pixels = _video.getFramebuffer(&width, &height, &pitch, &format);
-
-  if (pixels == NULL)
-  {
-    free(data);
-    return;
-  }
-
-  if (!util::saveFile(&_logger, path.c_str(), data, size))
-  {
-    free((void*)pixels);
-    free(data);
-    return;
-  }
-
-  util::saveImage(&_logger, path + ".png", pixels, width, height, pitch, format);
-  RA_OnSaveState(path.c_str());
-
-  free((void*)pixels);
-  free(data);
+  _states.saveState(path);
 }
 
 void Application::saveState(unsigned ndx)
 {
-  saveState(getStatePath(ndx));
+  _states.saveState(ndx);
+
   _validSlots |= 1 << ndx;
   enableSlots();
 }
@@ -1753,59 +1722,10 @@ void Application::saveState()
 
 void Application::loadState(const std::string& path)
 {
-  if (!RA_WarnDisableHardcore("load a state"))
+  if (_states.loadState(path))
   {
-    _logger.warn(TAG "Hardcore mode is active, can't load state");
-    return;
+    updateCDMenu(NULL, 0, false);
   }
-
-  size_t size;
-  void* data = util::loadFile(&_logger, path.c_str(), &size);
-
-  if (data == NULL)
-  {
-    return;
-  }
-
-  _core.unserialize(data, size);
-  free(data);
-  RA_OnLoadState(path.c_str());
-
-  updateCDMenu(NULL, 0, false);
-
-  unsigned width, height, pitch;
-  enum retro_pixel_format format;
-  _video.getFramebufferSize(&width, &height, &format);
-
-  unsigned image_width, image_height;
-  void* pixels = util::loadImage(&_logger, path + ".png", &image_width, &image_height, &pitch);
-  if (pixels == NULL)
-  {
-    _logger.error(TAG "Error loading savestate screenshot");
-    return;
-  }
-
-  /* if the widths aren't the same, the stride differs and we can't just load the pixels */
-  if (image_width == width)
-  {
-    void* converted = util::fromRgb(&_logger, pixels, image_width, image_height, &pitch, format);
-    if (converted == NULL)
-    {
-      _logger.error(TAG "Error converting savestate screenshot to the framebuffer format");
-    }
-    else
-    {
-      /* prevent frame buffer corruption */
-      if (height > image_height)
-        height = image_height;
-
-      _video.setFramebuffer(converted, width, height, pitch);
-
-      free((void*)converted);
-    }
-  }
-
-  free((void*)pixels);
 }
 
 void Application::loadState(unsigned ndx)
@@ -1815,7 +1735,10 @@ void Application::loadState(unsigned ndx)
     return;
   }
 
-  loadState(getStatePath(ndx));
+  if (_states.loadState(ndx))
+  {
+    updateCDMenu(NULL, 0, false);
+  }
 }
 
 void Application::loadState()
@@ -2038,6 +1961,13 @@ void Application::loadConfiguration()
           return -1;
         }
       }
+      else if (ud->key == "saves" && event == JSONSAX_OBJECT)
+      {
+        if (!ud->self->_states.deserializeSettings(str))
+        {
+          return -1;
+        }
+      }
 
       return 0;
     });
@@ -2142,11 +2072,11 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     case IDM_LOAD_RECENT_10:
     {
       const auto& recent = _recentList[cmd - IDM_LOAD_RECENT_1];
+      _system = recent.system;
       if (_fsm.loadCore(recent.coreName))
-      {
-        _system = recent.system;
         _fsm.loadGame(recent.path);
-      }
+      else
+        _system = 0;
       break;
     }
     
@@ -2225,6 +2155,10 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       _video.showDialog();
       break;
     
+    case IDM_SAVING_CONFIG:
+      _states.showDialog();
+      break;
+
     case IDM_WINDOW_1X:
     case IDM_WINDOW_2X:
     case IDM_WINDOW_3X:
@@ -2274,10 +2208,9 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       }
       else if (cmd >= IDM_SYSTEM_FIRST && cmd <= IDM_SYSTEM_LAST)
       {
-        int system;
-        const std::string& coreName = getCoreName(cmd - IDM_SYSTEM_FIRST, system);
-        if (_fsm.loadCore(coreName))
-          _system = system;
+        const std::string& coreName = getCoreName(cmd - IDM_SYSTEM_FIRST, _system);
+        if (!_fsm.loadCore(coreName))
+          _system = 0;
       }
 
       break;

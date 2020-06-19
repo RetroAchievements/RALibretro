@@ -87,3 +87,4 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #define IDM_INPUT_CONTROLLER_1                  40014
 #define IDM_INPUT_CONTROLLER_2                  40015
 #define IDM_MANAGE_CORES                        40016
+#define IDM_SAVING_CONFIG                       40017

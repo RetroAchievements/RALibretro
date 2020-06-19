@@ -175,7 +175,11 @@ static const struct retro_memory_descriptor* getDescriptor(const struct retro_me
     {
       /* otherwise, attempt to match the address by matching the select bits */
       if (((desc->start ^ realAddress) & desc->select) == 0)
-        return desc;
+      {
+        /* sanity check - make sure the descriptor is large enough to hold the target address */
+        if (realAddress - desc->start < desc->len)
+          return desc;
+      }
     }
   }
 

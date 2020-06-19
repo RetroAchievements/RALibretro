@@ -79,6 +79,7 @@ OBJS=\
 	src/main.o \
 	src/Memory.o \
 	src/menu.res \
+	src/States.o \
 	src/Util.o
 
 %.o: %.cpp

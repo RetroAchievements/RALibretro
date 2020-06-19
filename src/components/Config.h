@@ -43,6 +43,8 @@ public:
   virtual bool varUpdated() override;
   virtual const char* getVariable(const char* variable) override;
 
+  void setSaveDirectory(const std::string& path) { _saveFolder = path; }
+
   const char* getRootFolder()
   {
     return _rootFolder.c_str();

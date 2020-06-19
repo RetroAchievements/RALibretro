@@ -38,6 +38,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "Emulator.h"
 #include "KeyBinds.h"
 #include "Memory.h"
+#include "States.h"
 
 class Application
 {
@@ -131,6 +132,7 @@ protected:
   Audio        _audio;
   Input        _input;
   Memory       _memory;
+  States       _states;
 
   KeyBinds _keybinds;
   std::vector<RecentItem> _recentList;
