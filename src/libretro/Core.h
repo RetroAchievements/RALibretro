@@ -155,6 +155,7 @@ namespace libretro
     bool getCoreOptionsVersion(unsigned* data) const;
     bool setCoreOptions(const struct retro_core_option_definition* data);
     bool setCoreOptionsIntl(const struct retro_core_options_intl* data);
+    bool setCoreOptionsDisplay(const struct retro_core_option_display* data);
 
     // Callbacks
     bool                 environmentCallback(unsigned cmd, void* data);

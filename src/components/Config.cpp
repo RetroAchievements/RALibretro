@@ -117,6 +117,7 @@ void Config::setVariables(const struct retro_variable* variables, unsigned count
     while (isspace(*++aux)) /* nothing */;
 
     var._selected = 0;
+    var._hidden = 0;
 
     for (unsigned j = 0; aux != NULL; j++)
     {
@@ -168,6 +169,7 @@ void Config::setVariables(const struct retro_core_option_definition* options, un
     var._key = options->key;
     var._name = options->desc;
     var._selected = 0;
+    var._hidden = 0;
 
     bool hasLabels = false;
     for (unsigned j = 0; options->values[j].value != NULL; j++)
@@ -225,6 +227,21 @@ void Config::setVariables(const struct retro_core_option_definition* options, un
   }
 
   _updated = true;
+}
+
+void Config::setVariableDisplay(const struct retro_core_option_display* display)
+{
+  for (size_t i = 0; i < _variables.size(); i++)
+  {
+    if (_variables[i]._key == display->key)
+    {
+      _variables[i]._hidden = !display->visible;
+      _logger->info(TAG "Setting visibility on variable %s to %s", display->key, display->visible ? "visible" : "hidden");
+      return;
+    }
+  }
+
+  _logger->info(TAG "Could not set visibility on unknown variable %s", display->key);
 }
 
 bool Config::varUpdated()
@@ -371,18 +388,20 @@ void Config::showDialog(const std::string& coreName, Input& input)
   WORD x = 0;
   WORD y = 0;
 
-  std::vector<Variable> variables;
-  Variable controllerVariable;
+  std::vector<Variable*> variables;
+  std::vector<int> selections;
+  Variable controllerVariables[2];
 
-  for (unsigned i = 2; i > 0; --i)
+  for (unsigned i = sizeof(controllerVariables) / sizeof(controllerVariables[0]); i > 0; --i)
   {
+    auto& controllerVariable = controllerVariables[i - 1];
     controllerVariable._key = "__controller" + std::to_string(i);
     controllerVariable._name = "Controller " + std::to_string(i);
 
     controllerVariable._options.clear();
     input.getControllerNames(i - 1, controllerVariable._options, controllerVariable._selected);
     if (controllerVariable._options.size() > 1)
-      variables.insert(variables.begin(), controllerVariable);
+      variables.insert(variables.begin(), &controllerVariable);
   }
 
   if (_variables.empty() && variables.empty())
@@ -396,21 +415,30 @@ void Config::showDialog(const std::string& coreName, Input& input)
     WORD row = 0;
     WORD id = 0;
 
-    variables.insert(variables.end(), _variables.begin(), _variables.end());
+    for (auto& var : _variables)
+    {
+      if (!var._hidden)
+        variables.push_back(&var);
+    }
+
+    selections.reserve(variables.size());
 
     // evenly distribute the variables across multiple columns so no more than MAX_ROWS rows exist
     const WORD columns = ((WORD)variables.size() + MAX_ROWS - 1) / MAX_ROWS;
     const WORD rows = ((WORD)variables.size() + columns - 1) / columns;
 
-    for (auto& var : variables)
+    for (unsigned i = 0; i < variables.size(); ++i)
     {
+      auto& var = *variables[i];
+      selections.push_back(var._selected);
+
       const auto* options = &var._options;
       if (!var._labels.empty())
         options = &var._labels;
 
       db.addLabel(var._name.c_str(), x, y + 2, HEADER_WIDTH - 5, 8);
       db.addCombobox(50000 + id, x + HEADER_WIDTH + 5, y, VALUE_WIDTH, LINE_HEIGHT, 100,
-        s_getOption, (void*)options, &var._selected);
+        s_getOption, (void*)options, &selections[i]);
 
       if (++id < variables.size())
       {
@@ -439,26 +467,22 @@ void Config::showDialog(const std::string& coreName, Input& input)
 
   if (_updated)
   {
-    for (auto& var : variables)
+    for (unsigned i = 0; i < variables.size(); ++i)
     {
+      auto& var = *variables[i];
+
       if (var._key.length() == 13 && SDL_strncmp(var._key.c_str(), "__controller", 12) == 0)
       {
         const unsigned port = var._key[12] - '1';
-        input.setSelectedControllerIndex(port, var._selected);
+        input.setSelectedControllerIndex(port, selections[i]);
       }
       else
       {
-        _selections[var._key] = var._options[var._selected];
+        // keep track of the selected item
+        var._selected = selections[i];
 
-        // remember the selection for next time
-        for (auto& actualVar : _variables)
-        {
-          if (actualVar._key == var._key)
-          {
-            actualVar._selected = var._selected;
-            break;
-          }
-        }
+        // and selected value
+        _selections[var._key] = var._options[var._selected];
       }
     }
   }

@@ -104,6 +104,11 @@ namespace
       (void)count;
     }
 
+    virtual void setVariableDisplay(const struct retro_core_option_display* display) override
+    {
+      (void)display;
+    }
+
     virtual bool varUpdated() override
     {
       return false;
@@ -1201,6 +1206,12 @@ bool libretro::Core::setCoreOptionsIntl(const struct retro_core_options_intl* da
   return setCoreOptions(data->us);
 }
 
+bool libretro::Core::setCoreOptionsDisplay(const struct retro_core_option_display* data)
+{
+  _config->setVariableDisplay(data);
+  return true;
+}
+
 static void getEnvName(char* name, size_t size, unsigned cmd)
 {
   static const char* names[] =
@@ -1410,6 +1421,10 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
 
   case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL:
     ret = setCoreOptionsIntl((const struct retro_core_options_intl*)data);
+    break;
+
+  case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY:
+    ret = setCoreOptionsDisplay((const struct retro_core_option_display*)data);
     break;
 
   default:
