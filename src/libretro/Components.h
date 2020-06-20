@@ -179,6 +179,8 @@ namespace libretro
     virtual bool     ctrlUpdated() = 0;
     virtual unsigned getController(unsigned port) = 0;
 
+    virtual bool     setRumble(unsigned port, retro_rumble_effect effect, uint16_t strength) = 0;
+
     virtual void    poll() = 0;
     virtual int16_t read(unsigned port, unsigned device, unsigned index, unsigned id) = 0;
   };
