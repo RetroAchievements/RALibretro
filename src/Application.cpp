@@ -1503,13 +1503,10 @@ void Application::loadGame()
 
   if (!path.empty())
   {
-    /* disc-based system may append discs to the playlist, have to reload core to work around that */
-    if (_core.getNumDiscs() > 0)
-    {
-      std::string coreName = _coreName;
-      _fsm.unloadCore();
-      _fsm.loadCore(coreName);
-    }
+    /* some cores need to be reset to flush any previous state information */
+    /* this also ensures the disc menu is reset if the core built it dynamically */
+    /* ASSERT: loadCore will unload the current core, even if it's the same core */
+    _fsm.loadCore(_coreName);
 
     _fsm.loadGame(path);
   }
