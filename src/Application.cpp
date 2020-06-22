@@ -1506,7 +1506,8 @@ void Application::loadGame()
     /* some cores need to be reset to flush any previous state information */
     /* this also ensures the disc menu is reset if the core built it dynamically */
     /* ASSERT: loadCore will unload the current core, even if it's the same core */
-    _fsm.loadCore(_coreName);
+    if (_core.gameLoaded())
+      _fsm.loadCore(_coreName);
 
     _fsm.loadGame(path);
   }

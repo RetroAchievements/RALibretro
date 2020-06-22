@@ -61,6 +61,7 @@ namespace libretro
     inline bool                    getSupportsNoGame()      const { return _supportsNoGame; }
     inline bool                    getSupportAchievements() const { return _supportAchievements; }
     inline void                    unloadGame()                   { _core.unloadGame(); }
+    inline bool                    gameLoaded()             const { return _gameLoaded; }
 
     inline unsigned                getNumDiscs()            const { return (_diskControlInterface != NULL) ? _diskControlInterface->get_num_images() : 0; }
     inline unsigned                getCurrentDiscIndex()    const { return (_diskControlInterface != NULL) ? _diskControlInterface->get_image_index() : 0; }
