@@ -1291,7 +1291,7 @@ moved_recent_item:
     }
   }
 
-  _memory.attachToCore(&_core, _system);
+  refreshMemoryMap();
 
   _validSlots = 0;
 
@@ -1307,6 +1307,11 @@ moved_recent_item:
 
   _input.autoAssign();
   return true;
+}
+
+void Application::refreshMemoryMap()
+{
+  _memory.attachToCore(&_core, _system);
 }
 
 void Application::unloadCore()
