@@ -183,6 +183,7 @@ void Memory::attachToCore(libretro::Core* core, int consoleId)
   else if (g_lastMemoryRefresh == 0)
   {
     g_lastMemoryRefresh = clock();
+    RA_ClearMemoryBanks();
     RA_InstallMemoryBank(0, (void*)deferredMemoryRead, (void*)memoryWrite, g_memoryTotalSize);
   }
 }
