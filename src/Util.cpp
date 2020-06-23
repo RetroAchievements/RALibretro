@@ -593,6 +593,39 @@ std::string util::replaceFileName(const std::string& originalPath, const char* n
   return newPath;
 }
 
+std::string util::sanitizeFileName(const std::string& fileName)
+{
+  std::string sanitized = fileName;
+  for (int i = 0; i < sanitized.length(); ++i)
+  {
+    switch (sanitized[i])
+    {
+    case '<':
+    case '>':
+    case ':':
+    case '"':
+    case '/':
+    case '\\':
+    case '|':
+    case '?':
+    case '*':
+      sanitized[i] = '_';
+      break;
+
+    default:
+      break;
+    }
+  }
+
+  if (!sanitized.empty() && (sanitized.back() == ' ' || sanitized.back() == '.'))
+  {
+    sanitized.pop_back();
+    sanitized.push_back('_');
+  }
+
+  return sanitized;
+}
+
 std::string util::directory(const std::string& path)
 {
   std::string newPath = path;

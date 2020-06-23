@@ -80,13 +80,13 @@ std::string States::buildPath(Path path) const
 
   if ((path & Path::System) && _system)
   {
-    savePath += rc_console_name(_system);
+    savePath += util::sanitizeFileName(rc_console_name(_system));
     savePath += '\\';
   }
 
   if ((path & Path::Core) && _core->getSystemInfo()->library_name)
   {
-    savePath += _core->getSystemInfo()->library_name;
+    savePath += util::sanitizeFileName(_core->getSystemInfo()->library_name);
     savePath += '\\';
   }
 
