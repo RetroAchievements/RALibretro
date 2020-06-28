@@ -200,6 +200,13 @@ bool States::loadState(const std::string& path)
     return false;
   }
 
+  if (memcmp(data, "#RZIPv", 6) == 0)
+  {
+    _logger->error(TAG "Compressed save states not supported");
+    MessageBox(g_mainWindow, "Compressed save states not supported", "RALibRetro", MB_OK);
+    return false;
+  }
+
   _core->unserialize(data, size);
   free(data);
   RA_OnLoadState(path.c_str());
