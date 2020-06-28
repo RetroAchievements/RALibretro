@@ -232,6 +232,14 @@ namespace
       return RETRO_DEVICE_NONE;
     }
 
+    virtual bool setRumble(unsigned port, retro_rumble_effect effect, uint16_t strength) override
+    {
+      (void)port;
+      (void)effect;
+      (void)strength;
+      return false;
+    }
+
     virtual void poll() override {}
 
     virtual int16_t read(unsigned port, unsigned device, unsigned index, unsigned id) override
@@ -801,6 +809,12 @@ bool libretro::Core::getLibretroPath(const char** data) const
   return true;
 }
 
+bool libretro::Core::getRumbleInterface(struct retro_rumble_interface* data) const
+{
+  data->set_rumble_state = s_setRumbleCallback;
+  return true;
+}
+
 bool libretro::Core::getInputDeviceCapabilities(uint64_t* data) const
 {
   *data = (
@@ -1359,6 +1373,10 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
     ret = getLibretroPath((const char**)data);
     break;
 
+  case RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE:
+    ret = getRumbleInterface((struct retro_rumble_interface*)data);
+    break;
+
   case RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES:
     ret = getInputDeviceCapabilities((uint64_t*)data);
     break;
@@ -1564,6 +1582,16 @@ void libretro::Core::s_logCallback(enum retro_log_level level, const char *fmt, 
   va_start(args, fmt);
   s_instance->_logger->vprintf(level, fmt, args);
   va_end(args);
+}
+
+bool libretro::Core::s_setRumbleCallback(unsigned port, enum retro_rumble_effect effect, uint16_t strength)
+{
+  return s_instance->setRumble(port, effect, strength);
+}
+
+bool libretro::Core::setRumble(unsigned port, enum retro_rumble_effect effect, uint16_t strength)
+{
+  return _input->setRumble(port, effect, strength);
 }
 
 static size_t addBitsDown(size_t n)

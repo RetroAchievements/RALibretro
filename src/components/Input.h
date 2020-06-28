@@ -27,6 +27,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 
 #include <SDL_events.h>
+#include <SDL_haptic.h>
 #include <SDL_joystick.h>
 
 class Input: public libretro::InputComponent
@@ -87,6 +88,8 @@ public:
   void             getControllerNames(unsigned port, std::vector<std::string>& names, int& selectedIndex) const;
   void             setSelectedControllerIndex(unsigned port, int selectedIndex);
 
+  virtual bool     setRumble(unsigned port, retro_rumble_effect effect, uint16_t strength) override;
+
   virtual void    poll() override;
   virtual int16_t read(unsigned port, unsigned device, unsigned index, unsigned id) override;
   float getJoystickSensitivity(int joystickId);
@@ -106,6 +109,9 @@ protected:
     const char*         _joystickName;
     uint64_t            _ports;
     float               _sensitivity;
+    unsigned            _navigationPort;
+    SDL_Haptic*         _haptic;
+    int                 _rumbleEffect;
   };
 
   struct Descriptor

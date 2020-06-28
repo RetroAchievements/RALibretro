@@ -94,6 +94,7 @@ public:
     Action* action1, unsigned* extra1, Action* action2, unsigned* extra2);
 
   void mapDevice(SDL_JoystickID originalID, SDL_JoystickID newID);
+  unsigned getNavigationPort(SDL_JoystickID joystickID);
 
   void showControllerDialog(Input& input, int portId);
   void showHotKeyDialog(Input& input);
