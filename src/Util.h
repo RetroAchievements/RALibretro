@@ -67,6 +67,7 @@ namespace util
   std::string fileNameWithExtension(const std::string& path);
   std::string extension(const std::string& path);
   std::string replaceFileName(const std::string& originalPath, const char* newFileName);
+  std::string sanitizeFileName(const std::string& fileName);
 
   std::string directory(const std::string& path);
 

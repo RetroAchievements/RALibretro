@@ -89,7 +89,6 @@ protected:
   void        enableSlots();
   void        enableRecent();
   void        updateCDMenu(const char names[][128], int count, bool updateLabels);
-  std::string getSRamPath();
   std::string getStatePath(unsigned ndx);
   std::string getConfigPath();
   std::string getCoreConfigPath(const std::string& coreName);

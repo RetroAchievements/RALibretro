@@ -23,6 +23,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <sys/stat.h>
 #include <errno.h>
 #include <string.h>
+#include <share.h>
 
 #ifndef NO_MINIZ
 #include <miniz_zip.h>
@@ -105,7 +106,7 @@ FILE* util::openFile(Logger* logger, const std::string& path, const char* mode)
       /* fopen_s doesn't allow sharing files. if we're just reading, try again in sharing mode */
       if (mode[0] == 'r' && (!mode[1] || mode[1] == 'b'))
       {
-        file = _fsopen(path.c_str(), mode, _SH_DENYNO);
+        file = _fsopen(path.c_str(), mode, SH_DENYNO);
         err = (file) ? 0 : errno;
       }
     }
@@ -122,7 +123,7 @@ FILE* util::openFile(Logger* logger, const std::string& path, const char* mode)
       /* _wfopen_s doesn't allow sharing files. if we're just reading, try again in sharing mode */
       if (mode[0] == 'r' && (!mode[1] || mode[1] == 'b'))
       {
-        file = _wfsopen(unicodePath.c_str(), unicodeMode.c_str(), _SH_DENYNO);
+        file = _wfsopen(unicodePath.c_str(), unicodeMode.c_str(), SH_DENYNO);
         err = (file) ? 0 : errno;
       }
     }
@@ -590,6 +591,39 @@ std::string util::replaceFileName(const std::string& originalPath, const char* n
 
   newPath.replace(newPath.begin() + ndx + 1, newPath.end(), newFileName);
   return newPath;
+}
+
+std::string util::sanitizeFileName(const std::string& fileName)
+{
+  std::string sanitized = fileName;
+  for (int i = 0; i < sanitized.length(); ++i)
+  {
+    switch (sanitized[i])
+    {
+    case '<':
+    case '>':
+    case ':':
+    case '"':
+    case '/':
+    case '\\':
+    case '|':
+    case '?':
+    case '*':
+      sanitized[i] = '_';
+      break;
+
+    default:
+      break;
+    }
+  }
+
+  if (!sanitized.empty() && (sanitized.back() == ' ' || sanitized.back() == '.'))
+  {
+    sanitized.pop_back();
+    sanitized.push_back('_');
+  }
+
+  return sanitized;
 }
 
 std::string util::directory(const std::string& path)

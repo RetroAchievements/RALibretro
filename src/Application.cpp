@@ -413,6 +413,9 @@ void Application::runTurbo()
   _core.step(true, false);
   RA_DoAchievementsFrame();
 
+  // check for periodic SRAM flush
+  _states.periodicSaveSRAM(&_core);
+
   const auto tTurboEnd = std::chrono::steady_clock::now();
   const auto tTurboElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(tTurboEnd - tTurboStart);
 
@@ -530,6 +533,9 @@ void Application::runSmoothed()
       // render it
       _core.step(true, true);
 
+      // check for periodic SRAM flush
+      _states.periodicSaveSRAM(&_core);
+
       skippedFrames = 0;
 
 #ifdef DEBUG_FRAMERATE
@@ -554,6 +560,9 @@ void Application::runSmoothed()
 
         // render it
         _core.step(true, true);
+
+        // check for periodic SRAM flush
+        _states.periodicSaveSRAM(&_core);
 
 #ifdef DEBUG_FRAMERATE
         renders[frameIndex] = 'F';
@@ -1270,27 +1279,7 @@ bool Application::loadGame(const std::string& path)
   }
 
 moved_recent_item:
-  if (_core.getMemorySize(RETRO_MEMORY_SAVE_RAM) != 0)
-  {
-    std::string sram = getSRamPath();
-    data = util::loadFile(&_logger, sram, &size);
-
-    if (data != NULL)
-    {
-      if (size == _core.getMemorySize(RETRO_MEMORY_SAVE_RAM))
-      {
-        void* memory = _core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
-        memcpy(memory, data, size);
-      }
-      else
-      {
-        _logger.error(TAG "Save RAM size mismatch, wanted %lu, got %lu from disk", _core.getMemorySize(RETRO_MEMORY_SAVE_RAM), size);
-      }
-
-      free(data);
-    }
-  }
-
+  _states.loadSRAM(&_core);
   _memory.attachToCore(&_core, _system);
 
   _validSlots = 0;
@@ -1348,14 +1337,7 @@ bool Application::unloadGame()
     return false;
   }
 
-  size_t size = _core.getMemorySize(RETRO_MEMORY_SAVE_RAM);
-
-  if (size != 0)
-  {
-    void* data = _core.getMemoryData(RETRO_MEMORY_SAVE_RAM);
-    std::string sram = getSRamPath();
-    util::saveFile(&_logger, sram.c_str(), data, size);
-  }
+  _states.saveSRAM(&_core);
 
   romUnloaded(&_logger);
 
@@ -1649,11 +1631,6 @@ void Application::updateCDMenu(const char names[][128], int count, bool updateLa
 
     EnableMenuItem(_menu, IDM_CD_OPEN_TRAY, MF_ENABLED);
   }
-}
-
-std::string Application::getSRamPath()
-{
-  return _states.getSRamPath();
 }
 
 std::string Application::getStatePath(unsigned ndx)

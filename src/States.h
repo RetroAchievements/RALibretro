@@ -40,6 +40,10 @@ public:
   bool        loadState(const std::string& path);
   bool        loadState(unsigned ndx);
 
+  void        loadSRAM(libretro::Core* core);
+  void        saveSRAM(libretro::Core* core);
+  void        periodicSaveSRAM(libretro::Core* core);
+
   void        migrateFiles();
   bool        existsState(unsigned ndx);
 
@@ -62,15 +66,19 @@ protected:
 
   static const States::Path _sramPaths[];
   static const States::Path _statePaths[];
+  static const int _saveIntervals[];
 
   Logger* _logger;
   Config* _config;
   Video* _video;
 
   std::string _gameFileName;
-  int _system;
+  int _system = 0;
   std::string _coreName;
-  libretro::Core* _core;
+  libretro::Core* _core = NULL;
+  int _saveInterval = 0;
+  void* _lastSaveData = NULL;
+  time_t _lastSave = 0;
 
 private:
   std::string buildPath(Path path) const;

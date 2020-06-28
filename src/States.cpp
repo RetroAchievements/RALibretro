@@ -36,6 +36,8 @@ along with RALibRetro.  If not, see <http://www.gnu.org/licenses/>.
 #include <commdlg.h>
 #include <shlobj.h>
 
+#include <time.h>
+
 #define TAG "[SAV] "
 
 extern HWND g_mainWindow;
@@ -46,6 +48,7 @@ bool States::init(Logger* logger, Config* config, Video* video)
   _config = config;
   _video = video;
   _core = NULL;
+  _lastSave = 0;
 
   return true;
 }
@@ -58,6 +61,12 @@ void States::setGame(const std::string& gameFileName, int system, const std::str
   _core = core;
 
   _config->setSaveDirectory(buildPath(_sramPath));
+
+  if (_lastSaveData != NULL)
+  {
+    free(_lastSaveData);
+    _lastSaveData = NULL;
+  }
 }
 
 std::string States::buildPath(Path path) const
@@ -71,13 +80,13 @@ std::string States::buildPath(Path path) const
 
   if ((path & Path::System) && _system)
   {
-    savePath += rc_console_name(_system);
+    savePath += util::sanitizeFileName(rc_console_name(_system));
     savePath += '\\';
   }
 
   if ((path & Path::Core) && _core->getSystemInfo()->library_name)
   {
-    savePath += _core->getSystemInfo()->library_name;
+    savePath += util::sanitizeFileName(_core->getSystemInfo()->library_name);
     savePath += '\\';
   }
 
@@ -258,6 +267,17 @@ bool States::existsState(unsigned ndx)
   return util::exists(path);
 }
 
+const int States::_saveIntervals[] =
+{
+  0,
+  10,
+  30,
+  60,
+  120,
+  300,
+  600
+};
+
 const States::Path States::_sramPaths[] =
 {
   (States::Path)(States::Path::Saves),
@@ -286,6 +306,78 @@ const States::Path States::_statePaths[] =
   (States::Path)(States::Path::State | States::Path::System | States::Path::Core),
   (States::Path)(States::Path::State | States::Path::System | States::Path::Core | States::Path::Game),
 };
+
+void States::loadSRAM(libretro::Core* core)
+{
+  const size_t sramSize = core->getMemorySize(RETRO_MEMORY_SAVE_RAM);
+  if (sramSize != 0)
+  {
+    std::string sramPath = getSRamPath();
+    size_t fileSize;
+
+    void* data = util::loadFile(_logger, sramPath, &fileSize);
+    if (data != NULL)
+    {
+      if (fileSize == sramSize)
+      {
+        void* memory = core->getMemoryData(RETRO_MEMORY_SAVE_RAM);
+        memcpy(memory, data, sramSize);
+        _logger->info(TAG "Loaded %lu bytes of Save RAM from disk", fileSize);
+      }
+      else
+      {
+        _logger->error(TAG "Save RAM size mismatch, wanted %lu, got %lu from disk", sramSize, fileSize);
+      }
+
+      if (_saveInterval > 0)
+        _lastSaveData = data;
+      else
+        free(data);
+    }
+  }
+
+  _lastSave = time(NULL);
+}
+
+void States::saveSRAM(libretro::Core* core)
+{
+  size_t sramSize = core->getMemorySize(RETRO_MEMORY_SAVE_RAM);
+  if (sramSize != 0)
+  {
+    void* data = core->getMemoryData(RETRO_MEMORY_SAVE_RAM);
+    std::string sramPath = getSRamPath();
+    util::saveFile(_logger, sramPath, data, sramSize);
+  }
+}
+
+void States::periodicSaveSRAM(libretro::Core* core)
+{
+  if (_saveInterval == 0)
+    return;
+
+  time_t now = time(NULL);
+  if (now - _lastSave >= _saveInterval)
+  {
+    size_t sramSize = core->getMemorySize(RETRO_MEMORY_SAVE_RAM);
+    if (sramSize != 0)
+    {
+      void* data = core->getMemoryData(RETRO_MEMORY_SAVE_RAM);
+      if (_lastSaveData == NULL || memcmp(data, _lastSaveData, sramSize) != 0)
+      {
+        if (_lastSaveData == NULL)
+          _lastSaveData = malloc(sramSize);
+
+        memcpy(_lastSaveData, data, sramSize);
+
+        // TODO: offload this to a background thread?
+        std::string sramPath = getSRamPath();
+        util::saveFile(_logger, sramPath, _lastSaveData, sramSize);
+      }
+    }
+
+    _lastSave = now;
+  }
+}
 
 void States::migrateFiles()
 {
@@ -404,6 +496,10 @@ std::string States::serializeSettings() const
 {
   std::string settings = "{";
 
+  settings += "\"saveInterval\":";
+  settings += std::to_string(_saveInterval);
+  settings += ",";
+
   settings += "\"sramPath\":\"";
   settings += encodePath(_sramPath);
   settings += "\",";
@@ -460,6 +556,11 @@ bool States::deserializeSettings(const char* json)
       else if (ud->key == "statePath")
         ud->self->_statePath = decodePath(std::string(str, num));
     }
+    else if (event == JSONSAX_NUMBER)
+    {
+      if (ud->key == "saveInterval")
+        ud->self->_saveInterval = (int)strtoul(str, NULL, 10);
+    }
 
     return 0;
   });
@@ -471,6 +572,40 @@ bool States::deserializeSettings(const char* json)
 class StatesPathAccessor : public States
 {
 public:
+  StatesPathAccessor()
+  {
+    if (_pathOptions[0].empty())
+    {
+      for (unsigned i = 0; i < sizeof(_pathOptions) / sizeof(_pathOptions[0]); ++i)
+      {
+        std::string& option = _pathOptions[i];
+        if (i & States::Path::State)
+          option = "States";
+        else
+          option = "Saves";
+
+        if (i & States::Path::System)
+          option += "\\[System]";
+        if (i & States::Path::Core)
+          option += "\\[Core]";
+        if (i & States::Path::Game)
+          option += "\\[Game]";
+      }
+
+      _intervalOptions[0] = "None";
+      for (unsigned i = 1; i < sizeof(_saveIntervals) / sizeof(_saveIntervals[0]); ++i)
+      {
+        int seconds = _saveIntervals[i];
+        if (seconds == 60)
+          _intervalOptions[i] = "1 minute";
+        else if ((seconds % 60) == 0)
+          _intervalOptions[i] = std::to_string(seconds / 60) + " minutes";
+        else
+          _intervalOptions[i] = std::to_string(seconds) + " seconds";
+      }
+    }
+  }
+
   int getSramPathOption(int index)
   {
     if ((unsigned)index >= sizeof(_sramPaths) / sizeof(_sramPaths[0]))
@@ -486,9 +621,27 @@ public:
 
     return _statePaths[index];
   }
+
+  const char* getPathOption(int option) const
+  {
+    return _pathOptions[option].c_str();
+  }
+
+  const char* getIntervalOption(int option) const
+  {
+    if (option < 0 || option >= sizeof(_saveIntervals) / sizeof(_saveIntervals[0]))
+      return NULL;
+
+    return _intervalOptions[option].c_str();
+  }
+
+private:
+  static std::string _pathOptions[16];
+  static std::string _intervalOptions[sizeof(_saveIntervals) / sizeof(_saveIntervals[0])];
 };
 
-static std::string s_pathOptions[16];
+std::string StatesPathAccessor::_pathOptions[];
+std::string StatesPathAccessor::_intervalOptions[];
 
 const char* s_getSramPathOptions(int index, void* udata)
 {
@@ -497,7 +650,7 @@ const char* s_getSramPathOptions(int index, void* udata)
   if (index < 0)
     return NULL;
 
-  return s_pathOptions[index].c_str();
+  return accessor.getPathOption(index);
 }
 
 const char* s_getStatePathOptions(int index, void* udata)
@@ -507,7 +660,13 @@ const char* s_getStatePathOptions(int index, void* udata)
   if (index < 0)
     return NULL;
 
-  return s_pathOptions[index].c_str();
+  return accessor.getPathOption(index);
+}
+
+const char* s_getSaveIntervalOptions(int index, void* udata)
+{
+  StatesPathAccessor accessor;
+  return accessor.getIntervalOption(index);
 }
 
 void States::showDialog()
@@ -524,26 +683,20 @@ void States::showDialog()
   Dialog db;
   db.init("Saving Settings");
 
-  if (s_pathOptions[0].empty())
-  {
-    for (unsigned i = 0; i < sizeof(s_pathOptions) / sizeof(s_pathOptions[0]); ++i)
-    {
-      std::string& option = s_pathOptions[i];
-      if (i & States::Path::State)
-        option = "States";
-      else
-        option = "Saves";
+  WORD y = 0;
 
-      if (i & States::Path::System)
-        option += "\\[System]";
-      if (i & States::Path::Core)
-        option += "\\[Core]";
-      if (i & States::Path::Game)
-        option += "\\[Game]";
+  int saveInterval = 0;
+  for (unsigned i = 0; i < sizeof(_saveIntervals) / sizeof(_saveIntervals[0]); ++i)
+  {
+    if (_saveIntervals[i] == _saveInterval)
+    {
+      saveInterval = i;
+      break;
     }
   }
-
-  WORD y = 0;
+  db.addLabel("SRAM Save Interval", 51001, 0, y, 60, 8);
+  db.addCombobox(51002, 65, y - 2, WIDTH - 65, 12, 80, s_getSaveIntervalOptions, NULL, &saveInterval);
+  y += LINE;
 
   int sramPath = 0;
   for (unsigned i = 0; i < sizeof(_sramPaths) / sizeof(_sramPaths[0]); ++i)
@@ -554,8 +707,8 @@ void States::showDialog()
       break;
     }
   }
-  db.addLabel("SRAM Path", 51001, 0, y, 50, 8);
-  db.addCombobox(51002, 55, y - 2, WIDTH - 55, 12, 140, s_getSramPathOptions, NULL, &sramPath);
+  db.addLabel("SRAM Path", 51003, 0, y, 60, 8);
+  db.addCombobox(51004, 65, y - 2, WIDTH - 65, 12, 140, s_getSramPathOptions, NULL, &sramPath);
   y += LINE;
 
   int statePath = 0;
@@ -567,8 +720,8 @@ void States::showDialog()
       break;
     }
   }
-  db.addLabel("Save State Path", 51003, 0, y, 50, 8);
-  db.addCombobox(51004, 55, y - 2, WIDTH - 55, 12, 140, s_getStatePathOptions, NULL, &statePath);
+  db.addLabel("Save State Path", 51005, 0, y, 60, 8);
+  db.addCombobox(51006, 65, y - 2, WIDTH - 65, 12, 140, s_getStatePathOptions, NULL, &statePath);
   y += LINE;
 
   db.addButton("OK", IDOK, WIDTH - 55 - 50, y, 50, 14, true);
@@ -576,6 +729,7 @@ void States::showDialog()
 
   if (db.show())
   {
+    _saveInterval = _saveIntervals[saveInterval];
     _sramPath = _sramPaths[sramPath];
     _statePath = _statePaths[statePath];
   }
