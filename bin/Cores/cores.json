@@ -123,13 +123,17 @@
     "extensions": "gba",
     "systems": [5]
   },
+  "mupen64plus_next_libretro":{
+    "name": "Mupen64Plus-Next",
+    "systems": [2]
+  },
   "opera_libretro":{
     "name": "Opera",
     "systems": [43]
   },
   "parallel_n64_libretro":{
     "name": "ParaLLEl N64",
-    "systems": [2],
+    "systems": [2]
   },
   "pcsx_rearmed_libretro":{
     "name": "PCSX-ReARMed",

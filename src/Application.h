@@ -68,6 +68,8 @@ public:
 
   void onRotationChanged(Video::Rotation oldRotation, Video::Rotation newRotation);
 
+  void refreshMemoryMap();
+
 protected:
   struct RecentItem
   {

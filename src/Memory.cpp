@@ -19,8 +19,12 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Memory.h"
 
+#include "Application.h"
+
 #include <RA_Interface.h>
 #include <rcheevos.h>
+
+#include <time.h>
 
 #define TAG "[MEM] "
 
@@ -68,6 +72,21 @@ static void memoryWrite(unsigned addr, unsigned value)
   }
 }
 
+static clock_t g_lastMemoryRefresh = 0;
+static unsigned char deferredMemoryRead(unsigned addr)
+{
+  const clock_t now = clock();
+  const clock_t elapsed = now - g_lastMemoryRefresh;
+  if (elapsed < CLOCKS_PER_SEC / 100) /* 10ms */
+    return '\0';
+
+  g_lastMemoryRefresh = now;
+
+  extern Application app;
+  app.refreshMemoryMap();
+  return memoryRead(addr);
+}
+
 static const char* getMemoryType(int type)
 {
   switch (type)
@@ -89,12 +108,20 @@ void Memory::registerMemoryRegion(int type, uint8_t* data, size_t size, const ch
     return;
   }
 
-  if (!data && g_memoryRegionCount > 1 && !g_memoryRegionData[g_memoryRegionCount - 1])
+  if (!data && g_memoryRegionCount > 0 && !g_memoryRegionData[g_memoryRegionCount - 1])
   {
+    /* extend null region */
+    g_memoryRegionSize[g_memoryRegionCount - 1] += size;
+  }
+  else if (data && g_memoryRegionCount > 0 &&
+    data == (g_memoryRegionData[g_memoryRegionCount - 1] + g_memoryRegionSize[g_memoryRegionCount - 1]))
+  {
+    /* extend non-null region */
     g_memoryRegionSize[g_memoryRegionCount - 1] += size;
   }
   else
   {
+    /* create new region */
     g_memoryRegionData[g_memoryRegionCount] = data;
     g_memoryRegionSize[g_memoryRegionCount] = size;
     ++g_memoryRegionCount;
@@ -115,6 +142,7 @@ void Memory::destroy()
 {
   g_memoryRegionCount = 0;
   g_memoryTotalSize = 0;
+  g_lastMemoryRefresh = 0;
   RA_ClearMemoryBanks();
 }
 
@@ -122,7 +150,6 @@ void Memory::attachToCore(libretro::Core* core, int consoleId)
 {
   g_memoryRegionCount = 0;
   g_memoryTotalSize = 0;
-  RA_ClearMemoryBanks();
 
   const rc_memory_regions_t* regions = rc_console_memory_regions(consoleId);
   if (regions == NULL || regions->num_regions == 0)
@@ -138,7 +165,27 @@ void Memory::attachToCore(libretro::Core* core, int consoleId)
       initializeFromUnmappedMemory(regions, core);
   }
 
-  RA_InstallMemoryBank(0, (void*)memoryRead, (void*)memoryWrite, g_memoryTotalSize);
+  bool hasValidRegion = false;
+  for (int i = 0; i < g_memoryRegionCount; i++)
+  {
+    if (g_memoryRegionData[i] != NULL)
+    {
+      hasValidRegion = true;
+      break;
+    }
+  }
+
+  if (hasValidRegion)
+  {
+    RA_ClearMemoryBanks();
+    RA_InstallMemoryBank(0, (void*)memoryRead, (void*)memoryWrite, g_memoryTotalSize);
+  }
+  else if (g_lastMemoryRefresh == 0)
+  {
+    g_lastMemoryRefresh = clock();
+    RA_ClearMemoryBanks();
+    RA_InstallMemoryBank(0, (void*)deferredMemoryRead, (void*)memoryWrite, g_memoryTotalSize);
+  }
 }
 
 void Memory::initializeWithoutRegions(libretro::Core* core)

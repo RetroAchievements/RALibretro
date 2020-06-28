@@ -1280,7 +1280,7 @@ bool Application::loadGame(const std::string& path)
 
 moved_recent_item:
   _states.loadSRAM(&_core);
-  _memory.attachToCore(&_core, _system);
+  refreshMemoryMap();
 
   _validSlots = 0;
 
@@ -1296,6 +1296,11 @@ moved_recent_item:
 
   _input.autoAssign();
   return true;
+}
+
+void Application::refreshMemoryMap()
+{
+  _memory.attachToCore(&_core, _system);
 }
 
 void Application::unloadCore()
