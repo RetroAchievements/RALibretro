@@ -19,6 +19,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Input.h"
 
+#include "Util.h"
+
 #include "jsonsax/jsonsax.h"
 
 #define KEYBOARD_ID -1
@@ -27,11 +29,16 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 static const char* s_gameControllerDB[] =
 {
-  // Updated on 2017-06-15
+  // Updated on 2020-06-20 (https://github.com/gabomdq/SDL_GameControllerDB)
+  //
+  //   to convert to .inl file, remove leading comments and everything not in the #Windows block,
+  //   then run this command to wrap each line in quotes:
+  // 
+  //     sed 's/^/"/' GameControllerDB.txt | sed 's/,$/",/' > GameControllerDB.inl
+  //
   #include "GameControllerDB.inl"
   // Some controllers I have around
-  "63252305000000000000504944564944,USB Vibration Joystick (BM),platform:Windows,x:b3,a:b2,b:b1,y:b0,back:b8,start:b9,dpleft:h0.8,dpdown:h0.4,dpright:h0.2,dpup:h0.1,leftshoulder:b4,lefttrigger:b6,rightshoulder:b5,righttrigger:b7,leftstick:b10,rightstick:b11,leftx:a0,lefty:a1,rightx:a2,righty:a3,",
-  "351212ab000000000000504944564944,NES30 Joystick,platform:Windows,x:b3,a:b2,b:b1,y:b0,back:b6,start:b7,leftshoulder:b4,rightshoulder:b5,leftx:a0,lefty:a1,"
+  "351212ab000000000000504944564944,NES30 Joystick,platform:Windows,x:b3,a:b2,b:b1,y:b0,back:b6,start:b7,leftshoulder:b4,rightshoulder:b5,leftx:a0,lefty:a1"
 };
 
 bool Input::init(libretro::LoggerComponent* logger)
@@ -45,17 +52,26 @@ bool Input::init(libretro::LoggerComponent* logger)
   {
     SDL_GameControllerAddMapping(s_gameControllerDB[i]);
   }
+  _logger->debug(TAG "Loaded %d controller mappings", sizeof(s_gameControllerDB) / sizeof(s_gameControllerDB[0]));
+
+  if (util::exists("GameControllerDB.txt"))
+  {
+    int result = SDL_GameControllerAddMappingsFromFile("GameControllerDB.txt");
+    if (result > 0)
+      _logger->info(TAG "Loaded %d additional controller mappings from file", result);
+    else if (result < 0)
+      _logger->info(TAG "Error processing GameControllerDB.txt: %s", SDL_GetError());
+  }
 
   // Add the keyboard controller
   Pad keyb;
+  memset(&keyb, 0, sizeof(keyb));
 
   keyb._id = KEYBOARD_ID;
-  keyb._controller = NULL;
   keyb._controllerName = "Keyboard";
-  keyb._joystick = NULL;
   keyb._joystickName = "Keyboard";
-  keyb._ports = 0;
   keyb._sensitivity = 0.5f;
+  keyb._navigationPort = 0xFFFFFFFF;
 
   _pads.insert(std::make_pair(keyb._id, keyb));
   _logger->info(TAG "Controller %s (%s) added", keyb._controllerName, keyb._joystickName);
@@ -113,6 +129,8 @@ SDL_JoystickID Input::addController(int which)
   if (SDL_IsGameController(which))
   {
     Pad pad;
+    memset(&pad, 0, sizeof(pad));
+    pad._navigationPort = 0xFFFFFFFF;
 
     pad._controller = SDL_GameControllerOpen(which);
 
@@ -141,7 +159,6 @@ SDL_JoystickID Input::addController(int which)
 
     pad._controllerName = SDL_GameControllerName(pad._controller);
     pad._joystickName = SDL_JoystickName(pad._joystick);
-    pad._ports = 0;
     pad._sensitivity = 0.5f;
 
     _pads.insert(std::make_pair(pad._id, pad));
@@ -408,6 +425,95 @@ void Input::setSelectedControllerIndex(unsigned port, int selectedIndex)
   _updated = true;
 }
 
+bool Input::setRumble(unsigned port, retro_rumble_effect effect, uint16_t strength)
+{
+  const int RUMBLE_DISABLED = -2;
+  const int RUMBLE_NO_EFFECT = -1;
+
+  Pad* pad = NULL;
+  for (auto& scan : _pads)
+  {
+    if (scan.second._navigationPort == port)
+    {
+      pad = &scan.second;
+      break;
+    }
+  }
+
+  if (!pad || pad->_rumbleEffect == RUMBLE_DISABLED)
+    return false;
+
+  if (!pad->_haptic)
+  {
+    pad->_haptic = SDL_HapticOpenFromJoystick(pad->_joystick);
+    if (!pad->_haptic)
+    {
+      _logger->warn(TAG "Could not initialize rumble for %s", pad->_controllerName);
+      pad->_rumbleEffect = RUMBLE_DISABLED;
+    }
+    else
+    {
+      SDL_HapticEffect efx;
+      memset(&efx, 0, sizeof(efx));
+      efx.type = SDL_HAPTIC_LEFTRIGHT;
+      efx.leftright.type = SDL_HAPTIC_LEFTRIGHT;
+      efx.leftright.large_magnitude = efx.leftright.small_magnitude = 0x4000;
+      efx.leftright.length = 5000;
+
+      if (SDL_HapticEffectSupported(pad->_haptic, &efx) == SDL_FALSE)
+      {
+        _logger->warn(TAG "%s does not support rumble", pad->_controllerName);
+        pad->_rumbleEffect = RUMBLE_DISABLED;
+        SDL_HapticClose(pad->_haptic);
+        pad->_haptic = NULL;
+      }
+      else
+      {
+        _logger->info(TAG "Rumble initialized for %s", pad->_controllerName);
+        pad->_rumbleEffect = RUMBLE_NO_EFFECT;
+      }
+    }
+  }
+
+  if (pad->_rumbleEffect == RUMBLE_DISABLED)
+    return false;
+
+  SDL_HapticEffect efx;
+  memset(&efx, 0, sizeof(efx));
+  efx.type = SDL_HAPTIC_LEFTRIGHT;
+  efx.leftright.type = SDL_HAPTIC_LEFTRIGHT;
+  efx.leftright.length = 5000;
+
+  switch (effect)
+  {
+  case RETRO_RUMBLE_STRONG:
+    efx.leftright.large_magnitude = strength;
+    break;
+  case RETRO_RUMBLE_WEAK:
+    efx.leftright.small_magnitude = strength;
+    break;
+  default:
+    return false;
+  }
+
+  if (pad->_rumbleEffect == RUMBLE_NO_EFFECT)
+  {
+    pad->_rumbleEffect = SDL_HapticNewEffect(pad->_haptic, &efx);
+    if (pad->_rumbleEffect < 0)
+    {
+      _logger->warn(TAG "Failed to create rumble effect for %s", pad->_controllerName);
+      pad->_rumbleEffect = RUMBLE_DISABLED;
+      return false;
+    }
+  }
+  else
+  {
+    SDL_HapticUpdateEffect(pad->_haptic, pad->_rumbleEffect, &efx);
+  }
+
+  return (SDL_HapticRunEffect(pad->_haptic, pad->_rumbleEffect, 1) == 0);
+}
+
 bool Input::ctrlUpdated()
 {
   bool updated = _updated;
@@ -550,6 +656,8 @@ void Input::addController(const SDL_Event* event, KeyBinds* keyBinds)
           break;
         }
       }
+
+      pad->second._navigationPort = keyBinds->getNavigationPort(id);
     }
   }
 }
@@ -564,6 +672,9 @@ void Input::removeController(const SDL_Event* event)
     _logger->info(TAG "Controller %s (%s) removed", pad->_controllerName, pad->_joystickName);
 
     // cleanup
+    if (pad->_haptic)
+      SDL_HapticClose(pad->_haptic);
+
     SDL_GameControllerClose(pad->_controller);
     _pads.erase(it);
 

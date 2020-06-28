@@ -114,6 +114,7 @@ namespace libretro
 
     virtual void setVariables(const struct retro_variable* variables, unsigned count) = 0;
     virtual void setVariables(const struct retro_core_option_definition* options, unsigned count) = 0;
+    virtual void setVariableDisplay(const struct retro_core_option_display* display) = 0;
     virtual bool varUpdated() = 0;
     virtual const char* getVariable(const char* variable) = 0;
   };
@@ -178,6 +179,8 @@ namespace libretro
     virtual void     setControllerInfo(const struct retro_controller_info* info, unsigned count) = 0;
     virtual bool     ctrlUpdated() = 0;
     virtual unsigned getController(unsigned port) = 0;
+
+    virtual bool     setRumble(unsigned port, retro_rumble_effect effect, uint16_t strength) = 0;
 
     virtual void    poll() = 0;
     virtual int16_t read(unsigned port, unsigned device, unsigned index, unsigned id) = 0;

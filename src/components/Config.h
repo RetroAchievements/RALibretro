@@ -41,6 +41,7 @@ public:
 
   virtual void setVariables(const struct retro_variable* variables, unsigned count) override;
   virtual void setVariables(const struct retro_core_option_definition* options, unsigned count) override;
+  virtual void setVariableDisplay(const struct retro_core_option_display* display) override;
   virtual bool varUpdated() override;
   virtual const char* getVariable(const char* variable) override;
 
@@ -71,6 +72,7 @@ protected:
     std::string _key;
     std::string _name;
     int         _selected;
+    bool        _hidden;
 
     std::vector<std::string> _options;
     std::vector<std::string> _labels;

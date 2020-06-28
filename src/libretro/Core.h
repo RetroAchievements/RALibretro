@@ -61,6 +61,7 @@ namespace libretro
     inline bool                    getSupportsNoGame()      const { return _supportsNoGame; }
     inline bool                    getSupportAchievements() const { return _supportAchievements; }
     inline void                    unloadGame()                   { _core.unloadGame(); }
+    inline bool                    gameLoaded()             const { return _gameLoaded; }
 
     inline unsigned                getNumDiscs()            const { return (_diskControlInterface != NULL) ? _diskControlInterface->get_num_images() : 0; }
     inline unsigned                getCurrentDiscIndex()    const { return (_diskControlInterface != NULL) ? _diskControlInterface->get_image_index() : 0; }
@@ -139,6 +140,7 @@ namespace libretro
     bool getVariableUpdate(bool* data);
     bool setSupportNoGame(bool data);
     bool getLibretroPath(const char** data) const;
+    bool getRumbleInterface(struct retro_rumble_interface* data) const;
     bool getInputDeviceCapabilities(uint64_t* data) const;
     bool getLogInterface(struct retro_log_callback* data) const;
     bool getCoreAssetsDirectory(const char** data) const;
@@ -155,6 +157,7 @@ namespace libretro
     bool getCoreOptionsVersion(unsigned* data) const;
     bool setCoreOptions(const struct retro_core_option_definition* data);
     bool setCoreOptionsIntl(const struct retro_core_options_intl* data);
+    bool setCoreOptionsDisplay(const struct retro_core_option_display* data);
 
     // Callbacks
     bool                 environmentCallback(unsigned cmd, void* data);
@@ -166,6 +169,7 @@ namespace libretro
     uintptr_t            getCurrentFramebuffer();
     retro_proc_address_t getProcAddress(const char* symbol);
     void                 logCallback(enum retro_log_level level, const char *fmt, va_list args);
+    bool                 setRumble(unsigned port, enum retro_rumble_effect effect, uint16_t strength);
 
     // Static callbacks that use s_instance to call into the core's implementation
     static bool                 s_environmentCallback(unsigned cmd, void* data);
@@ -177,7 +181,8 @@ namespace libretro
     static uintptr_t            s_getCurrentFramebuffer();
     static retro_proc_address_t s_getProcAddress(const char* symbol);
     static void                 s_logCallback(enum retro_log_level level, const char *fmt, ...);
-    
+    static bool                 s_setRumbleCallback(unsigned port, enum retro_rumble_effect effect, uint16_t strength);
+
     LoggerComponent*                _logger;
     ConfigComponent*                _config;
     VideoContextComponent*          _videoContext;

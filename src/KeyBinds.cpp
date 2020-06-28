@@ -677,6 +677,28 @@ KeyBinds::Action KeyBinds::translate(const SDL_ControllerButtonEvent* cbutton, u
   return Action::kNothing;
 }
 
+unsigned KeyBinds::getNavigationPort(SDL_JoystickID joystickID)
+{
+  joystickID = getBindingID(joystickID);
+
+  if (_bindings[kJoy0Right].type == Binding::Type::Button && _bindings[kJoy0Right].joystick_id == joystickID)
+    return 0;
+  if (_bindings[kJoy1Right].type == Binding::Type::Button && _bindings[kJoy1Right].joystick_id == joystickID)
+    return 1;
+
+  if (_bindings[kJoy0LeftAnalogX].type == Binding::Type::Axis && _bindings[kJoy0LeftAnalogX].joystick_id == joystickID)
+    return 0;
+  if (_bindings[kJoy1LeftAnalogX].type == Binding::Type::Axis && _bindings[kJoy1LeftAnalogX].joystick_id == joystickID)
+    return 1;
+
+  if (_bindings[kJoy0LeftAnalogX].type == Binding::Type::Button && _bindings[kJoy0LeftAnalogX].joystick_id == joystickID)
+    return 0;
+  if (_bindings[kJoy1LeftAnalogX].type == Binding::Type::Button && _bindings[kJoy1LeftAnalogX].joystick_id == joystickID)
+    return 1;
+
+  return 0xFFFFFFFF;
+}
+
 void KeyBinds::mapDevice(SDL_JoystickID originalID, SDL_JoystickID newID)
 {
   for (auto pair = _bindingMap.begin(); pair != _bindingMap.end(); ++pair)
