@@ -1279,12 +1279,12 @@ bool Application::loadGame(const std::string& path)
   }
 
 moved_recent_item:
-  _states.loadSRAM(&_core);
   refreshMemoryMap();
 
   _validSlots = 0;
 
   _states.migrateFiles();
+  _states.loadSRAM(&_core);
 
   for (unsigned ndx = 1; ndx <= 10; ndx++)
   {
