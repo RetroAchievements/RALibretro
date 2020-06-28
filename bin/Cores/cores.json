@@ -90,6 +90,11 @@
     "extensions": "pce|cue",
     "systems": [8]
   },
+  "mednafen_pcfx_libretro":{
+    "name": "Beetle PC-FX",
+    "extensions": "m3u|cue",
+    "systems": [49]
+  },
   "mednafen_psx_libretro":{
     "name": "Beetle PSX",
     "extensions": "m3u|cue",
