@@ -19,6 +19,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Input.h"
 
+#include "Util.h"
+
 #include "jsonsax/jsonsax.h"
 
 #define KEYBOARD_ID -1
@@ -27,11 +29,16 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 static const char* s_gameControllerDB[] =
 {
-  // Updated on 2017-06-15
+  // Updated on 2020-06-20 (https://github.com/gabomdq/SDL_GameControllerDB)
+  //
+  //   to convert to .inl file, remove leading comments and everything not in the #Windows block,
+  //   then run this command to wrap each line in quotes:
+  // 
+  //     sed 's/^/"/' GameControllerDB.txt | sed 's/,$/",/' > GameControllerDB.inl
+  //
   #include "GameControllerDB.inl"
   // Some controllers I have around
-  "63252305000000000000504944564944,USB Vibration Joystick (BM),platform:Windows,x:b3,a:b2,b:b1,y:b0,back:b8,start:b9,dpleft:h0.8,dpdown:h0.4,dpright:h0.2,dpup:h0.1,leftshoulder:b4,lefttrigger:b6,rightshoulder:b5,righttrigger:b7,leftstick:b10,rightstick:b11,leftx:a0,lefty:a1,rightx:a2,righty:a3,",
-  "351212ab000000000000504944564944,NES30 Joystick,platform:Windows,x:b3,a:b2,b:b1,y:b0,back:b6,start:b7,leftshoulder:b4,rightshoulder:b5,leftx:a0,lefty:a1,"
+  "351212ab000000000000504944564944,NES30 Joystick,platform:Windows,x:b3,a:b2,b:b1,y:b0,back:b6,start:b7,leftshoulder:b4,rightshoulder:b5,leftx:a0,lefty:a1"
 };
 
 bool Input::init(libretro::LoggerComponent* logger)
@@ -44,6 +51,16 @@ bool Input::init(libretro::LoggerComponent* logger)
   for (size_t i = 0; i < sizeof(s_gameControllerDB) / sizeof(s_gameControllerDB[0]); i++ )
   {
     SDL_GameControllerAddMapping(s_gameControllerDB[i]);
+  }
+  _logger->debug(TAG "Loaded %d controller mappings", sizeof(s_gameControllerDB) / sizeof(s_gameControllerDB[0]));
+
+  if (util::exists("GameControllerDB.txt"))
+  {
+    int result = SDL_GameControllerAddMappingsFromFile("GameControllerDB.txt");
+    if (result > 0)
+      _logger->info(TAG "Loaded %d additional controller mappings from file", result);
+    else if (result < 0)
+      _logger->info(TAG "Error processing GameControllerDB.txt: %s", SDL_GetError());
   }
 
   // Add the keyboard controller
