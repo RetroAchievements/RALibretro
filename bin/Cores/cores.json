@@ -82,7 +82,7 @@
     "systems": [5]
   },
   "mednafen_ngp_libretro":{
-    "name": "Mednafen NeoPop",
+    "name": "Beetle NeoPop",
     "systems": [14]
   },
   "mednafen_pce_fast_libretro":{
@@ -111,16 +111,16 @@
     "systems": [39]
   },
   "mednafen_supergrafx_libretro":{
-    "name": "Mednafen SuperGrafX",
+    "name": "Beetle SuperGrafX",
     "extensions": "pce|sgx|cue",
     "systems": [8]
   },
   "mednafen_vb_libretro":{
-    "name": "Mednafen VB",
+    "name": "Beetle VB",
     "systems": [28]
   },
   "mednafen_wswan_libretro":{
-    "name": "Mednafen WonderSwan",
+    "name": "Beetle WonderSwan",
     "systems": [53]
   },
   "mgba_libretro":{
@@ -177,17 +177,17 @@
     "systems": [5]
   },
   "vbam_libretro":{
-    "name": "Mednafen VBA-M",
+    "name": "VBA-M",
     "extensions": "gb",
     "systems": [4]
   },
   "vbam_libretro":{
-    "name": "Mednafen VBA-M",
+    "name": "VBA-M",
     "extensions": "gbc",
     "systems": [5]
   },
   "vbam_libretro":{
-    "name": "Mednafen VBA-M",
+    "name": "VBA-M",
     "extensions": "gba",
     "systems": [6]
   },
