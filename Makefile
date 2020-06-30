@@ -21,6 +21,12 @@ ifeq ($(OS),Windows_NT)
   CC=gcc
   CXX=g++
   RC=windres
+  
+  ifeq ($(ARCH), x86)
+    MINGWLIBDIR=/mingw32/bin
+  else
+    MINGWLIBDIR=/mingw64/bin
+  endif
 
 else ifeq ($(shell uname -s),Linux)
   MINGW=x86_64-w64-mingw32
@@ -31,6 +37,8 @@ else ifeq ($(shell uname -s),Linux)
   CC=$(MINGW)-gcc
   CXX=$(MINGW)-g++
   RC=$(MINGW)-windres
+  
+  MINGWLIBDIR=/usr/$(MINGW)/lib
 
   # make sure to use the mingw-32bit flavor of sdl2-config
   ifneq (,$(wildcard /usr/lib/mxe/usr/i686-w64-mingw32.static/bin/sdl2-config))
@@ -68,11 +76,9 @@ else
   CXXFLAGS += -O3 -DNDEBUG -DLOG_TO_FILE
 endif
 
-LDFLAGS += -lopengl32 -lwinhttp
-ifeq ($(shell uname -s),Linux)
-  LDFLAGS += -static-libstdc++ -lmingw32 -lgdi32 -limm32 -lcomdlg32
-  LDFLAGS += -L${SDLLIBDIR} -lSDL2main -lSDL2.dll
-endif
+LDFLAGS += -static-libgcc -static-libstdc++
+LDFLAGS += -mwindows -lmingw32 -lopengl32 -lwinhttp -lgdi32 -limm32 -lcomdlg32
+LDFLAGS += -L${SDLLIBDIR} -lSDL2main -lSDL2
 
 # main
 OBJS=\
@@ -123,9 +129,12 @@ OBJS=\
 %.res: %.rc
 	$(RC) $< -O coff -o $@
 
-all: $(OUTDIR)/RALibretro.exe $(OUTDIR)/SDL2.dll
+all: $(OUTDIR)/RALibretro.exe $(OUTDIR)/SDL2.dll $(OUTDIR)/libwinpthread-1.dll
 
 $(OUTDIR)/SDL2.dll: $(SDLLIBDIR)/SDL2.dll
+	cp -f $< $@
+
+$(OUTDIR)/libwinpthread-1.dll: $(MINGWLIBDIR)/libwinpthread-1.dll
 	cp -f $< $@
 
 $(OUTDIR)/RALibretro.exe: $(OBJS)
