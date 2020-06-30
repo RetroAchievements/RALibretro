@@ -596,7 +596,7 @@ std::string util::replaceFileName(const std::string& originalPath, const char* n
 std::string util::sanitizeFileName(const std::string& fileName)
 {
   std::string sanitized = fileName;
-  for (int i = 0; i < sanitized.length(); ++i)
+  for (size_t i = 0; i < sanitized.length(); ++i)
   {
     switch (sanitized[i])
     {
