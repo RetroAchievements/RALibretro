@@ -1,0 +1,23 @@
+# Control file for continuous integration testing at http://travis-ci.org/
+
+# ignore release tags
+branches:
+  except:
+    /^\d+\.\d+(\.\d+)?(-\S*)?$/  
+
+language: c++
+
+
+
+jobs:
+  include:
+    - name: "Win32 cross-compile (Linux)"
+      os: linux
+      compiler: i686-w64-mingw32-gcc
+      script: make ARCH=x86
+
+    - name: "Win64 cross-compile (Linux)"
+      os: linux
+      compiler: x86_64-w64-mingw32
+      script: make ARCH=x64
+
