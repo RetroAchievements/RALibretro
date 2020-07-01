@@ -1326,6 +1326,7 @@ void Application::resetGame()
   {
     _core.resetGame();
     _video.clear();
+    refreshMemoryMap();
     RA_OnReset();
   }
 }
