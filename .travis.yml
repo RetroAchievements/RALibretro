@@ -14,28 +14,18 @@ jobs:
       os: windows
       env:
       - VSINSTALLDIR="C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\"
-      - MSBUILD_PATH="$(VSINSTALLDIR)MSBuild\15.0\Bin"
+      - MSBUILD_PATH="${VSINSTALLDIR}MSBuild\15.0\Bin"
       script:
-      - call "$(VSINSTALLDIR)VC\Auxiliary\Build\vcvars32.bat"
+      - call "${VSINSTALLDIR}VC\Auxiliary\Build\vcvars32.bat"
       - msbuild.exe -version
     
     - name: "Win32 cross-compile (Linux)"
       os: linux
       compiler: i686-w64-mingw32-gcc
-      addons:
-        apt:
-          packages:
-            - g++                  # iconv.h
-            - libsdl2-dev          # SDL headers
       script: make ARCH=x86
 
     - name: "Win64 cross-compile (Linux)"
       os: linux
       compiler: x86_64-w64-mingw32
-      addons:
-        apt:
-          packages:
-            - g++                  # iconv.h
-            - libsdl2-dev          # SDL headers
       script: make ARCH=x64
 

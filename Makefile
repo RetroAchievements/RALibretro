@@ -2,8 +2,6 @@
 #  ARCH           architecture - "x86" or "x64" [detected if not set]
 #  DEBUG          if set to anything, builds with DEBUG symbols
 
-SDL2CONFIG=sdl2-config
-
 # default parameter values
 ifeq ($(ARCH),)
   UNAME := $(shell uname -s)
@@ -39,17 +37,12 @@ else ifeq ($(shell uname -s),Linux)
   RC=$(MINGW)-windres
   
   MINGWLIBDIR=/usr/$(MINGW)/lib
-
-  # make sure to use the mingw-32bit flavor of sdl2-config
-  ifneq (,$(wildcard /usr/lib/mxe/usr/i686-w64-mingw32.static/bin/sdl2-config))
-    SDL2CONFIG=/usr/lib/mxe/usr/i686-w64-mingw32.static/bin/sdl2-config
-  endif
 endif
 
 # compile flags
-INCLUDES=-Isrc -I./src/RAInterface -I./src/miniz -I./src/rcheevos/include
+INCLUDES=-Isrc -I./src/RAInterface -I./src/miniz -I./src/rcheevos/include -I./src/SDL2/include
 DEFINES=-DOUTSIDE_SPEEX -DRANDOM_PREFIX=speex -DEXPORT= -D_USE_SSE2 -DFIXED_POINT -D_WINDOWS
-CCFLAGS=-Wall $(INCLUDES) $(DEFINES) `$(SDL2CONFIG) --cflags`
+CCFLAGS=-Wall $(INCLUDES) $(DEFINES)
 CXXFLAGS=$(CCFLAGS) -std=c++11
 
 ifeq ($(ARCH), x86)
