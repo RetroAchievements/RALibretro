@@ -568,7 +568,7 @@ static void getCoreSystemTimes(Config* config, Logger* logger)
         memset(&tm, 0, sizeof(tm));
 
         int y, m, d;
-        sscanf(dateStart, "%d-%d-%d", &y, &m, &d);
+        sscanf_s(dateStart, "%d-%d-%d", &y, &m, &d);
         tm.tm_year = y - 1900;
         tm.tm_mon = m - 1;
         tm.tm_mday = d;
