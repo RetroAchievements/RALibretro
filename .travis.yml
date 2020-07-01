@@ -8,20 +8,15 @@ branches:
 language: c++
 
 
-git:
-  depth: 100 # want to make sure we can find a version tag
-
-
 jobs:
   include:
     - name: "RALibretro Win32"
       os: windows
-      env: VSINSTALLDIR=C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\
-      script:
-      - echo $VSINSTALLDIR
-      - echo "${VSINSTALLDIR}VC\Auxiliary\Build\vcvars32.bat"
-      - call "${VSINSTALLDIR}VC\Auxiliary\Build\vcvars32.bat"
-      - msbuild.exe -version
+      script: etc/msbuild.bat Release x86
+
+    - name: "RALibretro Win64"
+      os: windows
+      script: etc/msbuild.bat Release x64
     
     - name: "RALibretro Win32 cross-compile (Linux)"
       os: linux
@@ -35,6 +30,10 @@ jobs:
 
     - name: "RAHasher x86 Linux"
       os: linux
+      addons:
+        apt:
+          packages:
+            g++-multilib # fatal error: bits/c++config.h: No such file or directory
       script: make ARCH=x86 -f Makefile.RAHasher
 
     - name: "RAHasher x64 Linux"
