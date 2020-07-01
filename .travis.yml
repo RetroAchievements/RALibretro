@@ -8,26 +8,35 @@ branches:
 language: c++
 
 
+git:
+  depth: 100 # want to make sure we can find a version tag
+
+
 jobs:
   include:
-    - name: "Win32"
+    - name: "RALibretro Win32"
       os: windows
-      env:
-      - VSINSTALLDIR="C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\"
-      - MSBUILD_PATH="${VSINSTALLDIR}MSBuild\15.0\Bin"
+      env: VSINSTALLDIR=C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\
       script:
       - echo $VSINSTALLDIR
       - echo "${VSINSTALLDIR}VC\Auxiliary\Build\vcvars32.bat"
       - call "${VSINSTALLDIR}VC\Auxiliary\Build\vcvars32.bat"
       - msbuild.exe -version
     
-    - name: "Win32 cross-compile (Linux)"
+    - name: "RALibretro Win32 cross-compile (Linux)"
       os: linux
       compiler: i686-w64-mingw32-gcc
       script: make ARCH=x86
 
-    - name: "Win64 cross-compile (Linux)"
+    - name: "RALibretro Win64 cross-compile (Linux)"
       os: linux
       compiler: x86_64-w64-mingw32
       script: make ARCH=x64
 
+    - name: "RAHasher x86 Linux"
+      os: linux
+      script: make ARCH=x86 -f Makefile.RAHasher
+
+    - name: "RAHasher x64 Linux"
+      os: linux
+      script: make ARCH=x64 -f Makefile.RAHasher
