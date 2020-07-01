@@ -5,8 +5,6 @@
 #include "Hash.h"
 #include "Util.h"
 
-#include <md5/md5.h>
-
 #include <rcheevos/include/rhash.h>
 
 #include <memory>

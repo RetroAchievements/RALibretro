@@ -1,0 +1,43 @@
+# default parameter values
+ifeq ($(ARCH),)
+  UNAME := $(shell uname -s)
+  ifeq ($(findstring MINGW64, $(UNAME)), MINGW64)
+    ARCH=x64
+  else ifeq ($(findstring MINGW32, $(UNAME)), MINGW32)
+    ARCH=x86
+  else
+    UNAME := $(shell uname -m)
+    ifeq ($(UNAME), x86_64)
+      ARCH=x64
+    else
+      ARCH=x86
+    endif
+  endif
+endif
+
+INCLUDES=-Isrc -I./src/miniz -I./src/rcheevos/include
+CFLAGS=-Wall $(INCLUDES)
+CXXFLAGS=$(CFLAGS) -std=c++11
+LDFLAGS=-static-libgcc -static-libstdc++
+
+ifeq ($(ARCH), x86)
+  CFLAGS += -m32
+  CXXFLAGS += -m32
+  LDFLAGS += -m32
+  OUTDIR=bin
+else ifeq ($(ARCH), x64)
+  CFLAGS += -m64
+  CXXFLAGS += -m64
+  LDFLAGS += -m64
+  OUTDIR=bin64
+else
+  $(error unknown ARCH "$(ARCH)")
+endif
+
+ifneq ($(DEBUG),)
+  CFLAGS   += -O0 -g
+  CXXFLAGS += -O0 -g
+else
+  CFLAGS   += -O3 -DNDEBUG
+  CXXFLAGS += -O3 -DNDEBUG
+endif

@@ -2,17 +2,7 @@
 #  ARCH           architecture - "x86" or "x64" [detected if not set]
 #  DEBUG          if set to anything, builds with DEBUG symbols
 
-# default parameter values
-ifeq ($(ARCH),)
-  UNAME := $(shell uname -s)
-  ifeq ($(findstring MINGW64, $(UNAME)), MINGW64)
-    ARCH=x64
-  else ifeq ($(findstring MINGW32, $(UNAME)), MINGW32)
-    ARCH=x86
-  else
-    $(error Could not determine ARCH)
-  endif
-endif
+include Makefile.common
 
 # Toolset setup
 ifeq ($(OS),Windows_NT)
@@ -40,36 +30,25 @@ else ifeq ($(shell uname -s),Linux)
 endif
 
 # compile flags
-INCLUDES=-Isrc -I./src/RAInterface -I./src/miniz -I./src/rcheevos/include -I./src/SDL2/include
+INCLUDES += -I./src/RAInterface -I./src/SDL2/include
 DEFINES=-DOUTSIDE_SPEEX -DRANDOM_PREFIX=speex -DEXPORT= -D_USE_SSE2 -DFIXED_POINT -D_WINDOWS
-CCFLAGS=-Wall $(INCLUDES) $(DEFINES)
-CXXFLAGS=$(CCFLAGS) -std=c++11
+CFLAGS += $(DEFINES)
+CXXFLAGS += $(DEFINES)
 
 ifeq ($(ARCH), x86)
-  CFLAGS += -m32
-  CXXFLAGS += -m32
-  LDFLAGS += -m32
-  OUTDIR=bin
   SDLLIBDIR=src/SDL2/lib/x86
-else ifeq ($(ARCH), x64)
-  CFLAGS += -m64
-  CXXFLAGS += -m64
-  LDFLAGS += -m64
-  OUTDIR=bin64
-  SDLLIBDIR=src/SDL2/lib/x64
 else
-  $(error unknown ARCH "$(ARCH)")
+  SDLLIBDIR=src/SDL2/lib/x64
 endif
 
 ifneq ($(DEBUG),)
-  CFLAGS   += -O0 -g -DDEBUG_FSM -DLOG_TO_FILE
-  CXXFLAGS += -O0 -g -DDEBUG_FSM -DLOG_TO_FILE
+  CFLAGS   += -DDEBUG_FSM -DLOG_TO_FILE
+  CXXFLAGS += -DDEBUG_FSM -DLOG_TO_FILE
 else
-  CFLAGS   += -O3 -DNDEBUG -DLOG_TO_FILE
-  CXXFLAGS += -O3 -DNDEBUG -DLOG_TO_FILE
+  CFLAGS   += -DLOG_TO_FILE
+  CXXFLAGS += -DLOG_TO_FILE
 endif
 
-LDFLAGS += -static-libgcc -static-libstdc++
 LDFLAGS += -mwindows -lmingw32 -lopengl32 -lwinhttp -lgdi32 -limm32 -lcomdlg32
 LDFLAGS += -L${SDLLIBDIR} -lSDL2main -lSDL2
 
@@ -117,7 +96,7 @@ OBJS=\
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 %.o: %.c
-	$(CC) $(CCFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 %.res: %.rc
 	$(RC) $< -O coff -o $@
@@ -132,7 +111,7 @@ $(OUTDIR)/libwinpthread-1.dll: $(MINGWLIBDIR)/libwinpthread-1.dll
 
 $(OUTDIR)/RALibretro.exe: $(OBJS)
 	mkdir -p $(OUTDIR)
-	$(CXX) -o $@ $+ $(LDFLAGS) $(LIBS)
+	$(CXX) -o $@ $+ $(LDFLAGS)
 
 src/Git.cpp: etc/Git.cpp.template FORCE
 	cat $< | sed s/GITFULLHASH/`git rev-parse HEAD | tr -d "\n"`/g | sed s/GITMINIHASH/`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`/g | sed s/GITRELEASE/`git describe --tags | sed s/\-.*//g | tr -d "\n"`/g > $@
