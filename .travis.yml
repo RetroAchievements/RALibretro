@@ -16,6 +16,8 @@ jobs:
       - VSINSTALLDIR="C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\"
       - MSBUILD_PATH="${VSINSTALLDIR}MSBuild\15.0\Bin"
       script:
+      - echo $VSINSTALLDIR
+      - echo "${VSINSTALLDIR}VC\Auxiliary\Build\vcvars32.bat"
       - call "${VSINSTALLDIR}VC\Auxiliary\Build\vcvars32.bat"
       - msbuild.exe -version
     
