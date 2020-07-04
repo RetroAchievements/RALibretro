@@ -148,6 +148,16 @@ void Memory::destroy()
 
 void Memory::attachToCore(libretro::Core* core, int consoleId)
 {
+  /* capture the registered regions */
+  uint8_t* memoryRegionData[MAX_MEMORY_REGIONS];
+  size_t memoryRegionSize[MAX_MEMORY_REGIONS];
+  size_t memoryRegionCount = g_memoryRegionCount;
+  size_t memoryTotalSize = g_memoryTotalSize;
+
+  memcpy(memoryRegionData, g_memoryRegionData, sizeof(memoryRegionData));
+  memcpy(memoryRegionSize, g_memoryRegionSize, sizeof(memoryRegionSize));
+
+  /* reset and register new regions */
   g_memoryRegionCount = 0;
   g_memoryTotalSize = 0;
 
@@ -165,6 +175,17 @@ void Memory::attachToCore(libretro::Core* core, int consoleId)
       initializeFromUnmappedMemory(regions, core);
   }
 
+  /* if no change is detected, do nothing */
+  if (g_memoryTotalSize == memoryTotalSize && g_memoryRegionCount == memoryRegionCount)
+  {
+    if (memcmp(memoryRegionData, g_memoryRegionData, memoryRegionCount * sizeof(memoryRegionData[0])) == 0 &&
+        memcmp(memoryRegionSize, g_memoryRegionSize, memoryRegionCount * sizeof(memoryRegionSize[0])) == 0)
+    {
+      return;
+    }
+  }
+
+  /* change detected - update the installed memory banks */
   bool hasValidRegion = false;
   for (int i = 0; i < g_memoryRegionCount; i++)
   {
