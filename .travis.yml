@@ -1,0 +1,41 @@
+# Control file for continuous integration testing at http://travis-ci.org/
+
+# ignore release tags
+branches:
+  except:
+    /^\d+\.\d+(\.\d+)?(-\S*)?$/  
+
+language: c++
+
+
+jobs:
+  include:
+    - name: "RALibretro Win32"
+      os: windows
+      script: etc/msbuild.bat Release x86
+
+    - name: "RALibretro Win64"
+      os: windows
+      script: etc/msbuild.bat Release x64
+    
+    - name: "RALibretro Win32 cross-compile (Linux)"
+      os: linux
+      compiler: i686-w64-mingw32-gcc
+      script: make ARCH=x86
+
+    - name: "RALibretro Win64 cross-compile (Linux)"
+      os: linux
+      compiler: x86_64-w64-mingw32
+      script: make ARCH=x64
+
+    - name: "RAHasher x86 Linux"
+      os: linux
+      addons:
+        apt:
+          packages:
+            g++-multilib # fatal error: bits/c++config.h: No such file or directory
+      script: make ARCH=x86 -f Makefile.RAHasher
+
+    - name: "RAHasher x64 Linux"
+      os: linux
+      script: make ARCH=x64 -f Makefile.RAHasher

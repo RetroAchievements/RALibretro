@@ -3,6 +3,7 @@
 *.suo
 *.user
 *.o
+*.res
 *.swp
 *.log
 *.pdb

@@ -41,6 +41,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <assert.h>
 #include <chrono>
 #include <time.h>
+#include <math.h>
 #include <sys/stat.h>
 
 #define WIN32_LEAN_AND_MEAN

@@ -31,6 +31,8 @@ for /f "tokens=1* delims=]" %%a in ('type "%TEMPLATE%" ^| find /V /N ""') do (
     )
 )
 
+if not exist Git.cpp copy %TEMPLATE% Git.cpp
+
 if not exist ..\src\Git.cpp goto nonexistant
 fc ..\src\Git.cpp Git.cpp > nul
 if errorlevel 1 goto different

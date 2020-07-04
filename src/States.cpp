@@ -629,7 +629,7 @@ public:
 
   const char* getIntervalOption(int option) const
   {
-    if (option < 0 || option >= sizeof(_saveIntervals) / sizeof(_saveIntervals[0]))
+    if (option < 0 || option >= (int)(sizeof(_saveIntervals) / sizeof(_saveIntervals[0])))
       return NULL;
 
     return _intervalOptions[option].c_str();

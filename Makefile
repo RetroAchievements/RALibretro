@@ -1,48 +1,58 @@
-# IMPORTANT NOTE FOR CROSS-COMPILING:
-# you need to change your PATH to invoke the mingw-32bit flavor of sdl2-config
+# supported parameters
+#  ARCH           architecture - "x86" or "x64" [detected if not set]
+#  DEBUG          if set to anything, builds with DEBUG symbols
+
+include Makefile.common
 
 # Toolset setup
 ifeq ($(OS),Windows_NT)
-    CC=gcc
-    CXX=g++
-    RC=windres
-
-    ifeq ($(findstring MINGW64, $(shell uname)), MINGW64)
-        ARCH=-m64
-        OUTDIR=bin64
-    else
-        ARCH=-m32
-        OUTDIR=bin
-    endif
+  CC=gcc
+  CXX=g++
+  RC=windres
+  
+  ifeq ($(ARCH), x86)
+    MINGWLIBDIR=/mingw32/bin
+  else
+    MINGWLIBDIR=/mingw64/bin
+  endif
 
 else ifeq ($(shell uname -s),Linux)
-    CC=i686-w64-mingw32-gcc
-    CXX=i686-w64-mingw32-g++
-    RC=i686-w64-mingw32-windres
-    STATICLIBS=-static-libstdc++ 
+  MINGW=x86_64-w64-mingw32
+  ifeq ($(ARCH), x86)
+    MINGW=i686-w64-mingw32
+  endif
 
-    #TODO: determine ARCH
-    ARCH=-m32
-    OUTDIR=bin
+  CC=$(MINGW)-gcc
+  CXX=$(MINGW)-g++
+  RC=$(MINGW)-windres
+  
+  MINGWLIBDIR=/usr/$(MINGW)/lib
 endif
 
-INCLUDES=-Isrc -I./src/RAInterface -I./src/miniz -I./src/rcheevos/include
+# compile flags
+INCLUDES += -I./src/RAInterface -I./src/SDL2/include
 DEFINES=-DOUTSIDE_SPEEX -DRANDOM_PREFIX=speex -DEXPORT= -D_USE_SSE2 -DFIXED_POINT -D_WINDOWS
-CCFLAGS=-Wall $(ARCH) $(INCLUDES) $(DEFINES) `sdl2-config --cflags`
-CXXFLAGS=$(CCFLAGS) -std=c++11
-LDFLAGS=$(ARCH)
+CFLAGS += $(DEFINES)
+CXXFLAGS += $(DEFINES)
 
+ifeq ($(ARCH), x86)
+  SDLLIBDIR=src/SDL2/lib/x86
+else
+  SDLLIBDIR=src/SDL2/lib/x64
+endif
 
 ifneq ($(DEBUG),)
-  CFLAGS   += -O0 -g -DDEBUG_FSM -DLOG_TO_FILE
-  CXXFLAGS += -O0 -g -DDEBUG_FSM -DLOG_TO_FILE
+  CFLAGS   += -DDEBUG_FSM -DLOG_TO_FILE
+  CXXFLAGS += -DDEBUG_FSM -DLOG_TO_FILE
 else
-  CFLAGS   += -O3 -DNDEBUG -DLOG_TO_FILE
-  CXXFLAGS += -O3 -DNDEBUG -DLOG_TO_FILE
+  CFLAGS   += -DLOG_TO_FILE
+  CXXFLAGS += -DLOG_TO_FILE
 endif
 
+LDFLAGS += -mwindows -lmingw32 -lopengl32 -lwinhttp -lgdi32 -limm32 -lcomdlg32
+LDFLAGS += -L${SDLLIBDIR} -lSDL2main -lSDL2
+
 # main
-LIBS=`sdl2-config --static-libs` $(STATICLIBS) -lopengl32 -lwinhttp
 OBJS=\
 	src/dynlib/dynlib.o \
 	src/jsonsax/jsonsax.o \
@@ -86,16 +96,22 @@ OBJS=\
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 %.o: %.c
-	$(CC) $(CCFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 %.res: %.rc
 	$(RC) $< -O coff -o $@
 
-all: $(OUTDIR)/RALibretro.exe
+all: $(OUTDIR)/RALibretro.exe $(OUTDIR)/SDL2.dll $(OUTDIR)/libwinpthread-1.dll
+
+$(OUTDIR)/SDL2.dll: $(SDLLIBDIR)/SDL2.dll
+	cp -f $< $@
+
+$(OUTDIR)/libwinpthread-1.dll: $(MINGWLIBDIR)/libwinpthread-1.dll
+	cp -f $< $@
 
 $(OUTDIR)/RALibretro.exe: $(OBJS)
 	mkdir -p $(OUTDIR)
-	$(CXX) $(LDFLAGS) -o $@ $+ $(LIBS)
+	$(CXX) -o $@ $+ $(LDFLAGS)
 
 src/Git.cpp: etc/Git.cpp.template FORCE
 	cat $< | sed s/GITFULLHASH/`git rev-parse HEAD | tr -d "\n"`/g | sed s/GITMINIHASH/`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`/g | sed s/GITRELEASE/`git describe --tags | sed s/\-.*//g | tr -d "\n"`/g > $@
@@ -105,7 +121,7 @@ zip:
 	zip -9 RALibretro-`git describe | tr -d "\n"`.zip $(OUTDIR)/RALibretro.exe
 
 clean:
-	rm -f $(OUTDIR)/RALibretro $(OBJS) $(OUTDIR)/RALibretro-*.zip RALibretro-*.zip
+	rm -f $(OUTDIR)/RALibretro.exe $(OBJS) $(OUTDIR)/RALibretro-*.zip RALibretro-*.zip
 
 pack:
 ifeq ("", "$(wildcard $(OUTDIR)/RALibretro.exe)")

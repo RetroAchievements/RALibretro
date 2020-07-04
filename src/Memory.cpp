@@ -187,7 +187,7 @@ void Memory::attachToCore(libretro::Core* core, int consoleId)
 
   /* change detected - update the installed memory banks */
   bool hasValidRegion = false;
-  for (int i = 0; i < g_memoryRegionCount; i++)
+  for (size_t i = 0; i < g_memoryRegionCount; i++)
   {
     if (g_memoryRegionData[i] != NULL)
     {

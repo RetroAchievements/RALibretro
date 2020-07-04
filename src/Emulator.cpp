@@ -21,15 +21,15 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Util.h"
 
-#include "components\Config.h"
-#include "components\Logger.h"
+#include "components/Config.h"
+#include "components/Logger.h"
 
 #ifdef _WINDOWS
-#include "components\Dialog.h"
+#include "components/Dialog.h"
 #include <RA_Interface.h>
 #endif
 
-#include <jsonsax\jsonsax.h>
+#include <jsonsax/jsonsax.h>
 
 #include <ctime>
 #include <map>
@@ -568,7 +568,7 @@ static void getCoreSystemTimes(Config* config, Logger* logger)
         memset(&tm, 0, sizeof(tm));
 
         int y, m, d;
-        sscanf_s(dateStart, "%d-%d-%d", &y, &m, &d);
+        sscanf(dateStart, "%d-%d-%d", &y, &m, &d);
         tm.tm_year = y - 1900;
         tm.tm_mon = m - 1;
         tm.tm_mday = d;

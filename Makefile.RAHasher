@@ -1,25 +1,21 @@
+# supported parameters
+#  ARCH           architecture - "x86" or "x64" [detected if not set]
+#  DEBUG          if set to anything, builds with DEBUG symbols
+
+include Makefile.common
+
 # Toolset setup
 CC=gcc
 CXX=g++
 
 ifeq ($(OS),Windows_NT)
-    EXE=.exe
+  EXE=.exe
 endif
 
-INCLUDES=-I./src -I./src/RAInterface -I./src/miniz -I./src/rcheevos/include
+# compile flags
 DEFINES=-D_CONSOLE
-CCFLAGS=-Wall -m32 $(INCLUDES) $(DEFINES)
-CXXFLAGS=$(CCFLAGS) -std=c++11
-LDFLAGS=-m32
-
-
-ifneq ($(DEBUG),)
-  CFLAGS   += -O0 -g
-  CXXFLAGS += -O0 -g
-else
-  CFLAGS   += -O3
-  CXXFLAGS += -O3
-endif
+CFLAGS += $(DEFINES)
+CXXFLAGS += $(DEFINES)
 
 # main
 LIBS=
@@ -40,21 +36,18 @@ OBJS=\
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 %.o: %.c
-	$(CC) $(CCFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
-%.res: %.rc
-	$(RC) $< -O coff -o $@
+all: $(OUTDIR)/RAHasher$(EXE)
 
-all: bin/RAHasher$(EXE)
-
-bin/RAHasher$(EXE): $(OBJS)
-	mkdir -p bin
-	$(CXX) $(LDFLAGS) -o $@ $+ $(LIBS)
+$(OUTDIR)/RAHasher$(EXE): $(OBJS)
+	mkdir -p $(OUTDIR)
+	$(CXX) -o $@ $+ $(LDFLAGS)
 
 src/Git.cpp: etc/Git.cpp.template FORCE
 	cat $< | sed s/GITFULLHASH/`git rev-parse HEAD | tr -d "\n"`/g | sed s/GITMINIHASH/`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`/g | sed s/GITRELEASE/`git describe --tags | sed s/\-.*//g | tr -d "\n"`/g > $@
 
 clean:
-	rm -f bin/RAHasher$(EXE) $(OBJS)
+	rm -f $(OUTDIR)/RAHasher$(EXE) $(OBJS)
 
 .PHONY: clean FORCE

@@ -23,7 +23,6 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <sys/stat.h>
 #include <errno.h>
 #include <string.h>
-#include <share.h>
 
 #ifndef NO_MINIZ
 #include <miniz_zip.h>
@@ -34,6 +33,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <commdlg.h>
 #include <shlobj.h>
 #include <winhttp.h>
+#include <share.h>
 #endif
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -596,7 +596,7 @@ std::string util::replaceFileName(const std::string& originalPath, const char* n
 std::string util::sanitizeFileName(const std::string& fileName)
 {
   std::string sanitized = fileName;
-  for (int i = 0; i < sanitized.length(); ++i)
+  for (size_t i = 0; i < sanitized.length(); ++i)
   {
     switch (sanitized[i])
     {
