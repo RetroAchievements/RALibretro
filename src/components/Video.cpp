@@ -159,6 +159,15 @@ bool Video::setGeometry(unsigned width, unsigned height, unsigned maxWidth, unsi
   if (!hardwareRender && _hw.enabled)
     postHwRenderReset();
 
+  if (hardwareRender)
+  {
+    if (Gl::getVersion() < 300)
+    {
+      MessageBox(NULL, "OpenGL 3.0 required for hardware rendering", "Initialization failed", MB_OK | MB_ICONERROR);
+      return false;
+    }
+  }
+
   _hw.enabled = hardwareRender;
   _hw.callback = hwRenderCallback;
 
@@ -586,15 +595,19 @@ bool Video::ensureVertexArray(unsigned windowWidth, unsigned windowHeight, float
     { winScaleX,  winScaleY,      0.0f,      0.0f}
   };
 
-  if (_vertexArray != 0)
-    Gl::deleteVertexArrays(1, &_vertexArray);
+  if (_hw.enabled)
+  {
+    if (_vertexArray != 0)
+      Gl::deleteVertexArrays(1, &_vertexArray);
+
+    Gl::genVertexArray(1, &_vertexArray);
+    if (_vertexArray == 0)
+      return false;
+    Gl::bindVertexArray(_vertexArray);
+  }
+
   if (_vertexBuffer != 0)
     Gl::deleteBuffers(1, &_vertexBuffer);
-
-  Gl::genVertexArray(1, &_vertexArray);
-  if (_vertexArray == 0)
-    return false;
-  Gl::bindVertexArray(_vertexArray);
 
   Gl::genBuffers(1, &_vertexBuffer);
   if (_vertexBuffer == 0)
