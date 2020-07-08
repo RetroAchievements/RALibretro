@@ -1456,7 +1456,7 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
       /* only log the unimplemented error once per core */
       if ((_calls[cmd / 8] & (1 << (cmd & 7))) == 0)
       {
-        _logger->error(TAG "Unimplemented env call: %s", name);
+        _logger->warn(TAG "Unimplemented env call: %s", name);
         _calls[cmd / 8] |= 1 << (cmd & 7);
       }
     }
@@ -1474,7 +1474,7 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
   }
   else
   {
-    _logger->error(TAG "Called  %s -> %d", name, ret);
+    _logger->warn(TAG "Called  %s -> %d", name, ret);
   }
 
   return ret;
