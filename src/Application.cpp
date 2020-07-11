@@ -165,11 +165,6 @@ bool Application::init(const char* title, int width, int height)
     }
   }
 
-  int major, minor;
-  SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &major);
-  SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minor);
-  _logger.info(TAG "Got OpenGL %d.%d", major, minor);
-
   inited = kWindowInited;
 
   Gl::init(&_logger);

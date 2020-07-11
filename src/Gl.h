@@ -74,5 +74,7 @@ namespace Gl
   void blendEquation(GLenum mode);
   void viewport(GLint x, GLint y, GLsizei width, GLsizei height);
   void drawArrays(GLenum mode, GLint first, GLsizei count);
+
+  int getVersion();
 }
 

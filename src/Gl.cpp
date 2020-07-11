@@ -7,6 +7,7 @@
 
 static libretro::LoggerComponent* s_logger;
 static bool s_ok;
+static int s_version;
 
 static PFNGLACTIVETEXTUREPROC s_glActiveTexture;
 
@@ -110,6 +111,25 @@ static void check(const char* function, bool ok = true)
 void Gl::init(libretro::LoggerComponent* logger)
 {
   s_logger = logger;
+
+  /* glGetIntegerv(GL_MAJOR_VERSION, &major) requires 3.0, so we have to parse the GL_VERSION string
+   * https://www.khronos.org/opengl/wiki/OpenGL_Context#Context_information_queries
+   */
+  const char* glVersion = (const char*)glGetString(GL_VERSION);
+  logger->info(TAG "Initializing OpenGL %s", glVersion);
+  int major = 0, minor = 0;
+  sscanf(glVersion, "%d.%d", &major, &minor);
+
+  s_version = major * 100 + minor;
+
+  if (major < 2)
+  {
+    char buffer[512];
+    sprintf(buffer, "OpenGL 2.0 required.\nFound: %d.%d", major, minor);
+    MessageBox(NULL, buffer, "Initialization failed", MB_OK | MB_ICONERROR);
+    return;
+  }
+
   s_ok = true;
 
   s_glActiveTexture = (PFNGLACTIVETEXTUREPROC)getProcAddress("glActiveTexture");
@@ -169,6 +189,11 @@ bool Gl::ok()
 GLenum Gl::getError()
 {
   return glGetError();
+}
+
+int Gl::getVersion()
+{
+  return s_version;
 }
 
 void Gl::getIntegerv(GLenum pname, GLint *params)

@@ -300,9 +300,12 @@ bool libretro::BareCore::loadGameSpecial(unsigned game_type, const struct retro_
 
 void libretro::BareCore::unloadGame() const
 {
-  _logger->debug(TAG "Calling %s", __FUNCTION__);
-  _unloadGame();
-  _logger->debug(TAG "Called  %s", __FUNCTION__);
+  if (_unloadGame)
+  {
+    _logger->debug(TAG "Calling %s", __FUNCTION__);
+    _unloadGame();
+    _logger->debug(TAG "Called  %s", __FUNCTION__);
+  }
 }
 
 unsigned libretro::BareCore::getRegion() const
