@@ -78,7 +78,7 @@
     "systems": [13]
   },
   "mednafen_gba_libretro":{
-    "name": "Mednafen VBA-M",
+    "name": "Beetle GBA",
     "systems": [5]
   },
   "mednafen_ngp_libretro":{
