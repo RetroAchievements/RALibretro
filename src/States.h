@@ -87,4 +87,6 @@ private:
 
   std::string getSRamPath(Path path) const;
   std::string getStatePath(unsigned ndx, Path path) const;
+
+  void saveSRAM(void* sramData, size_t sramSize);
 };
