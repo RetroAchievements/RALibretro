@@ -167,12 +167,6 @@ bool Video::setGeometry(unsigned width, unsigned height, unsigned maxWidth, unsi
       return false;
     }
   }
-  else if (_vertexArray)
-  {
-    Gl::disableVertexAttribArray(_vertexArray);
-    Gl::deleteVertexArrays(1, &_vertexArray);
-    _vertexArray = 0;
-  }
 
   _hw.enabled = hardwareRender;
   _hw.callback = hwRenderCallback;
@@ -601,11 +595,14 @@ bool Video::ensureVertexArray(unsigned windowWidth, unsigned windowHeight, float
     { winScaleX,  winScaleY,      0.0f,      0.0f}
   };
 
+  if (_vertexArray)
+  {
+    Gl::deleteVertexArrays(1, &_vertexArray);
+    _vertexArray = 0;
+  }
+
   if (_hw.enabled)
   {
-    if (_vertexArray != 0)
-      Gl::deleteVertexArrays(1, &_vertexArray);
-
     Gl::genVertexArray(1, &_vertexArray);
     if (_vertexArray == 0)
       return false;
