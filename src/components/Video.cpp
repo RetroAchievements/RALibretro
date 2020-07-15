@@ -167,6 +167,12 @@ bool Video::setGeometry(unsigned width, unsigned height, unsigned maxWidth, unsi
       return false;
     }
   }
+  else if (_vertexArray)
+  {
+    Gl::disableVertexAttribArray(_vertexArray);
+    Gl::deleteVertexArrays(1, &_vertexArray);
+    _vertexArray = 0;
+  }
 
   _hw.enabled = hardwareRender;
   _hw.callback = hwRenderCallback;
