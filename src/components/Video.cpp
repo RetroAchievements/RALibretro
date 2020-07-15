@@ -595,7 +595,7 @@ bool Video::ensureVertexArray(unsigned windowWidth, unsigned windowHeight, float
     { winScaleX,  winScaleY,      0.0f,      0.0f}
   };
 
-  if (_vertexArray)
+  if (_vertexArray != 0)
   {
     Gl::deleteVertexArrays(1, &_vertexArray);
     _vertexArray = 0;
