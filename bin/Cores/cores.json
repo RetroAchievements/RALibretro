@@ -123,6 +123,15 @@
     "name": "Beetle WonderSwan",
     "systems": [53]
   },
+  "mesen_libretro":{
+    "name": "Mesen",
+    "systems": [7]
+  },
+  "mesen-s_libretro":{
+    "name": "Mesen-S",
+    "extensions": "sfc|smc|swc|fig|bs",
+    "systems": [3]
+  },
   "mgba_libretro":{
     "name": "mGBA",
     "extensions": "gba",
