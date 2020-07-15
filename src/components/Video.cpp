@@ -676,8 +676,9 @@ GLuint Video::createTexture(unsigned width, unsigned height, retro_pixel_format 
 
 bool Video::ensureFramebuffer(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linearFilter)
 {
+  const bool hwEnabled = (_hw.frameBuffer != 0);
   if (_texture == 0
-    || (_hw.enabled && _hw.frameBuffer == 0)
+    || (_hw.enabled != hwEnabled)
     || width > _textureWidth || height > _textureHeight
     || pixelFormat != _pixelFormat
     || linearFilter != _linearFilter)
