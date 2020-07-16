@@ -24,6 +24,8 @@ SOFTWARE.
 
 #include "Core.h"
 
+#include "Util.h"
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -63,7 +65,7 @@ namespace
   };
 
   // Dummy components
-  class Logger: public libretro::LoggerComponent
+  class DummyLogger: public libretro::LoggerComponent
   {
   public:
     virtual void vprintf(enum retro_log_level level, const char* fmt, va_list args) override
@@ -74,7 +76,7 @@ namespace
     }
   };
 
-  class Config: public libretro::ConfigComponent
+  class DummyConfig: public libretro::ConfigComponent
   {
   public:
     virtual const char* getCoreAssetsDirectory() override
@@ -121,7 +123,7 @@ namespace
     }
   };
 
-  class VideoContext : public libretro::VideoContextComponent
+  class DummyVideoContext : public libretro::VideoContextComponent
   {
   public:
     virtual void swapBuffers() override
@@ -129,7 +131,7 @@ namespace
     }
   };
 
-  class Video: public libretro::VideoComponent
+  class DummyVideo: public libretro::VideoComponent
   {
   public:
     virtual void setEnabled(bool enabled) override
@@ -190,7 +192,7 @@ namespace
     }
   };
 
-  class Audio: public libretro::AudioComponent
+  class DummyAudio: public libretro::AudioComponent
   {
   public:
     virtual bool setRate(double rate) override
@@ -206,7 +208,7 @@ namespace
     }
   };
 
-  class Input: public libretro::InputComponent
+  class DummyInput: public libretro::InputComponent
   {
   public:
     virtual void setInputDescriptors(const struct retro_input_descriptor* descs, unsigned count) override
@@ -252,7 +254,7 @@ namespace
     }
   };
 
-  class Allocator: public libretro::AllocatorComponent
+  class DummyAllocator: public libretro::AllocatorComponent
   {
   public:
     virtual void reset() override {}
@@ -267,13 +269,13 @@ namespace
 }
 
 // Instances of the dummy components to use in CoreWrap instances by default
-static Logger       s_logger;
-static Config       s_config;
-static VideoContext s_videoContext;
-static Video        s_video;
-static Audio        s_audio;
-static Input        s_input;
-static Allocator    s_allocator;
+static DummyLogger       s_logger;
+static DummyConfig       s_config;
+static DummyVideoContext s_videoContext;
+static DummyVideo        s_video;
+static DummyAudio        s_audio;
+static DummyInput        s_input;
+static DummyAllocator    s_allocator;
 
 // Helper function for the memory map interface
 static bool preprocessMemoryDescriptors(struct retro_memory_descriptor* descriptors, unsigned num_descriptors);
@@ -602,7 +604,7 @@ char* libretro::Core::strdup(const char* str)
 
 bool libretro::Core::setRotation(unsigned data)
 {
-  _video->setRotation((Video::Rotation)data);
+  _video->setRotation((VideoComponent::Rotation)data);
   return true;
 }
 
@@ -841,6 +843,7 @@ bool libretro::Core::getCoreAssetsDirectory(const char** data) const
 bool libretro::Core::getSaveDirectory(const char** data) const
 {
   *data = _config->getSaveDirectory();
+  util::ensureDirectoryExists(*data);
   return true;
 }
 
