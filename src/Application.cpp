@@ -1682,8 +1682,10 @@ void Application::saveState(unsigned ndx)
 
 void Application::saveState()
 {
-  std::string extensions = "*.STATE";
+  std::string extensions = "State Files (*.state)";
   extensions.append("\0", 1);
+  extensions.append("*.state");
+  extensions.append("\0", 2);
   std::string path = util::saveFileDialog(g_mainWindow, extensions);
 
   if (!path.empty())
@@ -1720,8 +1722,10 @@ void Application::loadState(unsigned ndx)
 
 void Application::loadState()
 {
-  std::string extensions = "*.STATE";
+  std::string extensions = "State Files (*.state)";
   extensions.append("\0", 1);
+  extensions.append("*.state");
+  extensions.append("\0", 2);
   std::string path = util::openFileDialog(g_mainWindow, extensions);
 
   if (path.empty())
