@@ -304,7 +304,10 @@ bool util::saveFile(Logger* logger, const std::string& path, const void* data, s
 {
   FILE* file = util::openFile(logger, path, "wb");
   if (file == NULL)
+  {
+    logger->error(TAG "Error creating file \"%s\": %s", path.c_str(), strerror(errno));
     return false;
+  }
 
   if (fwrite(data, 1, size, file) != size)
   {

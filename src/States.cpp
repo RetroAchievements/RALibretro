@@ -339,14 +339,20 @@ void States::loadSRAM(libretro::Core* core)
   _lastSave = time(NULL);
 }
 
+void States::saveSRAM(void* sramData, size_t sramSize)
+{
+  std::string sramPath = getSRamPath();
+  util::ensureDirectoryExists(util::directory(sramPath));
+  util::saveFile(_logger, sramPath, sramData, sramSize);
+}
+
 void States::saveSRAM(libretro::Core* core)
 {
   size_t sramSize = core->getMemorySize(RETRO_MEMORY_SAVE_RAM);
   if (sramSize != 0)
   {
-    void* data = core->getMemoryData(RETRO_MEMORY_SAVE_RAM);
-    std::string sramPath = getSRamPath();
-    util::saveFile(_logger, sramPath, data, sramSize);
+    void* sramData = core->getMemoryData(RETRO_MEMORY_SAVE_RAM);
+    saveSRAM(sramData, sramSize);
   }
 }
 
@@ -370,8 +376,7 @@ void States::periodicSaveSRAM(libretro::Core* core)
         memcpy(_lastSaveData, data, sramSize);
 
         // TODO: offload this to a background thread?
-        std::string sramPath = getSRamPath();
-        util::saveFile(_logger, sramPath, _lastSaveData, sramSize);
+        saveSRAM(_lastSaveData, sramSize);
       }
     }
 
