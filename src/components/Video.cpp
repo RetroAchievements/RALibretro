@@ -595,11 +595,14 @@ bool Video::ensureVertexArray(unsigned windowWidth, unsigned windowHeight, float
     { winScaleX,  winScaleY,      0.0f,      0.0f}
   };
 
+  if (_vertexArray != 0)
+  {
+    Gl::deleteVertexArrays(1, &_vertexArray);
+    _vertexArray = 0;
+  }
+
   if (_hw.enabled)
   {
-    if (_vertexArray != 0)
-      Gl::deleteVertexArrays(1, &_vertexArray);
-
     Gl::genVertexArray(1, &_vertexArray);
     if (_vertexArray == 0)
       return false;
@@ -673,8 +676,9 @@ GLuint Video::createTexture(unsigned width, unsigned height, retro_pixel_format 
 
 bool Video::ensureFramebuffer(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linearFilter)
 {
+  const bool hwEnabled = (_hw.frameBuffer != 0);
   if (_texture == 0
-    || (_hw.enabled && _hw.frameBuffer == 0)
+    || (_hw.enabled != hwEnabled)
     || width > _textureWidth || height > _textureHeight
     || pixelFormat != _pixelFormat
     || linearFilter != _linearFilter)
