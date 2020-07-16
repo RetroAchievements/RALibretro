@@ -393,7 +393,7 @@ void States::migrateFiles()
       std::string path = getSRamPath(_sramPaths[i]);
       if (util::exists(path))
       {
-        testPath = (Path)i;
+        testPath = _sramPaths[i];
         break;
       }
     }
