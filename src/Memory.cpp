@@ -93,6 +93,7 @@ static const char* getMemoryType(int type)
   {
     case RC_MEMORY_TYPE_SAVE_RAM: return "SRAM";
     case RC_MEMORY_TYPE_VIDEO_RAM: return "VRAM";
+    case RC_MEMORY_TYPE_UNUSED: return "UNUSED";
     default: return "SYSTEM RAM";
   }
 }
@@ -309,6 +310,19 @@ void Memory::initializeFromMemoryMap(const rc_memory_regions_t* regions, const r
   }
 }
 
+static unsigned rcMemoryTypeToRetroMemoryType(int regionType)
+{
+  switch (regionType)
+  {
+  case RC_MEMORY_TYPE_SAVE_RAM:
+    return RETRO_MEMORY_SAVE_RAM;
+  case RC_MEMORY_TYPE_VIDEO_RAM:
+    return RETRO_MEMORY_VIDEO_RAM;
+  default:
+    return RETRO_MEMORY_SYSTEM_RAM;
+  }
+}
+
 void Memory::initializeFromUnmappedMemory(const rc_memory_regions_t* regions, libretro::Core* core)
 {
   char description[64];
@@ -324,31 +338,19 @@ void Memory::initializeFromUnmappedMemory(const rc_memory_regions_t* regions, li
     unsigned base_address = 0;
     unsigned j;
 
+    unsigned retroMemoryType = rcMemoryTypeToRetroMemoryType(region->type);
     for (j = 0; j <= i; ++j)
     {
       const rc_memory_region_t* region2 = &regions->region[j];
-      if (region2->type == region->type)
+      if (rcMemoryTypeToRetroMemoryType(region2->type) == retroMemoryType)
       {
         base_address = region2->start_address;
         break;
       }
     }
 
-    switch (region->type)
-    {
-      case RC_MEMORY_TYPE_SAVE_RAM:
-        descStart = (uint8_t*)core->getMemoryData(RETRO_MEMORY_SAVE_RAM);
-        descSize = core->getMemorySize(RETRO_MEMORY_SAVE_RAM);
-        break;
-      case RC_MEMORY_TYPE_VIDEO_RAM:
-        descStart = (uint8_t*)core->getMemoryData(RETRO_MEMORY_VIDEO_RAM);
-        descSize = core->getMemorySize(RETRO_MEMORY_VIDEO_RAM);
-        break;
-      default:
-        descStart = (uint8_t*)core->getMemoryData(RETRO_MEMORY_SYSTEM_RAM);
-        descSize = core->getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
-        break;
-    }
+    descStart = (uint8_t*)core->getMemoryData(retroMemoryType);
+    descSize = core->getMemorySize(retroMemoryType);
 
     const size_t offset = region->start_address - base_address;
     if (descStart != NULL && offset < descSize)
