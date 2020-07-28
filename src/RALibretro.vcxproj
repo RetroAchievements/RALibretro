@@ -118,7 +118,7 @@
       <Message>Copying $(TargetFileName) to bin directory</Message>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>xcopy /D /Q /Y $(ProjectDir)SDL2\lib\x86\SDL2.dll $(SolutionDir)bin\
+      <Command>$(SolutionDir)etc\CopyDLLs.bat x86 $(ProjectDir) $(SolutionDir)bin
 $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)bin</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -149,7 +149,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)bin</Command>
       <Command>$(ProjectDir)..\etc\MakeGitCpp.bat</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy /D /Q /Y $(ProjectDir)SDL2\lib\x86\SDL2.dll $(SolutionDir)bin\
+      <Command>$(SolutionDir)etc\CopyDLLs.bat x86 $(ProjectDir) $(SolutionDir)bin
 $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)bin</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -179,7 +179,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)bin</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy /D /Q /Y $(SolutionDir)bin\Cores\cores.json $(SolutionDir)bin64\Cores\
-xcopy /D /Q /Y $(ProjectDir)SDL2\lib\x64\SDL2.dll $(SolutionDir)bin64\
+$(SolutionDir)etc\CopyDLLs.bat x64 $(ProjectDir) $(SolutionDir)\bin64
 $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -211,7 +211,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy /D /Q /Y $(SolutionDir)bin\Cores\cores.json $(SolutionDir)bin64\Cores\
-xcopy /D /Q /Y $(ProjectDir)SDL2\lib\x64\SDL2.dll $(SolutionDir)bin64\
+$(SolutionDir)etc\CopyDLLs.bat x64 $(ProjectDir) $(SolutionDir)\bin64
 $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
