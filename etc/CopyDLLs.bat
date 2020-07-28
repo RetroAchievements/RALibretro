@@ -33,7 +33,7 @@ if not exist "%SRCDIR%" set SRCDIR=C:\mingw
 
 if not exist "%SRCDIR%" (
     echo Could not locate MINGW
-    exit /B 1
+    exit /B 0
 )
 
 if not exist "%BINDIR%\%LIBSTDCPP%" (
