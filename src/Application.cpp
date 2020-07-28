@@ -749,58 +749,64 @@ void Application::run()
 {
   _video.clear();
 
-  do
+  try
   {
-    // handle any pending events
-    processEvents();
-
-    switch (_fsm.currentState())
+    do
     {
-      case Fsm::State::GameRunning:
+      // handle any pending events
+      processEvents();
+
+      switch (_fsm.currentState())
       {
-        runSmoothed();
-        continue;
+        case Fsm::State::GameRunning:
+        {
+          runSmoothed();
+          continue;
+        }
+
+        case Fsm::State::GamePaused:
+        case Fsm::State::GamePausedNoOvl:
+        default:
+          // do no frames
+          break;
+
+        case Fsm::State::FrameStep:
+          // do one frame without audio
+          _core.step(true, false);
+          RA_DoAchievementsFrame();
+
+          // set state to GamePaused
+          _fsm.resumeGame();
+          break;
+
+        case Fsm::State::GameTurbo:
+          // do five frames without audio
+          runTurbo();
+          continue;
+
+        case Fsm::State::Quit:
+          return;
       }
 
-      case Fsm::State::GamePaused:
-      case Fsm::State::GamePausedNoOvl:
-      default:
-        // do no frames
-        break;
+      // handle overlay navigation
+      if (RA_IsOverlayFullyVisible())
+      {
+        ControllerInput input;
+        input.m_bUpPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP) != 0;
+        input.m_bDownPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN) != 0;
+        input.m_bLeftPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT) != 0;
+        input.m_bRightPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT) != 0;
+        input.m_bConfirmPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A) != 0;
+        input.m_bCancelPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B) != 0;
+        input.m_bQuitPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START) != 0;
 
-      case Fsm::State::FrameStep:
-        // do one frame without audio
-        _core.step(true, false);
-        RA_DoAchievementsFrame();
-
-        // set state to GamePaused
-        _fsm.resumeGame();
-        break;
-
-      case Fsm::State::GameTurbo:
-        // do five frames without audio
-        runTurbo();
-        continue;
-
-      case Fsm::State::Quit:
-        return;
-    }
-
-    // handle overlay navigation
-    if (RA_IsOverlayFullyVisible())
-    {
-      ControllerInput input;
-      input.m_bUpPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP) != 0;
-      input.m_bDownPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN) != 0;
-      input.m_bLeftPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT) != 0;
-      input.m_bRightPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT) != 0;
-      input.m_bConfirmPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A) != 0;
-      input.m_bCancelPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B) != 0;
-      input.m_bQuitPressed = _input.read(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START) != 0;
-
-      RA_NavigateOverlay(&input);
-    }
-  } while (true);
+        RA_NavigateOverlay(&input);
+      }
+    } while (true);
+  }
+  catch (std::exception ex) {
+    _logger.error(TAG "Unhandled exception: %s", ex.what());
+  }
 }
 
 void Application::saveConfiguration()
@@ -863,6 +869,8 @@ void Application::saveConfiguration()
 
 void Application::destroy()
 {
+  _logger.info(TAG "begin shutdown");
+
   saveConfiguration();
 
   RA_Shutdown();
@@ -879,6 +887,8 @@ void Application::destroy()
   SDL_Quit();
 
   _allocator.destroy();
+
+  _logger.info(TAG "shutdown complete");
   _logger.destroy();
 }
 

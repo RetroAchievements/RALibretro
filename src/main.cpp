@@ -23,6 +23,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "Application.h"
 #include "Util.h"
 
+#include <signal.h>
+
 extern Application app;
 
 bool isGameActive()
@@ -57,14 +59,31 @@ void loadROM(const char* path)
   app.loadGame(path);
 }
 
+extern "C" void abort_handler(int signal_number)
+{
+  app.logger().error("[APP] abort() called");
+  app.unloadCore();
+  app.destroy();
+}
+
 int main(int argc, char* argv[])
 {
+  signal(SIGABRT, &abort_handler);
+
   bool ok = app.init("RALibRetro", 640, 480);
 
   if (ok)
   {
-    app.run();
-	app.destroy();
+    __try
+    {
+      app.run();
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+      app.logger().error("[APP] Unhandled exception %08X", GetExceptionCode());
+    }
+
+    app.destroy();
   }
 
   return ok ? 0 : 1;
