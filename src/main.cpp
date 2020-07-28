@@ -74,6 +74,9 @@ int main(int argc, char* argv[])
 
   if (ok)
   {
+#if defined(MINGW) || defined(__MINGW32__) || defined(__MINGW64__)
+    app.run();
+#else
     __try
     {
       app.run();
@@ -82,6 +85,7 @@ int main(int argc, char* argv[])
     {
       app.logger().error("[APP] Unhandled exception %08X", GetExceptionCode());
     }
+#endif
 
     app.destroy();
   }
