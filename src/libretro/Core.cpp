@@ -1490,11 +1490,18 @@ void libretro::Core::videoRefreshCallback(const void* data, unsigned width, unsi
 
 size_t libretro::Core::audioSampleBatchCallback(const int16_t* data, size_t frames)
 {
+#if 0
+  /* retroarch resamples every packet as it comes in. to minimize the overhead of resampling,
+   * we buffer up an entire frame's worth of audio and resample it in a single pass.
+   */
+  _audio->mix(data, frames);
+#else
   if (_samplesCount < SAMPLE_COUNT - frames * 2 + 1)
   {
     memcpy(_samples + _samplesCount, data, frames * 2 * sizeof(int16_t));
     _samplesCount += frames * 2;
   }
+#endif
 
   return frames;
 }
