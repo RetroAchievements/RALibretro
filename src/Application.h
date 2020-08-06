@@ -61,6 +61,7 @@ public:
   void pauseGame(bool pause);
 
   void printf(const char* fmt, ...);
+  Logger& logger() { return _logger; }
 
   // RA_Integration
   bool isGameActive();
