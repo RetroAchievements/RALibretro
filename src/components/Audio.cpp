@@ -233,11 +233,26 @@ void Audio::mix(const int16_t* samples, size_t frames)
 
   /* flush to FIFO queue */
   const size_t needed = (output_size / 2) * _channels;
-  while (avail < needed)
+  if (avail < needed)
   {
     _logger->debug(TAG "Waiting for FIFO (need %zu bytes but only %zu available), sleeping", needed, avail);
-    SDL_Delay(1);
-    avail = _fifo->free();
+
+    const int MAX_WAIT = 250;
+    int tries = MAX_WAIT;
+    do {
+      SDL_Delay(1);
+      avail = _fifo->free();
+      if (avail >= needed)
+        break;
+
+      /* prevent infinite loop if fifo full */
+      if (--tries == 0)
+      {
+        _logger->warn(TAG "FIFO still full after %dms, flushing", MAX_WAIT);
+        _fifo->reset();
+        break;
+      }
+    } while (true);
   }
 
   if (_channels == 2)
