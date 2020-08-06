@@ -21,6 +21,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <SDL_timer.h>
 #include <string.h>
+#include <math.h>
 
 #define TAG "[AUD] "
 
