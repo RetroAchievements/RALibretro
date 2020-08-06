@@ -220,14 +220,17 @@ void Audio::mix(const int16_t* samples, size_t frames)
     }
 
     /* do the resampling */
-    spx_uint32_t in_len = frames * 2; /* input is 2-channel */
-    _logger->debug(TAG "Resampling %u samples to %u", in_len, out_len);
-    int error = speex_resampler_process_int(_resampler, 0, samples, &in_len, output, &out_len);
+    spx_uint32_t in_frames = frames;
+    spx_uint32_t out_frames = out_len / 2;
+    _logger->debug(TAG "Resampling %u samples to %u", in_frames * 2, out_frames * 2);
+
+    speex_resampler_reset_mem(_resampler);
+    const int error = speex_resampler_process_interleaved_int(_resampler, samples, &in_frames, output, &out_frames);
 
     if (error != RESAMPLER_ERR_SUCCESS)
     {
       memset(output, 0, output_size);
-      _logger->error(TAG "speex_resampler_process_int: %s", speex_resampler_strerror(error));
+      _logger->error(TAG "speex_resampler_process_interleaved_int: %s", speex_resampler_strerror(error));
     }
   }
 
