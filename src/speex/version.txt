@@ -1,0 +1,11 @@
+SpeexDSP 1.2rc3
+https://www.speex.org/downloads/
+
+Speex website indicates it has been superceded by Opus, but Opus documentation specifically 
+states it does not have a resampler, and points back at Speex:
+
+https://gitlab.xiph.org/xiph/opusfile/-/blob/master/include/opusfile.h#L59-62
+
+    (the <tt>libopusfile</tt> API does not currently provide a resampler, but
+    <a href="https://www.speex.org/docs/manual/speex-manual/node7.html#SECTION00760000000000000000">the
+    Speex resampler</a> is a good choice if you need one)
