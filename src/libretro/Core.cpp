@@ -121,6 +121,16 @@ namespace
       (void)variable;
       return NULL;
     }
+
+    virtual bool getFastForwarding() override
+    {
+      return false;
+    }
+
+    virtual void setFastForwarding(bool value) override
+    {
+      (void)value;
+    }
   };
 
   class DummyVideoContext : public libretro::VideoContextComponent
@@ -568,6 +578,7 @@ void libretro::Core::reset()
   _pixelFormat = RETRO_PIXEL_FORMAT_UNKNOWN;
   _supportsNoGame = false;
   _supportAchievements = false;
+  _fastForwarding = false;
   _inputDescriptorsCount = 0;
   _inputDescriptors = NULL;
   memset(&_hardwareRenderCallback, 0, sizeof(_hardwareRenderCallback));
@@ -1188,6 +1199,12 @@ bool libretro::Core::setSupportAchievements(bool data)
   return true;
 }
 
+bool libretro::Core::getFastForwarding(bool* data)
+{
+  *data = _config->getFastForwarding();
+  return true;
+}
+
 bool libretro::Core::getInputBitmasks(bool* data)
 {
   // The documentation says the parameter is a [bool * that indicates whether or not the
@@ -1446,6 +1463,10 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
 
   case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY:
     ret = setCoreOptionsDisplay((const struct retro_core_option_display*)data);
+    break;
+
+  case RETRO_ENVIRONMENT_GET_FASTFORWARDING:
+    ret = getFastForwarding((bool*)data);
     break;
 
   default:

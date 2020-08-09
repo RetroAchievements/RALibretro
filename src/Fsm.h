@@ -18,7 +18,6 @@ public:
     GamePaused,
     GamePausedNoOvl,
     GameRunning,
-    GameTurbo,
     Quit,
     Start,
   };
@@ -33,14 +32,12 @@ public:
 
   bool loadCore(const_string core);
   bool loadGame(const_string path);
-  bool normal();
   bool pauseGame();
   bool pauseGameNoOvl();
   bool quit();
   bool resetGame();
   bool resumeGame();
   bool step();
-  bool turbo();
   bool unloadCore();
   bool unloadGame();
 
@@ -53,4 +50,3 @@ protected:
   Application& ctx;
   State __state;
 };
-

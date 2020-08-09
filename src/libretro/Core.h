@@ -153,6 +153,7 @@ namespace libretro
     bool getUsername(const char** data) const;
     bool getLanguage(unsigned* data) const;
     bool setSupportAchievements(bool data);
+    bool getFastForwarding(bool* data);
     bool getInputBitmasks(bool* data);
     bool getCoreOptionsVersion(unsigned* data) const;
     bool setCoreOptions(const struct retro_core_option_definition* data);
@@ -202,6 +203,7 @@ namespace libretro
     enum retro_pixel_format         _pixelFormat;
     bool                            _supportsNoGame;
     bool                            _supportAchievements;
+    bool                            _fastForwarding;
     
     unsigned                        _inputDescriptorsCount;
     struct retro_input_descriptor*  _inputDescriptors;

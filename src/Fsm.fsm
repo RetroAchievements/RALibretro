@@ -113,8 +113,6 @@ fsm Fsm {
       }
     }
     
-    turbo() => GameTurbo;
-
     unloadGame() => CoreLoaded {
       if (!ctx.unloadGame()) {
         forbid;
@@ -138,8 +136,6 @@ fsm Fsm {
         forbid;
       }
     }
-
-    turbo() => GameTurbo;
 
     unloadGame() => CoreLoaded {
       if (!ctx.unloadGame()) {
@@ -165,8 +161,6 @@ fsm Fsm {
       }
     }
 
-    turbo() => GameTurbo;
-
     unloadGame() => CoreLoaded {
       if (!ctx.unloadGame()) {
         forbid;
@@ -182,38 +176,6 @@ fsm Fsm {
 
   FrameStep {
     resumeGame() => GamePaused;
-  }
-
-  GameTurbo {
-    normal() => GameRunning;
-
-    resetGame() => normal() => resetGame();
-
-    unloadGame() => CoreLoaded {
-      if (!ctx.unloadGame()) {
-        forbid;
-      }
-    }
-
-    step() => FrameStep {
-      if (ctx.hardcore()) {
-        forbid;
-      }
-    }
-
-    pauseGame() => GamePaused;
-
-    pauseGameNoOvl() => GamePausedNoOvl {
-      if (ctx.hardcore()) {
-        forbid;
-      }
-    }
-
-    loadCore(const_string core) => unloadGame() => unloadCore() => loadCore(core);
-
-    loadGame(const_string path) => unloadGame() => loadGame(path);
-
-    quit() => unloadGame() => quit();
   }
 }
 
