@@ -67,7 +67,8 @@ protected:
 
   double _currentRatio;
   double _originalRatio;
-  SpeexResamplerState* _resampler;
+  SpeexResamplerState* _resamplerLeft;
+  SpeexResamplerState* _resamplerRight;
 
   Fifo* _fifo;
 };
