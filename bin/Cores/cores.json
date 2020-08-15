@@ -141,6 +141,10 @@
     "name": "Mupen64Plus-Next",
     "systems": [2]
   },
+  "o2em_libretro":{
+    "name": "O2EM",
+    "systems": [23]
+  },
   "opera_libretro":{
     "name": "Opera",
     "systems": [43]
