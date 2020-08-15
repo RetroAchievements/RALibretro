@@ -45,6 +45,9 @@ public:
   virtual bool varUpdated() override;
   virtual const char* getVariable(const char* variable) override;
 
+  virtual bool getFastForwarding() override { return _fastForwarding; }
+  virtual void setFastForwarding(bool value) override { _fastForwarding = value; }
+
   void setSaveDirectory(const std::string& path) { _saveFolder = path; }
 
   const char* getRootFolder()
@@ -92,6 +95,7 @@ protected:
   std::unordered_map<std::string, std::string> _selections;
 
   bool _updated;
+  bool _fastForwarding;
 
   std::string _key;
 };

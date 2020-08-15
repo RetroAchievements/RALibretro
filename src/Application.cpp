@@ -510,17 +510,16 @@ void Application::runSmoothed()
     auto tFrameStart = std::chrono::steady_clock::now();
 
     processEvents();
-    if (_fsm.currentState() != Fsm::State::GameRunning)
-    {
-      // don't kick out of smoothing routine for turbo
-      if (_fsm.currentState() == Fsm::State::GameTurbo)
-      {
-        runTurbo();
-        continue;
-      }
 
-      // state is not running or turbo - return to outer handler
+    // state is not running - return to outer handler
+    if (_fsm.currentState() != Fsm::State::GameRunning)
       break;
+
+    // handle fast forwarding
+    if (_config.getFastForwarding())
+    {
+      runTurbo();
+      continue;
     }
 
     // state is running - do one frame with audio
@@ -760,7 +759,15 @@ void Application::run()
       {
         case Fsm::State::GameRunning:
         {
-          runSmoothed();
+          if (_config.getFastForwarding())
+          {
+            // do five frames without audio
+            runTurbo();
+          }
+          else
+          {
+            runSmoothed();
+          }
           continue;
         }
 
@@ -778,11 +785,6 @@ void Application::run()
           // set state to GamePaused
           _fsm.resumeGame();
           break;
-
-        case Fsm::State::GameTurbo:
-          // do five frames without audio
-          runTurbo();
-          continue;
 
         case Fsm::State::Quit:
           return;
@@ -1038,14 +1040,6 @@ void Application::updateMenu()
     IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
-  static const UINT game_turbo_items[] =
-  {
-    IDM_LOAD_GAME, IDM_PAUSE_GAME, IDM_RESET_GAME,
-    IDM_EXIT,
-
-    IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
-  };
-
   enableItems(all_items, sizeof(all_items) / sizeof(all_items[0]), MF_DISABLED);
 
   switch (_fsm.currentState())
@@ -1062,9 +1056,6 @@ void Application::updateMenu()
   case Fsm::State::GamePaused:
   case Fsm::State::GamePausedNoOvl:
     enableItems(game_paused_items, sizeof(game_paused_items) / sizeof(game_paused_items[0]), MF_ENABLED);
-    break;
-  case Fsm::State::GameTurbo:
-    enableItems(game_turbo_items, sizeof(game_turbo_items) / sizeof(game_turbo_items[0]), MF_ENABLED);
     break;
   default:
     break;
@@ -1399,7 +1390,6 @@ bool Application::isGameActive()
   case Fsm::State::GameRunning:
   case Fsm::State::GamePaused:
   case Fsm::State::GamePausedNoOvl:
-  case Fsm::State::GameTurbo:
   case Fsm::State::FrameStep:
     return true;
 
@@ -2085,7 +2075,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       break;
     
     case IDM_TURBO_GAME:
-      _fsm.turbo();
+      _config.setFastForwarding(true);
       break;
 
     case IDM_RESET_GAME:
@@ -2348,15 +2338,7 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
     break;
 
   case KeyBinds::Action::kFastForward:
-    if (extra)
-    {
-      _fsm.turbo();
-    }
-    else
-    {
-      _fsm.normal();
-    }
-
+    _config.setFastForwarding(static_cast<bool>(extra));
     break;
   
   case KeyBinds::Action::kScreenshot:
