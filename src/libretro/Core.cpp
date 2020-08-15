@@ -37,33 +37,14 @@ SOFTWARE.
 
 #define TAG "[COR] "
 
-/**
- * Unavoidable because the libretro API don't have an userdata pointer to
- * allow us pass and receive back the core instance :/
+/* Some libretro callbacks need access to the other frontend elements that are stored
+ * in the core instance (like _input). Since we can't pass pointers through libretro,
+ * keep a global pointer to the current core object (there should be only one).
  */
-static thread_local libretro::Core* s_instance;
+static libretro::Core* s_instance = NULL;
 
 namespace
 {
-  // Helper class to set and unset the s_instance thread local.
-  class InstanceSetter
-  {
-  public:
-    inline InstanceSetter(libretro::Core* instance)
-    {
-      _previous = s_instance;
-      s_instance = instance;
-    }
-    
-    inline ~InstanceSetter()
-    {
-      s_instance = _previous;
-    }
-
-  protected:
-    libretro::Core* _previous;
-  };
-
   // Dummy components
   class DummyLogger: public libretro::LoggerComponent
   {
@@ -282,8 +263,6 @@ static bool preprocessMemoryDescriptors(struct retro_memory_descriptor* descript
 
 bool libretro::Core::init(const Components* components)
 {
-  InstanceSetter instance_setter(this);
-
   _logger       = &s_logger;
   _config       = &s_config;
   _videoContext = &s_videoContext;
@@ -291,6 +270,8 @@ bool libretro::Core::init(const Components* components)
   _audio        = &s_audio;
   _input        = &s_input;
   _allocator    = &s_allocator;
+
+  s_instance    = this;
 
   if (components != NULL)
   {
@@ -309,8 +290,6 @@ bool libretro::Core::init(const Components* components)
 
 bool libretro::Core::loadCore(const char* core_path)
 {
-  InstanceSetter instance_setter(this);
-
   _allocator->reset();
 
   _libretroPath = strdup(core_path);
@@ -331,8 +310,6 @@ bool libretro::Core::loadCore(const char* core_path)
 
 bool libretro::Core::loadGame(const char* game_path, void* data, size_t size)
 {
-  InstanceSetter instance_setter(this);
-
   if (game_path == NULL)
   {
     _logger->error(TAG "Can't load game data without a ROM path");
@@ -382,8 +359,6 @@ error:
 
 void libretro::Core::destroy()
 {
-  InstanceSetter instance_setter(this);
-
   if (_gameLoaded)
   {
     _core.unloadGame();
@@ -398,8 +373,6 @@ void libretro::Core::destroy()
 
 void libretro::Core::step(bool generateVideo, bool generateAudio)
 {
-  InstanceSetter instance_setter(this);
-
   if (_input->ctrlUpdated())
   {
     for (unsigned i = 0; i < _controllerInfoCount; i++)
@@ -429,56 +402,46 @@ void libretro::Core::step(bool generateVideo, bool generateAudio)
 
 unsigned libretro::Core::getApiVersion()
 {
-  InstanceSetter instance_setter(this);
   return _core.apiVersion();
 }
 
 unsigned libretro::Core::getRegion()
 {
-  InstanceSetter instance_setter(this);
   return _core.getRegion();
 }
 
 void* libretro::Core::getMemoryData(unsigned id)
 {
-  InstanceSetter instance_setter(this);
   return _core.getMemoryData(id);
 }
 
 size_t libretro::Core::getMemorySize(unsigned id)
 {
-  InstanceSetter instance_setter(this);
   return _core.getMemorySize(id);
 }
 
 void libretro::Core::resetGame()
 {
-  InstanceSetter instance_setter(this);
   _core.reset();
 }
 
 size_t libretro::Core::serializeSize()
 {
-  InstanceSetter instance_setter(this);
   return _core.serializeSize();
 }
 
 bool libretro::Core::serialize(void* data, size_t size)
 {
-  InstanceSetter instance_setter(this);
   return _core.serialize(data, size);
 }
 
 bool libretro::Core::unserialize(const void* data, size_t size)
 {
-  InstanceSetter instance_setter(this);
   return _core.unserialize(data, size);
 }
 
 bool libretro::Core::initCore()
 {
-  InstanceSetter instance_setter(this);
-
   struct retro_system_info system_info;
   _core.getSystemInfo(&system_info);
 
@@ -508,8 +471,6 @@ bool libretro::Core::initCore()
 
 bool libretro::Core::initAV()
 {
-  InstanceSetter instance_setter(this);
-
   _core.setVideoRefresh(s_videoRefreshCallback);
   _core.setAudioSampleBatch(s_audioSampleBatchCallback);
   _core.setAudioSample(s_audioSampleCallback);
@@ -628,16 +589,12 @@ bool libretro::Core::setMessage(const struct retro_message* data)
 
 void libretro::Core::setTrayOpen(bool open)
 {
-  InstanceSetter instance_setter(this);
-
   if (_diskControlInterface)
     _diskControlInterface->set_eject_state(open);
 }
 
 void libretro::Core::setCurrentDiscIndex(unsigned index)
 {
-  InstanceSetter instance_setter(this);
-
   if (_diskControlInterface)
     _diskControlInterface->set_image_index(index);
 }
