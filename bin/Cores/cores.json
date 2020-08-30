@@ -197,12 +197,12 @@
   "vbam_libretro":{
     "name": "VBA-M",
     "extensions": "gbc",
-    "systems": [5]
+    "systems": [6]
   },
   "vbam_libretro":{
     "name": "VBA-M",
     "extensions": "gba",
-    "systems": [6]
+    "systems": [5]
   },
   "vecx_libretro": {
     "name": "VecX",
