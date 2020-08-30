@@ -200,13 +200,13 @@ void Memory::attachToCore(libretro::Core* core, int consoleId)
   if (hasValidRegion)
   {
     RA_ClearMemoryBanks();
-    RA_InstallMemoryBank(0, (void*)memoryRead, (void*)memoryWrite, g_memoryTotalSize);
+    RA_InstallMemoryBank(0, memoryRead, memoryWrite, g_memoryTotalSize);
   }
   else if (g_lastMemoryRefresh == 0)
   {
     g_lastMemoryRefresh = clock();
     RA_ClearMemoryBanks();
-    RA_InstallMemoryBank(0, (void*)deferredMemoryRead, (void*)memoryWrite, g_memoryTotalSize);
+    RA_InstallMemoryBank(0, deferredMemoryRead, memoryWrite, g_memoryTotalSize);
   }
 }
 
@@ -255,10 +255,28 @@ static const struct retro_memory_descriptor* getDescriptor(const struct retro_me
   return NULL;
 }
 
+static void dumpDescriptors(const retro_memory_map* mmap, libretro::LoggerComponent* logger)
+{
+  const retro_memory_descriptor* desc = mmap->descriptors;
+  const retro_memory_descriptor* end = desc + mmap->num_descriptors;
+  int i = 0;
+
+  for (; desc < end; desc++, i++)
+  {
+    /* log these at info level show they show up in the about dialog, but the function is only
+     * called if debug level is enabled. */
+    logger->info(TAG "desc[%d]: $%06x (%04x): %s%s", i + 1, desc->start, desc->len,
+      desc->addrspace ? desc->addrspace : "", desc->ptr ? "" : "(null)");
+  }
+}
+
 void Memory::initializeFromMemoryMap(const rc_memory_regions_t* regions, const retro_memory_map* mmap)
 {
   char description[64];
   unsigned i;
+
+  if (_logger->logLevel(RETRO_LOG_DEBUG))
+    dumpDescriptors(mmap, _logger);
 
   for (i = 0; i < regions->num_regions; ++i)
   {

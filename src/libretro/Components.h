@@ -45,6 +45,11 @@ namespace libretro
       _level = level;
     }
 
+    bool logLevel(enum retro_log_level level)
+    {
+      return (_level <= level);
+    }
+
     void printf(enum retro_log_level level, const char* fmt, ...)
     {
       va_list args;

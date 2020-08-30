@@ -26,7 +26,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef _WINDOWS
 #include "components/Dialog.h"
-#include <RA_Interface.h>
+#include <RAInterface/RA_Consoles.h>
 #endif
 
 #include <jsonsax/jsonsax.h>
