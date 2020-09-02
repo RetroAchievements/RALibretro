@@ -380,6 +380,34 @@ bool Fsm::loadGame(const_string path) {
 
 bool Fsm::pauseGame() {
   switch (__state) {
+    case State::GamePausedNoOvl: {
+      if (!before()) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed global precondition while switching to %s", __FUNCTION__, __LINE__, stateName(State::GamePaused));
+#endif
+
+        return false;
+      }
+
+      if (!before(__state)) {
+#ifdef DEBUG_FSM
+        ctx.printf("FSM %s:%u Failed state precondition while switching to %s", __FUNCTION__, __LINE__, stateName(State::GamePaused));
+#endif
+
+        return false;
+      }
+
+      __state = State::GamePaused;
+      after(__state);
+      after();
+
+#ifdef DEBUG_FSM
+      ctx.printf("FSM %s:%u Switched to %s", __FUNCTION__, __LINE__, stateName(State::GamePaused));
+#endif
+      return true;
+    }
+    break;
+
     case State::GameRunning: {
       if (!before()) {
 #ifdef DEBUG_FSM
