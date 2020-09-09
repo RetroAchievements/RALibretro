@@ -609,8 +609,11 @@ bool showCoresDialog(Config* config, Logger* logger, const std::string& loadedCo
     for (auto system : core.systems)
     {
       allSystems.emplace(getSystemName(system), system);
-      if (++systemCoreCounts[(int)system] > maxSystemCoreCount)
-        maxSystemCoreCount = systemCoreCounts[(int)system];
+      if ((int)system < (int)NumConsoleIDs)
+      {
+        if (++systemCoreCounts[(int)system] > maxSystemCoreCount)
+          maxSystemCoreCount = systemCoreCounts[(int)system];
+      }
     }
   }
 
