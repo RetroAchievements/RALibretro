@@ -2067,11 +2067,11 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       break;
 
     case IDM_PAUSE_GAME:
-      _fsm.pauseGame();
+      pauseGame(true);
       break;
 
     case IDM_RESUME_GAME:
-      _fsm.resumeGame();
+      pauseGame(false);
       break;
     
     case IDM_TURBO_GAME:
@@ -2307,31 +2307,35 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
     _fsm.step();
     break;
 
-  case KeyBinds::Action::kPauseToggle:
+  case KeyBinds::Action::kPauseToggle: /* overlay toggle */
     if (_fsm.currentState() == Fsm::State::GamePaused)
     {
-      _fsm.resumeGame();
-      RA_SetPaused(false);
-    }
-    else if (_fsm.currentState() == Fsm::State::GamePausedNoOvl)
-    {
-      _fsm.resumeGame();
+      // overlay visible. hide and unpause
+      pauseGame(false);
     }
     else
     {
+      // paused without overlay, or not paused - show overlay and pause
       _fsm.pauseGame();
       RA_SetPaused(true);
     }
 
     break;
 
-  case KeyBinds::Action::kPauseToggleNoOvl:
+  case KeyBinds::Action::kPauseToggleNoOvl: /* non-overlay pause toggle */
     if (_fsm.currentState() == Fsm::State::GamePausedNoOvl)
     {
+      // paused without overlay, just unpause
       _fsm.resumeGame();
+    }
+    else if (_fsm.currentState() == Fsm::State::GamePaused)
+    {
+      // overlay visible. hide and unpause
+      pauseGame(false);
     }
     else
     {
+      // not paused, pause without overlay (will fail silently in hardcore)
       _fsm.pauseGameNoOvl();
     }
 

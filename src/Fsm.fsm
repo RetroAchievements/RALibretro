@@ -151,6 +151,8 @@ fsm Fsm {
   }
 
   GamePausedNoOvl {
+    pauseGame() => GamePaused;
+
     resumeGame() => GameRunning;
 
     resetGame() => resumeGame() => resetGame();
