@@ -1,5 +1,7 @@
 #include "RA_Interface.h"
 
+#include "RA_Emulators.h"
+
 #include <windows.h>
 
 #include "Git.h"

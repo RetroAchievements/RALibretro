@@ -26,7 +26,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef _WINDOWS
 #include "components/Dialog.h"
-#include <RA_Interface.h>
+#include <RAInterface/RA_Consoles.h>
 #endif
 
 #include <jsonsax/jsonsax.h>
@@ -609,8 +609,11 @@ bool showCoresDialog(Config* config, Logger* logger, const std::string& loadedCo
     for (auto system : core.systems)
     {
       allSystems.emplace(getSystemName(system), system);
-      if (++systemCoreCounts[(int)system] > maxSystemCoreCount)
-        maxSystemCoreCount = systemCoreCounts[(int)system];
+      if ((int)system < (int)NumConsoleIDs)
+      {
+        if (++systemCoreCounts[(int)system] > maxSystemCoreCount)
+          maxSystemCoreCount = systemCoreCounts[(int)system];
+      }
     }
   }
 
