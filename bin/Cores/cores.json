@@ -1,4 +1,19 @@
 {
+  "81_libretro":{
+    "name": "EightyOne",
+    "systems": [31],
+    "platforms": "none"
+  },
+  "atari800_libretro":{
+    "name": "Atari800",
+    "systems": [50],
+    "platforms": "none"
+  },
+  "blastem_libretro":{
+    "name": "BlastEm",
+    "systems": [1],
+    "platforms": "none"
+  },
   "bluemsx_libretro":{
     "name": "blueMSX",
     "extensions": "col",
@@ -14,6 +29,31 @@
     "extensions": "dsk|cas|mx1|mx2|rom|ri|m3u",
     "systems": [29]
   },
+  "bsnes2014_accuracy_libretro":{
+    "name": "bsnes 2014 (Accuracy)",
+    "systems": [3],
+    "platforms": "none"
+  },
+  "bsnes2014_balanced_libretro":{
+    "name": "bsnes 2014 (Balanced)",
+    "systems": [3],
+    "platforms": "none"
+  },
+  "bsnes2014_performance_libretro":{
+    "name": "bsnes 2014 (Performance)",
+    "systems": [3],
+    "platforms": "none"
+  },
+  "bsnes_cplusplus98_libretro":{
+    "name": "bsnes C++98 (v085)",
+    "systems": [3],
+    "platforms": "none"
+  },
+  "bsnes_mercury_accuracy_libretro":{
+    "name": "bsnes-mercury (Accuracy)",
+    "systems": [3],
+    "platforms": "none"
+  },
   "bsnes_mercury_balanced_libretro":{
     "name": "bsnes-mercury (Balanced)",
     "systems": [3]
@@ -22,9 +62,76 @@
     "name": "bsnes-mercury (Performance)",
     "systems": [3]
   },
+  "bsnes_libretro":{
+    "name": "bsnes",
+    "extensions": "sfc|smc",
+    "systems": [3],
+    "platforms": "none"
+  },
+  "bsnes_libretro":{
+    "name": "bsnes",
+    "extensions": "gb",
+    "systems": [4],
+    "platforms": "none"
+  },
+  "bsnes_libretro":{
+    "name": "bsnes",
+    "extensions": "gbc",
+    "systems": [6],
+    "platforms": "none"
+  },
+  "bsnes_hd_libretro":{
+    "name": "bsnes-hd beta",
+    "extensions": "sfc|smc",
+    "systems": [3],
+    "platforms": "none"
+  },
+  "bsnes_hd_libretro":{
+    "name": "bsnes-hd beta",
+    "extensions": "gb",
+    "systems": [4],
+    "platforms": "none"
+  },
+  "bsnes_hd_libretro":{
+    "name": "bsnes-hd beta",
+    "extensions": "gbc",
+    "systems": [6],
+    "platforms": "none"
+  },
+  "cap32_libretro":{
+    "name": "Caprice32",
+    "systems": [37],
+    "platforms": "none"
+  },
+  "citra_libretro":{
+    "name": "Citra",
+    "systems": [62],
+    "platforms": "none"
+  },
+  "crocods_libretro":{
+    "name": "CrocoDS",
+    "systems": [37],
+    "platforms": "none"
+  },
+  "desmume2015_libretro":{
+    "name": "DeSmuME 2015",
+    "systems": [18],
+    "platforms": "none"
+  },
   "desmume_libretro":{
     "name": "DeSmuME",
     "systems": [18]
+  },
+  "dolphin_libretro":{
+    "name": "Dolphin",
+    "systems": [16,19],
+    "platforms": "none"
+  },
+  "duckstation_libretro":{
+    "name": "Duckstation",
+    "extensions": "cue",
+    "systems": [12],
+    "platforms": "none"
   },
   "fbalpha_libretro":{
     "name": "FB Alpha",
@@ -40,13 +147,62 @@
     "name": "FCEUmm",
     "systems": [7]
   },
+  "flycast_libretro":{
+    "name": "Flycast",
+    "extensions": "zip|7z",
+    "systems": [27],
+    "platforms": "none"
+  },
+  "flycast_libretro":{
+    "name": "Flycast",
+    "extensions": "gdi|m3u",
+    "systems": [40],
+    "platforms": "none"
+  },
+  "fmsx_libretro":{
+    "name": "fMSX",
+    "systems": [29],
+    "platforms": "none"
+  },
+  "freechaf_libretro":{
+    "name": "FreeChaF",
+    "systems": [57],
+    "platforms": "none"
+  },
+  "freeintv_libretro":{
+    "name": "FreeIntV",
+    "systems": [45],
+    "platforms": "none"
+  },
+  "frodo_libretro":{
+    "name": "Frodo",
+    "systems": [30],
+    "platforms": "none"
+  },
+  "fuse_libretro":{
+    "name": "FUSE",
+    "systems": [59],
+    "platforms": "none"
+  },
   "gambatte_libretro":{
     "name": "Gambatte",
-    "systems": [4,6]
+    "extensions": "gb|dmg",
+    "systems": [4]
+  },
+  "gambatte_libretro":{
+    "name": "Gambatte",
+    "extensions": "gbc",
+    "systems": [6]
   },
   "gearboy_libretro":{
     "name": "Gearboy",
-    "systems": [4,6]
+    "extensions": "gb|dmg|sgb",
+    "systems": [4]
+  },
+  "gearboy_libretro":{
+    "name": "Gearboy",
+    "extensions": "gbc|cgb",
+    "systems": [6]
   },
   "gearsystem_libretro":{
     "name": "Gearsystem",
@@ -73,17 +229,125 @@
     "extensions": "cue|iso",
     "systems": [9]
   },
+  "gpsp_libretro":{
+    "name": "gpSP",
+    "systems": [5],
+    "platforms": "none"
+  },
+  "gw_libretro":{
+    "name": "GW",
+    "systems": [60],
+    "platforms": "none"
+  },
+  "kronos_libretro":{
+    "name": "Kronos",
+    "extensions": "m3u|cue",
+    "systems": [39],
+    "platforms": "none"
+  },
   "handy_libretro":{
     "name": "Handy",
     "systems": [13]
+  },
+  "hatari_libretro":{
+    "name": "Hatari",
+    "systems": [36],
+    "platforms": "none"
+  },
+  "hbmame_libretro":{
+    "name": "HBMAME",
+    "systems": [27],
+    "platforms": "none"
+  },
+  "higan_sfc_libretro":{
+    "name": "Higan Accuracy",
+    "extensions": "sfc|smc",
+    "systems": [3],
+    "platforms": "none"
+  },
+  "higan_sfc_libretro":{
+    "name": "Higan Accuracy",
+    "extensions": "gb",
+    "systems": [4],
+    "platforms": "none"
+  },
+  "higan_sfc_libretro":{
+    "name": "Higan Accuracy",
+    "extensions": "gbc",
+    "systems": [6],
+    "platforms": "none"
+  },
+  "higan_sfc_balanced_libretro":{
+    "name": "nSide Balanced",
+    "extensions": "sfc|smc",
+    "systems": [3],
+    "platforms": "none"
+  },
+  "higan_sfc_balanced_libretro":{
+    "name": "nSide Balanced",
+    "extensions": "gb",
+    "systems": [4],
+    "platforms": "none"
+  },
+  "higan_sfc_balanced_libretro":{
+    "name": "nSide Balanced",
+    "extensions": "gbc",
+    "systems": [6],
+    "platforms": "none"
+  },
+  "ishiiruka_libretro":{
+    "name": "Ishiiruka",
+    "systems": [16,19],
+    "platforms": "none"
+  },
+  "mame2003_libretro":{
+    "name": "MAME 2003",
+    "systems": [27],
+    "platforms": "none"
+  },
+  "mame2003_plus_libretro":{
+    "name": "MAME 2003 Plus",
+    "systems": [27],
+    "platforms": "none"
+  },
+  "mame2010_libretro":{
+    "name": "MAME 2010",
+    "systems": [27],
+    "platforms": "none"
+  },
+  "mame2015_libretro":{
+    "name": "MAME 2015",
+    "systems": [27],
+    "platforms": "none"
+  },
+  "mame2016_libretro":{
+    "name": "MAME 2016",
+    "systems": [27],
+    "platforms": "none"
+  },
+  "mame_libretro":{
+    "name": "MAME",
+    "systems": [27],
+    "platforms": "none"
   },
   "mednafen_gba_libretro":{
     "name": "Beetle GBA",
     "systems": [5]
   },
+  "mednafen_lynx_libretro":{
+    "name": "Beetle Lynx",
+    "systems": [13],
+    "platforms": "none"
+  },
   "mednafen_ngp_libretro":{
     "name": "Beetle NeoPop",
     "systems": [14]
+  },
+  "mednafen_pce_libretro":{
+    "name": "Beetle PCE",
+    "extensions": "pce|cue",
+    "systems": [8],
+    "platforms": "none"
   },
   "mednafen_pce_fast_libretro":{
     "name": "Beetle PCE Fast",
@@ -110,6 +374,11 @@
     "extensions": "m3u|cue",
     "systems": [39]
   },
+  "mednafen_supafaust_libretro":{
+    "name": "Supafaust",
+    "systems": [3],
+    "platforms": "none"
+  },
   "mednafen_supergrafx_libretro":{
     "name": "Beetle SuperGrafX",
     "extensions": "pce|sgx|cue",
@@ -123,6 +392,11 @@
     "name": "Beetle WonderSwan",
     "systems": [53]
   },
+  "melonds_libretro":{
+    "name": "melonDS",
+    "systems": [18],
+    "platforms": "none"
+  },
   "mesen_libretro":{
     "name": "Mesen",
     "systems": [7]
@@ -132,6 +406,35 @@
     "extensions": "sfc|smc|swc|fig|bs",
     "systems": [3]
   },
+  "mesen-s_libretro":{
+    "name": "Mesen-S",
+    "extensions": "gb",
+    "systems": [4],
+    "platforms": "none"
+  },
+  "mesen-s_libretro":{
+    "name": "Mesen-S",
+    "extensions": "gbc",
+    "systems": [6],
+    "platforms": "none"
+  },
+  "meteor_libretro":{
+    "name": "Meteor",
+    "systems": [5],
+    "platforms": "none"
+  },
+  "mgba_libretro":{
+    "name": "mGBA",
+    "extensions": "gb",
+    "systems": [4],
+    "platforms": "none"
+  },
+  "mgba_libretro":{
+    "name": "mGBA",
+    "extensions": "gbc",
+    "systems": [6],
+    "platforms": "none"
+  },
   "mgba_libretro":{
     "name": "mGBA",
     "extensions": "gba",
@@ -140,6 +443,26 @@
   "mupen64plus_next_libretro":{
     "name": "Mupen64Plus-Next",
     "systems": [2]
+  },
+  "nekop2_libretro":{
+    "name": "Neko Project II",
+    "systems": [48],
+    "platforms": "none"
+  },
+  "neocd_libretro":{
+    "name": "NeoCD",
+    "systems": [56],
+    "platforms": "none"
+  },
+  "nestopia_libretro":{
+    "name": "Nestopia UE",
+    "systems": [7],
+    "platforms": "none"
+  },
+  "np2kai_libretro":{
+    "name": "Neko Project II Kai",
+    "systems": [48],
+    "platforms": "none"
   },
   "o2em_libretro":{
     "name": "O2EM",
@@ -166,24 +489,124 @@
   },
   "picodrive_libretro":{
     "name": "PicoDrive",
-    "extensions": "bin",
+    "extensions": "cue",
+    "systems": [9],
+    "platforms": "none"
+  },
+  "picodrive_libretro":{
+    "name": "PicoDrive",
+    "extensions": "32x|bin",
     "systems": [10]
+  },
+  "play_libretro":{
+    "name": "Play!",
+    "systems": [21],
+    "platforms": "none"
   },
   "pokemini_libretro":{
     "name": "PokeMini",
     "systems": [24]
   },
+  "ppsspp_libretro":{
+    "name": "PPSSPP",
+    "systems": [41],
+    "platforms": "none"
+  },
   "prosystem_libretro":{
     "name": "ProSystem",
     "systems": [51]
+  },
+  "puae_libretro":{
+    "name": "P-UAE",
+    "systems": [35],
+    "platforms": "none"
+  },
+  "px68k_libretro":{
+    "name": "PX68k",
+    "systems": [52],
+    "platforms": "none"
+  },
+  "quasi88_libretro":{
+    "name": "QUASI88",
+    "systems": [47],
+    "platforms": "none"
+  },
+  "quicknes_libretro":{
+    "name": "QuickNES",
+    "systems": [7],
+    "platforms": "none"
+  },
+  "race_libretro":{
+    "name": "RACE",
+    "systems": [14],
+    "platforms": "none"
+  },
+  "sameboy_libretro":{
+    "name": "SameBoy",
+    "extensions": "gb",
+    "systems": [4],
+    "platforms": "none"
+  },
+  "sameboy_libretro":{
+    "name": "SameBoy",
+    "extensions": "gbc",
+    "systems": [6],
+    "platforms": "none"
+  },
+  "smsplus_libretro":{
+    "name": "SMS Plus GX",
+    "systems": [11,44],
+    "platforms": "none"
+  },
+  "snes9x2002_libretro":{
+    "name": "Snes9x 2002",
+    "systems": [3],
+    "platforms": "none"
+  },
+  "snes9x2005_libretro":{
+    "name": "Snes9x 2005",
+    "systems": [3],
+    "platforms": "none"
+  },
+  "snes9x2005_plus_libretro":{
+    "name": "Snes9x 2005 Plus",
+    "systems": [3],
+    "platforms": "none"
+  },
+  "snes9x2010_libretro":{
+    "name": "Snes9x 2010",
+    "systems": [3],
+    "platforms": "none"
   },
   "snes9x_libretro":{
     "name": "Snes9x",
     "systems": [3]
   },
+  "stella2014_libretro":{
+    "name": "Stella 2014",
+    "systems": [25],
+    "platforms": "none"
+  },
   "stella_libretro":{
     "name": "Stella",
     "systems": [25]
+  },
+  "tgbdual_libretro":{
+    "name": "TGB Dual",
+    "extensions": "gb|sgb",
+    "systems": [4],
+    "platforms": "none"
+  },
+  "tgbdual_libretro":{
+    "name": "TGB Dual",
+    "extensions": "gbc",
+    "systems": [6],
+    "platforms": "none"
+  },
+  "ume2015_libretro":{
+    "name": "UME 2015",
+    "systems": [27],
+    "platforms": "none"
   },
   "vba_next_libretro":{
     "name": "VBA Next",
@@ -191,12 +614,12 @@
   },
   "vbam_libretro":{
     "name": "VBA-M",
-    "extensions": "gb",
+    "extensions": "gb|dmg|sgb",
     "systems": [4]
   },
   "vbam_libretro":{
     "name": "VBA-M",
-    "extensions": "gbc",
+    "extensions": "gbc|cgb",
     "systems": [6]
   },
   "vbam_libretro":{
@@ -208,8 +631,65 @@
     "name": "VecX",
     "systems": [46]
   },
+  "vice_x128_libretro":{
+    "name": "Vice x128",
+    "systems": [30],
+    "platforms": "none"
+  },
+  "vice_x64_libretro":{
+    "name": "Vice x64",
+    "systems": [30],
+    "platforms": "none"
+  },
+  "vice_x64sc_libretro":{
+    "name": "Vice x64sc",
+    "systems": [30],
+    "platforms": "none"
+  },
+  "vice_xcbm2_libretro":{
+    "name": "Vice xcbm2",
+    "systems": [30],
+    "platforms": "none"
+  },
+  "vice_xcbm5x0_libretro":{
+    "name": "Vice xcbm5x0",
+    "systems": [30],
+    "platforms": "none"
+  },
+  "vice_xpet_libretro":{
+    "name": "Vice xpet",
+    "systems": [30],
+    "platforms": "none"
+  },
+  "vice_xplus4_libretro":{
+    "name": "Vice xplus4",
+    "systems": [30],
+    "platforms": "none"
+  },
+  "vice_xscpu64_libretro":{
+    "name": "Vice xscpu64",
+    "systems": [30],
+    "platforms": "none"
+  },
+  "vice_xvic_libretro":{
+    "name": "Vice xvic",
+    "systems": [34],
+    "platforms": "none"
+  },
   "virtualjaguar_libretro":{
     "name": "Virtual Jaguar",
     "systems": [17]
+  },
+  "yabasanshiro_libretro":{
+    "name": "YabaSanshiro",
+    "extensions": "cue",
+    "systems": [39],
+    "platforms": "none"
+  },
+  "yabause_libretro":{
+    "name": "Yabause",
+    "extensions": "cue",
+    "systems": [39],
+    "platforms": "none"
   }
 }
