@@ -352,14 +352,14 @@ void Input::setInputDescriptors(const struct retro_input_descriptor* descs, unsi
 void Input::setControllerInfo(const struct retro_controller_info* rinfo, unsigned count)
 {
   ControllerInfo none;
+  memset(&none, 0, sizeof(none));
   none._description = "None";
   none._id = RETRO_DEVICE_NONE;
-  none._state = 0;
 
   ControllerInfo retropad;
+  memset(&retropad, 0, sizeof(retropad));
   retropad._description = "RetroPad";
   retropad._id = RETRO_DEVICE_JOYPAD;
-  retropad._state = 0;
 
   _ports = 0;
 
@@ -380,15 +380,13 @@ void Input::setControllerInfo(const struct retro_controller_info* rinfo, unsigne
         }
 
         ControllerInfo info;
+        memset(&info, 0, sizeof(info));
         info._description = rinfo->types[i].desc;
         info._id = rinfo->types[i].id;
 
         if ((info._id & RETRO_DEVICE_MASK) == RETRO_DEVICE_JOYPAD ||
           (info._id & RETRO_DEVICE_MASK) == RETRO_DEVICE_ANALOG)
         {
-          info._state = 0;
-          memset(info._axis, 0, sizeof(info._axis));
-
           _info[port].push_back(info);
           _ports |= 1ULL << port;
         }
