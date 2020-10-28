@@ -390,7 +390,7 @@ void Config::showDialog(const std::string& coreName, Input& input)
 
   std::vector<Variable*> variables;
   std::vector<int> selections;
-  Variable controllerVariables[2];
+  Variable controllerVariables[4];
 
   for (unsigned i = sizeof(controllerVariables) / sizeof(controllerVariables[0]); i > 0; --i)
   {
