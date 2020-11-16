@@ -1104,6 +1104,8 @@ public:
 
   Input* _input = nullptr;
   std::map<SDL_JoystickID, SDL_JoystickID>* _bindingMap = nullptr;
+  KeyBinds::BindingList* _bindings = nullptr;
+  KeyBinds::Action _button = KeyBinds::Action::kNothing;
   bool _isOpen = false;
   bool _isAnalog = false;
 
@@ -1113,6 +1115,9 @@ public:
 
     auto hwnd = CreateDialogIndirectParam(NULL, (LPCDLGTEMPLATE)_template, hParent, s_dialogProc, (LPARAM)this);
     EnableWindow(hParent, 0);
+
+    _buttonDescriptor = _bindings->at(static_cast<int>(_button));
+    updateBindingString(hwnd);
 
     ShowWindow(hwnd, 1);
 
@@ -1159,9 +1164,7 @@ public:
                   if (GetKeyState(VK_SHIFT) & 0x8000)
                     _buttonDescriptor.modifiers |= KMOD_SHIFT;
 
-                  char buffer[32];
-                  KeyBinds::getBindingString(buffer, _buttonDescriptor);
-                  SetDlgItemText(hwnd, ID_LABEL, buffer);
+                  updateBindingString(hwnd);
                   break;
               }
             }
@@ -1245,9 +1248,7 @@ protected:
           _buttonDescriptor.button = 0;
           _buttonDescriptor.modifiers = 0;
 
-          char buffer[32];
-          KeyBinds::getBindingString(buffer, _buttonDescriptor);
-          SetDlgItemText(hwnd, ID_LABEL, buffer);
+          updateBindingString(hwnd);
         }
         break;
       }
@@ -1267,15 +1268,44 @@ protected:
             if (pair != _bindingMap->end())
               _buttonDescriptor.joystick_id = pair->second;
 
-            char buffer[32];
-            KeyBinds::getBindingString(buffer, _buttonDescriptor);
-            SetDlgItemText(hwnd, ID_LABEL, buffer);
+            updateBindingString(hwnd);
           }
         }
         break;
     }
 
     return Dialog::dialogProc(hwnd, msg, wparam, lparam);
+  }
+
+  void updateBindingString(HWND hwnd)
+  {
+    char buffer[32];
+    KeyBinds::getBindingString(buffer, _buttonDescriptor);
+
+    if (_buttonDescriptor.type != KeyBinds::Binding::Type::None)
+    {
+      for (int i = 0; i < _bindings->size(); ++i)
+      {
+        if (i == static_cast<int>(_button))
+          continue;
+
+        const KeyBinds::Binding& binding = _bindings->at(i);
+        if (binding.button == _buttonDescriptor.button &&
+          binding.modifiers == _buttonDescriptor.modifiers &&
+          binding.type == _buttonDescriptor.type)
+        {
+          if (binding.type == KeyBinds::Binding::Type::Key || binding.joystick_id == _buttonDescriptor.joystick_id)
+          {
+            std::string sMessage = buffer;
+            sMessage.append("\nWARNING: Multiple bindings");
+            SetDlgItemText(hwnd, ID_LABEL, sMessage.c_str());
+            return;
+          }
+        }
+      }
+    }
+
+    SetDlgItemText(hwnd, ID_LABEL, buffer);
   }
 };
 
@@ -1430,10 +1460,12 @@ protected:
     db.init(buffer);
     db._input = _input;
     db._bindingMap = _bindingMap;
+    db._bindings = &_bindings;
     db._isAnalog = IsAnalog(button);
+    db._button = static_cast<KeyBinds::Action>(button);
 
     GetDlgItemText(hwnd, 10000 + button, buffer, sizeof(buffer));
-    db.addLabel(buffer, ChangeInputDialog::ID_LABEL, 0, 0, 100, 15);
+    db.addLabel(buffer, ChangeInputDialog::ID_LABEL, 0, 0, 100, 18);
 
     db.addButton("Clear", ChangeInputDialog::IDC_CLEAR, 0, 20, 50, 14, false);
     db.addButton("OK", IDOK, 80, 20, 50, 14, true);
