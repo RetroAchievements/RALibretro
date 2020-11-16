@@ -127,9 +127,9 @@ protected:
   struct ControllerInfo
   {
     std::string _description;
-    unsigned    _id;
-    int16_t     _state;
-    int16_t     _axis[4];
+    unsigned    _id = 0;
+    int16_t     _state = 0;
+    int16_t     _axis[4] = { 0,0,0,0 };
   };
 
   struct MouseInfo
