@@ -49,11 +49,11 @@ namespace
   class DummyLogger: public libretro::LoggerComponent
   {
   public:
-    virtual void vprintf(enum retro_log_level level, const char* fmt, va_list args) override
+    virtual void log(enum retro_log_level level, const char* line, size_t length) override
     {
       (void)level;
-      (void)fmt;
-      (void)args;
+      (void)line;
+      (void)length;
     }
   };
 
@@ -318,7 +318,33 @@ bool libretro::Core::loadCore(const char* core_path)
   return true;
 }
 
-bool libretro::Core::loadGame(const char* game_path, void* data, size_t size)
+class CoreErrorLogger : public libretro::LoggerComponent
+{
+public:
+  CoreErrorLogger(libretro::LoggerComponent* logger, std::string* errorBuffer)
+    : _logger(logger), _errorBuffer(errorBuffer)
+  {
+  }
+
+  void log(enum retro_log_level level, const char* line, size_t length) override
+  {
+    _logger->log(level, line, length);
+
+    if (level == RETRO_LOG_ERROR && _errorBuffer)
+    {
+      if (!_errorBuffer->empty())
+        _errorBuffer->push_back('\n');
+
+      _errorBuffer->append(line, length);
+    }
+  }
+
+private:
+  libretro::LoggerComponent* _logger;
+  std::string* _errorBuffer;
+};
+
+bool libretro::Core::loadGame(const char* game_path, void* data, size_t size, std::string* errorBuffer)
 {
   if (game_path == NULL)
   {
@@ -332,7 +358,17 @@ bool libretro::Core::loadGame(const char* game_path, void* data, size_t size)
   game.size = size;
   game.meta = NULL;
 
-  if (!_core.loadGame(&game))
+  // use extended logger to capture load error
+  bool result;
+  {
+    CoreErrorLogger errorLogger(_logger, errorBuffer);
+    libretro::LoggerComponent* oldLogger = _logger;
+    _logger = &errorLogger;
+    result = _core.loadGame(&game);
+    _logger = oldLogger;
+  }
+
+  if (!result)
   {
     _logger->error(TAG "Error loading content");
     goto error;

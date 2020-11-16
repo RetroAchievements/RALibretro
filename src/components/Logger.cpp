@@ -21,6 +21,11 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory.h>
 
+/* must be less than RING_LOG_MAX_BUFFER_SIZE */
+#ifndef RING_LOG_MAX_LINE_SIZE
+#define RING_LOG_MAX_LINE_SIZE 1024
+#endif
+
 bool Logger::init()
 {
   // Do compile-time checks for the line and buffer sizes.
@@ -51,22 +56,8 @@ void Logger::destroy()
 #endif
 }
 
-void Logger::vprintf(enum retro_log_level level, const char* fmt, va_list args)
+void Logger::log(enum retro_log_level level, const char* line, size_t length)
 {
-  char line[RING_LOG_MAX_LINE_SIZE];
-  size_t length = vsnprintf(line, sizeof(line), fmt, args);
-
-  if (length >= sizeof(line))
-  {
-    length = sizeof(line) - 1;
-    line[length - 1] = line[length - 2] = line[length - 3] = '.';
-  }
-
-  while (length > 0 && line[length - 1] == '\n')
-  {
-    line[--length] = 0;
-  }
-
   const char* desc = "?";
 
   switch (level)

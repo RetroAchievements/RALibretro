@@ -25,11 +25,6 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 #endif
 
-// Must be at most 65535
-#ifndef RING_LOG_MAX_LINE_SIZE
-#define RING_LOG_MAX_LINE_SIZE 1024
-#endif
-
 // Must be at least MAX_LINE_SIZE + 3
 #ifndef RING_LOG_MAX_BUFFER_SIZE
 #define RING_LOG_MAX_BUFFER_SIZE 65536
@@ -41,14 +36,14 @@ public:
   bool init();
   void destroy();
 
-  virtual void vprintf(enum retro_log_level level, const char* fmt, va_list args) override;
-
   std::string contents() const;
   
   typedef bool (*Iterator)(enum retro_log_level level, const char* line, void* ud);
   void iterate(Iterator iterator, void* ud) const;
 
 protected:
+  void   log(enum retro_log_level level, const char* msg, size_t length) override;
+
   void   write(const void* data, size_t size);
   void   read(void* data, size_t size);
   size_t peek(size_t pos, void* data, size_t size) const;

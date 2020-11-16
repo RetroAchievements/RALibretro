@@ -40,7 +40,7 @@ namespace libretro
     bool init(const Components* components);
     bool loadCore(const char* core_path);
     bool initCore();
-    bool loadGame(const char* game_path, void* data, size_t size);
+    bool loadGame(const char* game_path, void* data, size_t size, std::string* errorBuffer);
 
     void destroy();
     

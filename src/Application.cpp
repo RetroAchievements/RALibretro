@@ -1171,18 +1171,19 @@ bool Application::loadGame(const std::string& path)
   /* must update save path before loading the game */
   _states.setGame(unzippedFileName, _system, _coreName, &_core);
 
+  std::string errorBuffer;
   if (info->need_fullpath)
   {
-    loaded = _core.loadGame(path.c_str(), NULL, 0);
+    loaded = _core.loadGame(path.c_str(), NULL, 0, &errorBuffer);
   }
   else if (iszip)
   {
     std::string zipPsuedoPath = path + '#' + unzippedFileName;
-    loaded = _core.loadGame(zipPsuedoPath.c_str(), data, size);
+    loaded = _core.loadGame(zipPsuedoPath.c_str(), data, size, &errorBuffer);
   }
   else
   {
-    loaded = _core.loadGame(path.c_str(), data, size);
+    loaded = _core.loadGame(path.c_str(), data, size, &errorBuffer);
   }
 
   if (!loaded)
@@ -1190,7 +1191,15 @@ bool Application::loadGame(const std::string& path)
     // The most common cause of failure is missing system files.
     _logger.debug(TAG "Game load failure (%s)", info ? info->library_name : "Unknown");
 
-    MessageBox(g_mainWindow, "Game load error. Please ensure that required system files are present and restart.", "Core Error", MB_OK);
+    if (!errorBuffer.empty())
+    {
+      errorBuffer = "Game load error.\n\n" + errorBuffer;
+      MessageBox(g_mainWindow, errorBuffer.c_str(), "Core Error", MB_OK);
+    }
+    else
+    {
+      MessageBox(g_mainWindow, "Game load error.\n\nPlease ensure that required system files are present and restart.", "Core Error", MB_OK);
+    }
 
     if (data)
     {
