@@ -60,6 +60,9 @@ public:
   unsigned getViewWidth() const { return _viewWidth; }
   unsigned getViewHeight() const { return _viewHeight; }
 
+  unsigned getViewScaledWidth() const { return _viewScaledWidth; }
+  unsigned getViewScaledHeight() const { return _viewScaledHeight; }
+
   void setRotation(Rotation rotation) override;
   Rotation getRotation() const override { return _rotation; }
 
@@ -94,6 +97,8 @@ protected:
   unsigned                _textureHeight;
   unsigned                _viewWidth;
   unsigned                _viewHeight;
+  unsigned                _viewScaledWidth;
+  unsigned                _viewScaledHeight;
   enum retro_pixel_format _pixelFormat;
   float                   _aspect;
   Rotation                _rotation;
