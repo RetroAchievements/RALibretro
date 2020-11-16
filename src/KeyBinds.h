@@ -81,6 +81,9 @@ public:
     // Screenshot
     kScreenshot,
 
+    // Reset
+    kReset,
+
     // Keyboard
     kKeyboardInput  // (extra = key << 8 | pressed)
   };
@@ -114,7 +117,7 @@ public:
     Type type;
     uint16_t modifiers;
   };
-  typedef std::array<Binding, 88> BindingList;
+  typedef std::array<Binding, 89> BindingList;
 
   static void getBindingString(char buffer[32], const KeyBinds::Binding& desc);
 
