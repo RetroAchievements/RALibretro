@@ -336,8 +336,7 @@
   },
   "mednafen_lynx_libretro":{
     "name": "Beetle Lynx",
-    "systems": [13],
-    "platforms": "none"
+    "systems": [13]
   },
   "mednafen_ngp_libretro":{
     "name": "Beetle NeoPop",
