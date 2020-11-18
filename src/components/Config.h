@@ -63,6 +63,8 @@ public:
   std::string serialize();
   void deserialize(const char* json);
 
+  bool validateSettingsForHardcore(const char* library_name, bool prompt) const;
+
 #ifdef _WINDOWS
   void showDialog(const std::string& coreName, Input& input);
 #endif

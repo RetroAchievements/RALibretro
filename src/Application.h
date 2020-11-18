@@ -66,6 +66,7 @@ public:
   // RA_Integration
   bool isGameActive();
   const std::string& gameName() const { return _gameFileName; }
+  bool validateHardcoreEnablement();
 
   void onRotationChanged(Video::Rotation oldRotation, Video::Rotation newRotation);
 
@@ -118,6 +119,7 @@ protected:
 
   Fsm _fsm;
   bool lastHardcore;
+  bool cancelLoad;
 
   std::string _coreName;
   int         _system;
