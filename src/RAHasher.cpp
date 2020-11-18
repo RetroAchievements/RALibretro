@@ -32,9 +32,15 @@ public:
 
     // don't print the category
     while (*line && *line != ']')
+    {
       ++line;
+      --length;
+    }
     while (*line == ']' || *line == ' ')
+    {
       ++line;
+      --length;
+    }
 
     ::fwrite(line, length, 1, stderr);
     ::fprintf(stderr, "\n");
