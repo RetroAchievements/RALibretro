@@ -73,16 +73,12 @@ void Logger::log(enum retro_log_level level, const char* line, size_t length)
   if (level != RETRO_LOG_DEBUG)
   {
     // Log to the internal buffer.
-
-    if (length > sizeof(line))
-    {
-      // Line size too small, truncated. Consider increasing the array size.
-      length = sizeof(line);
-    }
-
     length += 3; // Add one byte for the level and two bytes for the length.
-    unsigned char meta[3];
 
+    if (length > RING_LOG_MAX_LINE_SIZE)
+      length = RING_LOG_MAX_LINE_SIZE;
+
+    unsigned char meta[3];
     if (length > _avail)
     {
       do
@@ -103,7 +99,6 @@ void Logger::log(enum retro_log_level level, const char* line, size_t length)
     write(line, length);
 
     // Log to the console.
-
     ::printf("[%s] %s\n", desc, line);
     fflush(stdout);
   }
