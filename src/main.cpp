@@ -51,7 +51,9 @@ void resume()
 
 void reset()
 {
-  app.resetGame();
+  // this is called when the user switches from non-hardcore to hardcore - validate the config settings
+  if (app.validateHardcoreEnablement())
+    app.resetGame();
 }
 
 void loadROM(const char* path)

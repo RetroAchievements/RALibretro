@@ -293,6 +293,7 @@ bool Application::init(const char* title, int width, int height)
   _coreName.clear();
   _validSlots = 0;
   lastHardcore = hardcore();
+  cancelLoad = false;
   updateMenu();
   updateCDMenu(NULL, 0, true);
   return true;
@@ -806,7 +807,7 @@ void Application::run()
       }
     } while (true);
   }
-  catch (std::exception ex) {
+  catch (std::exception& ex) {
     _logger.error(TAG "Unhandled exception: %s", ex.what());
   }
 }
@@ -1003,6 +1004,35 @@ bool Application::loadCore(const std::string& coreName)
   return true;
 }
 
+bool Application::validateHardcoreEnablement()
+{
+  if (_config.validateSettingsForHardcore(_core.getSystemInfo()->library_name, false))
+    return true;
+
+#if defined(MINGW) || defined(__MINGW32__) || defined(__MINGW64__)
+  RA_DisableHardcore();
+#else
+  __try
+  {
+    // This functionality is not available in the 0.78 DLL, but is implemented in such a way that
+    // it throws an exception we can catch and handle.
+    RA_DisableHardcore();
+  }
+  __except (EXCEPTION_EXECUTE_HANDLER)
+  {
+    MessageBox(g_mainWindow, "Could not prevent switch to hardcore. Closing game.", "Failed", MB_OK);
+
+    // if this gets called during the load (auto-enable hardcore when achievements are present), the
+    // FSM won't transition properly. set a flag so we can deal with it when we get done loading.
+    cancelLoad = true;
+
+    _fsm.unloadGame();
+  }
+#endif
+
+  return false;
+}
+
 void Application::updateMenu()
 {
   static const UINT all_items[] =
@@ -1092,6 +1122,16 @@ bool Application::loadGame(const std::string& path)
   bool loaded;
   bool iszip = (path.length() > 4 && stricmp(&path.at(path.length() - 4), ".zip") == 0);
   bool issupportedzip = false;
+
+  /* in hardcore mode, make sure none of the forbidden settings are set */
+  if (RA_HardcoreModeIsActive())
+  {
+    if (!_config.validateSettingsForHardcore(_core.getSystemInfo()->library_name, true))
+    {
+      MessageBox(g_mainWindow, "Game load was canceled.", "Failed", MB_OK);
+      return false;
+    }
+  }
 
   /* if the core says it wants the full path, we have to see if it supports zip files */
   if (iszip && info->need_fullpath)
@@ -1202,15 +1242,28 @@ bool Application::loadGame(const std::string& path)
     }
 
     if (data)
-    {
       free(data);
-    }
 
     // A failure in loadGame typically destroys the core.
     if (_core.getSystemInfo()->library_name == NULL)
       _fsm.unloadCore();
 
     return false;
+  }
+
+  /* calling loadGame may change one or more settings - revalidate */
+  if (RA_HardcoreModeIsActive())
+  {
+    if (!_config.validateSettingsForHardcore(_core.getSystemInfo()->library_name, true))
+    {
+      if (data)
+        free(data);
+
+      _core.unloadGame();
+
+      MessageBox(g_mainWindow, "Game load was canceled.", "Failed", MB_OK);
+      return false;
+    }
   }
 
   RA_SetConsoleID((unsigned)_system);
@@ -1227,16 +1280,20 @@ bool Application::loadGame(const std::string& path)
     _core.unloadGame();
 
     if (data)
-    {
       free(data);
-    }
 
     return false;
   }
 
   if (data)
-  {
     free(data);
+
+  if (cancelLoad)
+  {
+    cancelLoad = false; // reset for future load attempts
+
+    _fsm.unloadGame();
+    return false;
   }
 
   // reset the vertical sync flag
@@ -1347,10 +1404,10 @@ bool Application::hardcore()
 
 bool Application::unloadGame()
 {
+  cancelLoad = false; // reset for future loads
+
   if (!RA_ConfirmLoadNewRom(true))
-  {
     return false;
-  }
 
   _states.saveSRAM(&_core);
 

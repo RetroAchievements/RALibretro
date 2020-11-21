@@ -60,6 +60,7 @@ OBJS=\
 	src/libretro/Core.o \
 	src/RA_Implementation.o \
 	src/RAInterface/RA_Interface.o \
+	src/cheevos_libretro.o \
 	src/components/Audio.o \
 	src/components/Config.o \
 	src/components/Dialog.o \
@@ -91,6 +92,8 @@ OBJS=\
 	src/menu.res \
 	src/States.o \
 	src/Util.o
+
+src/cheevos_libretro.o: CFLAGS += -I./src/libretro
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@

@@ -21,9 +21,15 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Util.h"
 #include "jsonsax/jsonsax.h"
+#include "cheevos_libretro.h"
+#include "RA_Interface.h"
 
+#ifdef _WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+
+extern HWND g_mainWindow;
+#endif
 
 #include <string.h>
 #include <sys/stat.h>
@@ -358,6 +364,60 @@ void Config::deserialize(const char* json)
   _updated = true;
 }
 
+bool Config::validateSettingsForHardcore(const char* library_name, bool prompt) const
+{
+#ifdef _WINDOWS
+  const rc_disallowed_setting_t* disallowed_settings = rc_libretro_get_disallowed_settings(library_name);
+  if (disallowed_settings)
+  {
+    for (auto& var : _variables)
+    {
+      const char* value = var._options[var._selected].c_str();
+      if (!rc_libretro_is_setting_allowed(disallowed_settings, var._key.c_str(), value))
+      {
+        if (var._selected < (int)var._labels.size())
+          value = var._labels[var._selected].c_str();
+
+        if (prompt)
+        {
+          std::string setting = "set " + var._name + " to " + value;
+          if (!RA_WarnDisableHardcore(setting.c_str()))
+            return false;
+        }
+        else
+        {
+          std::string error = var._name + " cannot be set to " + value + " in hardcore mode.";
+          MessageBox(g_mainWindow, error.c_str(), "Error", MB_OK);
+          return false;
+        }
+      }
+    }
+
+    for (auto& var : _selections)
+    {
+      if (!rc_libretro_is_setting_allowed(disallowed_settings, var.first.c_str(), var.second.c_str()))
+      {
+        if (prompt)
+        {
+          std::string setting = "set " + var.first + " to " + var.second;
+          if (!RA_WarnDisableHardcore(setting.c_str()))
+            return false;
+        }
+        else
+        {
+          std::string error = var.first + " cannot be set to " + var.second + " in hardcore mode.";
+          MessageBox(g_mainWindow, error.c_str(), "Error", MB_OK);
+          return false;
+        }
+      }
+    }
+
+  }
+#endif
+
+  return true;
+}
+
 void Config::initializeControllerVariable(Variable& variable, const char* name, const char* key, const std::map<std::string, unsigned>& names, unsigned selectedDevice)
 {
   variable._name = name;
@@ -467,6 +527,28 @@ void Config::showDialog(const std::string& coreName, Input& input)
 
   if (_updated)
   {
+    if (RA_HardcoreModeIsActive())
+    {
+      const rc_disallowed_setting_t* disallowed_settings = rc_libretro_get_disallowed_settings(coreName.c_str());
+      if (disallowed_settings)
+      {
+        for (unsigned i = 0; i < variables.size(); ++i)
+        {
+          auto& var = *variables[i];
+          const char* value = var._options[selections[i]].c_str();
+          if (!rc_libretro_is_setting_allowed(disallowed_settings, var._key.c_str(), value))
+          {
+            if (var._selected < (int)var._labels.size())
+              value = var._labels[var._selected].c_str();
+
+            std::string setting = "set " + var._name + " to " + value;
+            if (!RA_WarnDisableHardcore(setting.c_str()))
+              return;
+          }
+        }
+      }
+    }
+
     for (unsigned i = 0; i < variables.size(); ++i)
     {
       auto& var = *variables[i];

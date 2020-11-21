@@ -150,6 +150,9 @@
     <ClCompile Include="States.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="cheevos_libretro.c">
+      <Filter>Source Files\RAInterface</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="About.h">
