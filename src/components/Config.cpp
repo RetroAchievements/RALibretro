@@ -538,8 +538,8 @@ void Config::showDialog(const std::string& coreName, Input& input)
           const char* value = var._options[selections[i]].c_str();
           if (!rc_libretro_is_setting_allowed(disallowed_settings, var._key.c_str(), value))
           {
-            if (var._selected < (int)var._labels.size())
-              value = var._labels[var._selected].c_str();
+            if (selections[i] < (int)var._labels.size())
+              value = var._labels[selections[i]].c_str();
 
             std::string setting = "set " + var._name + " to " + value;
             if (!RA_WarnDisableHardcore(setting.c_str()))
