@@ -2210,38 +2210,59 @@ void Application::handle(const SDL_WindowEvent* window)
 
 void Application::handle(const SDL_MouseMotionEvent* motion)
 {
-  if (_video.getViewWidth())
+  const int viewWidth = _video.getViewWidth();
+  if (viewWidth)
   {
     int rel_x, rel_y, abs_x, abs_y;
+
+    // convert the window position (motion->x/y) to view-relative positions (viewX/Y)
+    const int viewScaledWidth = _video.getViewScaledWidth();
+    const int windowWidth = _video.getWindowWidth();
+    const int leftMargin = (windowWidth - viewScaledWidth) / 2;
+    int viewX = motion->x - leftMargin;
+    if (viewX < 0)
+      viewX = 0;
+    else if (viewX >= viewScaledWidth)
+      viewX = viewScaledWidth - 1;
+
+    const int viewHeight = _video.getViewHeight();
+    const int viewScaledHeight = _video.getViewScaledHeight();
+    const int windowHeight = _video.getWindowHeight();
+    const int topMargin = (windowHeight - viewScaledHeight) / 2;
+    int viewY = motion->y - topMargin;
+    if (viewY < 0)
+      viewY = 0;
+    else if (viewY >= viewScaledHeight)
+      viewY = viewScaledHeight - 1;
 
     switch (_video.getRotation())
     {
       default:
-        rel_x = ((motion->x << 16) / _video.getWindowWidth()) - 32767;
-        rel_y = ((motion->y << 16) / _video.getWindowHeight()) - 32767;
-        abs_x = (motion->x * _video.getViewWidth()) / _video.getWindowWidth();
-        abs_y = (motion->y * _video.getViewHeight()) / _video.getWindowHeight();
+        rel_x = ((viewX << 16) / viewScaledWidth) - 32767;
+        rel_y = ((viewY << 16) / viewScaledHeight) - 32767;
+        abs_x = (viewX * viewWidth) / viewScaledWidth;
+        abs_y = (viewY * viewHeight) / viewScaledHeight;
         break;
 
       case Video::Rotation::Ninety:
-        rel_x = 32767 - ((motion->y << 16) / _video.getWindowHeight());
-        rel_y = ((motion->x << 16) / _video.getWindowWidth()) - 32767;
-        abs_x = _video.getViewWidth() - ((motion->y * _video.getViewWidth()) / _video.getWindowHeight()) - 1;
-        abs_y = (motion->x * _video.getViewHeight()) / _video.getWindowWidth();
+        rel_x = 32767 - ((viewY << 16) / viewScaledHeight);
+        rel_y = ((viewX << 16) / viewScaledWidth) - 32767;
+        abs_x = viewWidth - ((viewY * viewWidth) / viewScaledHeight) - 1;
+        abs_y = (viewX * viewHeight) / viewScaledWidth;
         break;
 
       case Video::Rotation::OneEighty:
-        rel_x = 32767 - ((motion->x << 16) / _video.getWindowWidth());
-        rel_y = 32767 - ((motion->y << 16) / _video.getWindowHeight());
-        abs_x = _video.getViewWidth() - ((motion->x * _video.getViewWidth()) / _video.getWindowWidth()) - 1;
-        abs_y = _video.getViewHeight() - ((motion->y * _video.getViewHeight()) / _video.getWindowHeight()) - 1;
+        rel_x = 32767 - ((viewX << 16) / viewScaledWidth);
+        rel_y = 32767 - ((viewY << 16) / viewScaledHeight);
+        abs_x = viewWidth - ((viewX * viewWidth) / viewScaledWidth) - 1;
+        abs_y = viewHeight - ((viewY * viewHeight) / viewScaledHeight) - 1;
         break;
 
       case Video::Rotation::TwoSeventy:
-        rel_x = ((motion->y << 16) / _video.getWindowHeight());
-        rel_y = 32767 - ((motion->x << 16) / _video.getWindowWidth());
-        abs_x = (motion->y * _video.getViewWidth()) / _video.getWindowHeight();
-        abs_y = _video.getViewWidth() - ((motion->x * _video.getViewHeight()) / _video.getWindowWidth()) - 1;
+        rel_x = ((viewY << 16) / viewScaledHeight) - 32767;
+        rel_y = 32767 - ((viewX << 16) / viewScaledWidth);
+        abs_x = (viewY * viewWidth) / viewScaledHeight;
+        abs_y = viewHeight - ((viewX * viewHeight) / viewScaledWidth) - 1;
         break;
     }
 

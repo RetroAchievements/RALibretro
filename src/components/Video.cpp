@@ -554,12 +554,16 @@ bool Video::ensureVertexArray(unsigned windowWidth, unsigned windowHeight, float
         break;
     }
 
+    _viewScaledWidth = w;
+    _viewScaledHeight = h;
     winScaleX = (float)w / (float)windowWidth;
     winScaleY = (float)h / (float)windowHeight;
   }
   else
   {
     winScaleX = winScaleY = 1.0f;
+    _viewScaledWidth = windowWidth;
+    _viewScaledHeight = windowHeight;
   }
 
   if (_hw.enabled && _hw.callback->bottom_left_origin)
