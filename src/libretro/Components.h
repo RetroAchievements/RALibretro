@@ -30,6 +30,10 @@ SOFTWARE.
 
 #include "libretro.h"
 
+#ifndef LOG_MAX_LINE_SIZE
+#define LOG_MAX_LINE_SIZE 1024
+#endif
+
 namespace libretro
 {
   /**
@@ -38,7 +42,26 @@ namespace libretro
   class LoggerComponent
   {
   public:
-    virtual void vprintf(enum retro_log_level level, const char* fmt, va_list args) = 0;
+    virtual void log(enum retro_log_level level, const char* line, size_t length) = 0;
+
+    void vprintf(enum retro_log_level level, const char* fmt, va_list args)
+    {
+      char line[LOG_MAX_LINE_SIZE];
+      size_t length = vsnprintf(line, sizeof(line), fmt, args);
+
+      if (length >= sizeof(line))
+      {
+        length = sizeof(line) - 1;
+        line[length - 1] = line[length - 2] = line[length - 3] = '.';
+      }
+
+      while (length > 0 && line[length - 1] == '\n')
+      {
+        line[--length] = 0;
+      }
+
+      log(level, line, length);
+    }
 
     void setLogLevel(enum retro_log_level level)
     {

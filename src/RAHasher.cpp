@@ -24,19 +24,25 @@ static void usage(const char* appname)
 class StdErrLogger : public Logger
 {
 public:
-  void vprintf(enum retro_log_level level, const char* fmt, va_list args) override
+  void log(enum retro_log_level level, const char* line, size_t length) override
   {
     // ignore non-errors unless they're coming from the hashing code
-    if (level != RETRO_LOG_ERROR && strncmp(fmt, "[HASH]", 6) != 0)
+    if (level != RETRO_LOG_ERROR && strncmp(line, "[HASH]", 6) != 0)
       return;
 
     // don't print the category
-    while (*fmt && *fmt != ']')
-      ++fmt;
-    while (*fmt == ']' || *fmt == ' ')
-      ++fmt;
+    while (*line && *line != ']')
+    {
+      ++line;
+      --length;
+    }
+    while (*line == ']' || *line == ' ')
+    {
+      ++line;
+      --length;
+    }
 
-    ::vfprintf(stderr, fmt, args);
+    ::fwrite(line, length, 1, stderr);
     ::fprintf(stderr, "\n");
   }
 };
