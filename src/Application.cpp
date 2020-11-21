@@ -2366,7 +2366,11 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
   case KeyBinds::Action::kFastForward:
     _config.setFastForwarding(static_cast<bool>(extra));
     break;
-  
+
+  case KeyBinds::Action::kReset:
+    _fsm.resetGame();
+    break;
+
   case KeyBinds::Action::kScreenshot:
     screenshot();
     break;

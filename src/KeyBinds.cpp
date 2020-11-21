@@ -131,6 +131,9 @@ enum
   // Screenshot
   kScreenshot,
 
+  // Reset
+  kReset,
+
   // Game Focus
   kGameFocusToggle,
 
@@ -158,6 +161,8 @@ static const char* bindingNames[] = {
   "SHOW_OVERLAY", "PAUSE", "FAST_FORWARD", "FAST_FORWARD_TOGGLE", "FRAME_ADVANCE",
 
   "SCREENSHOT",
+
+  "RESET",
 
   "GAME_FOCUS_TOGGLE"
 };
@@ -264,6 +269,8 @@ bool KeyBinds::init(libretro::LoggerComponent* logger)
   _bindings[kFastForwardToggle] = { 0, SDLK_MINUS, Binding::Type::Key, 0 };
   _bindings[kStep] = { 0, SDLK_SEMICOLON, Binding::Type::Key, 0 };
 
+  _bindings[kReset] = { 0, 0, Binding::Type::None, 0 };
+
   _bindings[kScreenshot] = { 0, SDLK_PRINTSCREEN, Binding::Type::Key, 0 };
 
   _bindings[kGameFocusToggle] = { 0, SDLK_SCROLLLOCK, Binding::Type::Key, 0 };
@@ -365,6 +372,9 @@ KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
     case kFastForward:       *extra = (unsigned)!_ff; return Action::kFastForward;
     case kFastForwardToggle: _ff = !_ff; *extra = (unsigned)_ff; return Action::kFastForward;
     case kStep:              return Action::kStep;
+
+    // Reset
+    case kReset:             return Action::kReset;
 
     // Screenshot
     case kScreenshot:        return Action::kScreenshot;
@@ -1319,49 +1329,48 @@ public:
   {
     _bindings = bindings;
 
-    const WORD WIDTH = 357;
-    const WORD HEIGHT = 376;
+    const WORD WIDTH = 437;
+    const WORD HEIGHT = 326;
     char label[32];
 
-    addButtonInput(0, 0, "Window Size 1x", kSetWindowSize1);
-    addButtonInput(1, 0, "Window Size 2x", kSetWindowSize2);
-    addButtonInput(2, 0, "Window Size 3x", kSetWindowSize3);
-    addButtonInput(3, 0, "Window Size 4x", kSetWindowSize4);
-    addButtonInput(4, 0, "Toggle Fullscreen", kToggleFullscreen);
-    addButtonInput(5, 0, "Rotate Right", kRotateRight);
-    addButtonInput(6, 0, "Rotate Left", kRotateLeft);
+    addButtonInput(0, 0, "Reset", kReset);
+    addButtonInput(1, 0, "Take Screenshot", kScreenshot);
+    addButtonInput(2, 0, "Game Focus", kGameFocusToggle);
+    addButtonInput(3, 0, "Pause", kPauseToggleNoOvl);
+    addButtonInput(4, 0, "Frame Advance", kStep);
+    addButtonInput(5, 0, "Fast Forward (Hold)", kFastForward);
+    addButtonInput(6, 0, "Fast Forward (Toggle)", kFastForwardToggle);
 
-    addButtonInput(7, 0, "Show Overlay", kPauseToggle);
-    addButtonInput(8, 0, "Pause", kPauseToggleNoOvl);
-    addButtonInput(9, 0, "Frame Advance", kStep);
-    addButtonInput(10, 0, "Fast Forward (Hold)", kFastForward);
-    addButtonInput(11, 0, "Fast Forward (Toggle)", kFastForwardToggle);
-
-    addButtonInput(12, 0, "Take Screenshot", kScreenshot);
-
-    addButtonInput(13, 0, "Game Focus", kGameFocusToggle);
+    addButtonInput(0, 2, "Window Size 1x", kSetWindowSize1);
+    addButtonInput(1, 2, "Window Size 2x", kSetWindowSize2);
+    addButtonInput(2, 2, "Window Size 3x", kSetWindowSize3);
+    addButtonInput(3, 2, "Window Size 4x", kSetWindowSize4);
+    addButtonInput(4, 2, "Rotate Right", kRotateRight);
+    addButtonInput(5, 2, "Rotate Left", kRotateLeft);
+    addButtonInput(6, 2, "Toggle Fullscreen", kToggleFullscreen);
+    addButtonInput(7, 2, "Show Overlay", kPauseToggle);
 
     for (int i = 0; i < 10; ++i)
     {
       snprintf(label, sizeof(label), "Save State %d", i + 1);
-      addButtonInput(i, 3, label, kSaveState1 + i);
+      addButtonInput(i, 5, label, kSaveState1 + i);
     }
-    addButtonInput(10, 3, "Save Current State", kSaveCurrent);
+    addButtonInput(10, 5, "Save Current State", kSaveCurrent);
 
     for (int i = 0; i < 10; ++i)
     {
       snprintf(label, sizeof(label), "Load State %d", i + 1);
-      addButtonInput(i, 5, label, kLoadState1 + i);
+      addButtonInput(i, 7, label, kLoadState1 + i);
     }
-    addButtonInput(10, 5, "Load Current State", kLoadCurrent);
+    addButtonInput(10, 7, "Load Current State", kLoadCurrent);
 
     for (int i = 0; i < 10; ++i)
     {
       snprintf(label, sizeof(label), "Select State %d", i + 1);
-      addButtonInput(i, 7, label, kSetSlot1 + i);
+      addButtonInput(i, 9, label, kSetSlot1 + i);
     }
-    addButtonInput(10, 7, "Select Previous State", kPreviousSlot);
-    addButtonInput(11, 7, "Select Next State", kNextSlot);
+    addButtonInput(10, 9, "Select Previous State", kPreviousSlot);
+    addButtonInput(11, 9, "Select Next State", kNextSlot);
 
     addButton("OK", IDOK, WIDTH - 55 - 50, HEIGHT - 14, 50, 14, true);
     addButton("Cancel", IDCANCEL, WIDTH - 50, HEIGHT - 14, 50, 14, false);
