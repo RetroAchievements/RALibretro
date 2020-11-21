@@ -1252,9 +1252,12 @@ bool Application::loadGame(const std::string& path)
 
     if (item.path == path && item.coreName == _coreName && item.system == _system)
     {
-      _recentList.erase(_recentList.begin() + i);
-      _recentList.insert(_recentList.begin(), item);
-      _logger.debug(TAG "Moved recent file %zu to front \"%s\" - %s - %u", i, util::fileName(item.path).c_str(), item.coreName.c_str(), (unsigned)item.system);
+      if (i > 0)
+      {
+        _recentList.erase(_recentList.begin() + i);
+        _recentList.insert(_recentList.begin(), item);
+        _logger.debug(TAG "Moved recent file %zu to front \"%s\" - %s - %u", i, util::fileName(item.path).c_str(), item.coreName.c_str(), (unsigned)item.system);
+      }
       goto moved_recent_item;
     }
   }
@@ -1543,6 +1546,14 @@ void Application::enableRecent()
     caption += " - ";
     caption += getSystemName(_recentList[i].system);
     caption += ")";
+
+    // escape ampersands so they don't get interpreted as accelerators
+    size_t nPos = 0;
+    while ((nPos = caption.find('&', nPos)) != std::string::npos)
+    {
+      caption.insert(caption.begin() + nPos, '&');
+      nPos += 2;
+    }
 
     info.dwTypeData = (char*)caption.c_str();
     SetMenuItemInfo(_menu, id, false, &info);
