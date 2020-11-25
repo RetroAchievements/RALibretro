@@ -97,6 +97,7 @@ void Config::reset()
   _variables.clear();
   _selections.clear();
   _updated = false;
+  _hadDisallowedSetting = false;
 }
 
 const char* Config::getCoreAssetsDirectory()
@@ -369,32 +370,47 @@ void Config::deserialize(const char* json)
   _updated = true;
 }
 
-bool Config::validateSettingsForHardcore(const char* library_name, bool prompt) const
+bool Config::validateSettingsForHardcore(const char* library_name, bool prompt)
 {
 #ifdef _WINDOWS
+  // previously detected a disallowed setting and not trying to enable hardcore, return success
+  if (_hadDisallowedSetting && !RA_HardcoreModeIsActive())
+    return true;
+
+
   const rc_disallowed_setting_t* disallowed_settings = rc_libretro_get_disallowed_settings(library_name);
   if (disallowed_settings)
   {
+    bool hadDisallowedSetting = _hadDisallowedSetting;
     for (auto& var : _variables)
     {
       const char* value = var._options[var._selected].c_str();
       if (!rc_libretro_is_setting_allowed(disallowed_settings, var._key.c_str(), value))
       {
-        if (var._selected < (int)var._labels.size())
-          value = var._labels[var._selected].c_str();
+        if (RA_HardcoreModeIsActive())
+        {
+          // hardcore mode - setting is not allowed. if prompt is true, give the user the chance
+          // to disable hardcore mode. if they choose not to, or prompt is false, return false
+          if (var._selected < (int)var._labels.size())
+            value = var._labels[var._selected].c_str();
 
-        if (prompt)
-        {
-          std::string setting = "set " + var._name + " to " + value;
-          if (!RA_WarnDisableHardcore(setting.c_str()))
+          if (prompt)
+          {
+            std::string setting = "set " + var._name + " to " + value;
+            if (!RA_WarnDisableHardcore(setting.c_str()))
+              return false;
+          }
+          else
+          {
+            std::string error = var._name + " cannot be set to " + value + " in hardcore mode.";
+            MessageBox(g_mainWindow, error.c_str(), "Error", MB_OK);
             return false;
+          }
         }
-        else
-        {
-          std::string error = var._name + " cannot be set to " + value + " in hardcore mode.";
-          MessageBox(g_mainWindow, error.c_str(), "Error", MB_OK);
-          return false;
-        }
+
+        // non hardcore mode - just track the fact that a disallowed setting was set
+        _hadDisallowedSetting = true;
+        break;
       }
     }
 
@@ -402,21 +418,34 @@ bool Config::validateSettingsForHardcore(const char* library_name, bool prompt) 
     {
       if (!rc_libretro_is_setting_allowed(disallowed_settings, var.first.c_str(), var.second.c_str()))
       {
-        if (prompt)
+        if (RA_HardcoreModeIsActive())
         {
-          std::string setting = "set " + var.first + " to " + var.second;
-          if (!RA_WarnDisableHardcore(setting.c_str()))
+          if (prompt)
+          {
+            std::string setting = "set " + var.first + " to " + var.second;
+            if (!RA_WarnDisableHardcore(setting.c_str()))
+              return false;
+          }
+          else
+          {
+            std::string error = var.first + " cannot be set to " + var.second + " in hardcore mode.";
+            MessageBox(g_mainWindow, error.c_str(), "Error", MB_OK);
             return false;
+          }
         }
-        else
-        {
-          std::string error = var.first + " cannot be set to " + var.second + " in hardcore mode.";
-          MessageBox(g_mainWindow, error.c_str(), "Error", MB_OK);
-          return false;
-        }
+
+        // non hardcore mode - just track the fact that a disallowed setting was set
+        _hadDisallowedSetting = true;
+        break;
       }
     }
 
+    if (hadDisallowedSetting && RA_HardcoreModeIsActive())
+    {
+      // no current disallowed setting, but one was previously set, prevent switch to hardcore
+      MessageBox(g_mainWindow, "You must reload the game to enable hardcore mode due to a core configuration change", "Error", MB_OK);
+      return false;
+    }
   }
 #endif
 
@@ -549,6 +578,8 @@ void Config::showDialog(const std::string& coreName, Input& input)
             std::string setting = "set " + var._name + " to " + value;
             if (!RA_WarnDisableHardcore(setting.c_str()))
               return;
+
+            _hadDisallowedSetting = true;
           }
         }
       }
