@@ -38,6 +38,7 @@ protected:
   void initializeWithoutRegions(libretro::Core* core);
   void initializeFromMemoryMap(const rc_memory_regions_t* regions, const retro_memory_map* mmap);
   void initializeFromUnmappedMemory(const rc_memory_regions_t* regions, libretro::Core* core);
+  void installMemoryBanks();
 
   libretro::LoggerComponent* _logger;
 };

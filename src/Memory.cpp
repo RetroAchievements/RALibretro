@@ -199,14 +199,80 @@ void Memory::attachToCore(libretro::Core* core, int consoleId)
 
   if (hasValidRegion)
   {
-    RA_ClearMemoryBanks();
-    RA_InstallMemoryBank(0, memoryRead, memoryWrite, g_memoryTotalSize);
+    installMemoryBanks();
   }
   else if (g_lastMemoryRefresh == 0)
   {
     g_lastMemoryRefresh = clock();
     RA_ClearMemoryBanks();
     RA_InstallMemoryBank(0, deferredMemoryRead, memoryWrite, g_memoryTotalSize);
+  }
+}
+
+static bool g_bVersionChecked = false;
+static bool g_bVersionSupported = false;
+
+void Memory::installMemoryBanks()
+{
+  RA_ClearMemoryBanks();
+
+  // 0.78 DLL will crash if passed NULL as a read function - detect 0.79 DLL by looking for the _RA_SuspendRepaint export
+  if (!g_bVersionChecked)
+  {
+    wchar_t sBuffer[MAX_PATH];
+    DWORD iIndex = GetModuleFileNameW(0, sBuffer, MAX_PATH);
+    while (iIndex > 0 && sBuffer[iIndex - 1] != '\\' && sBuffer[iIndex - 1] != '/')
+      --iIndex;
+
+    wcscpy_s(&sBuffer[iIndex], sizeof(sBuffer) / sizeof(sBuffer[0]) - iIndex, L"RA_Integration.dll");
+    HINSTANCE hRADLL = LoadLibraryW(sBuffer);
+    if (hRADLL)
+    {
+      g_bVersionSupported = GetProcAddress(hRADLL, "_RA_SuspendRepaint") != NULL;
+      FreeLibrary(hRADLL);
+    }
+
+    g_bVersionChecked = true;
+  }
+
+  if (!g_bVersionSupported)
+  {
+    // have an 0.78 DLL - register a read function that will return 0 for the unsupported regions
+    RA_InstallMemoryBank(0, memoryRead, memoryWrite, g_memoryTotalSize);
+    return;
+  }
+
+  // have an 0.79 DLL - register invalid banks for unsupported regions
+  int bankId = 0;
+  size_t bankSize = 0;
+  bool wasValidRegion = false;
+  for (size_t i = 0; i < g_memoryRegionCount; i++)
+  {
+    bool isValidRegion = (g_memoryRegionData[i] != NULL);
+    if (bankSize > 0 && isValidRegion != wasValidRegion)
+    {
+      if (wasValidRegion)
+        RA_InstallMemoryBank(bankId, memoryRead, memoryWrite, bankSize);
+      else
+        RA_InstallMemoryBank(bankId, NULL, NULL, bankSize);
+
+      bankSize = g_memoryRegionSize[i];
+      ++bankId;
+    }
+    else
+    {
+      bankSize += g_memoryRegionSize[i];
+    }
+
+    wasValidRegion = isValidRegion;
+  }
+
+  if (bankSize > 0)
+  {
+    if (wasValidRegion)
+      RA_InstallMemoryBank(bankId, memoryRead, memoryWrite, bankSize);
+    else
+      RA_InstallMemoryBank(bankId, NULL, NULL, bankSize);
   }
 }
 
