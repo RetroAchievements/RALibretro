@@ -26,7 +26,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #define RING_LOG_MAX_LINE_SIZE 1024
 #endif
 
-bool Logger::init()
+bool Logger::init(const char* rootFolder)
 {
   // Do compile-time checks for the line and buffer sizes.
   char check_line_size[RING_LOG_MAX_LINE_SIZE <= 65535 ? 1 : -1];
@@ -39,7 +39,11 @@ bool Logger::init()
   _first = _last = 0;
 
 #ifdef LOG_TO_FILE
-  _file = fopen("log.txt", "w");
+  char path[512] = "";
+  if (rootFolder)
+    strcpy(path, rootFolder);
+  strcat(path, "log.txt");
+  _file = fopen(path, "w");
 #endif
 
 #ifndef NDEBUG

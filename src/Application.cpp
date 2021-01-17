@@ -95,7 +95,9 @@ bool Application::init(const char* title, int width, int height)
   }
   inited = kNothingInited;
 
-  if (!_logger.init())
+  _config.initRootFolder();
+
+  if (!_logger.init(_config.getRootFolder()))
   {
     goto error;
   }
