@@ -400,6 +400,7 @@ void Application::runTurbo()
   const auto tTurboStart = std::chrono::steady_clock::now();
 
   // do four frames without video or audio
+  RA_SuspendRepaint();
   for (int i = 0; i < 4; i++)
   {
     _core.step(false, false);
@@ -409,6 +410,7 @@ void Application::runTurbo()
   // do a final frame with video and no audio
   _core.step(true, false);
   RA_DoAchievementsFrame();
+  RA_ResumeRepaint();
 
   // check for periodic SRAM flush
   _states.periodicSaveSRAM(&_core);
