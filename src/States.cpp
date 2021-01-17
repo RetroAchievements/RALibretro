@@ -150,8 +150,14 @@ void States::saveState(const std::string& path)
   util::ensureDirectoryExists(util::directory(path));
 
   size_t size = _core->serializeSize();
-  void* data = malloc(size);
+  if (size == 0)
+  {
+    _logger->warn(TAG "Core returned 0 for save state size");
+    MessageBox(g_mainWindow, "Core does not support save states", "RALibRetro", MB_OK);
+    return;
+  }
 
+  void* data = malloc(size);
   if (data == NULL)
   {
     _logger->error(TAG "Out of memory allocating %lu bytes for the game state", size);
