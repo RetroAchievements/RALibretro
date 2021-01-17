@@ -20,6 +20,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "Logger.h"
 
 #include <memory.h>
+#include <string.h>
 
 /* must be less than RING_LOG_MAX_BUFFER_SIZE */
 #ifndef RING_LOG_MAX_LINE_SIZE
