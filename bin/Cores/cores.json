@@ -80,19 +80,19 @@
     "systems": [6],
     "platforms": "none"
   },
-  "bsnes_hd_libretro":{
+  "bsnes_hd_beta_libretro":{
     "name": "bsnes-hd beta",
     "extensions": "sfc|smc",
     "systems": [3],
     "platforms": "none"
   },
-  "bsnes_hd_libretro":{
+  "bsnes_hd_beta_libretro":{
     "name": "bsnes-hd beta",
     "extensions": "gb",
     "systems": [4],
     "platforms": "none"
   },
-  "bsnes_hd_libretro":{
+  "bsnes_hd_beta_libretro":{
     "name": "bsnes-hd beta",
     "extensions": "gbc",
     "systems": [6],
@@ -171,8 +171,7 @@
   },
   "freeintv_libretro":{
     "name": "FreeIntV",
-    "systems": [45],
-    "platforms": "none"
+    "systems": [45]
   },
   "frodo_libretro":{
     "name": "Frodo",
@@ -554,7 +553,7 @@
   },
   "smsplus_libretro":{
     "name": "SMS Plus GX",
-    "systems": [11,44],
+    "systems": [11,15,33,44],
     "platforms": "none"
   },
   "snes9x2002_libretro":{
