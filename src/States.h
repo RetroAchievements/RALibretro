@@ -86,7 +86,9 @@ private:
   static Path decodePath(const std::string& shorthand);
 
   std::string getSRamPath(Path path) const;
-  std::string getStatePath(unsigned ndx, Path path) const;
+  std::string getStatePath(unsigned ndx, Path path, bool bOldFormat) const;
 
   void saveSRAM(void* sramData, size_t sramSize);
+
+  bool loadRAState1(unsigned char* input, size_t size);
 };

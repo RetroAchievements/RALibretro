@@ -116,10 +116,10 @@ std::string States::getSRamPath(Path path) const
 
 std::string States::getStatePath(unsigned ndx) const
 {
-  return getStatePath(ndx, _statePath);
+  return getStatePath(ndx, _statePath, false);
 }
 
-std::string States::getStatePath(unsigned ndx, Path path) const
+std::string States::getStatePath(unsigned ndx, Path path, bool bOldFormat) const
 {
   std::string statePath = buildPath(path);
 
@@ -133,12 +133,18 @@ std::string States::getStatePath(unsigned ndx, Path path) const
     statePath += "-";
     statePath += _coreName;
   }
-  
-  char index[8];
-  sprintf(index, ".%03u", ndx);
 
-  statePath += index;
+  if (bOldFormat)
+  {
+    char index[8];
+    sprintf(index, ".%03u", ndx);
+    statePath += index;
+  }
+
   statePath += ".state";
+
+  if (!bOldFormat)
+    statePath += std::to_string(ndx);
 
   return statePath;
 }
@@ -199,6 +205,39 @@ void States::saveState(unsigned ndx)
   saveState(getStatePath(ndx));
 }
 
+bool States::loadRAState1(unsigned char* input, size_t size)
+{
+  unsigned char* stop = input + size;
+  unsigned char* marker;
+  bool ret = true;
+
+  input += 8;
+  while (input < stop && ret)
+  {
+    size_t block_size = (input[7] << 24 | input[6] << 16 | input[5] << 8 | input[4]);
+    marker = input;
+    input += 8;
+
+    if (memcmp(marker, "MEM ", 4) == 0)
+    {
+      ret = _core->unserialize(input, block_size);
+    }
+    else if (memcmp(marker, "ACHV", 4) == 0)
+    {
+      RA_RestoreState((const char*)input);
+    }
+    else if (memcmp(marker, "END ", 4) == 0)
+    {
+      break;
+    }
+
+    block_size = ((block_size + 7) & ~7); /* align to 8-bytes */
+    input += block_size;
+  }
+
+  return ret;
+}
+
 bool States::loadState(const std::string& path)
 {
   if (!RA_WarnDisableHardcore("load a state"))
@@ -222,9 +261,35 @@ bool States::loadState(const std::string& path)
     return false;
   }
 
-  _core->unserialize(data, size);
+  bool ret = true;
+  if (memcmp(data, "RASTATE", 7) != 0)
+  {
+    /* old format is just core data, load it directly */
+    ret = _core->unserialize(data, size);
+    if (ret)
+      RA_OnLoadState(path.c_str());
+  }
+  else
+  {
+    unsigned char* input = (unsigned char*)data;
+    switch (input[7]) /* version */
+    {
+      case 1:
+        ret = loadRAState1(input, size);
+        break;
+
+      default:
+        ret = false;
+        break;
+    }
+  }
+
   free(data);
-  RA_OnLoadState(path.c_str());
+  if (!ret)
+  {
+    _logger->error(TAG "Error loading savestate");
+    return false;
+  }
 
   unsigned width, height, pitch;
   enum retro_pixel_format format;
@@ -264,12 +329,20 @@ bool States::loadState(const std::string& path)
 
 bool States::loadState(unsigned ndx)
 {
-  return loadState(getStatePath(ndx));
+  std::string path = getStatePath(ndx, _statePath, false);
+  if (!util::exists(path))
+    path = getStatePath(ndx, _statePath, true);
+
+  return loadState(path);
 }
 
 bool States::existsState(unsigned ndx)
 {
-  std::string path = getStatePath(ndx);
+  std::string path = getStatePath(ndx, _statePath, false);
+  if (util::exists(path))
+    return true;
+
+  path = getStatePath(ndx, _statePath, true);
   return util::exists(path);
 }
 
@@ -429,8 +502,7 @@ void States::migrateFiles()
 
   for (unsigned ndx = 1; ndx <= 10; ndx++)
   {
-    std::string statePath = getStatePath(ndx, _statePath);
-    if (util::exists(statePath))
+    if (existsState(ndx))
       return;
   }
 
@@ -443,7 +515,14 @@ void States::migrateFiles()
 
     for (unsigned ndx = 1; ndx <= 10; ndx++)
     {
-      statePath = getStatePath(ndx, _statePaths[i]);
+      statePath = getStatePath(ndx, _statePaths[i], false);
+      if (util::exists(statePath))
+      {
+        testPath = _statePaths[i];
+        break;
+      }
+
+      statePath = getStatePath(ndx, _statePaths[i], true);
       if (util::exists(statePath))
       {
         testPath = _statePaths[i];
@@ -462,12 +541,20 @@ void States::migrateFiles()
       std::string message = "Found save state data in " + oldPath + ".\n\nMove to " + newPath + "?";
       if (MessageBox(g_mainWindow, message.c_str(), "RALibRetro", MB_YESNO) == IDYES)
       {
-        util::ensureDirectoryExists(util::directory(getStatePath(1, _statePath)));
+        util::ensureDirectoryExists(util::directory(getStatePath(1, _statePath, true)));
 
         for (unsigned ndx = 1; ndx <= 10; ndx++)
         {
-          oldPath = getStatePath(ndx, testPath);
-          newPath = getStatePath(ndx, _statePath);
+          oldPath = getStatePath(ndx, testPath, true);
+          newPath = getStatePath(ndx, _statePath, true);
+          if (util::exists(oldPath))
+            MoveFile(oldPath.c_str(), newPath.c_str());
+        }
+
+        for (unsigned ndx = 1; ndx <= 10; ndx++)
+        {
+          oldPath = getStatePath(ndx, testPath, false);
+          newPath = getStatePath(ndx, _statePath, false);
           if (util::exists(oldPath))
           {
             MoveFile(oldPath.c_str(), newPath.c_str());
