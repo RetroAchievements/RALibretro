@@ -37,17 +37,17 @@ extern HWND g_mainWindow;
 
 #define TAG "[CFG] "
 
-bool Config::init(libretro::LoggerComponent* logger)
+void Config::initRootFolder()
 {
-  _logger = logger;
-
 #ifdef _WINDOWS
-  HMODULE hModule = GetModuleHandleW(NULL);
   WCHAR path[MAX_PATH + 1];
-  DWORD len = GetModuleFileNameW(hModule, path, sizeof(path) / sizeof(path[0]) - 1);
+  DWORD len = GetModuleFileNameW(NULL, path, MAX_PATH);
   path[len] = 0;
 
-  _rootFolder = util::ucharToUtf8(path);
+  WCHAR fullpath[MAX_PATH + 1];
+  len = GetFullPathNameW(path, MAX_PATH, fullpath, NULL);
+
+  _rootFolder = util::ucharToUtf8(fullpath);
 #endif
 
   size_t index = _rootFolder.find_last_of('\\');
@@ -59,6 +59,11 @@ bool Config::init(libretro::LoggerComponent* logger)
   {
     _rootFolder = ".\\";
   }
+}
+
+bool Config::init(libretro::LoggerComponent* logger)
+{
+  _logger = logger;
 
   _assetsFolder = _rootFolder + "Assets\\";
   _saveFolder = _rootFolder + "Saves\\";

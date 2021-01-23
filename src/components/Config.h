@@ -31,6 +31,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 class Config: public libretro::ConfigComponent
 {
 public:
+  void initRootFolder();
   bool init(libretro::LoggerComponent* logger);
   void destroy() {}
   void reset();

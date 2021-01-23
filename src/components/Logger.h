@@ -33,7 +33,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 class Logger: public libretro::LoggerComponent
 {
 public:
-  bool init();
+  bool init(const char* rootFolder);
   void destroy();
 
   std::string contents() const;
