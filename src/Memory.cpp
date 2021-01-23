@@ -54,7 +54,7 @@ static unsigned char memoryRead(unsigned addr)
   return 0;
 }
 
-static void memoryWrite(unsigned addr, unsigned value)
+static void memoryWrite(unsigned addr, unsigned char value)
 {
   unsigned i;
   for (i = 0; i < g_memoryRegionCount; ++i)
