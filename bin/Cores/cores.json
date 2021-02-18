@@ -210,8 +210,13 @@
   },
   "gearsystem_libretro":{
     "name": "Gearsystem",
-    "extensions": "gg|sg",
+    "extensions": "gg",
     "systems": [15]
+  },
+  "gearsystem_libretro":{
+    "name": "Gearsystem",
+    "extensions": "sg",
+    "systems": [33]
   },
   "genesis_plus_gx_libretro":{
     "name": "Genesis Plus GX",
@@ -227,6 +232,11 @@
     "name": "Genesis Plus GX",
     "extensions": "cue|iso",
     "systems": [9]
+  },
+  "genesis_plus_gx_libretro":{
+    "name": "Genesis Plus GX",
+    "extensions": "sg",
+    "systems": [33]
   },
   "gpsp_libretro":{
     "name": "gpSP",
