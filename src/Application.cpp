@@ -780,6 +780,7 @@ void Application::run()
         case Fsm::State::GamePausedNoOvl:
         default:
           // do no frames
+          Sleep(10);
           break;
 
         case Fsm::State::FrameStep:
