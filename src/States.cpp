@@ -36,9 +36,16 @@ along with RALibRetro.  If not, see <http://www.gnu.org/licenses/>.
 #include <commdlg.h>
 #include <shlobj.h>
 
+#include <assert.h>
 #include <time.h>
 
 #define TAG "[SAV] "
+
+#define RASTATE_VERSION 1
+#define RASTATE_MEM_BLOCK "MEM "
+#define RASTATE_CHEEVOS_BLOCK "ACHV"
+#define RASTATE_SCREEN_BLOCK "SCRN"
+#define RASTATE_END_BLOCK "END "
 
 extern HWND g_mainWindow;
 
@@ -149,60 +156,133 @@ std::string States::getStatePath(unsigned ndx, Path path, bool bOldFormat) const
   return statePath;
 }
 
-void States::saveState(const std::string& path)
+static size_t alignSize(size_t size)
+{
+  /* align to 8-byte boundary */
+  return ((size + 7) & ~7);
+}
+
+static void writeBlockHeader(uint8_t* output, const char* header, size_t size)
+{
+  memcpy(output, header, 4);
+  output[4] = ((size) & 0xFF);
+  output[5] = ((size >> 8) & 0xFF);
+  output[6] = ((size >> 16) & 0xFF);
+  output[7] = ((size >> 24) & 0xFF);
+}
+
+bool States::saveState(const std::string& path)
 {
   _logger->info(TAG "Saving state to %s", path.c_str());
 
   util::ensureDirectoryExists(util::directory(path));
 
-  size_t size = _core->serializeSize();
-  if (size == 0)
+  /* make sure the core supports save states */
+  const size_t coreSize = _core->serializeSize();
+  if (coreSize == 0)
   {
     _logger->warn(TAG "Core returned 0 for save state size");
     MessageBox(g_mainWindow, "Core does not support save states", "RALibRetro", MB_OK);
-    return;
+    return false;
   }
 
-  void* data = malloc(size);
-  if (data == NULL)
-  {
-    _logger->error(TAG "Out of memory allocating %lu bytes for the game state", size);
-    return;
-  }
-
-  if (!_core->serialize(data, size))
-  {
-    free(data);
-    return;
-  }
-
+  /* capture the screen data so we can restore it if the state is loaded while paused */
+  const void* pngData = NULL;
+  int pngSize = 0;
   unsigned width, height, pitch;
   enum retro_pixel_format format;
-  const void* pixels = _video->getFramebuffer(&width, &height, &pitch, &format);
-
-  if (pixels == NULL)
+  const void* rawFramebuffer = _video->getFramebuffer(&width, &height, &pitch, &format);
+  if (rawFramebuffer != NULL)
   {
-    free(data);
-    return;
+    pngData = util::toPng(_logger, rawFramebuffer, width, height, pitch, format, &pngSize);
+    free((void*)rawFramebuffer);
   }
 
-  if (!util::saveFile(_logger, path.c_str(), data, size))
+  /* determine how much space is needed for achievement data */
+  const size_t rapSize = RA_CaptureState(NULL, 0);
+
+  /* 8-byte identifier, 8-byte block header, content, 8-byte terminator */
+  size_t totalSize = 8 + 8 + alignSize(coreSize) + 8;
+
+  if (rapSize > 0)
+    totalSize += 8 + alignSize(rapSize); /* 8-byte header + content */
+
+  if (pngSize > 0)
+    totalSize += 8 + alignSize(pngSize); /* 8-byte header + content */
+
+  bool result = false;
+  void* data = malloc(totalSize);
+  if (data == NULL)
   {
-    free((void*)pixels);
+    _logger->error(TAG "Out of memory allocating %lu bytes for the game state", totalSize);
+  }
+  else
+  {
+    uint8_t* output = (uint8_t*)data;
+    memcpy(output, "RASTATE", 7);
+    output[7] = RASTATE_VERSION;
+    output += 8;
+
+    writeBlockHeader(output, RASTATE_MEM_BLOCK, coreSize);
+    output += 8;
+
+    if (!_core->serialize(output, coreSize))
+    {
+      _logger->error(TAG "Core serialize failed");
+    }
+    else
+    {
+      output += alignSize(coreSize);
+
+      if (rapSize > 0)
+      {
+        writeBlockHeader(output, RASTATE_MEM_BLOCK, coreSize);
+        output += 8;
+
+        RA_CaptureState((char*)output, rapSize);
+        output += alignSize(rapSize);
+      }
+
+      if (pngSize > 0)
+      {
+        writeBlockHeader(output, RASTATE_SCREEN_BLOCK, pngSize);
+        output += 8;
+
+        memcpy(output, pngData, pngSize);
+        output += alignSize(pngSize);
+      }
+
+      writeBlockHeader(output, RASTATE_END_BLOCK, 0);
+      output += 8;
+
+      const size_t actualSize = (output - (uint8_t*)data);
+      assert(actualSize <= totalSize);
+
+      result = util::saveFile(_logger, path.c_str(), data, actualSize);
+    }
+
     free(data);
-    return;
   }
 
-  util::saveImage(_logger, path + ".png", pixels, width, height, pitch, format);
-  RA_OnSaveState(path.c_str());
+  if (pngData)
+    free((void*)pngData);
 
-  free((void*)pixels);
-  free(data);
+  return result;
 }
 
 void States::saveState(unsigned ndx)
 {
-  saveState(getStatePath(ndx));
+  std::string path = getStatePath(ndx, _statePath, false);
+  if (saveState(path))
+  {
+    path = getStatePath(ndx, _statePath, true);
+    if (util::exists(path))
+    {
+      util::deleteFile(path);
+      util::deleteFile(path + ".png");
+      util::deleteFile(path + ".rap");
+    }
+  }
 }
 
 bool States::loadRAState1(unsigned char* input, size_t size)
@@ -218,15 +298,15 @@ bool States::loadRAState1(unsigned char* input, size_t size)
     marker = input;
     input += 8;
 
-    if (memcmp(marker, "MEM ", 4) == 0)
+    if (memcmp(marker, RASTATE_MEM_BLOCK, 4) == 0)
     {
       ret = _core->unserialize(input, block_size);
     }
-    else if (memcmp(marker, "ACHV", 4) == 0)
+    else if (memcmp(marker, RASTATE_CHEEVOS_BLOCK, 4) == 0)
     {
       RA_RestoreState((const char*)input);
     }
-    else if (memcmp(marker, "END ", 4) == 0)
+    else if (memcmp(marker, RASTATE_END_BLOCK, 4) == 0)
     {
       break;
     }

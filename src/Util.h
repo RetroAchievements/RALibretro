@@ -80,6 +80,7 @@ namespace util
   std::string saveFileDialog(HWND hWnd, const std::string& extensionsFilter);
 #endif
 
+  const void* toPng(Logger* logger, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format, int* len);
   const void* toRgb(Logger* logger, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format);
   void        saveImage(Logger* logger, const std::string& path, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format);
   void*       fromRgb(Logger* logger, const void* data, unsigned width, unsigned height, unsigned* pitch, enum retro_pixel_format format);

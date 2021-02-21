@@ -801,17 +801,25 @@ const void* util::toRgb(Logger* logger, const void* data, unsigned width, unsign
   return pixels;
 }
 
-void util::saveImage(Logger* logger, const std::string& path, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format)
+const void* util::toPng(Logger* logger, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format, int* len)
 {
   const void* pixels = util::toRgb(logger, data, width, height, pitch, format);
-
   if (pixels == NULL)
   {
-    return;
+    *len = 0;
+    return NULL;
   }
 
+  unsigned char* png = stbi_write_png_to_mem((unsigned char*)pixels, 0, width, height, 3, len);
+
+  free((void*)pixels);
+  return png;
+}
+
+void util::saveImage(Logger* logger, const std::string& path, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format)
+{
   int len;
-  unsigned char* png = stbi_write_png_to_mem((unsigned char*)pixels, 0, width, height, 3, &len);
+  const void* png = util::toPng(logger, data, width, height, pitch, format, &len);
   if (png)
   {
     FILE* f = util::openFile(logger, path, "wb");
@@ -823,10 +831,8 @@ void util::saveImage(Logger* logger, const std::string& path, const void* data, 
       logger->info(TAG "Wrote image %u x %u to %s", width, height, path.c_str());
     }
 
-    STBIW_FREE(png);
+    STBIW_FREE((void*)png);
   }
-
-  free((void*)pixels);
 }
 
 void* util::fromRgb(Logger* logger, const void* data, unsigned width, unsigned height, unsigned* pitch, enum retro_pixel_format format)

@@ -35,7 +35,7 @@ public:
   std::string getSRamPath() const;
   std::string getStatePath(unsigned ndx) const;
 
-  void        saveState(const std::string& path);
+  bool        saveState(const std::string& path);
   void        saveState(unsigned ndx);
   bool        loadState(const std::string& path);
   bool        loadState(unsigned ndx);
