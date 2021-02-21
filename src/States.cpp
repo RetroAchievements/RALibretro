@@ -236,7 +236,7 @@ bool States::saveState(const std::string& path)
 
       if (rapSize > 0)
       {
-        writeBlockHeader(output, RASTATE_MEM_BLOCK, coreSize);
+        writeBlockHeader(output, RASTATE_CHEEVOS_BLOCK, rapSize);
         output += 8;
 
         RA_CaptureState((char*)output, rapSize);
@@ -306,13 +306,22 @@ bool States::loadRAState1(unsigned char* input, size_t size)
     {
       RA_RestoreState((const char*)input);
     }
+    else if (memcmp(marker, RASTATE_SCREEN_BLOCK, 4) == 0)
+    {
+      unsigned width, height, pitch;
+      const void* png = util::fromPng(_logger, input, block_size, &width, &height, &pitch);
+      if (png)
+      {
+        restoreFrameBuffer(png, width, height, pitch);
+        free((void*)png);
+      }
+    }
     else if (memcmp(marker, RASTATE_END_BLOCK, 4) == 0)
     {
       break;
     }
 
-    block_size = ((block_size + 7) & ~7); /* align to 8-bytes */
-    input += block_size;
+    input += alignSize(block_size);
   }
 
   return ret;
@@ -371,11 +380,7 @@ bool States::loadState(const std::string& path)
     return false;
   }
 
-  unsigned width, height, pitch;
-  enum retro_pixel_format format;
-  _video->getFramebufferSize(&width, &height, &format);
-
-  unsigned image_width, image_height;
+  unsigned image_width, image_height, pitch;
   const void* pixels = util::loadImage(_logger, path + ".png", &image_width, &image_height, &pitch);
   if (pixels == NULL)
   {
@@ -383,8 +388,23 @@ bool States::loadState(const std::string& path)
     return true; /* state was still loaded even if the frame buffer wasn't updated */
   }
 
-  /* if the widths aren't the same, the stride differs and we can't just load the pixels */
-  if (image_width == width)
+  restoreFrameBuffer(pixels, image_width, image_height, pitch);
+  free((void*)pixels);
+  return true;
+}
+
+void States::restoreFrameBuffer(const void* pixels, unsigned image_width, unsigned image_height, unsigned pitch)
+{
+  unsigned width, height;
+  enum retro_pixel_format format;
+  _video->getFramebufferSize(&width, &height, &format);
+
+  if (image_width != width)
+  {
+    /* if the widths aren't the same, the stride differs and we can't just load the pixels */
+    _logger->warn(TAG "Ignoring savestate screenshot. width differs: %u != %u", image_width, width);
+  }
+  else
   {
     void* converted = util::fromRgb(_logger, pixels, image_width, image_height, &pitch, format);
     if (converted == NULL)
@@ -402,9 +422,6 @@ bool States::loadState(const std::string& path)
       free((void*)converted);
     }
   }
-
-  free((void*)pixels);
-  return true;
 }
 
 bool States::loadState(unsigned ndx)

@@ -84,6 +84,7 @@ namespace util
   const void* toRgb(Logger* logger, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format);
   void        saveImage(Logger* logger, const std::string& path, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format);
   void*       fromRgb(Logger* logger, const void* data, unsigned width, unsigned height, unsigned* pitch, enum retro_pixel_format format);
+  void*       fromPng(Logger* logger, const void* data, int len, unsigned* width, unsigned* height, unsigned* pitch);
   void*       loadImage(Logger* logger, const std::string& path, unsigned* width, unsigned* height, unsigned* pitch);
 
 #ifdef _WINDOWS

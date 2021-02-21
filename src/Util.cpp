@@ -971,6 +971,18 @@ void* util::loadImage(Logger* logger, const std::string& path, unsigned* width, 
   return rgb888;
 }
 
+void* util::fromPng(Logger* logger, const void* data, int len, unsigned* width, unsigned* height, unsigned* pitch)
+{
+  int w, h;
+  void* rgb888 = stbi_load_from_memory((const stbi_uc*)data, len, &w, &h, NULL, STBI_rgb);
+
+  *width = w;
+  *height = h;
+  *pitch = w * 3;
+
+  return rgb888;
+}
+
 #ifdef _WINDOWS
 std::string util::ucharToUtf8(const std::wstring& unicodeString)
 {
