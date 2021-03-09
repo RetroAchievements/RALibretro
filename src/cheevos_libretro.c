@@ -57,6 +57,12 @@ static const rc_disallowed_setting_t _rc_disallowed_gpgx_settings[] = {
   { NULL, NULL }
 };
 
+static const rc_disallowed_setting_t _rc_disallowed_gpgx_wide_settings[] = {
+  { "genesis_plus_gx_wide_lock_on", ",action replay (pro),game genie" },
+  { "genesis_plus_gx_wide_region_detect", "pal" },
+  { NULL, NULL }
+};
+
 static const rc_disallowed_setting_t _rc_disallowed_mesen_settings[] = {
   { "mesen_region", ",PAL,Dendy" },
   { NULL, NULL }
@@ -99,6 +105,7 @@ static const rc_disallowed_core_settings_t rc_disallowed_core_settings[] = {
   { "FCEUmm", _rc_disallowed_fceumm_settings },
   { "FinalBurn Neo", _rc_disallowed_fbneo_settings },
   { "Genesis Plus GX", _rc_disallowed_gpgx_settings },
+  { "Genesis Plus GX Wide", _rc_disallowed_gpgx_wide_settings },
   { "Mesen", _rc_disallowed_mesen_settings },
   { "Mesen-S", _rc_disallowed_mesen_s_settings },
   { "PPSSPP", _rc_disallowed_ppsspp_settings },
