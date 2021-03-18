@@ -134,17 +134,23 @@ FILE* util::openFile(Logger* logger, const std::string& path, const char* mode)
 
   if (err)
   {
-    char buffer[256];
-    strerror_s(buffer, sizeof(buffer), err);
-    logger->error(TAG "Error opening \"%s\": %s", path.c_str(), buffer);
+    if (logger)
+    {
+      char buffer[256];
+      strerror_s(buffer, sizeof(buffer), err);
+      logger->error(TAG "Error opening \"%s\": %s", path.c_str(), buffer);
+    }
     file = NULL;
   }
 #else
   file = fopen(path.c_str(), mode);
   if (errno)
   {
-    char buffer[256];
-    logger->error(TAG "Error opening \"%s\": %s", path.c_str(), strerror_r(errno, buffer, sizeof(buffer)));
+    if (logger)
+    {
+      char buffer[256];
+      logger->error(TAG "Error opening \"%s\": %s", path.c_str(), strerror_r(errno, buffer, sizeof(buffer)));
+    }
     file = NULL;
   }
 #endif
