@@ -19,6 +19,10 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Logger.h"
 
+#ifdef LOG_TO_FILE
+#include "Util.h"
+#endif
+
 #include <memory.h>
 #include <string.h>
 
@@ -44,7 +48,7 @@ bool Logger::init(const char* rootFolder)
   if (rootFolder)
     strcpy(path, rootFolder);
   strcat(path, "log.txt");
-  _file = fopen(path, "w");
+  _file = util::openFile(NULL, path, "w");
 #endif
 
 #ifndef NDEBUG
@@ -57,7 +61,11 @@ bool Logger::init(const char* rootFolder)
 void Logger::destroy()
 {
 #ifdef LOG_TO_FILE
-  fclose(_file);
+  if (_file)
+  {
+    fclose(_file);
+    _file = NULL;
+  }
 #endif
 }
 
@@ -109,11 +117,14 @@ void Logger::log(enum retro_log_level level, const char* line, size_t length)
   }
 
 #ifdef LOG_TO_FILE
-  // Log to the log file.
-  fprintf(_file, "[%s] %s\n", desc, line);
+  if (_file)
+  {
+    // Log to the log file.
+    fprintf(_file, "[%s] %s\n", desc, line);
 #ifndef NDEBUG
-  fflush(_file);
+    fflush(_file);
 #endif
+  }
 #endif
 }
 
