@@ -1128,14 +1128,11 @@ bool Application::loadGame(const std::string& path)
   bool iszip = (path.length() > 4 && stricmp(&path.at(path.length() - 4), ".zip") == 0);
   bool issupportedzip = false;
 
-  /* in hardcore mode, make sure none of the forbidden settings are set */
-  if (RA_HardcoreModeIsActive())
+  /* make sure none of the forbidden settings are set */
+  if (!_config.validateSettingsForHardcore(_core.getSystemInfo()->library_name, true))
   {
-    if (!_config.validateSettingsForHardcore(_core.getSystemInfo()->library_name, true))
-    {
-      MessageBox(g_mainWindow, "Game load was canceled.", "Failed", MB_OK);
-      return false;
-    }
+    MessageBox(g_mainWindow, "Game load was canceled.", "Failed", MB_OK);
+    return false;
   }
 
   /* if the core says it wants the full path, we have to see if it supports zip files */
@@ -1257,18 +1254,15 @@ bool Application::loadGame(const std::string& path)
   }
 
   /* calling loadGame may change one or more settings - revalidate */
-  if (RA_HardcoreModeIsActive())
+  if (!_config.validateSettingsForHardcore(_core.getSystemInfo()->library_name, true))
   {
-    if (!_config.validateSettingsForHardcore(_core.getSystemInfo()->library_name, true))
-    {
-      if (data)
-        free(data);
+    if (data)
+      free(data);
 
-      _core.unloadGame();
+    _core.unloadGame();
 
-      MessageBox(g_mainWindow, "Game load was canceled.", "Failed", MB_OK);
-      return false;
-    }
+    MessageBox(g_mainWindow, "Game load was canceled.", "Failed", MB_OK);
+    return false;
   }
 
   RA_SetConsoleID((unsigned)_system);

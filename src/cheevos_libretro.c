@@ -15,11 +15,20 @@
 #include <ctype.h>
 #include <string.h>
 
+/* a value that starts with a comma is a CSV.
+ * if it starts with an exclamation point, it's everything but the provided value.
+ * if it starts with an exclamntion point followed by a comma, it's everything but the CSV values.
+ * values are case-insensitive */
 typedef struct rc_disallowed_core_settings_t
 {
   const char* library_name;
   const rc_disallowed_setting_t* disallowed_settings;
 } rc_disallowed_core_settings_t;
+
+static const rc_disallowed_setting_t _rc_disallowed_bsnes_settings[] = {
+  { "bsnes_region", "pal" },
+  { NULL, NULL }
+};
 
 static const rc_disallowed_setting_t _rc_disallowed_dolphin_settings[] = {
   { "dolphin_cheats_enabled", "enabled" },
@@ -37,8 +46,40 @@ static const rc_disallowed_setting_t _rc_disallowed_fbneo_settings[] = {
   { NULL, NULL }
 };
 
+static const rc_disallowed_setting_t _rc_disallowed_fceumm_settings[] = {
+  { "fceumm_region", ",PAL,Dendy" },
+  { NULL, NULL }
+};
+
 static const rc_disallowed_setting_t _rc_disallowed_gpgx_settings[] = {
   { "genesis_plus_gx_lock_on", ",action replay (pro),game genie" },
+  { "genesis_plus_gx_region_detect", "pal" },
+  { NULL, NULL }
+};
+
+static const rc_disallowed_setting_t _rc_disallowed_gpgx_wide_settings[] = {
+  { "genesis_plus_gx_wide_lock_on", ",action replay (pro),game genie" },
+  { "genesis_plus_gx_wide_region_detect", "pal" },
+  { NULL, NULL }
+};
+
+static const rc_disallowed_setting_t _rc_disallowed_mesen_settings[] = {
+  { "mesen_region", ",PAL,Dendy" },
+  { NULL, NULL }
+};
+
+static const rc_disallowed_setting_t _rc_disallowed_mesen_s_settings[] = {
+  { "mesen-s_region", "PAL" },
+  { NULL, NULL }
+};
+
+static const rc_disallowed_setting_t _rc_disallowed_pcsx_rearmed_settings[] = {
+  { "pcsx_rearmed_region", "pal" },
+  { NULL, NULL }
+};
+
+static const rc_disallowed_setting_t _rc_disallowed_picodrive_settings[] = {
+  { "picodrive_region", ",Europe,Japan PAL" },
   { NULL, NULL }
 };
 
@@ -47,12 +88,31 @@ static const rc_disallowed_setting_t _rc_disallowed_ppsspp_settings[] = {
   { NULL, NULL }
 };
 
+static const rc_disallowed_setting_t _rc_disallowed_snes9x_settings[] = {
+  { "snes9x_region", "pal" },
+  { NULL, NULL }
+};
+
+static const rc_disallowed_setting_t _rc_disallowed_virtual_jaguar_settings[] = {
+  { "virtualjaguar_pal", "enabled" },
+  { NULL, NULL }
+};
+
 static const rc_disallowed_core_settings_t rc_disallowed_core_settings[] = {
+  { "bsnes-mercury", _rc_disallowed_bsnes_settings },
   { "dolphin-emu", _rc_disallowed_dolphin_settings },
   { "ecwolf", _rc_disallowed_ecwolf_settings },
+  { "FCEUmm", _rc_disallowed_fceumm_settings },
   { "FinalBurn Neo", _rc_disallowed_fbneo_settings },
   { "Genesis Plus GX", _rc_disallowed_gpgx_settings },
+  { "Genesis Plus GX Wide", _rc_disallowed_gpgx_wide_settings },
+  { "Mesen", _rc_disallowed_mesen_settings },
+  { "Mesen-S", _rc_disallowed_mesen_s_settings },
   { "PPSSPP", _rc_disallowed_ppsspp_settings },
+  { "PCSX-ReARMed", _rc_disallowed_pcsx_rearmed_settings },
+  { "PicoDrive", _rc_disallowed_picodrive_settings },
+  { "Snes9x", _rc_disallowed_snes9x_settings },
+  { "Virtual Jaguar", _rc_disallowed_virtual_jaguar_settings },
   { NULL, NULL }
 };
 

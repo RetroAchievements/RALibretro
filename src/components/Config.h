@@ -64,7 +64,7 @@ public:
   std::string serialize();
   void deserialize(const char* json);
 
-  bool validateSettingsForHardcore(const char* library_name, bool prompt) const;
+  bool validateSettingsForHardcore(const char* library_name, bool prompt);
 
 #ifdef _WINDOWS
   void showDialog(const std::string& coreName, Input& input);
@@ -99,6 +99,7 @@ protected:
 
   bool _updated;
   bool _fastForwarding;
+  bool _hadDisallowedSetting;
 
   std::string _key;
 };
