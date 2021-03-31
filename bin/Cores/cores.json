@@ -517,7 +517,6 @@
   },
   "potator_libretro":{
     "name": "Potator",
-    "extensions": "sv",
     "systems": [63]
   },
   "ppsspp_libretro":{
