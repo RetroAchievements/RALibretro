@@ -16,7 +16,7 @@
   },
   "bluemsx_libretro":{
     "name": "blueMSX",
-    "extensions": "col",
+    "extensions": "col|rom",
     "systems": [44]
   },
   "bluemsx_libretro":{
@@ -514,6 +514,11 @@
   "pokemini_libretro":{
     "name": "PokeMini",
     "systems": [24]
+  },
+  "potator_libretro":{
+    "name": "Potator",
+    "extensions": "sv",
+    "systems": [63]
   },
   "ppsspp_libretro":{
     "name": "PPSSPP",
