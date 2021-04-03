@@ -28,7 +28,7 @@ along with RALibRetro.  If not, see <http://www.gnu.org/licenses/>.
 #include "RA_Interface.h"
 
 #include <jsonsax/jsonsax.h>
-#include <rcheevos/include/rconsoles.h>
+#include <rcheevos/include/rc_consoles.h>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

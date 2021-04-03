@@ -34,10 +34,6 @@ public:
   void attachToCore(libretro::Core* core, int consoleId);
 
 protected:
-  void registerMemoryRegion(int type, uint8_t* data, size_t size, const char* description);
-  void initializeWithoutRegions(libretro::Core* core);
-  void initializeFromMemoryMap(const rc_memory_regions_t* regions, const retro_memory_map* mmap);
-  void initializeFromUnmappedMemory(const rc_memory_regions_t* regions, libretro::Core* core);
   void installMemoryBanks();
 
   libretro::LoggerComponent* _logger;
