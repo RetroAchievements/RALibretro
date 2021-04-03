@@ -615,6 +615,16 @@
     "systems": [6],
     "platforms": "none"
   },
+  "theodore_libretro":{
+    "name": "Theodore",
+    "systems": [66],
+    "platforms": "none"
+  },
+  "tic80_libretro":{
+    "name": "TIC-80",
+    "systems": [65],
+    "platforms": "none"
+  },
   "ume2015_libretro":{
     "name": "UME 2015",
     "systems": [27],
@@ -691,6 +701,11 @@
   "virtualjaguar_libretro":{
     "name": "Virtual Jaguar",
     "systems": [17]
+  },
+  "x1_libretro":{
+    "name": "X1",
+    "systems": [64],
+    "platforms": "none"
   },
   "yabasanshiro_libretro":{
     "name": "YabaSanshiro",
