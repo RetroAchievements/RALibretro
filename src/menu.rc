@@ -115,6 +115,7 @@ main MENU
             MENUITEM "Resize to 2x", IDM_WINDOW_2X
             MENUITEM "Resize to 3x", IDM_WINDOW_3X
             MENUITEM "Resize to 4x", IDM_WINDOW_4X
+            MENUITEM "Resize to 5x", IDM_WINDOW_5X
         }
         MENUITEM SEPARATOR
         MENUITEM "Manage Cores...", IDM_MANAGE_CORES

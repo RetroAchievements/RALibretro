@@ -1477,7 +1477,7 @@ void Application::onRotationChanged(Video::Rotation oldRotation, Video::Rotation
     {
       int width = _video.getWindowWidth();
       int height = _video.getWindowHeight();
-      SDL_SetWindowSize(_window, height, width);
+      resizeWindow(height, width);
 
       /* immediately call windowResized as rotation may change again before the window message is processed */
       _video.windowResized(height, width);
@@ -2070,21 +2070,38 @@ void Application::resizeWindow(unsigned multiplier)
   
   if (!fullscreen)
   {
-    unsigned width, height;
+    unsigned width, height, temp;
     enum retro_pixel_format format;
-    _video.getFramebufferSize(&width, &height, &format);
 
     switch (_video.getRotation())
     {
       default:
-        SDL_SetWindowSize(_window, width * multiplier, height * multiplier);
+        _video.getFramebufferSize(&width, &height, &format);
         break;
 
       case Video::Rotation::Ninety:
       case Video::Rotation::TwoSeventy:
-        SDL_SetWindowSize(_window, height * multiplier, width * multiplier);
+        _video.getFramebufferSize(&height, &width, &format);
         break;
     }
+
+    resizeWindow(width * multiplier, height * multiplier);
+  }
+}
+
+void Application::resizeWindow(int width, int height)
+{
+  int actual_width, actual_height;
+  SDL_SetWindowSize(_window, width, height);
+
+  /* SDL_SetWindowSize does not always account for the menu size correctly - especially if it wraps
+   * make sure we got the size we wanted */
+  SDL_GetWindowSize(_window, &actual_width, &actual_height);
+  if (actual_width != width || actual_height != height)
+  {
+    width += (width - actual_width);
+    height += (height - actual_height);
+    SDL_SetWindowSize(_window, width, height);
   }
 }
 
@@ -2221,6 +2238,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     case IDM_WINDOW_2X:
     case IDM_WINDOW_3X:
     case IDM_WINDOW_4X:
+    case IDM_WINDOW_5X:
       resizeWindow(cmd - IDM_WINDOW_1X + 1);
       break;
 
@@ -2396,6 +2414,7 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
   case KeyBinds::Action::kSetWindowSize2:   resizeWindow(2); break;
   case KeyBinds::Action::kSetWindowSize3:   resizeWindow(3); break;
   case KeyBinds::Action::kSetWindowSize4:   resizeWindow(4); break;
+  case KeyBinds::Action::kSetWindowSize5:   resizeWindow(5); break;
   case KeyBinds::Action::kToggleFullscreen: toggleFullscreen(); break;
   case KeyBinds::Action::kRotateRight:      _video.setRotation((Video::Rotation)(((int)_video.getRotation() + 3) & 3)); break;
   case KeyBinds::Action::kRotateLeft:       _video.setRotation((Video::Rotation)(((int)_video.getRotation() + 1) & 3)); break;

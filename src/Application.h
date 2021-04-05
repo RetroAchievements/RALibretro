@@ -106,6 +106,7 @@ protected:
   void        screenshot();
   void        aboutDialog();
   void        resizeWindow(unsigned multiplier);
+  void        resizeWindow(int width, int height);
   void        toggleFullscreen();
   void        handle(const SDL_SysWMEvent* syswm);
   void        handle(const SDL_WindowEvent* window);

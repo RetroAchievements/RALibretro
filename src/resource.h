@@ -66,6 +66,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #define IDM_WINDOW_2X                           54001
 #define IDM_WINDOW_3X                           54002
 #define IDM_WINDOW_4X                           54003
+#define IDM_WINDOW_5X                           54004
 
 #define IDM_CD_DISC_FIRST                       55000
 #define IDM_CD_DISC_LAST                        55019
