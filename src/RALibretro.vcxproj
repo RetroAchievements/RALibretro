@@ -68,14 +68,14 @@
     <OutDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\</IntDir>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
-    <LocalDebuggerCommand>$(ProjectDir)..\bin\RALibRetro.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>$(ProjectDir)..\bin\RALibretro.exe</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>$(ProjectDir)..\bin</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\</IntDir>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
-    <LocalDebuggerCommand>$(ProjectDir)..\bin\RALibRetro.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>$(ProjectDir)..\bin\RALibretro.exe</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>$(ProjectDir)..\bin</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -83,14 +83,14 @@
     <OutDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\</IntDir>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
-    <LocalDebuggerCommand>$(ProjectDir)..\bin64\RALibRetro.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>$(ProjectDir)..\bin64\RALibretro.exe</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>$(ProjectDir)..\bin64</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\</IntDir>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
-    <LocalDebuggerCommand>$(ProjectDir)..\bin64\RALibRetro.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>$(ProjectDir)..\bin64\RALibretro.exe</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>$(ProjectDir)..\bin64</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

@@ -13,7 +13,7 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\RALibRetro">
+    <Filter Include="Source Files\RALibretro">
       <UniqueIdentifier>{dbb91ad7-cb9c-4d0b-8000-4c52930b4044}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\miniz">
@@ -28,7 +28,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Util.cpp">
-      <Filter>Source Files\RALibRetro</Filter>
+      <Filter>Source Files\RALibretro</Filter>
     </ClCompile>
     <ClCompile Include="miniz\miniz.c">
       <Filter>Source Files\miniz</Filter>
@@ -43,10 +43,10 @@
       <Filter>Source Files\miniz</Filter>
     </ClCompile>
     <ClCompile Include="components\Logger.cpp">
-      <Filter>Source Files\RALibRetro</Filter>
+      <Filter>Source Files\RALibretro</Filter>
     </ClCompile>
     <ClCompile Include="Git.cpp">
-      <Filter>Source Files\RALibRetro</Filter>
+      <Filter>Source Files\RALibretro</Filter>
     </ClCompile>
     <ClCompile Include="rcheevos\src\rhash\md5.c">
       <Filter>Source Files\rhash</Filter>

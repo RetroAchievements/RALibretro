@@ -14,7 +14,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "Util.h"
@@ -366,7 +366,7 @@ bool util::downloadFile(Logger* logger, const std::string& url, const std::strin
   const char* pageStart = strchr(hostName, '/');
 
   // Use WinHttpOpen to obtain a session handle.
-  hSession = WinHttpOpen(L"RALibRetro", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+  hSession = WinHttpOpen(L"RALibretro", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
     WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
 
   // Specify an HTTP server.

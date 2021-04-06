@@ -14,7 +14,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "Emulator.h"
@@ -446,11 +446,11 @@ protected:
       const auto unicodePath = util::utf8ToUChar(path);
       if (unicodePath.length() != path.length())
       {
-        MessageBox(hwnd, "miniz does not support unicode paths. Please manually unzip the file in the Cores subdirectory and restart RALibRetro.", "Error", MB_OK);
+        MessageBox(hwnd, "miniz does not support unicode paths. Please manually unzip the file in the Cores subdirectory and restart RALibretro.", "Error", MB_OK);
       }
       else
       {
-        MessageBox(hwnd, "Unzip failed. Please manually unzip the file in the Cores subdirectory and restart RALibRetro.", "Error", MB_OK);
+        MessageBox(hwnd, "Unzip failed. Please manually unzip the file in the Cores subdirectory and restart RALibretro.", "Error", MB_OK);
       }
     }
     else

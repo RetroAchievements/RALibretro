@@ -14,7 +14,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with RALibRetro.  If not, see <http://www.gnu.org/licenses/>.
+along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "States.h"
@@ -182,7 +182,7 @@ bool States::saveState(const std::string& path)
   if (coreSize == 0)
   {
     _logger->warn(TAG "Core returned 0 for save state size");
-    MessageBox(g_mainWindow, "Core does not support save states", "RALibRetro", MB_OK);
+    MessageBox(g_mainWindow, "Core does not support save states", "RALibretro", MB_OK);
     return false;
   }
 
@@ -346,7 +346,7 @@ bool States::loadState(const std::string& path)
   if (memcmp(data, "#RZIPv", 6) == 0)
   {
     _logger->error(TAG "Compressed save states not supported");
-    MessageBox(g_mainWindow, "Compressed save states not supported", "RALibRetro", MB_OK);
+    MessageBox(g_mainWindow, "Compressed save states not supported", "RALibretro", MB_OK);
     return false;
   }
 
@@ -588,7 +588,7 @@ void States::migrateFiles()
       newPath.erase(0, rootFolderLength);
 
       std::string message = "Found SRAM data in " + oldPath + ".\n\nMove to " + newPath + "?";
-      if (MessageBox(g_mainWindow, message.c_str(), "RALibRetro", MB_YESNO) == IDYES)
+      if (MessageBox(g_mainWindow, message.c_str(), "RALibretro", MB_YESNO) == IDYES)
       {
         util::ensureDirectoryExists(util::directory(sramPath));
 
@@ -636,7 +636,7 @@ void States::migrateFiles()
       newPath.erase(0, rootFolderLength);
 
       std::string message = "Found save state data in " + oldPath + ".\n\nMove to " + newPath + "?";
-      if (MessageBox(g_mainWindow, message.c_str(), "RALibRetro", MB_YESNO) == IDYES)
+      if (MessageBox(g_mainWindow, message.c_str(), "RALibretro", MB_YESNO) == IDYES)
       {
         util::ensureDirectoryExists(util::directory(getStatePath(1, _statePath, true)));
 
@@ -868,7 +868,7 @@ void States::showDialog()
 {
   if (!_gameFileName.empty())
   {
-    MessageBox(g_mainWindow, "Saving settings cannot be changed with a game loaded.", "RALibRetro", MB_OK);
+    MessageBox(g_mainWindow, "Saving settings cannot be changed with a game loaded.", "RALibretro", MB_OK);
     return;
   }
 

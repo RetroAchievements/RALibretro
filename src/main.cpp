@@ -14,7 +14,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <SDL.h>
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
 {
   signal(SIGABRT, &abort_handler);
 
-  bool ok = app.init("RALibRetro", 640, 480);
+  bool ok = app.init("RALibretro", 640, 480);
 
   if (ok)
   {
