@@ -232,7 +232,11 @@ int encodeCoreName(const std::string& coreName, int system)
       for (auto s : s_coreInfos[i].systems)
       {
         if (s == system)
-          return (j * 100) + i;
+        {
+          // the IDM resources allocated for selecting cores goes from 45000 to 49999, giving us 4999
+          // unique identifiers to use. encode the core index and system subindex to fit in that range
+          return (j * s_coreInfos.size()) + i;
+        }
 
         ++j;
       }
@@ -244,11 +248,8 @@ int encodeCoreName(const std::string& coreName, int system)
 
 const std::string& getCoreName(int encoded, int& system)
 {
-  size_t i = encoded % 100;
-  size_t j = encoded / 100;
-
-  if (i > s_coreInfos.size())
-    i = 0;
+  const size_t i = encoded % s_coreInfos.size();
+  size_t j = encoded / s_coreInfos.size();
 
   if (j > s_coreInfos[i].systems.size())
     j = 0;
