@@ -63,10 +63,10 @@ namespace libretro
     inline void                    unloadGame()                   { _core.unloadGame(); }
     inline bool                    gameLoaded()             const { return _gameLoaded; }
 
-    inline unsigned                getNumDiscs()            const { return (_diskControlInterface != NULL) ? _diskControlInterface->get_num_images() : 0; }
-    inline unsigned                getCurrentDiscIndex()    const { return (_diskControlInterface != NULL) ? _diskControlInterface->get_image_index() : 0; }
+    inline unsigned                getNumDiscs()            const { return (_diskControlInterface.get_num_images != NULL) ? _diskControlInterface.get_num_images() : 0; }
+    inline unsigned                getCurrentDiscIndex()    const { return (_diskControlInterface.get_image_index != NULL) ? _diskControlInterface.get_image_index() : 0; }
     void                           setCurrentDiscIndex(unsigned);
-    inline bool                    getTrayOpen()            const { return (_diskControlInterface != NULL) ? (bool)_diskControlInterface->get_eject_state() : false; }
+    inline bool                    getTrayOpen()            const { return (_diskControlInterface.get_eject_state != NULL) ? (bool)_diskControlInterface.get_eject_state() : false; }
     void                           setTrayOpen(bool open);
 
     inline const struct retro_input_descriptor* getInputDescriptors(unsigned* count) const
@@ -221,7 +221,7 @@ namespace libretro
     struct retro_controller_info*   _controllerInfo;
     unsigned*                       _ports;
 
-    const struct retro_disk_control_callback* _diskControlInterface;
+    struct retro_disk_control_callback _diskControlInterface;
 
     struct retro_memory_map         _memoryMap;
 
