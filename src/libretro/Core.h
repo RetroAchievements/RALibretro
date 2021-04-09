@@ -134,6 +134,7 @@ namespace libretro
     bool setPixelFormat(enum retro_pixel_format data);
     bool setInputDescriptors(const struct retro_input_descriptor* data);
     bool setDiskControlInterface(const struct retro_disk_control_callback* data);
+    bool setDiskControlExtInterface(const struct retro_disk_control_ext_callback* data);
     bool setHWRender(struct retro_hw_render_callback* data);
     bool getVariable(struct retro_variable* data);
     bool setVariables(const struct retro_variable* data);
@@ -159,6 +160,7 @@ namespace libretro
     bool setCoreOptions(const struct retro_core_option_definition* data);
     bool setCoreOptionsIntl(const struct retro_core_options_intl* data);
     bool setCoreOptionsDisplay(const struct retro_core_option_display* data);
+    bool getPreferredHWRender(unsigned* data);
 
     // Callbacks
     bool                 environmentCallback(unsigned cmd, void* data);

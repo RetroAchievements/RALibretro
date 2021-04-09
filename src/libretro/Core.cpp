@@ -728,6 +728,24 @@ bool libretro::Core::setDiskControlInterface(const struct retro_disk_control_cal
   return true;
 }
 
+bool libretro::Core::setDiskControlExtInterface(const struct retro_disk_control_ext_callback* data)
+{
+  _diskControlInterface.set_eject_state = data->set_eject_state;
+  _diskControlInterface.get_eject_state = data->get_eject_state;
+  _diskControlInterface.get_image_index = data->get_image_index;
+  _diskControlInterface.set_image_index = data->set_image_index;
+  _diskControlInterface.get_num_images = data->get_num_images;
+  _diskControlInterface.replace_image_index = data->replace_image_index;
+  _diskControlInterface.add_image_index = data->add_image_index;
+  return true;
+}
+
+bool libretro::Core::getPreferredHWRender(unsigned* data)
+{
+  *data = RETRO_HW_CONTEXT_OPENGL_CORE;
+  return true;
+}
+
 bool libretro::Core::setHWRender(struct retro_hw_render_callback* data)
 {
   static const char* context_type_desc[] =
@@ -1460,6 +1478,14 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
 
   case RETRO_ENVIRONMENT_GET_FASTFORWARDING:
     ret = getFastForwarding((bool*)data);
+    break;
+
+  case RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER:
+    ret = getPreferredHWRender((unsigned*)data);
+    break;
+
+  case RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE:
+    ret = setDiskControlExtInterface((const struct retro_disk_control_ext_callback*)data);
     break;
 
   default:

@@ -483,6 +483,12 @@
     "name": "ParaLLEl N64",
     "systems": [2]
   },
+  "pcsx2_libretro":{
+    "name": "pcsx2",
+    "extensions": "cue|iso",
+    "systems": [21],
+    "platforms": "none"
+  },
   "pcsx_rearmed_libretro":{
     "name": "PCSX-ReARMed",
     "extensions": "m3u|cue",
