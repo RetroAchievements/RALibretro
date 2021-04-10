@@ -63,10 +63,10 @@ namespace libretro
     inline void                    unloadGame()                   { _core.unloadGame(); }
     inline bool                    gameLoaded()             const { return _gameLoaded; }
 
-    inline unsigned                getNumDiscs()            const { return (_diskControlInterface != NULL) ? _diskControlInterface->get_num_images() : 0; }
-    inline unsigned                getCurrentDiscIndex()    const { return (_diskControlInterface != NULL) ? _diskControlInterface->get_image_index() : 0; }
+    inline unsigned                getNumDiscs()            const { return (_diskControlInterface.get_num_images != NULL) ? _diskControlInterface.get_num_images() : 0; }
+    inline unsigned                getCurrentDiscIndex()    const { return (_diskControlInterface.get_image_index != NULL) ? _diskControlInterface.get_image_index() : 0; }
     void                           setCurrentDiscIndex(unsigned);
-    inline bool                    getTrayOpen()            const { return (_diskControlInterface != NULL) ? (bool)_diskControlInterface->get_eject_state() : false; }
+    inline bool                    getTrayOpen()            const { return (_diskControlInterface.get_eject_state != NULL) ? (bool)_diskControlInterface.get_eject_state() : false; }
     void                           setTrayOpen(bool open);
 
     inline const struct retro_input_descriptor* getInputDescriptors(unsigned* count) const
@@ -134,6 +134,7 @@ namespace libretro
     bool setPixelFormat(enum retro_pixel_format data);
     bool setInputDescriptors(const struct retro_input_descriptor* data);
     bool setDiskControlInterface(const struct retro_disk_control_callback* data);
+    bool setDiskControlExtInterface(const struct retro_disk_control_ext_callback* data);
     bool setHWRender(struct retro_hw_render_callback* data);
     bool getVariable(struct retro_variable* data);
     bool setVariables(const struct retro_variable* data);
@@ -159,6 +160,7 @@ namespace libretro
     bool setCoreOptions(const struct retro_core_option_definition* data);
     bool setCoreOptionsIntl(const struct retro_core_options_intl* data);
     bool setCoreOptionsDisplay(const struct retro_core_option_display* data);
+    bool getPreferredHWRender(unsigned* data);
 
     // Callbacks
     bool                 environmentCallback(unsigned cmd, void* data);
@@ -221,7 +223,7 @@ namespace libretro
     struct retro_controller_info*   _controllerInfo;
     unsigned*                       _ports;
 
-    const struct retro_disk_control_callback* _diskControlInterface;
+    struct retro_disk_control_callback _diskControlInterface;
 
     struct retro_memory_map         _memoryMap;
 

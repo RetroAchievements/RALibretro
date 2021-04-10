@@ -304,7 +304,7 @@ bool libretro::Core::loadCore(const char* core_path)
 
   _libretroPath = strdup(core_path);
   _samples = alloc<int16_t>(SAMPLE_COUNT);
-  
+
   if (_libretroPath == NULL || _samples == NULL)
   {
     return false;
@@ -410,7 +410,7 @@ void libretro::Core::destroy()
     _core.unloadGame();
   }
 
-  _diskControlInterface = NULL;
+  memset(&_diskControlInterface, 0, sizeof(_diskControlInterface));
 
   _core.deinit();
   _core.destroy();
@@ -587,7 +587,7 @@ void libretro::Core::reset()
   _controllerInfoCount = 0;
   _controllerInfo = NULL;
   _ports = NULL;
-  _diskControlInterface = NULL;
+  memset(&_diskControlInterface, 0, sizeof(_diskControlInterface));
   memset(&_memoryMap, 0, sizeof(_memoryMap));
   memset(&_calls, 0, sizeof(_calls));
 }
@@ -636,14 +636,14 @@ bool libretro::Core::setMessage(const struct retro_message* data)
 
 void libretro::Core::setTrayOpen(bool open)
 {
-  if (_diskControlInterface)
-    _diskControlInterface->set_eject_state(open);
+  if (_diskControlInterface.set_eject_state)
+    _diskControlInterface.set_eject_state(open);
 }
 
 void libretro::Core::setCurrentDiscIndex(unsigned index)
 {
-  if (_diskControlInterface)
-    _diskControlInterface->set_image_index(index);
+  if (_diskControlInterface.set_image_index)
+    _diskControlInterface.set_image_index(index);
 }
 
 bool libretro::Core::setPerformanceLevel(unsigned data)
@@ -724,7 +724,25 @@ bool libretro::Core::setInputDescriptors(const struct retro_input_descriptor* da
 
 bool libretro::Core::setDiskControlInterface(const struct retro_disk_control_callback* data)
 {
-  _diskControlInterface = data;
+  memcpy(&_diskControlInterface, data, sizeof(_diskControlInterface));
+  return true;
+}
+
+bool libretro::Core::setDiskControlExtInterface(const struct retro_disk_control_ext_callback* data)
+{
+  _diskControlInterface.set_eject_state = data->set_eject_state;
+  _diskControlInterface.get_eject_state = data->get_eject_state;
+  _diskControlInterface.get_image_index = data->get_image_index;
+  _diskControlInterface.set_image_index = data->set_image_index;
+  _diskControlInterface.get_num_images = data->get_num_images;
+  _diskControlInterface.replace_image_index = data->replace_image_index;
+  _diskControlInterface.add_image_index = data->add_image_index;
+  return true;
+}
+
+bool libretro::Core::getPreferredHWRender(unsigned* data)
+{
+  *data = RETRO_HW_CONTEXT_OPENGL_CORE;
   return true;
 }
 
@@ -1460,6 +1478,14 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
 
   case RETRO_ENVIRONMENT_GET_FASTFORWARDING:
     ret = getFastForwarding((bool*)data);
+    break;
+
+  case RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER:
+    ret = getPreferredHWRender((unsigned*)data);
+    break;
+
+  case RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE:
+    ret = setDiskControlExtInterface((const struct retro_disk_control_ext_callback*)data);
     break;
 
   default:

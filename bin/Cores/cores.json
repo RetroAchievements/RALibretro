@@ -128,10 +128,9 @@
     "platforms": "none"
   },
   "duckstation_libretro":{
-    "name": "Duckstation",
-    "extensions": "cue",
-    "systems": [12],
-    "platforms": "none"
+    "name": "SwanStation",
+    "extensions": "m3u|cue",
+    "systems": [12]
   },
   "fbalpha_libretro":{
     "name": "FB Alpha",
@@ -483,6 +482,12 @@
   "parallel_n64_libretro":{
     "name": "ParaLLEl N64",
     "systems": [2]
+  },
+  "pcsx2_libretro":{
+    "name": "pcsx2",
+    "extensions": "cue|iso",
+    "systems": [21],
+    "platforms": "none"
   },
   "pcsx_rearmed_libretro":{
     "name": "PCSX-ReARMed",
