@@ -550,8 +550,7 @@
   },
   "quicknes_libretro":{
     "name": "QuickNES",
-    "systems": [7],
-    "platforms": "none"
+    "systems": [7]
   },
   "race_libretro":{
     "name": "RACE",
