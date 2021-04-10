@@ -50,8 +50,8 @@ public:
   const void* getFramebuffer(unsigned* width, unsigned* height, unsigned* pitch, enum retro_pixel_format* format);
   void setFramebuffer(void* pixels, unsigned width, unsigned height, unsigned pitch);
 
-  std::string serialize();
-  void deserialize(const char* json);
+  std::string serializeSettings();
+  bool deserializeSettings(const char* json);
   void showDialog();
 
   unsigned getWindowWidth() const { return _windowWidth; }

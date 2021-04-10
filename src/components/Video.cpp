@@ -390,7 +390,7 @@ void Video::setFramebuffer(void* pixels, unsigned width, unsigned height, unsign
   draw(true);
 }
 
-std::string Video::serialize()
+std::string Video::serializeSettings()
 {
   std::string json("{");
 
@@ -405,7 +405,7 @@ std::string Video::serialize()
   return json;
 }
 
-void Video::deserialize(const char* json)
+bool Video::deserializeSettings(const char* json)
 {
   struct Deserialize
   {
@@ -416,7 +416,8 @@ void Video::deserialize(const char* json)
   Deserialize ud;
   ud.self = this;
 
-  jsonsax_parse(json, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num) {
+  jsonsax_result_t res = jsonsax_parse(json, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+  {
     auto ud = (Deserialize*)udata;
 
     if (event == JSONSAX_KEY)
@@ -437,6 +438,8 @@ void Video::deserialize(const char* json)
 
     return 0;
   });
+
+  return (res == JSONSAX_OK);
 }
 
 static const char* s_getRotateOptions(int index, void* udata)
