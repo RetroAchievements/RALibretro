@@ -117,6 +117,7 @@ enum
   kSetWindowSize2,
   kSetWindowSize3,
   kSetWindowSize4,
+  kSetWindowSize5,
   kToggleFullscreen,
   kRotateRight,
   kRotateLeft,
@@ -155,7 +156,7 @@ static const char* bindingNames[] = {
   "SLOT1", "SLOT2", "SLOT3", "SLOT4", "SLOT5", "SLOT6", "SLOT7", "SLOT8", "SLOT9", "SLOT0",
   "LOAD_SLOT", "SAVE_SLOT",
 
-  "WINDOW_1X", "WINDOW_2X", "WINDOW_3X", "WINDOW_4X",
+  "WINDOW_1X", "WINDOW_2X", "WINDOW_3X", "WINDOW_4X", "WINDOW_5X",
   "TOGGLE_FULLSCREEN", "ROTATE_RIGHT", "ROTATE_LEFT",
 
   "SHOW_OVERLAY", "PAUSE", "FAST_FORWARD", "FAST_FORWARD_TOGGLE", "FRAME_ADVANCE",
@@ -259,6 +260,7 @@ bool KeyBinds::init(libretro::LoggerComponent* logger)
   _bindings[kSetWindowSize2] = { 0, SDLK_2, Binding::Type::Key, KMOD_ALT };
   _bindings[kSetWindowSize3] = { 0, SDLK_3, Binding::Type::Key, KMOD_ALT };
   _bindings[kSetWindowSize4] = { 0, SDLK_4, Binding::Type::Key, KMOD_ALT };
+  _bindings[kSetWindowSize5] = { 0, SDLK_5, Binding::Type::Key, KMOD_ALT };
   _bindings[kToggleFullscreen] = { 0, SDLK_RETURN, Binding::Type::Key, KMOD_ALT };
   _bindings[kRotateRight] = { 0, SDLK_r, Binding::Type::Key, KMOD_CTRL };
   _bindings[kRotateLeft] = { 0, SDLK_r, Binding::Type::Key, KMOD_CTRL | KMOD_SHIFT };
@@ -362,6 +364,7 @@ KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
     case kSetWindowSize2:    return Action::kSetWindowSize2;
     case kSetWindowSize3:    return Action::kSetWindowSize3;
     case kSetWindowSize4:    return Action::kSetWindowSize4;
+    case kSetWindowSize5:    return Action::kSetWindowSize5;
     case kToggleFullscreen:  return Action::kToggleFullscreen;
     case kRotateRight:       return Action::kRotateRight;
     case kRotateLeft:        return Action::kRotateLeft;
@@ -1375,10 +1378,11 @@ public:
     addButtonInput(1, 2, "Window Size 2x", kSetWindowSize2);
     addButtonInput(2, 2, "Window Size 3x", kSetWindowSize3);
     addButtonInput(3, 2, "Window Size 4x", kSetWindowSize4);
-    addButtonInput(4, 2, "Rotate Right", kRotateRight);
-    addButtonInput(5, 2, "Rotate Left", kRotateLeft);
-    addButtonInput(6, 2, "Toggle Fullscreen", kToggleFullscreen);
-    addButtonInput(7, 2, "Show Overlay", kPauseToggle);
+    addButtonInput(4, 2, "Window Size 5x", kSetWindowSize5);
+    addButtonInput(5, 2, "Rotate Right", kRotateRight);
+    addButtonInput(6, 2, "Rotate Left", kRotateLeft);
+    addButtonInput(7, 2, "Toggle Fullscreen", kToggleFullscreen);
+    addButtonInput(8, 2, "Show Overlay", kPauseToggle);
 
     for (int i = 0; i < 10; ++i)
     {

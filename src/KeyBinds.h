@@ -68,6 +68,7 @@ public:
     kSetWindowSize2,
     kSetWindowSize3,
     kSetWindowSize4,
+    kSetWindowSize5,
     kToggleFullscreen,
     kRotateRight,
     kRotateLeft,
@@ -117,7 +118,7 @@ public:
     Type type;
     uint16_t modifiers;
   };
-  typedef std::array<Binding, 89> BindingList;
+  typedef std::array<Binding, 90> BindingList;
 
   static void getBindingString(char buffer[32], const KeyBinds::Binding& desc);
 
