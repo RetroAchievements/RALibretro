@@ -268,9 +268,6 @@ static DummyAudio        s_audio;
 static DummyInput        s_input;
 static DummyAllocator    s_allocator;
 
-// Helper function for the memory map interface
-static bool preprocessMemoryDescriptors(struct retro_memory_descriptor* descriptors, unsigned num_descriptors);
-
 bool libretro::Core::init(const Components* components)
 {
   _logger       = &s_logger;
@@ -1103,8 +1100,6 @@ bool libretro::Core::setMemoryMaps(const struct retro_memory_map* data)
     }
   }
 
-  preprocessMemoryDescriptors(descriptors, _memoryMap.num_descriptors);
-
   _logger->debug(TAG "retro_memory_map");
   _logger->debug(TAG "  ndx flags  ptr      offset   start    select   disconn  len      addrspace");
 
@@ -1690,70 +1685,4 @@ static size_t highestBit(size_t n)
 {
    n = addBitsDown(n);
    return n ^ (n >> 1);
-}
-
-static bool preprocessMemoryDescriptors(struct retro_memory_descriptor* descriptors, unsigned num_descriptors)
-{
-  struct retro_memory_descriptor* desc;
-  const struct retro_memory_descriptor* end = descriptors + num_descriptors;
-  size_t disconnect_mask;
-  size_t top_addr = 1;
-
-  for (desc = descriptors; desc < end; desc++)
-  {
-    if (desc->select != 0)
-    {
-      top_addr |= desc->select;
-    }
-    else
-    {
-      top_addr |= desc->start + desc->len - 1;
-    }
-  }
-
-  top_addr = addBitsDown(top_addr);
-
-  for (desc = descriptors; desc < end; desc++)
-  {
-    if (desc->select == 0)
-    {
-      if (desc->len == 0)
-      {
-        return false;
-      }
-
-      if ((desc->len & (desc->len - 1)) != 0)
-      {
-        return false;
-      }
-
-      desc->select = top_addr & ~inflate(addBitsDown(desc->len - 1), desc->disconnect);
-    }
-
-    if (desc->len == 0)
-    {
-      desc->len = addBitsDown(reduce(top_addr & ~desc->select, desc->disconnect)) + 1;
-    }
-
-    if (desc->start & ~desc->select)
-    {
-      return false;
-    }
-
-    while (reduce(top_addr & ~desc->select, desc->disconnect) >> 1 > desc->len - 1)
-    {
-      desc->disconnect |= highestBit(top_addr & ~desc->select & ~desc->disconnect);
-    }
-
-    disconnect_mask = addBitsDown(desc->len - 1);
-    desc->disconnect &= disconnect_mask;
-
-    while ((~disconnect_mask) >> 1 & desc->disconnect)
-    {
-      disconnect_mask >>= 1;
-      desc->disconnect &= disconnect_mask;
-    }
-  }
-
-  return true;
 }
