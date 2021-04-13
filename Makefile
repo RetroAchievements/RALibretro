@@ -60,7 +60,6 @@ OBJS=\
 	src/libretro/Core.o \
 	src/RA_Implementation.o \
 	src/RAInterface/RA_Interface.o \
-	src/cheevos_libretro.o \
 	src/components/Audio.o \
 	src/components/Config.o \
 	src/components/Dialog.o \
@@ -73,6 +72,7 @@ OBJS=\
 	src/miniz/miniz_tinfl.o \
 	src/miniz/miniz_zip.o \
 	src/rcheevos/src/rcheevos/consoleinfo.o \
+	src/rcheevos/src/rcheevos/rc_libretro.o \
 	src/rcheevos/src/rhash/cdreader.o \
 	src/rcheevos/src/rhash/md5.o \
 	src/rcheevos/src/rhash/hash.o \
@@ -93,7 +93,11 @@ OBJS=\
 	src/States.o \
 	src/Util.o
 
-src/cheevos_libretro.o: CFLAGS += -I./src/libretro
+src/rcheevos/src/rcheevos/rc_libretro.o: CFLAGS += -I./src/libretro
+
+src/components/Config.o: CFLAGS += -I./src/libretro
+
+src/Memory.o: CFLAGS += -I./src/libretro
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
