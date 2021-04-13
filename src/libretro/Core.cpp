@@ -1655,34 +1655,3 @@ static size_t addBitsDown(size_t n)
 
   return n;
 }
-
-static size_t inflate(size_t addr, size_t mask)
-{
-  while (mask)
-  {
-    size_t tmp = (mask - 1) & ~mask;
-    /* to put in an 1 bit instead, OR in tmp+1 */
-    addr = ((addr & ~tmp) << 1) | (addr & tmp);
-    mask = mask & (mask - 1);
-  }
-
-  return addr;
-}
-
-static size_t reduce(size_t addr, size_t mask)
-{
-  while (mask)
-  {
-    size_t tmp = (mask - 1) & ~mask;
-    addr = (addr & tmp) | ((addr >> 1) & ~tmp);
-    mask = (mask & (mask - 1)) >> 1;
-  }
-
-  return addr;
-}
-
-static size_t highestBit(size_t n)
-{
-   n = addBitsDown(n);
-   return n ^ (n >> 1);
-}
