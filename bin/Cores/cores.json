@@ -719,8 +719,7 @@
   },
   "yabause_libretro":{
     "name": "Yabause",
-    "extensions": "cue",
-    "systems": [39],
-    "platforms": "none"
+    "extensions": "cue|m3u|iso",
+    "systems": [39]
   }
 }
