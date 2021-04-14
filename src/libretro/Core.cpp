@@ -24,6 +24,7 @@ SOFTWARE.
 
 #include "Core.h"
 
+#include "Application.h"
 #include "Util.h"
 
 #include <stdlib.h>
@@ -1154,6 +1155,10 @@ bool libretro::Core::setMemoryMaps(const struct retro_memory_map* data)
     _logger->debug(TAG "  %3u %s %p %08X %08X %08X %08X %08X %s", i, flags, descriptors->ptr, descriptors->offset, descriptors->start, descriptors->select, descriptors->disconnect, descriptors->len, descriptors->addrspace ? descriptors->addrspace : "");
   }
 
+  extern Application app;
+  if (app.isGameActive())
+    app.refreshMemoryMap();
+
   return true;
 }
 
@@ -1637,21 +1642,4 @@ bool libretro::Core::s_setRumbleCallback(unsigned port, enum retro_rumble_effect
 bool libretro::Core::setRumble(unsigned port, enum retro_rumble_effect effect, uint16_t strength)
 {
   return _input->setRumble(port, effect, strength);
-}
-
-static size_t addBitsDown(size_t n)
-{
-  n |= n >>  1;
-  n |= n >>  2;
-  n |= n >>  4;
-  n |= n >>  8;
-  n |= n >> 16;
-
-  /* double shift to avoid warnings on 32bit (it's dead code, but compilers suck) */
-  if (sizeof(size_t) > 4)
-  {
-    n |= n >> 16 >> 16;
-  }
-
-  return n;
 }
