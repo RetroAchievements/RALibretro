@@ -44,6 +44,8 @@ SOFTWARE.
  */
 static libretro::Core* s_instance = NULL;
 
+extern Application app;
+
 namespace
 {
   // Dummy components
@@ -1155,7 +1157,6 @@ bool libretro::Core::setMemoryMaps(const struct retro_memory_map* data)
     _logger->debug(TAG "  %3u %s %p %08X %08X %08X %08X %08X %s", i, flags, descriptors->ptr, descriptors->offset, descriptors->start, descriptors->select, descriptors->disconnect, descriptors->len, descriptors->addrspace ? descriptors->addrspace : "");
   }
 
-  extern Application app;
   if (app.isGameActive())
     app.refreshMemoryMap();
 

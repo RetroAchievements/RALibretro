@@ -2070,7 +2070,7 @@ void Application::resizeWindow(unsigned multiplier)
   
   if (!fullscreen)
   {
-    unsigned width, height, temp;
+    unsigned width, height;
     enum retro_pixel_format format;
 
     switch (_video.getRotation())

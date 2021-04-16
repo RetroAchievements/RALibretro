@@ -1297,9 +1297,9 @@ protected:
 
     if (_buttonDescriptor.type != KeyBinds::Binding::Type::None)
     {
-      for (int i = 0; i < _bindings->size(); ++i)
+      for (size_t i = 0; i < _bindings->size(); ++i)
       {
-        if (i == static_cast<int>(_button))
+        if (i == static_cast<size_t>(_button))
           continue;
 
         const KeyBinds::Binding& binding = _bindings->at(i);
