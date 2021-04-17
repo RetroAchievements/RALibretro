@@ -869,6 +869,10 @@ void Application::saveConfiguration()
     json += "}";
   }
 
+  // video settings
+  json.append(",\"video\":");
+  json.append(_video.serializeSettings());
+
   // complete and save
   json += "}";
 
@@ -969,10 +973,6 @@ bool Application::loadCore(const std::string& coreName)
         {
           ud->self->_input.deserialize(str);
         }
-        else if (ud->key == "video")
-        {
-          ud->self->_video.deserialize(str);
-        }
       }
 
       return 0;
@@ -1046,7 +1046,7 @@ void Application::updateMenu()
     IDM_PAUSE_GAME, IDM_RESUME_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
-    IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
+    IDM_CORE_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   static const UINT start_items[] =
@@ -1056,7 +1056,7 @@ void Application::updateMenu()
 
   static const UINT core_loaded_items[] =
   {
-    IDM_LOAD_GAME, IDM_EXIT, IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_ABOUT
+    IDM_LOAD_GAME, IDM_EXIT, IDM_CORE_CONFIG, IDM_ABOUT
   };
 
   static const UINT game_running_items[] =
@@ -1064,7 +1064,7 @@ void Application::updateMenu()
     IDM_LOAD_GAME, IDM_PAUSE_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
-    IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
+    IDM_CORE_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   static const UINT game_paused_items[] =
@@ -1072,7 +1072,7 @@ void Application::updateMenu()
     IDM_LOAD_GAME, IDM_RESUME_GAME, IDM_RESET_GAME,
     IDM_EXIT,
 
-    IDM_CORE_CONFIG, IDM_VIDEO_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
+    IDM_CORE_CONFIG, IDM_TURBO_GAME, IDM_ABOUT
   };
 
   enableItems(all_items, sizeof(all_items) / sizeof(all_items[0]), MF_DISABLED);
@@ -1375,8 +1375,6 @@ void Application::unloadCore()
   json.append(_config.serialize());
   json.append(",\"input\":");
   json.append(_input.serialize());
-  json.append(",\"video\":");
-  json.append(_video.serialize());
   json.append("}");
 
   util::saveFile(&_logger, getCoreConfigPath(_coreName), json.c_str(), json.length());
@@ -2021,6 +2019,13 @@ void Application::loadConfiguration()
       else if (ud->key == "saves" && event == JSONSAX_OBJECT)
       {
         if (!ud->self->_states.deserializeSettings(str))
+        {
+          return -1;
+        }
+      }
+      else if (ud->key == "video" && event == JSONSAX_OBJECT)
+      {
+        if (!ud->self->_video.deserializeSettings(str))
         {
           return -1;
         }
