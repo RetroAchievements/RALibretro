@@ -21,8 +21,9 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Util.h"
 #include "jsonsax/jsonsax.h"
-#include "cheevos_libretro.h"
 #include "RA_Interface.h"
+
+#include <rcheevos/src/rcheevos/rc_libretro.h>
 
 #ifdef _WINDOWS
 #define WIN32_LEAN_AND_MEAN

@@ -5,7 +5,7 @@
 #include "Hash.h"
 #include "Util.h"
 
-#include <rcheevos/include/rhash.h>
+#include <rcheevos/include/rc_hash.h>
 
 #include <memory>
 #include <string.h>
@@ -64,26 +64,6 @@ static void* rhash_file_open(const char* path)
   return util::openFile(logger.get(), path, "rb");
 }
 
-static void rhash_file_seek(void* file_handle, size_t offset, int origin)
-{
-  fseek((FILE*)file_handle, (long)offset, origin);
-}
-
-static size_t rhash_file_tell(void* file_handle)
-{
-  return ftell((FILE*)file_handle);
-}
-
-static size_t rhash_file_read(void* file_handle, void* buffer, size_t requested_bytes)
-{
-  return fread(buffer, 1, requested_bytes, (FILE*)file_handle);
-}
-
-static void rhash_file_close(void* file_handle)
-{
-  fclose((FILE*)file_handle);
-}
-
 #define RC_CONSOLE_MAX 90
 
 int main(int argc, char* argv[])
@@ -131,12 +111,10 @@ int main(int argc, char* argv[])
     }
     else
     {
+      /* register a custom file_open handler for unicode support. use the default implementation for the other methods */
       struct rc_hash_filereader filereader;
+      memset(&filereader, 0, sizeof(filereader));
       filereader.open = rhash_file_open;
-      filereader.seek = rhash_file_seek;
-      filereader.tell = rhash_file_tell;
-      filereader.read = rhash_file_read;
-      filereader.close = rhash_file_close;
       rc_hash_init_custom_filereader(&filereader);
 
       rc_hash_init_default_cdreader();

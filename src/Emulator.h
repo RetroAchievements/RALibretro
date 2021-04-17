@@ -22,7 +22,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #include <set>
 #include <string>
 
-#include <rconsoles.h>
+#include <rc_consoles.h>
 
 const std::string& getEmulatorName(const std::string& coreName, int system);
 const char* getEmulatorExtensions(const std::string& coreName, int system);
