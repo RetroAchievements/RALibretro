@@ -528,18 +528,28 @@ void Input::poll()
 
 int16_t Input::read(unsigned port, unsigned device, unsigned index, unsigned id)
 {
+  int port_device;
+
   if (port < kMaxPorts)
   {
     switch (device)
     {
       case RETRO_DEVICE_JOYPAD:
-        if (id == RETRO_DEVICE_ID_JOYPAD_MASK)
-          return _info[port][_devices[port]]._state;
+        port_device = _devices[port];
+        if (port_device > _info[port].size())
+          return 0;
 
-        return (_info[port][_devices[port]]._state >> id) & 1;
+        if (id == RETRO_DEVICE_ID_JOYPAD_MASK)
+          return _info[port][port_device]._state;
+
+        return (_info[port][port_device]._state >> id) & 1;
 
       case RETRO_DEVICE_ANALOG:
-        return _info[port][_devices[port]]._axis[index << 1 | id];
+        port_device = _devices[port];
+        if (port_device > _info[port].size())
+          return 0;
+
+        return _info[port][port_device]._axis[index << 1 | id];
 
       case RETRO_DEVICE_MOUSE:
         switch (id)
