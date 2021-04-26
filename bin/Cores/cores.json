@@ -205,7 +205,7 @@
   "gearsystem_libretro":{
     "name": "Gearsystem",
     "extensions": "bin|sms|rom",
-    "systems": [1,11]
+    "systems": [11]
   },
   "gearsystem_libretro":{
     "name": "Gearsystem",
@@ -229,7 +229,7 @@
   },
   "genesis_plus_gx_libretro":{
     "name": "Genesis Plus GX",
-    "extensions": "cue|iso",
+    "extensions": "cue|iso|m3u",
     "systems": [9]
   },
   "genesis_plus_gx_libretro":{
