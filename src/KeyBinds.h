@@ -76,7 +76,7 @@ public:
     // Emulation speed
     kPauseToggle,
     kPauseToggleNoOvl,
-    kFastForward, // (extra = enabled)
+    kFastForward, // (extra = pressed[0/1],toggle[2])
     kStep,
 
     // Screenshot
@@ -139,7 +139,6 @@ protected:
   std::map<SDL_JoystickID, SDL_JoystickID> _bindingMap;
 
   unsigned _slot;
-  bool _ff;
   bool _gameFocus;
 };
 

@@ -2183,7 +2183,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       break;
     
     case IDM_TURBO_GAME:
-      _config.setFastForwarding(true);
+      toggleFastForwarding(2);
       break;
 
     case IDM_RESET_GAME:
@@ -2474,7 +2474,7 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
     break;
 
   case KeyBinds::Action::kFastForward:
-    _config.setFastForwarding(static_cast<bool>(extra));
+    toggleFastForwarding(extra);
     break;
 
   case KeyBinds::Action::kReset:
@@ -2491,3 +2491,30 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
   }
 }
 
+void Application::toggleFastForwarding(unsigned extra)
+{
+  // get the current fast forward selection
+  MENUITEMINFO info;
+  memset(&info, 0, sizeof(info));
+  info.cbSize = sizeof(info);
+  info.fMask = MIIM_STATE;
+  GetMenuItemInfo(_menu, IDM_TURBO_GAME, false, &info);
+  const bool checked = (info.fState == MFS_CHECKED);
+
+  switch (extra)
+  {
+    case 0: // FF key released - restore to selection
+      _config.setFastForwarding(checked);
+      break;
+
+    case 1: // FF key pressed - switch to opposite of selection (but don't change selection)
+      _config.setFastForwarding(!checked);
+      break;
+
+    case 2: // FF toggle pressed - switch to opposite of selection (and change selection)
+      _config.setFastForwarding(!checked);
+      info.fState = checked ? MFS_UNCHECKED : MFS_CHECKED;
+      SetMenuItemInfo(_menu, IDM_TURBO_GAME, false, &info);
+      break;
+  }
+}

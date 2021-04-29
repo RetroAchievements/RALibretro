@@ -175,7 +175,6 @@ bool KeyBinds::init(libretro::LoggerComponent* logger)
 
   _logger = logger;
   _slot = 1;
-  _ff = false;
   _gameFocus = false;
 
   if (SDL_NumJoysticks() > 0)
@@ -372,8 +371,8 @@ KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
     // Emulation speed
     case kPauseToggleNoOvl:  return Action::kPauseToggleNoOvl;
     case kPauseToggle:       return Action::kPauseToggle;
-    case kFastForward:       *extra = (unsigned)!_ff; return Action::kFastForward;
-    case kFastForwardToggle: _ff = !_ff; *extra = (unsigned)_ff; return Action::kFastForward;
+    case kFastForward:       *extra = 1; return Action::kFastForward;
+    case kFastForwardToggle: *extra = 2; return Action::kFastForward;
     case kStep:              return Action::kStep;
 
     // Reset
@@ -429,7 +428,7 @@ KeyBinds::Action KeyBinds::translateButtonReleased(int button, unsigned* extra)
     case kJoy1Start:    *extra = JOY_EXTRA(1, 0); return Action::kButtonStart;
 
     // Emulation speed
-    case kFastForward: *extra = (unsigned)_ff; return Action::kFastForward;
+    case kFastForward:  *extra = 0; return Action::kFastForward;
 
     default: return Action::kNothing;
   }

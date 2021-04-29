@@ -60,10 +60,6 @@ public:
   bool unloadGame();
   void pauseGame(bool pause);
 
-  bool isTurbo() {
-    return _config.getFastForwarding();
-  }
-
   void printf(const char* fmt, ...);
   Logger& logger() { return _logger; }
 
@@ -121,6 +117,7 @@ protected:
   void        loadConfiguration();
   void        saveConfiguration();
   std::string serializeRecentList();
+  void        toggleFastForwarding(unsigned extra);
 
   Fsm _fsm;
   bool lastHardcore;
