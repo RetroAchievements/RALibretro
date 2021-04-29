@@ -107,6 +107,7 @@ main MENU
             MENUITEM "Controller 1...", IDM_INPUT_CONTROLLER_1
             MENUITEM "Controller 2...", IDM_INPUT_CONTROLLER_2
         }
+        MENUITEM "Emulator...", IDM_EMULATOR_CONFIG
         MENUITEM "Saving...", IDM_SAVING_CONFIG
         MENUITEM "Video...", IDM_VIDEO_CONFIG
         POPUP "Window Size"

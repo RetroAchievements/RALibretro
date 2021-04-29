@@ -404,18 +404,20 @@ void Application::runTurbo()
   // disable per-frame rendering in the toolkit
   RA_SuspendRepaint();
 
-  // won't wait for audio buffer to flush - only fill whatever space is available
+  // don't wait for audio buffer to flush - only fill whatever space is available
   _audio.setBlocking(false);
 
-  // do four frames without video
-  for (int i = 0; i < 4; i++)
+  // do some frames without video
+  const bool playAudio = _config.getAudioWhileFastForwarding();
+  const int nSkipFrames = _config.getFastForwardRatio() - 1;
+  for (int i = 0; i < nSkipFrames; i++)
   {
-    _core.step(false, true);
+    _core.step(false, playAudio);
     RA_DoAchievementsFrame();
   }
 
   // do a final frame with video
-  _core.step(true, true);
+  _core.step(true, playAudio);
   RA_DoAchievementsFrame();
 
   // allow normal audio processing
@@ -831,8 +833,12 @@ void Application::saveConfiguration()
 {
   std::string json = "{";
 
+  // emulator settings
+  json += "\"emulator\":";
+  json += _config.serializeEmulatorSettings();
+
   // recent items
-  json += "\"recent\":";
+  json += ",\"recent\":";
   json += serializeRecentList();
 
   // bindings
@@ -2040,6 +2046,13 @@ void Application::loadConfiguration()
           return -1;
         }
       }
+      else if (ud->key == "emulator" && event == JSONSAX_OBJECT)
+      {
+        if (!ud->self->_config.deserializeEmulatorSettings(str))
+        {
+          return -1;
+        }
+      }
 
       return 0;
     });
@@ -2244,7 +2257,11 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     case IDM_VIDEO_CONFIG:
       _video.showDialog();
       break;
-    
+
+    case IDM_EMULATOR_CONFIG:
+      _config.showEmulatorSettingsDialog();
+      break;
+
     case IDM_SAVING_CONFIG:
       _states.showDialog();
       break;

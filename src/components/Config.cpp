@@ -89,6 +89,10 @@ bool Config::init(libretro::LoggerComponent* logger)
   // TODO This should be done in main.cpp as soon as possible
   SetCurrentDirectory(_rootFolder.c_str());
 
+  // these settings are global and should not be modified by reset()
+  _audioWhileFastForwarding = true;
+  _fastForwardRatio = 5;
+
   reset();
   return true;
 }
@@ -468,6 +472,66 @@ void Config::initializeControllerVariable(Variable& variable, const char* name, 
   }
 }
 
+std::string Config::serializeEmulatorSettings()
+{
+  std::string json("{");
+
+  json.append("\"_audioWhileFastForwarding\":");
+  json.append(_audioWhileFastForwarding ? "true" : "false");
+  json.append(",");
+
+  json.append("\"_fastForwardRatio\":");
+  json.append(std::to_string(_fastForwardRatio));
+
+  json.append("}");
+  return json;
+}
+
+bool Config::deserializeEmulatorSettings(const char* json)
+{
+  struct Deserialize
+  {
+    Config* self;
+    std::string key;
+  };
+
+  Deserialize ud;
+  ud.self = this;
+
+  jsonsax_result_t res = jsonsax_parse(json, &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+  {
+    auto ud = (Deserialize*)udata;
+
+    if (event == JSONSAX_KEY)
+    {
+      ud->key = std::string(str, num);
+    }
+    else if (event == JSONSAX_BOOLEAN)
+    {
+      if (ud->key == "_audioWhileFastForwarding")
+      {
+        ud->self->_audioWhileFastForwarding = num != 0;
+      }
+    }
+    else if (event == JSONSAX_NUMBER)
+    {
+      if (ud->key == "_fastForwardRatio")
+      {
+        auto value = strtoul(str, NULL, 10);
+        if (value < 2)
+          value = 2;
+        else if (value > 10)
+          value = 10;
+        ud->self->_fastForwardRatio = value;
+      }
+    }
+
+    return 0;
+  });
+
+  return (res == JSONSAX_OK);
+}
+
 #ifdef _WINDOWS
 void Config::showDialog(const std::string& coreName, Input& input)
 {
@@ -604,6 +668,52 @@ void Config::showDialog(const std::string& coreName, Input& input)
         _selections[var._key] = var._options[var._selected];
       }
     }
+  }
+}
+
+static const char* s_getFastForwardRatioOptions(int index, void* udata)
+{
+  switch (index)
+  {
+    case 0: return "2x";
+    case 1: return "3x";
+    case 2: return "4x";
+    case 3: return "5x";
+    case 4: return "6x";
+    case 5: return "7x";
+    case 6: return "8x";
+    case 7: return "9x";
+    case 8: return "10x";
+    default: return NULL;
+  }
+}
+
+void Config::showEmulatorSettingsDialog()
+{
+  const WORD WIDTH = 140;
+  const WORD LINE = 15;
+
+  Dialog db;
+  db.init("Emulator Settings");
+
+  WORD y = 0;
+
+  int fastForwardRatio = _fastForwardRatio - 2;
+  db.addLabel("Fast Forward Ratio", 51003, 0, y, 50, 8);
+  db.addCombobox(51001, 55, y - 2, WIDTH - 55, 12, 100, s_getFastForwardRatioOptions, NULL, &fastForwardRatio);
+  y += LINE;
+
+  bool playAudio = _audioWhileFastForwarding;
+  db.addCheckbox("Play Audio while Fast Forwarding", 51002, 0, y, WIDTH - 10, 8, &playAudio);
+  y += LINE;
+
+  db.addButton("OK", IDOK, WIDTH - 55 - 50, y, 50, 14, true);
+  db.addButton("Cancel", IDCANCEL, WIDTH - 50, y, 50, 14, false);
+
+  if (db.show())
+  {
+    _audioWhileFastForwarding = playAudio;
+    _fastForwardRatio = fastForwardRatio + 2;
   }
 }
 #endif

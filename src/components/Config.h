@@ -49,6 +49,9 @@ public:
   virtual bool getFastForwarding() override { return _fastForwarding; }
   virtual void setFastForwarding(bool value) override { _fastForwarding = value; }
 
+  virtual bool getAudioWhileFastForwarding() override { return _audioWhileFastForwarding; }
+  virtual int getFastForwardRatio() override { return _fastForwardRatio; }
+
   void setSaveDirectory(const std::string& path) { _saveFolder = path; }
 
   const char* getRootFolder()
@@ -66,8 +69,12 @@ public:
 
   bool validateSettingsForHardcore(const char* library_name, bool prompt);
 
+  std::string serializeEmulatorSettings();
+  bool deserializeEmulatorSettings(const char* json);
+
 #ifdef _WINDOWS
   void showDialog(const std::string& coreName, Input& input);
+  void showEmulatorSettingsDialog();
 #endif
 
 protected:
@@ -100,6 +107,9 @@ protected:
   bool _updated;
   bool _fastForwarding;
   bool _hadDisallowedSetting;
+  bool _audioWhileFastForwarding;
+
+  int _fastForwardRatio;
 
   std::string _key;
 };

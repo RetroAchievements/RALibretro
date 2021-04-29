@@ -115,6 +115,16 @@ namespace
     {
       (void)value;
     }
+
+    virtual bool getAudioWhileFastForwarding() override
+    {
+      return false;
+    }
+
+    virtual int getFastForwardRatio() override
+    {
+      return 5;
+    }
   };
 
   class DummyVideoContext : public libretro::VideoContextComponent
