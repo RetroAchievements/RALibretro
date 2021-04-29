@@ -401,17 +401,27 @@ void Application::runTurbo()
 {
   const auto tTurboStart = std::chrono::steady_clock::now();
 
-  // do four frames without video or audio
+  // disable per-frame rendering in the toolkit
   RA_SuspendRepaint();
+
+  // won't wait for audio buffer to flush - only fill whatever space is available
+  _audio.setBlocking(false);
+
+  // do four frames without video
   for (int i = 0; i < 4; i++)
   {
-    _core.step(false, false);
+    _core.step(false, true);
     RA_DoAchievementsFrame();
   }
 
-  // do a final frame with video and no audio
-  _core.step(true, false);
+  // do a final frame with video
+  _core.step(true, true);
   RA_DoAchievementsFrame();
+
+  // allow normal audio processing
+  _audio.setBlocking(true);
+
+  // restore per-frame rendering in the toolkit
   RA_ResumeRepaint();
 
   // check for periodic SRAM flush

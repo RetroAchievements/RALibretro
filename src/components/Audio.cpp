@@ -136,6 +136,7 @@ bool Audio::init(libretro::LoggerComponent* logger, double sample_rate, int chan
   _logger = logger;
   _sampleRate = sample_rate;
   _channels = channels;
+  _blocking = true;
 
   _currentRatio = 0.0;
   _originalRatio = 0.0;
@@ -281,24 +282,34 @@ void Audio::mix(const int16_t* samples, size_t frames)
   const size_t needed = out_len * _channels;
   if (avail < needed)
   {
-    _logger->debug(TAG "Waiting for FIFO (need %zu bytes but only %zu available), sleeping", needed, avail);
+    if (!_blocking)
+    {
+      out_len = (avail / _channels) & ~1;
+      output_size = out_len * sizeof(int16_t);
+      if (output_size == 0)
+        return;
+    }
+    else
+    {
+      _logger->debug(TAG "Waiting for FIFO (need %zu bytes but only %zu available), sleeping", needed, avail);
 
-    const int MAX_WAIT = 250;
-    int tries = MAX_WAIT;
-    do {
-      SDL_Delay(1);
-      avail = _fifo->free();
-      if (avail >= needed)
-        break;
+      const int MAX_WAIT = 250;
+      int tries = MAX_WAIT;
+      do {
+        SDL_Delay(1);
+        avail = _fifo->free();
+        if (avail >= needed)
+          break;
 
-      /* prevent infinite loop if fifo full */
-      if (--tries == 0)
-      {
-        _logger->warn(TAG "FIFO still full after %dms, flushing", MAX_WAIT);
-        _fifo->reset();
-        break;
-      }
-    } while (true);
+        /* prevent infinite loop if fifo full */
+        if (--tries == 0)
+        {
+          _logger->warn(TAG "FIFO still full after %dms, flushing", MAX_WAIT);
+          _fifo->reset();
+          break;
+        }
+      } while (true);
+    }
   }
 
   if (_channels == 2)
