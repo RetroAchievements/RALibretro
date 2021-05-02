@@ -171,7 +171,7 @@ bool Video::setGeometry(unsigned width, unsigned height, unsigned maxWidth, unsi
   _hw.enabled = hardwareRender;
   _hw.callback = hwRenderCallback;
 
-  if (!ensureFramebuffer(maxWidth, maxHeight, pixelFormat, _linearFilter))
+  if (!ensureFramebuffer(std::max(width, maxWidth), std::max(height, maxHeight), pixelFormat, _linearFilter))
     return false;
 
   _aspect = aspect;
@@ -646,6 +646,7 @@ bool Video::ensureVertexArray(unsigned windowWidth, unsigned windowHeight, float
   Gl::vertexAttribPointer(uv, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, u));
 
   Gl::bindVertexArray(0);
+  Gl::bindBuffer(GL_ARRAY_BUFFER, 0);
   
   _logger->debug(TAG "Vertices updated with window scale %f x %f and texture scale %f x %f", winScaleX, winScaleY, texScaleX, texScaleY);
   return true;
