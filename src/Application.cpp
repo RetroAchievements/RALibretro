@@ -297,7 +297,7 @@ bool Application::init(const char* title, int width, int height)
   lastHardcore = hardcore();
   cancelLoad = false;
   updateMenu();
-  updateCDMenu(NULL, 0, true);
+  updateDiscMenu(true);
   return true;
 
 error:
@@ -1272,7 +1272,8 @@ bool Application::loadGame(const std::string& path)
 
   if (!romLoaded(&_logger, _system, path, data, size))
   {
-    updateCDMenu(NULL, 0, true);
+    _discPaths.clear();
+    updateDiscMenu(true);
 
     _gameFileName.clear();
 
@@ -1300,13 +1301,13 @@ bool Application::loadGame(const std::string& path)
 
   if (_core.getNumDiscs() == 0)
   {
-    updateCDMenu(NULL, 0, true);
+    _discPaths.clear();
+    updateDiscMenu(true);
   }
   else
   {
-    char names[10][128];
-    int count = cdrom_get_cd_names(path.c_str(), names, sizeof(names) / sizeof(names[0]), &_logger);
-    updateCDMenu(names, count, true);
+    cdrom_get_cd_names(path.c_str(), &_discPaths, &_logger);
+    updateDiscMenu(true);
   }
 
   _gamePath = path;
@@ -1638,7 +1639,7 @@ void Application::enableRecent()
   }
 }
 
-void Application::updateCDMenu(const char names[][128], int count, bool updateLabels)
+void Application::updateDiscMenu(bool updateLabels)
 {
   size_t i = 0;
   size_t coreDiscCount = _core.getNumDiscs();
@@ -1685,9 +1686,17 @@ void Application::updateCDMenu(const char names[][128], int count, bool updateLa
 
       if (updateLabels)
       {
-        if ((int)i < count)
+        if ((int)i < _discPaths.size())
         {
-          info.dwTypeData = (char*)names[i];
+          const std::string& path = _discPaths.at(i);
+          size_t index = path.find_last_of('\\');
+          if (index == std::string::npos)
+            index = path.find_last_of('/');
+
+          if (index != std::string::npos)
+            info.dwTypeData = (LPSTR)&path.at(index + 1);
+          else
+            info.dwTypeData = (LPSTR)&path.at(0);
         }
         else
         {
@@ -1777,7 +1786,7 @@ void Application::loadState(const std::string& path)
 {
   if (_states.loadState(path))
   {
-    updateCDMenu(NULL, 0, false);
+    updateDiscMenu(false);
   }
 }
 
@@ -1790,7 +1799,7 @@ void Application::loadState(unsigned ndx)
 
   if (_states.loadState(ndx))
   {
-    updateCDMenu(NULL, 0, false);
+    updateDiscMenu(false);
   }
 }
 
@@ -2161,7 +2170,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     
     case IDM_CD_OPEN_TRAY:
       _core.setTrayOpen(!_core.getTrayOpen());
-      updateCDMenu(NULL, 0, false);
+      updateDiscMenu(false);
       break;
 
     case IDM_PAUSE_GAME:
@@ -2272,19 +2281,13 @@ void Application::handle(const SDL_SysWMEvent* syswm)
         {
           _core.setCurrentDiscIndex(newDiscIndex);
 
-          char buffer[128];
-          MENUITEMINFO info;
-          memset(&info, 0, sizeof(info));
-          info.cbSize = sizeof(info);
-          info.fMask = MIIM_TYPE | MIIM_DATA;
-          info.dwTypeData = buffer;
-          info.cch = sizeof(buffer);
-          GetMenuItemInfo(_menu, cmd, false, &info);
+          if (newDiscIndex < _discPaths.size())
+          {
+            std::string path = util::replaceFileName(_gamePath, _discPaths.at(newDiscIndex).c_str());
+            romLoaded(&_logger, _system, path, NULL, 0);
+          }
 
-          std::string path = util::replaceFileName(_gamePath, buffer);
-          romLoaded(&_logger, _system, path, NULL, 0);
-
-          updateCDMenu(NULL, 0, false);
+          updateDiscMenu(false);
         }
       }
       else if (cmd >= IDM_SYSTEM_FIRST && cmd <= IDM_SYSTEM_LAST)

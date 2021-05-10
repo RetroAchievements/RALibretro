@@ -21,6 +21,6 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "components/Logger.h"
 
-#include <stdio.h>
+#include <vector>
 
-int cdrom_get_cd_names(const char* filename, char names[][128], int max_names, Logger* logger);
+int cdrom_get_cd_names(const char* filename, std::vector<std::string>* disc_paths, Logger* logger);
