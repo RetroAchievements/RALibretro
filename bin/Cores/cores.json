@@ -502,9 +502,8 @@
   },
   "picodrive_libretro":{
     "name": "PicoDrive",
-    "extensions": "cue",
-    "systems": [9],
-    "platforms": "none"
+    "extensions": "cue|m3u",
+    "systems": [9]
   },
   "picodrive_libretro":{
     "name": "PicoDrive",
