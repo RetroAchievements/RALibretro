@@ -117,6 +117,7 @@ protected:
   void        loadConfiguration();
   void        saveConfiguration();
   std::string serializeRecentList();
+  void        toggleFastForwarding(unsigned extra);
 
   Fsm _fsm;
   bool lastHardcore;

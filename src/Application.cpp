@@ -401,17 +401,29 @@ void Application::runTurbo()
 {
   const auto tTurboStart = std::chrono::steady_clock::now();
 
-  // do four frames without video or audio
+  // disable per-frame rendering in the toolkit
   RA_SuspendRepaint();
-  for (int i = 0; i < 4; i++)
+
+  // don't wait for audio buffer to flush - only fill whatever space is available
+  _audio.setBlocking(false);
+
+  // do some frames without video
+  const bool playAudio = _config.getAudioWhileFastForwarding();
+  const int nSkipFrames = _config.getFastForwardRatio() - 1;
+  for (int i = 0; i < nSkipFrames; i++)
   {
-    _core.step(false, false);
+    _core.step(false, playAudio);
     RA_DoAchievementsFrame();
   }
 
-  // do a final frame with video and no audio
-  _core.step(true, false);
+  // do a final frame with video
+  _core.step(true, playAudio);
   RA_DoAchievementsFrame();
+
+  // allow normal audio processing
+  _audio.setBlocking(true);
+
+  // restore per-frame rendering in the toolkit
   RA_ResumeRepaint();
 
   // check for periodic SRAM flush
@@ -821,8 +833,12 @@ void Application::saveConfiguration()
 {
   std::string json = "{";
 
+  // emulator settings
+  json += "\"emulator\":";
+  json += _config.serializeEmulatorSettings();
+
   // recent items
-  json += "\"recent\":";
+  json += ",\"recent\":";
   json += serializeRecentList();
 
   // bindings
@@ -2030,6 +2046,13 @@ void Application::loadConfiguration()
           return -1;
         }
       }
+      else if (ud->key == "emulator" && event == JSONSAX_OBJECT)
+      {
+        if (!ud->self->_config.deserializeEmulatorSettings(str))
+        {
+          return -1;
+        }
+      }
 
       return 0;
     });
@@ -2173,7 +2196,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       break;
     
     case IDM_TURBO_GAME:
-      _config.setFastForwarding(true);
+      toggleFastForwarding(2);
       break;
 
     case IDM_RESET_GAME:
@@ -2234,7 +2257,11 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     case IDM_VIDEO_CONFIG:
       _video.showDialog();
       break;
-    
+
+    case IDM_EMULATOR_CONFIG:
+      _config.showEmulatorSettingsDialog();
+      break;
+
     case IDM_SAVING_CONFIG:
       _states.showDialog();
       break;
@@ -2464,7 +2491,7 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
     break;
 
   case KeyBinds::Action::kFastForward:
-    _config.setFastForwarding(static_cast<bool>(extra));
+    toggleFastForwarding(extra);
     break;
 
   case KeyBinds::Action::kReset:
@@ -2481,3 +2508,30 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
   }
 }
 
+void Application::toggleFastForwarding(unsigned extra)
+{
+  // get the current fast forward selection
+  MENUITEMINFO info;
+  memset(&info, 0, sizeof(info));
+  info.cbSize = sizeof(info);
+  info.fMask = MIIM_STATE;
+  GetMenuItemInfo(_menu, IDM_TURBO_GAME, false, &info);
+  const bool checked = (info.fState == MFS_CHECKED);
+
+  switch (extra)
+  {
+    case 0: // FF key released - restore to selection
+      _config.setFastForwarding(checked);
+      break;
+
+    case 1: // FF key pressed - switch to opposite of selection (but don't change selection)
+      _config.setFastForwarding(!checked);
+      break;
+
+    case 2: // FF toggle pressed - switch to opposite of selection (and change selection)
+      _config.setFastForwarding(!checked);
+      info.fState = checked ? MFS_UNCHECKED : MFS_CHECKED;
+      SetMenuItemInfo(_menu, IDM_TURBO_GAME, false, &info);
+      break;
+  }
+}

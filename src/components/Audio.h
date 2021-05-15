@@ -58,12 +58,15 @@ public:
   virtual bool setRate(double rate) override;
   virtual void mix(const int16_t* samples, size_t frames) override;
 
+  void setBlocking(bool value) { _blocking = value; }
+
 protected:
   libretro::LoggerComponent* _logger;
 
   double _sampleRate;
   double _coreRate;
   int _channels;
+  bool _blocking;
 
   double _currentRatio;
   double _originalRatio;

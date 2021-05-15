@@ -357,6 +357,17 @@ bool States::loadState(const std::string& path)
     ret = _core->unserialize(data, size);
     if (ret)
       RA_OnLoadState(path.c_str());
+
+    unsigned image_width, image_height, pitch;
+    const void* pixels = util::loadImage(_logger, path + ".png", &image_width, &image_height, &pitch);
+    if (pixels == NULL)
+    {
+      _logger->error(TAG "Error loading savestate screenshot");
+      return true; /* state was still loaded even if the frame buffer wasn't updated */
+    }
+
+    restoreFrameBuffer(pixels, image_width, image_height, pitch);
+    free((void*)pixels);
   }
   else
   {
@@ -380,16 +391,6 @@ bool States::loadState(const std::string& path)
     return false;
   }
 
-  unsigned image_width, image_height, pitch;
-  const void* pixels = util::loadImage(_logger, path + ".png", &image_width, &image_height, &pitch);
-  if (pixels == NULL)
-  {
-    _logger->error(TAG "Error loading savestate screenshot");
-    return true; /* state was still loaded even if the frame buffer wasn't updated */
-  }
-
-  restoreFrameBuffer(pixels, image_width, image_height, pitch);
-  free((void*)pixels);
   return true;
 }
 

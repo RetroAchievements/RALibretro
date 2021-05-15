@@ -148,6 +148,9 @@ namespace libretro
 
     virtual bool getFastForwarding() = 0;
     virtual void setFastForwarding(bool value) = 0;
+
+    virtual bool getAudioWhileFastForwarding() = 0;
+    virtual int getFastForwardRatio() = 0;
   };
 
   /**
