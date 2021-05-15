@@ -70,7 +70,7 @@ static void memoryWrite(unsigned addr, int firstRegion, unsigned char value)
   }
 }
 
-static unsigned char memoryRead0(unsigned addr) { return memoryRead(addr, 0); }
+static unsigned char memoryRead0(unsigned addr) { return memoryRead(addr, g_memoryBankFirstRegion[0]); }
 static unsigned char memoryRead1(unsigned addr) { return memoryRead(addr, g_memoryBankFirstRegion[1]); }
 static unsigned char memoryRead2(unsigned addr) { return memoryRead(addr, g_memoryBankFirstRegion[2]); }
 static unsigned char memoryRead3(unsigned addr) { return memoryRead(addr, g_memoryBankFirstRegion[3]); }
@@ -87,7 +87,7 @@ static unsigned char memoryRead13(unsigned addr) { return memoryRead(addr, g_mem
 static unsigned char memoryRead14(unsigned addr) { return memoryRead(addr, g_memoryBankFirstRegion[14]); }
 static unsigned char memoryRead15(unsigned addr) { return memoryRead(addr, g_memoryBankFirstRegion[15]); }
 
-static void memoryWrite0(unsigned addr, unsigned char value) { memoryWrite(addr, 0, value); }
+static void memoryWrite0(unsigned addr, unsigned char value) { memoryWrite(addr, g_memoryBankFirstRegion[0], value); }
 static void memoryWrite1(unsigned addr, unsigned char value) { memoryWrite(addr, g_memoryBankFirstRegion[1], value); }
 static void memoryWrite2(unsigned addr, unsigned char value) { memoryWrite(addr, g_memoryBankFirstRegion[2], value); }
 static void memoryWrite3(unsigned addr, unsigned char value) { memoryWrite(addr, g_memoryBankFirstRegion[3], value); }
