@@ -92,7 +92,7 @@ protected:
   void        enableItems(const UINT* items, size_t count, UINT enable);
   void        enableSlots();
   void        enableRecent();
-  void        updateCDMenu(const char names[][128], int count, bool updateLabels);
+  void        updateDiscMenu(bool updateLabels);
   std::string getStatePath(unsigned ndx);
   std::string getConfigPath();
   std::string getCoreConfigPath(const std::string& coreName);
@@ -142,6 +142,7 @@ protected:
 
   KeyBinds _keybinds;
   std::vector<RecentItem> _recentList;
+  std::vector<std::string> _discPaths;
 
   Allocator<256 * 1024> _allocator;
 

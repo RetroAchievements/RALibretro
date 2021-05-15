@@ -26,7 +26,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string.h>
 
-static int cdrom_get_cd_names_m3u(const char* filename, char names[][128], int max_names, Logger* logger)
+static int cdrom_get_cd_names_m3u(const char* filename, std::vector<std::string>* disc_paths, Logger* logger)
 {
   int count = 0;
   char buffer[2048], *ptr, *start;
@@ -46,13 +46,9 @@ static int cdrom_get_cd_names_m3u(const char* filename, char names[][128], int m
 
       if (ptr > start)
       {
-        char* name = names[count];
-        memcpy(name, start, ptr - start);
-        name[ptr - start] = '\0';
+        std::string path(start, ptr - start);
+        disc_paths->push_back(path);
         ++count;
-
-        if (count == max_names)
-          break;
       }
 
       if (!*ptr)
@@ -65,13 +61,15 @@ static int cdrom_get_cd_names_m3u(const char* filename, char names[][128], int m
   return count;
 }
 
-int cdrom_get_cd_names(const char* filename, char names[][128], int max_names, Logger* logger)
+int cdrom_get_cd_names(const char* filename, std::vector<std::string>* disc_paths, Logger* logger)
 {
+  disc_paths->clear();
+
   int len = strlen(filename);
   if (len > 4 && strcasecmp(&filename[len - 4], ".m3u") == 0)
-    return cdrom_get_cd_names_m3u(filename, names, max_names, logger);
+    return cdrom_get_cd_names_m3u(filename, disc_paths, logger);
 
   std::string filename_path = util::fileNameWithExtension(filename);
-  strcpy(names[0], filename_path.c_str());
+  disc_paths->push_back(std::move(filename_path));
   return 1;
 }
