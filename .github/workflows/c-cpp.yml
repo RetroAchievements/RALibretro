@@ -1,0 +1,88 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ master,feature/github-actions ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  RALibretro-Win32:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Install MSBuild
+      uses: microsoft/setup-msbuild@v1.0.2
+    - name: Install Windows SDK 8.1
+      run: choco install windows-sdk-8.1
+    - name: Build
+      run: msbuild.exe RALibretro.sln -p:Configuration=Release -p:Platform=x86
+
+  RALibretro-Win64:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Install MSBuild
+      uses: microsoft/setup-msbuild@v1.0.2
+    - name: Install Windows SDK 8.1
+      run: choco install windows-sdk-8.1
+    - name: Build
+      run: msbuild.exe RALibretro.sln -p:Configuration=Release -p:Platform=x64
+
+  RALibretro-Win32-cross-compile:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Install dependencies
+      run: sudo apt-get install gcc-multilib # bits/libc-header-start.h
+    - name: Install MinGW
+      uses: egor-tensin/setup-mingw@v2
+    - name: Build
+      run: make ARCH=x86
+
+  RALibretro-Win64-cross-compile:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Install dependencies
+      run: sudo apt-get install gcc-multilib # bits/libc-header-start.h
+    - name: Install MinGW
+      uses: egor-tensin/setup-mingw@v2
+    - name: Build
+      run: make ARCH=x64
+
+  RAHasher-x86:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Install dependencies
+      run: sudo apt-get install gcc-multilib g++-multilib # bits/libc-header-start.h, bits/c++config.h
+    - name: Build
+      run: make ARCH=x86 -f Makefile.RAHasher
+
+  RAHasher-x64:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Install dependencies
+      run: sudo apt-get install gcc-multilib # bits/libc-header-start.h
+    - name: Build
+      run: make ARCH=x64 -f Makefile.RAHasher
