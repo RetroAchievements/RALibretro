@@ -495,16 +495,22 @@ void States::loadSRAM(libretro::Core* core)
     void* data = util::loadFile(_logger, sramPath, &fileSize);
     if (data != NULL)
     {
+      void* memory = core->getMemoryData(RETRO_MEMORY_SAVE_RAM);
       if (fileSize == sramSize)
       {
-        void* memory = core->getMemoryData(RETRO_MEMORY_SAVE_RAM);
-        memcpy(memory, data, sramSize);
         _logger->info(TAG "Loaded %lu bytes of Save RAM from disk", fileSize);
+      }
+      else if (fileSize <= sramSize)
+      {
+        _logger->warn(TAG "Loaded %lu bytes of Save RAM from disk, wanted %lu", fileSize, sramSize);
       }
       else
       {
-        _logger->error(TAG "Save RAM size mismatch, wanted %lu, got %lu from disk", sramSize, fileSize);
+        _logger->warn(TAG "Loaded %lu bytes of Save RAM from disk, truncated from %lu", sramSize, fileSize);
+        fileSize = sramSize;
       }
+
+      memcpy(memory, data, fileSize);
 
       if (_saveInterval > 0)
         _lastSaveData = data;
