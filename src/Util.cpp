@@ -932,10 +932,11 @@ void* util::fromRgb(Logger* logger, const void* data, unsigned width, unsigned h
 
       for (unsigned x = 0; x < width; x++)
       {
-        *target_rgba8880++ = *source_rgb888++;
-        *target_rgba8880++ = *source_rgb888++;
-        *target_rgba8880++ = *source_rgb888++;
+        *target_rgba8880++ = source_rgb888[2];
+        *target_rgba8880++ = source_rgb888[1];
+        *target_rgba8880++ = source_rgb888[0];
         *target_rgba8880++ = 255;
+        source_rgb888 += 3;
       }
 
       source_rgb888 = row + *pitch;
