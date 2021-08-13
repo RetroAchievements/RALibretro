@@ -673,7 +673,7 @@ std::string util::openFileDialog(HWND hWnd, const std::string& extensionsFilter)
   cfg.lStructSize = sizeof(cfg);
   cfg.hwndOwner = hWnd;
   cfg.lpstrFilter = unicodeExtensionsFilter.c_str();
-  cfg.nFilterIndex = 2;
+  cfg.nFilterIndex = 1;
   cfg.lpstrFile = path;
   cfg.nMaxFile = sizeof(path)/sizeof(path[0]);
   cfg.lpstrTitle = L"Load";
@@ -689,9 +689,10 @@ std::string util::openFileDialog(HWND hWnd, const std::string& extensionsFilter)
   }
 }
 
-std::string util::saveFileDialog(HWND hWnd, const std::string& extensionsFilter)
+std::string util::saveFileDialog(HWND hWnd, const std::string& extensionsFilter, const char* defaultExtension)
 {
   std::wstring unicodeExtensionsFilter = util::utf8ToUChar(extensionsFilter);
+  std::wstring unicodeDefaultExtension;
   wchar_t path[_MAX_PATH];
   path[0] = 0;
 
@@ -701,11 +702,17 @@ std::string util::saveFileDialog(HWND hWnd, const std::string& extensionsFilter)
   cfg.lStructSize = sizeof(cfg);
   cfg.hwndOwner = hWnd;
   cfg.lpstrFilter = unicodeExtensionsFilter.c_str();
-  cfg.nFilterIndex = 2;
+  cfg.nFilterIndex = 1;
   cfg.lpstrFile = path;
   cfg.nMaxFile = sizeof(path)/sizeof(path[0]);
   cfg.lpstrTitle = L"Save";
   cfg.Flags = OFN_NOREADONLYRETURN | OFN_OVERWRITEPROMPT;
+
+  if (defaultExtension)
+  {
+    unicodeDefaultExtension = util::utf8ToUChar(defaultExtension);
+    cfg.lpstrDefExt = unicodeDefaultExtension.c_str();
+  }
 
   if (GetSaveFileNameW(&cfg) == TRUE)
   {

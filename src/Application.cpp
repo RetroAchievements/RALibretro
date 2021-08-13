@@ -1555,16 +1555,16 @@ void Application::loadGame()
   }
 
   file_types.reserve(supported_exts.size() * 2 + 32);
-  file_types.append("All Files (*.*)");
-  file_types.append("\0", 1);
-  file_types.append("*.*");
-  file_types.append("\0", 1);
   file_types.append("Supported Files (");
   file_types.append(supported_exts);
   file_types.append(")");
   file_types.append("\0", 1);
   file_types.append(supported_exts);
   file_types.append("\0", 1);
+  file_types.append("All Files (*.*)");
+  file_types.append("\0", 1);
+  file_types.append("*.*");
+  file_types.append("\0", 2);
 
   std::string path = util::openFileDialog(g_mainWindow, file_types);
 
@@ -1785,15 +1785,10 @@ void Application::saveState()
   extensions.append("\0", 1);
   extensions.append("*.state");
   extensions.append("\0", 2);
-  std::string path = util::saveFileDialog(g_mainWindow, extensions);
+  std::string path = util::saveFileDialog(g_mainWindow, extensions, "state");
 
   if (!path.empty())
   {
-    if (util::extension(path).empty())
-    {
-      path += ".state";
-    }
-
     saveState(path);
   }
 }
@@ -1824,15 +1819,17 @@ void Application::loadState()
   std::string extensions = "State Files (*.state)";
   extensions.append("\0", 1);
   extensions.append("*.state");
+  extensions.append("\0", 1);
+  extensions.append("All Files (*.*)");
+  extensions.append("\0", 1);
+  extensions.append("*.*");
   extensions.append("\0", 2);
   std::string path = util::openFileDialog(g_mainWindow, extensions);
 
-  if (path.empty())
+  if (!path.empty())
   {
-    return;
+    loadState(path);
   }
-
-  loadState(path);
 }
 
 void Application::screenshot()
