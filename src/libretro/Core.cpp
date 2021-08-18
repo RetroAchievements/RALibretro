@@ -34,7 +34,10 @@ SOFTWARE.
 #include <RA_Interface.h>
 #endif
 
-#define SAMPLE_COUNT 8192
+/* PPSSPP pushes 512 frames per packet, and relies on the mixer being called for every packet within
+ * core.run() to throttle the framerate, so this value cannot exceed 1024 (512 frames * 2 channels).
+ */
+#define SAMPLE_COUNT 1024
 
 #define TAG "[COR] "
 
@@ -314,6 +317,7 @@ bool libretro::Core::loadCore(const char* core_path)
 
   _libretroPath = strdup(core_path);
   _samples = alloc<int16_t>(SAMPLE_COUNT);
+  _samplesCount = 0;
 
   if (_libretroPath == NULL || _samples == NULL)
   {
@@ -445,14 +449,15 @@ void libretro::Core::step(bool generateVideo, bool generateAudio)
 
   _video->setEnabled(generateVideo);
 
-  _samplesCount = 0;
+  _generateAudio = generateAudio;
 
   _core.run();
-  
-  if (generateAudio && _samplesCount > 0)
+
+  /* if any audio was buffered, flush it now */
+  if (_samplesCount > 0)
   {
-    // _samples are 2-channel (stereo)
     _audio->mix(_samples, _samplesCount / 2);
+    _samplesCount = 0;
   }
 }
 
@@ -1541,19 +1546,58 @@ void libretro::Core::videoRefreshCallback(const void* data, unsigned width, unsi
 
 size_t libretro::Core::audioSampleBatchCallback(const int16_t* data, size_t frames)
 {
-#if 0
-  /* retroarch resamples every packet as it comes in. to minimize the overhead of resampling,
-   * we buffer up an entire frame's worth of audio and resample it in a single pass.
-   */
-  _audio->mix(data, frames);
-#else
-  if (_samplesCount < SAMPLE_COUNT - frames * 2 + 1)
+  if (_generateAudio)
   {
-    memcpy(_samples + _samplesCount, data, frames * 2 * sizeof(int16_t));
-    _samplesCount += frames * 2;
-  }
-#endif
+    /* RetroArch resamples every packet as it comes in. To minimize the overhead of
+     * resampling (and reduce the scratchiness of rounding at boundaries), we buffer
+     * up to SAMPLE_COUNT samples (2 samples per frame) before resampling. Normally,
+     * fewer than SAMPLE_COUNT samples will be generated per frame and the flush in
+     * Core::step() will process a single frame's worth of audio. */
+    if (_samplesCount == 0 && frames >= SAMPLE_COUNT / 2)
+    {
+      /* buffer is empty. more samples were provided than would fit in buffer. just
+       * pass the samples directly to the mixer */
+      _audio->mix(data, frames);
+    }
+    else
+    {
+      size_t framesAvailable = (SAMPLE_COUNT - _samplesCount) / 2;
+      if (framesAvailable > frames)
+      {
+        /* less samples than would fill the buffer, just copy them */
+        memcpy(_samples + _samplesCount, data, frames * 2 * sizeof(int16_t));
+        _samplesCount += frames * 2;
+      }
+      else
+      {
+        /* fill the remaining portion of the buffer and flush it */
+        memcpy(_samples + _samplesCount, data, framesAvailable * 2 * sizeof(int16_t));
+        _audio->mix(_samples, SAMPLE_COUNT / 2);
+        _samplesCount = 0;
 
+        data += framesAvailable * 2;
+        const size_t framesRemaining = frames - framesAvailable;
+        if (framesRemaining > SAMPLE_COUNT / 2)
+        {
+          /* remaining frames still don't fit into buffer, send them to the mixer */
+          _audio->mix(data, framesRemaining);
+        }
+        else if (framesRemaining > 0)
+        {
+          /* capture the remaining frames for later */
+          memcpy(_samples, data, framesRemaining * 2 * sizeof(int16_t));
+          _samplesCount = framesRemaining * 2;
+        }
+      }
+    }
+  }
+  else
+  {
+    /* audio disabled, clear the buffer */
+    _samplesCount = 0;
+  }
+
+  /* say we processed all provided frames */
   return frames;
 }
 
@@ -1563,6 +1607,15 @@ void libretro::Core::audioSampleCallback(int16_t left, int16_t right)
   {
     _samples[_samplesCount++] = left;
     _samples[_samplesCount++] = right;
+  }
+  else
+  {
+    /* buffer full, flush it */
+    _audio->mix(_samples, SAMPLE_COUNT / 2);
+
+    _samples[0] = left;
+    _samples[1] = right;
+    _samplesCount = 2;
   }
 }
 
