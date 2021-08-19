@@ -58,6 +58,8 @@ namespace libretro
     inline unsigned                getPerformanceLevel()    const { return _performanceLevel; }
     inline enum retro_pixel_format getPixelFormat()         const { return _pixelFormat; }
     inline bool                    getNeedsHardwareRender() const { return _needsHardwareRender; }
+    bool                           getNeedsFullPath(const std::string& extension) const;
+    bool                           getPersistData(const std::string& extension) const;
     inline bool                    getSupportsNoGame()      const { return _supportsNoGame; }
     inline bool                    getSupportAchievements() const { return _supportAchievements; }
     inline void                    unloadGame()                   { _core.unloadGame(); }
@@ -146,6 +148,7 @@ namespace libretro
     bool getLogInterface(struct retro_log_callback* data) const;
     bool getCoreAssetsDirectory(const char** data) const;
     bool getSaveDirectory(const char** data) const;
+    bool setContentInfoOverride(const struct retro_system_content_info_override* data);
     bool setSystemAVInfo(const struct retro_system_av_info* data);
     bool setSubsystemInfo(const struct retro_subsystem_info* data);
     bool setControllerInfo(const struct retro_controller_info* data);
@@ -206,7 +209,9 @@ namespace libretro
     bool                            _supportsNoGame;
     bool                            _supportAchievements;
     bool                            _fastForwarding;
-    
+
+    struct retro_system_content_info_override* _contentInfoOverride;
+
     unsigned                        _inputDescriptorsCount;
     struct retro_input_descriptor*  _inputDescriptors;
 

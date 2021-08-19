@@ -151,6 +151,7 @@ protected:
 
   std::string _gamePath;
   std::string _gameFileName;
+  void*       _gameData;
   unsigned    _validSlots;
 
   HMENU _menu;
