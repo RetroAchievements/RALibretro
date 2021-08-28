@@ -599,6 +599,7 @@ void libretro::Core::reset()
   memset(&_systemAVInfo, 0, sizeof(_systemAVInfo));
   _subsystemInfoCount = 0;
   _subsystemInfo = NULL;
+  _contentInfoOverride = NULL;
   _controllerInfoCount = 0;
   _controllerInfo = NULL;
   _ports = NULL;
@@ -753,6 +754,56 @@ bool libretro::Core::setDiskControlExtInterface(const struct retro_disk_control_
   _diskControlInterface.replace_image_index = data->replace_image_index;
   _diskControlInterface.add_image_index = data->add_image_index;
   return true;
+}
+
+bool libretro::Core::setContentInfoOverride(const struct retro_system_content_info_override* data)
+{
+  _contentInfoOverride = alloc<struct retro_system_content_info_override>(1);
+  if (!_contentInfoOverride)
+    return false;
+
+  _logger->info(TAG "retro_system_content_info_override");
+  _logger->info(TAG "  %s need_fullpath=%d persistent_data=%d", data->extensions, data->need_fullpath, data->persistent_data);
+
+  memcpy(_contentInfoOverride, data, sizeof(*_contentInfoOverride));
+  _contentInfoOverride->extensions = strdup(data->extensions);
+  return true;
+}
+
+static bool extensionMatches(const char* extensions, const std::string& extension)
+{
+  const char* ptr = extensions;
+  const char* start = ptr;
+
+  while (*ptr)
+  {
+    while (*ptr && *ptr != '|')
+      ++ptr;
+
+    if ((ptr - start) == extension.length() && strnicmp(start, extension.c_str(), extension.length()) == 0)
+      return true;
+
+    if (*ptr == '|')
+      start = ++ptr;
+  }
+
+  return false;
+}
+
+bool libretro::Core::getNeedsFullPath(const std::string& extension) const
+{
+  if (_contentInfoOverride && extensionMatches(_contentInfoOverride->extensions, extension))
+    return _contentInfoOverride->need_fullpath;
+
+  return _systemInfo.need_fullpath;
+}
+
+bool libretro::Core::getPersistData(const std::string& extension) const
+{
+  if (_contentInfoOverride && extensionMatches(_contentInfoOverride->extensions, extension))
+    return _contentInfoOverride->persistent_data;
+
+  return false;
 }
 
 bool libretro::Core::getPreferredHWRender(unsigned* data)
@@ -1336,6 +1387,17 @@ static void getEnvName(char* name, size_t size, unsigned cmd)
     "GET_PREFERRED_HW_RENDER",
     "GET_DISK_CONTROL_INTERFACE_VERSION",
     "SET_DISK_CONTROL_EXT_INTERFACE",
+    "GET_MESSAGE_INTERFACE_VERSION",
+    "SET_MESSAGE_EXT",                         // 60
+    "GET_INPUT_MAX_USERS",
+    "SET_AUDIO_BUFFER_STATUS_CALLBACK",
+    "SET_MINIMUM_AUDIO_LATENCY",
+    "SET_FASTFORWARDING_OVERRIDE",
+    "SET_CONTENT_INFO_OVERRIDE",
+    "GET_GAME_INFO_EXT",
+    "SET_CORE_OPTIONS_V2",
+    "SET_CORE_OPTIONS_V2_INTL",
+    "SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK",
   };
 
   cmd &= ~RETRO_ENVIRONMENT_EXPERIMENTAL;
@@ -1502,6 +1564,10 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
 
   case RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE:
     ret = setDiskControlExtInterface((const struct retro_disk_control_ext_callback*)data);
+    break;
+
+  case RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE:
+    ret = setContentInfoOverride((const struct retro_system_content_info_override*)data);
     break;
 
   default:

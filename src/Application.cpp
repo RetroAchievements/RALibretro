@@ -293,6 +293,7 @@ bool Application::init(const char* title, int width, int height)
 
   SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
   _coreName.clear();
+  _gameData = NULL;
   _validSlots = 0;
   lastHardcore = hardcore();
   cancelLoad = false;
@@ -903,6 +904,9 @@ void Application::destroy()
 
   RA_Shutdown();
 
+  if (_gameData)
+    free(_gameData);
+
   _video.destroy();
   _keybinds.destroy();
   _input.destroy();
@@ -1229,8 +1233,12 @@ bool Application::loadGame(const std::string& path)
   /* must update save path before loading the game */
   _states.setGame(unzippedFileName, _system, _coreName, &_core);
 
+  std::string extension = util::extension(unzippedFileName);
+  if (extension.front() == '.')
+    extension.erase(extension.begin()); /* remove leading period */
+
   std::string errorBuffer;
-  if (info->need_fullpath)
+  if (_core.getNeedsFullPath(extension))
   {
     loaded = _core.loadGame(path.c_str(), NULL, 0, &errorBuffer);
   }
@@ -1302,7 +1310,17 @@ bool Application::loadGame(const std::string& path)
   }
 
   if (data)
-    free(data);
+  {
+    if (_core.getPersistData(extension))
+    {
+      _logger.info(TAG "persisting game data");
+      _gameData = data;
+    }
+    else
+    {
+      free(data);
+    }
+  }
 
   if (cancelLoad)
   {
@@ -1351,13 +1369,12 @@ bool Application::loadGame(const std::string& path)
   }
 
   {
-    RecentItem item;
-    item.path = path;
-    item.coreName = _coreName;
-    item.system = _system;
+    auto item = _recentList.emplace(_recentList.begin());
+    item->path = path;
+    item->coreName = _coreName;
+    item->system = _system;
 
-    _recentList.insert(_recentList.begin(), item);
-    _logger.debug(TAG "Added recent file \"%s\" - %s - %u", util::fileName(item.path).c_str(), item.coreName.c_str(), (unsigned)item.system);
+    _logger.debug(TAG "Added recent file \"%s\" - %s - %u", util::fileName(item->path).c_str(), item->coreName.c_str(), (unsigned)item->system);
   }
 
 moved_recent_item:
@@ -1431,6 +1448,12 @@ bool Application::unloadGame()
 
   _gamePath.clear();
   _gameFileName.clear();
+  if (_gameData)
+  {
+    free(_gameData);
+    _gameData = NULL;
+  }
+
   _states.setGame(_gameFileName, 0, _coreName, &_core);
 
   _validSlots = 0;
