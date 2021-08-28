@@ -199,6 +199,7 @@ namespace libretro
     
     int16_t*                        _samples;
     size_t                          _samplesCount;
+    bool                            _generateAudio;
 
     const char*                     _libretroPath;
     unsigned                        _performanceLevel;
