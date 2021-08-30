@@ -117,7 +117,7 @@ bool Application::init(const char* title, int width, int height)
   std::tm now_tm;
   localtime_s(&now_tm, &now_timet);
   char buffer[64];
-  strftime(buffer, sizeof(buffer), "%D %T %Z", &now_tm);
+  strftime(buffer, sizeof(buffer), "%m/%d/%y %H:%M:%S %Z", &now_tm);
   _logger.info(TAG "Current time is %s", buffer);
 
   if (!_config.init(&_logger))
