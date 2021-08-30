@@ -113,12 +113,14 @@ bool Application::init(const char* title, int width, int height)
 #endif
   _logger.info(TAG "RALibretro commit hash is %s", git::getFullHash());
 
-  const time_t now_timet = time(0);
-  std::tm now_tm;
-  localtime_s(&now_tm, &now_timet);
-  char buffer[64];
-  strftime(buffer, sizeof(buffer), "%m/%d/%y %H:%M:%S %Z", &now_tm);
-  _logger.info(TAG "Current time is %s", buffer);
+  {
+    const time_t now_timet = time(0);
+    std::tm now_tm;
+    localtime_s(&now_tm, &now_timet);
+    char buffer[64];
+    strftime(buffer, sizeof(buffer), "%m/%d/%y %H:%M:%S %Z", &now_tm);
+    _logger.info(TAG "Current time is %s", buffer);
+  }
 
   if (!_config.init(&_logger))
   {
@@ -1738,7 +1740,7 @@ void Application::updateDiscMenu(bool updateLabels)
 
       if (updateLabels)
       {
-        if ((int)i < _discPaths.size())
+        if (i < _discPaths.size())
         {
           const std::string& path = _discPaths.at(i);
           size_t index = path.find_last_of('\\');
