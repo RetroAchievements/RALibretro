@@ -530,8 +530,8 @@
   },
   "ppsspp_libretro":{
     "name": "PPSSPP",
-    "systems": [41],
-    "platforms": "none"
+    "extensions": "iso",
+    "systems": [41]
   },
   "prosystem_libretro":{
     "name": "ProSystem",
