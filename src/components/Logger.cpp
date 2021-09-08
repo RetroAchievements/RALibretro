@@ -21,6 +21,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef LOG_TO_FILE
 #include "Util.h"
+#include <chrono>
 #endif
 
 #include <memory.h>
@@ -119,8 +120,17 @@ void Logger::log(enum retro_log_level level, const char* line, size_t length)
 #ifdef LOG_TO_FILE
   if (_file)
   {
+    const std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+    const unsigned int now_ms = (unsigned int)
+      (std::chrono::time_point_cast<std::chrono::milliseconds>(now).time_since_epoch().count() % 1000);
+    const time_t now_timet = std::chrono::system_clock::to_time_t(now);
+    std::tm now_tm;
+    localtime_s(&now_tm, &now_timet);
+    char buffer[10];
+    strftime(buffer, sizeof(buffer), "%H%M%S", &now_tm);
+
     // Log to the log file.
-    fprintf(_file, "[%s] %s\n", desc, line);
+    fprintf(_file, "%s.%03u [%s] %s\n", buffer, now_ms, desc, line);
 #ifndef NDEBUG
     fflush(_file);
 #endif

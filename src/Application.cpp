@@ -55,6 +55,8 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 //#define DISPLAY_FRAMERATE 1
 //#define DEBUG_FRAMERATE 1
 
+//#define DEBUG_AUDIO 1
+
 HWND g_mainWindow;
 Application app;
 
@@ -110,6 +112,15 @@ bool Application::init(const char* title, int width, int height)
   _logger.info(TAG "RALibretro version %s starting", git::getReleaseVersion());
 #endif
   _logger.info(TAG "RALibretro commit hash is %s", git::getFullHash());
+
+  {
+    const time_t now_timet = time(0);
+    std::tm now_tm;
+    localtime_s(&now_tm, &now_timet);
+    char buffer[64];
+    strftime(buffer, sizeof(buffer), "%m/%d/%y %H:%M:%S %Z", &now_tm);
+    _logger.info(TAG "Current time is %s", buffer);
+  }
 
   if (!_config.init(&_logger))
   {
@@ -1540,12 +1551,16 @@ void Application::s_audioCallback(void* udata, Uint8* stream, int len)
     else
     {
       app->_fifo.read((void*)stream, len);
+#ifdef DEBUG_AUDIO
       app->_logger.debug("[AUD] Audio hardware requested %d bytes", len);
+#endif
     }
   }
   else
   {
+#ifdef DEBUG_AUDIO
     app->_logger.debug("[AUD] Audio hardware requested %d bytes, game is not running, sending silence", len);
+#endif
     memset((void*)stream, 0, len);
   }
 }
@@ -1725,7 +1740,7 @@ void Application::updateDiscMenu(bool updateLabels)
 
       if (updateLabels)
       {
-        if ((int)i < _discPaths.size())
+        if (i < _discPaths.size())
         {
           const std::string& path = _discPaths.at(i);
           size_t index = path.find_last_of('\\');
