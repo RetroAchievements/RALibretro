@@ -108,6 +108,11 @@
     "systems": [62],
     "platforms": "none"
   },
+  "citra2018_libretro":{
+    "name": "Citra 2018",
+    "systems": [62],
+    "platforms": "none"
+  },
   "crocods_libretro":{
     "name": "CrocoDS",
     "systems": [37],
@@ -128,7 +133,7 @@
     "platforms": "none"
   },
   "duckstation_libretro":{
-    "name": "SwanStation",
+    "name": "DuckStation",
     "extensions": "m3u|cue",
     "systems": [12]
   },
@@ -605,6 +610,12 @@
   "stella_libretro":{
     "name": "Stella",
     "systems": [25]
+  },
+  "swanstation_libretro":{
+    "name": "SwanStation",
+    "extensions": "m3u|cue",
+    "systems": [12],
+    "platforms": "none"
   },
   "tgbdual_libretro":{
     "name": "TGB Dual",
