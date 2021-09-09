@@ -32,6 +32,7 @@ SOFTWARE.
 
 #ifdef _WINDOWS
 #include <RA_Interface.h>
+#include <io.h>
 #endif
 
 /* PPSSPP pushes 512 frames per packet, and relies on the mixer being called for every packet within
@@ -755,6 +756,209 @@ bool libretro::Core::setDiskControlExtInterface(const struct retro_disk_control_
   _diskControlInterface.add_image_index = data->add_image_index;
   return true;
 }
+
+#ifndef _WINDOWS
+
+bool libretro::Core::getVfsInterface(struct retro_vfs_interface_info* data)
+{
+  _logger->debug(TAG "Unimplemented env call: %s", name);
+  return false;
+}
+
+#else
+
+typedef struct retro_vfs_file_handle
+{
+  FILE* fp;
+  char* orig_path;
+} retro_vfs_file_handle;
+
+static int retro_vfs_file_close_impl(retro_vfs_file_handle* stream)
+{
+  if (!stream)
+    return -1;
+
+  if (stream->fp)
+    fclose(stream->fp);
+
+  if (stream->orig_path)
+    free(stream->orig_path);
+
+  free(stream);
+  return 0;
+}
+
+static retro_vfs_file_handle* retro_vfs_file_open_impl(const char* path, unsigned mode, unsigned hints)
+{
+  retro_vfs_file_handle* handle = (retro_vfs_file_handle*)calloc(1, sizeof(retro_vfs_file_handle));
+  handle->orig_path = strdup(path);
+
+  switch (mode)
+  {
+    case RETRO_VFS_FILE_ACCESS_READ:
+      handle->fp = util::openFile(&app.logger(), path, "rb");
+      break;
+
+    case RETRO_VFS_FILE_ACCESS_WRITE:
+      handle->fp = util::openFile(&app.logger(), path, "wb");
+      break;
+
+    case RETRO_VFS_FILE_ACCESS_READ_WRITE:
+      handle->fp = util::openFile(&app.logger(), path, "w+b");
+      break;
+
+    case RETRO_VFS_FILE_ACCESS_WRITE | RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING:
+    case RETRO_VFS_FILE_ACCESS_READ_WRITE | RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING:
+      handle->fp = util::openFile(&app.logger(), path, "r+b");
+      break;
+  }
+
+  if (!handle->fp)
+  {
+    retro_vfs_file_close_impl(handle);
+    return nullptr;
+  }
+
+  return handle;
+}
+
+static const char* retro_vfs_file_get_path_impl(retro_vfs_file_handle* stream)
+{
+  return (stream) ? stream->orig_path : nullptr;
+}
+
+static int64_t retro_vfs_file_tell_impl(retro_vfs_file_handle* stream)
+{
+  if (stream && stream->fp)
+    return _ftelli64(stream->fp);
+
+  return 0;
+}
+
+static int64_t retro_vfs_file_seek_impl(retro_vfs_file_handle* stream, int64_t offset, int seek_position)
+{
+  if (!stream)
+    return -1;
+
+  int whence = -1;
+  switch (seek_position)
+  {
+    case RETRO_VFS_SEEK_POSITION_START:
+      whence = SEEK_SET;
+      break;
+    case RETRO_VFS_SEEK_POSITION_CURRENT:
+      whence = SEEK_CUR;
+      break;
+    case RETRO_VFS_SEEK_POSITION_END:
+      whence = SEEK_END;
+      break;
+  }
+
+  _fseeki64(stream->fp, offset, whence);
+  return retro_vfs_file_tell_impl(stream);
+}
+
+static int64_t retro_vfs_file_size_impl(retro_vfs_file_handle* stream)
+{
+  if (stream && stream->fp)
+  {
+    const int64_t pos = _ftelli64(stream->fp);
+    _fseeki64(stream->fp, 0, SEEK_END);
+
+    const int64_t size = _ftelli64(stream->fp);
+
+    _fseeki64(stream->fp, pos, SEEK_SET);
+    return size;
+  }
+
+  return 0;
+}
+static int64_t retro_vfs_file_read_impl(retro_vfs_file_handle* stream, void* buffer, uint64_t len)
+{
+  if (!stream || !buffer)
+    return -1;
+
+  return fread(buffer, 1, len, stream->fp);
+}
+
+static int64_t retro_vfs_file_write_impl(retro_vfs_file_handle* stream, const void* buffer, uint64_t len)
+{
+  if (!stream || !buffer)
+    return -1;
+
+  return fwrite(buffer, 1, len, stream->fp);
+}
+
+static int retro_vfs_file_flush_impl(retro_vfs_file_handle* stream)
+{
+  if (!stream || fflush(stream->fp) != 0)
+    return -1;
+
+  return 0;
+}
+
+static int retro_vfs_file_remove_impl(const char* path)
+{
+  util::deleteFile(path);
+  return 0;
+}
+
+static int retro_vfs_file_rename_impl(const char* old_path, const char* new_path)
+{
+  std::wstring unicodeOldPath = util::utf8ToUChar(old_path);
+  std::wstring unicodeNewPath = util::utf8ToUChar(new_path);
+  return (_wrename(unicodeOldPath.c_str(), unicodeNewPath.c_str()) == 0) ? 0 : -1;
+}
+
+int64_t retro_vfs_file_truncate_impl(retro_vfs_file_handle* stream, int64_t length)
+{
+  return (stream && _chsize_s(_fileno(stream->fp), length) == 0) ? 0 : -1;
+}
+
+bool libretro::Core::getVfsInterface(struct retro_vfs_interface_info* data)
+{
+  const uint32_t supported_vfs_version = 2;
+  static struct retro_vfs_interface vfs_iface =
+  {
+    /* VFS API v1 */
+    retro_vfs_file_get_path_impl,
+    retro_vfs_file_open_impl,
+    retro_vfs_file_close_impl,
+    retro_vfs_file_size_impl,
+    retro_vfs_file_tell_impl,
+    retro_vfs_file_seek_impl,
+    retro_vfs_file_read_impl,
+    retro_vfs_file_write_impl,
+    retro_vfs_file_flush_impl,
+    retro_vfs_file_remove_impl,
+    retro_vfs_file_rename_impl,
+    /* VFS API v2 */
+    retro_vfs_file_truncate_impl,
+    /* VFS API v3 */
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr
+  };
+
+  if (data->required_interface_version > supported_vfs_version)
+  {
+    _logger->warn(TAG "%s: requested version %d, only have version %d",
+      "GET_VFS_INTERFACE", data->required_interface_version, supported_vfs_version);
+    return false;
+  }
+
+  _logger->info(TAG "%s: requested version %d, providing version %d",
+    "GET_VFS_INTERFACE", data->required_interface_version, supported_vfs_version);
+  data->required_interface_version = supported_vfs_version;
+  data->iface = &vfs_iface;
+  return true;
+}
+
+#endif
 
 bool libretro::Core::setContentInfoOverride(const struct retro_system_content_info_override* data)
 {
@@ -1532,6 +1736,10 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
 
   case RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS:
     ret = setSupportAchievements(*(bool*)data);
+    break;
+
+  case RETRO_ENVIRONMENT_GET_VFS_INTERFACE:
+    ret = getVfsInterface((struct retro_vfs_interface_info*)data);
     break;
 
   case RETRO_ENVIRONMENT_GET_INPUT_BITMASKS:

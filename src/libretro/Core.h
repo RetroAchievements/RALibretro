@@ -137,6 +137,7 @@ namespace libretro
     bool setInputDescriptors(const struct retro_input_descriptor* data);
     bool setDiskControlInterface(const struct retro_disk_control_callback* data);
     bool setDiskControlExtInterface(const struct retro_disk_control_ext_callback* data);
+    bool getVfsInterface(struct retro_vfs_interface_info* data);
     bool setHWRender(struct retro_hw_render_callback* data);
     bool getVariable(struct retro_variable* data);
     bool setVariables(const struct retro_variable* data);
