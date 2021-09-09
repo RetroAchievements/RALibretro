@@ -1011,6 +1011,20 @@ bool Application::loadCore(const std::string& coreName)
 
     free(data);
   }
+  else
+  {
+    if (coreName == "ppsspp_libretro")
+    {
+      // PPSSPP stutters if frame duplication is not enabled
+      // see https://github.com/hrydgard/ppsspp/issues/14748
+      _config.deserialize("{\"ppsspp_frame_duplication\":\"enabled\"}");
+    }
+    else if (coreName == "fbneo_libretro")
+    {
+      // this setting must be off for hardcore mode, but defaults to enabled
+      _config.deserialize("{\"fbneo-allow-patched-romsets\":\"disabled\"}");
+    }
+  }
 
   // tell the core to startup (must be done after reading configs)
   if (!_core.initCore())
