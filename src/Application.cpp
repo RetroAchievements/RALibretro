@@ -1305,7 +1305,7 @@ bool Application::loadGame(const std::string& path)
 
   _gameFileName = unzippedFileName; // store for GetEstimatedTitle callback
 
-  if (!romLoaded(&_logger, _system, path, data, size))
+  if (!romLoaded(&_logger, _system, path, data, size, false))
   {
     _discPaths.clear();
     updateDiscMenu(true);
@@ -2341,14 +2341,14 @@ void Application::handle(const SDL_SysWMEvent* syswm)
         unsigned newDiscIndex = cmd - IDM_CD_DISC_FIRST;
         if (_core.getCurrentDiscIndex() != newDiscIndex)
         {
-          _core.setCurrentDiscIndex(newDiscIndex);
-
           if (newDiscIndex < _discPaths.size())
           {
             std::string path = util::replaceFileName(_gamePath, _discPaths.at(newDiscIndex).c_str());
-            romLoaded(&_logger, _system, path, NULL, 0);
+            if (!romLoaded(&_logger, _system, path, NULL, 0, true))
+              break;
           }
 
+          _core.setCurrentDiscIndex(newDiscIndex);
           updateDiscMenu(false);
         }
       }
