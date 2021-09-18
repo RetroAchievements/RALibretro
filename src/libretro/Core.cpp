@@ -94,6 +94,15 @@ namespace
       (void)count;
     }
 
+    virtual void setVariables(const struct retro_core_option_v2_definition* options, unsigned count,
+      const struct retro_core_option_v2_category* categories, unsigned category_count) override
+    {
+      (void)options;
+      (void)count;
+      (void)categories;
+      (void)category_count;
+    }
+
     virtual void setVariableDisplay(const struct retro_core_option_display* display) override
     {
       (void)display;
@@ -1498,7 +1507,7 @@ bool libretro::Core::getInputBitmasks(bool* data)
 
 bool libretro::Core::getCoreOptionsVersion(unsigned* data) const
 {
-  *data = 1;
+  *data = 2;
   return true;
 }
 
@@ -1520,6 +1529,32 @@ bool libretro::Core::setCoreOptions(const struct retro_core_option_definition* d
 bool libretro::Core::setCoreOptionsIntl(const struct retro_core_options_intl* data)
 {
   return setCoreOptions(data->us);
+}
+
+bool libretro::Core::setCoreOptionsV2(const struct retro_core_options_v2* data)
+{
+  const struct retro_core_option_v2_definition* option;
+  const struct retro_core_option_v2_category* category;
+  unsigned count, category_count;
+
+  for (category = data->categories; category->key != NULL; category++)
+    ;
+  category_count = category - data->categories;
+
+  _logger->debug(TAG "retro_options_v2");
+  for (option = data->definitions; option->key != NULL; option++)
+    _logger->debug(TAG "  %s: %s", option->key, option->desc);
+
+  count = option - data->definitions;
+
+  _config->setVariables(data->definitions, count, data->categories, category_count);
+
+  return true;
+}
+
+bool libretro::Core::setCoreOptionsV2Intl(const struct retro_core_options_v2_intl* data)
+{
+  return setCoreOptionsV2(data->us);
 }
 
 bool libretro::Core::setCoreOptionsDisplay(const struct retro_core_option_display* data)
@@ -1777,6 +1812,19 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
   case RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE:
     ret = setContentInfoOverride((const struct retro_system_content_info_override*)data);
     break;
+
+  case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2:
+    ret = setCoreOptionsV2((const struct retro_core_options_v2*)data);
+    break;
+
+  case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL:
+    ret = setCoreOptionsV2Intl((const struct retro_core_options_v2_intl*)data);
+    break;
+
+  /* RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK cannot be supported because
+   * we don't update the variable values in real time. values are only updated when the config
+   * dialog is closed.
+   */
 
   default:
     /* we don't care about private events */

@@ -123,6 +123,7 @@ const char* Config::getSystemPath()
 void Config::setVariables(const struct retro_variable* variables, unsigned count)
 {
   _variables.clear();
+  _categories.clear();
 
   for (unsigned i = 0; i < count; variables++, i++)
   {
@@ -135,6 +136,7 @@ void Config::setVariables(const struct retro_variable* variables, unsigned count
 
     var._selected = 0;
     var._hidden = 0;
+    var._category = nullptr;
 
     for (unsigned j = 0; aux != NULL; j++)
     {
@@ -179,65 +181,123 @@ void Config::setVariables(const struct retro_variable* variables, unsigned count
 void Config::setVariables(const struct retro_core_option_definition* options, unsigned count)
 {
   _variables.clear();
+  _categories.clear();
 
   for (unsigned i = 0; i < count; options++, i++)
   {
     Variable var;
     var._key = options->key;
     var._name = options->desc;
-    var._selected = 0;
-    var._hidden = 0;
 
-    bool hasLabels = false;
-    for (unsigned j = 0; options->values[j].value != NULL; j++)
+    setOptions(var, options->values, options->default_value);
+
+    _variables.push_back(var);
+  }
+
+  _updated = true;
+}
+
+void Config::setOptions(Variable& var, const retro_core_option_value* values, const char* default_value)
+{
+  var._selected = 0;
+  var._hidden = 0;
+  var._category = nullptr;
+
+  bool hasLabels = false;
+  for (unsigned j = 0; values[j].value != NULL; j++)
+  {
+    if (values[j].label)
     {
-      if (options->values[j].label)
+      hasLabels = true;
+      break;
+    }
+  }
+
+  for (unsigned j = 0; values[j].value != NULL; j++)
+  {
+    const char* value = values[j].value;
+    if (hasLabels)
+    {
+      const char* label = values[j].label;
+      if (label == NULL)
+        label = value;
+
+      var._labels.push_back(label);
+    }
+
+    var._options.push_back(value);
+  }
+
+  const auto& found = _selections.find(var._key);
+
+  if (found != _selections.cend())
+  {
+    for (size_t i = 0; i < var._options.size(); i++)
+    {
+      if (var._options[i] == found->second)
       {
-        hasLabels = true;
+        var._selected = i;
+        _logger->info(TAG "Variable %s found in selections, set to \"%s\"", var._key.c_str(), found->second.c_str());
         break;
       }
     }
-
-    for (unsigned j = 0; options->values[j].value != NULL; j++)
+  }
+  else if (default_value != NULL)
+  {
+    for (size_t i = 0; i < var._options.size(); i++)
     {
-      const char* value = options->values[j].value;
-      if (hasLabels)
+      if (var._options[i] == default_value)
       {
-        const char* label = options->values[j].label;
-        if (label == NULL)
-          label = value;
-
-        var._labels.push_back(label);
+        var._selected = i;
+        _logger->info(TAG "Variable %s not found in selections, using default \"%s\"", var._key.c_str(), default_value);
+        break;
       }
-
-      var._options.push_back(value);
     }
+  }
+}
 
-    const auto& found = _selections.find(var._key);
+void Config::setVariables(const struct retro_core_option_v2_definition* options, unsigned count,
+  const struct retro_core_option_v2_category* categories, unsigned category_count)
+{
+  _variables.clear();
+  _categories.clear();
 
-    if (found != _selections.cend())
+  for (unsigned i = 0; i < category_count; categories++, i++)
+  {
+    Category category;
+    category._key = categories->key;
+    category._name = categories->desc;
+    category._description = categories->info;
+
+    _categories.push_back(category);
+  }
+
+  for (unsigned i = 0; i < count; options++, i++)
+  {
+    Variable var;
+    var._key = options->key;
+
+    if (options->desc_categorized)
+      var._name = options->desc_categorized;
+    else
+      var._name = options->desc;
+
+    setOptions(var, options->values, options->default_value);
+
+    if (options->category_key)
     {
-      for (size_t i = 0; i < var._options.size(); i++)
+      for (auto& category : _categories)
       {
-        if (var._options[i] == found->second)
+        if (category._key == options->category_key)
         {
-          var._selected = i;
-          _logger->info(TAG "Variable %s found in selections, set to \"%s\"", var._key.c_str(), found->second.c_str());
+          var._category = &category;
           break;
         }
       }
     }
-    else if (options->default_value != NULL)
+    else
     {
-      for (size_t i = 0; i < var._options.size(); i++)
-      {
-        if (var._options[i] == options->default_value)
-        {
-          var._selected = i;
-          _logger->info(TAG "Variable %s not found in selections, using default \"%s\"", var._key.c_str(), options->default_value);
-          break;
-        }
-      }
+      var._category = nullptr;
     }
 
     _variables.push_back(var);
@@ -533,6 +593,113 @@ bool Config::deserializeEmulatorSettings(const char* json)
 }
 
 #ifdef _WINDOWS
+
+void Config::ConfigDialog::updateVariables()
+{
+  int id = 0;
+  for (int i = 0; i < variables.size(); ++i)
+  {
+    auto& var = variables[i];
+    if (var->_category != category)
+      continue;
+
+    HWND hLabel = GetDlgItem(hwnd, 50000 + id);
+    std::wstring unicodeString = util::utf8ToUChar(var->_name);
+    SetWindowTextW(hLabel, unicodeString.c_str());
+    ShowWindow(hLabel, SW_SHOW);
+
+    HWND hComboBox = GetDlgItem(hwnd, 51000 + id);
+    SendMessageW(hComboBox, CB_RESETCONTENT, 0, 0);
+
+    for (int j = 0; j < var->_options.size(); ++j)
+    {
+      unicodeString = util::utf8ToUChar(var->_options[j]);
+      SendMessageW(hComboBox, CB_ADDSTRING, 0, (LPARAM)unicodeString.c_str());
+    }
+
+    SendMessageW(hComboBox, CB_SETCURSEL, selections[i], 0);
+
+    ShowWindow(hComboBox, SW_SHOW);
+    ++id;
+  }
+
+  for (; id < maxCount; ++id)
+  {
+    HWND hLabel = GetDlgItem(hwnd, 50000 + id);
+    ShowWindow(hLabel, SW_HIDE);
+
+    HWND hComboBox = GetDlgItem(hwnd, 51000 + id);
+    ShowWindow(hComboBox, SW_HIDE);
+  }
+}
+
+void Config::ConfigDialog::retrieveData(HWND hwnd)
+{
+  int id = 0;
+  for (int i = 0; i < variables.size(); ++i)
+  {
+    auto& var = variables[i];
+    if (var->_category != category)
+      continue;
+
+    HWND hComboBox = GetDlgItem(this->hwnd, 51000 + id);
+    int selection = SendMessageW(hComboBox, CB_GETCURSEL, 0, 0);
+    if (selection != selections[i])
+    {
+      selections[i] = selection;
+      updated = true;
+    }
+
+    ++id;
+  }
+
+  if (hwnd != nullptr)
+    _updated = updated;
+}
+
+void Config::ConfigDialog::initControls(HWND hwnd)
+{
+  this->hwnd = hwnd;
+
+  if (owner->_categories.size() > 0)
+  {
+    HWND hComboBox = GetDlgItem(hwnd, 49999);
+    SendMessageW(hComboBox, CB_ADDSTRING, 0, (LPARAM)L"General");
+
+    std::wstring unicodeString;
+    for (const auto& category : owner->_categories)
+    {
+      unicodeString = util::utf8ToUChar(category._name);
+      SendMessageW(hComboBox, CB_ADDSTRING, 0, (LPARAM)unicodeString.c_str());
+    }
+
+    SendMessageW(hComboBox, CB_SETCURSEL, 0, 0);
+  }
+
+  updateVariables();
+}
+
+INT_PTR Config::ConfigDialog::dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+  if (msg == WM_COMMAND && LOWORD(wparam) == 49999 && HIWORD(wparam) == CBN_SELCHANGE)
+  {
+    HWND hComboBox = GetDlgItem(hwnd, 49999);
+    int selection = SendMessageW(hComboBox, CB_GETCURSEL, 0, 0);
+
+    retrieveData(nullptr);
+
+    if (selection == 0)
+      category = nullptr;
+    else
+      category = &owner->_categories[selection - 1];
+
+    updateVariables();
+    return 0;
+  }
+
+  return Dialog::dialogProc(hwnd, msg, wparam, lparam);
+}
+
 void Config::showDialog(const std::string& coreName, Input& input)
 {
   const WORD HEADER_WIDTH = 90;
@@ -541,14 +708,15 @@ void Config::showDialog(const std::string& coreName, Input& input)
 
   std::string title = coreName + " Settings";
 
-  Dialog db;
+  ConfigDialog db;
   db.init(title.c_str());
+  db.owner = this;
+  db.category = nullptr;
+  db.updated = false;
 
   WORD x = 0;
   WORD y = 0;
 
-  std::vector<Variable*> variables;
-  std::vector<int> selections;
   Variable controllerVariables[4];
 
   for (unsigned i = sizeof(controllerVariables) / sizeof(controllerVariables[0]); i > 0; --i)
@@ -556,14 +724,18 @@ void Config::showDialog(const std::string& coreName, Input& input)
     auto& controllerVariable = controllerVariables[i - 1];
     controllerVariable._key = "__controller" + std::to_string(i);
     controllerVariable._name = "Controller " + std::to_string(i);
+    controllerVariable._category = nullptr;
 
     controllerVariable._options.clear();
     input.getControllerNames(i - 1, controllerVariable._options, controllerVariable._selected);
     if (controllerVariable._options.size() > 1)
-      variables.insert(variables.begin(), &controllerVariable);
+    {
+      db.variables.insert(db.variables.begin(), &controllerVariable);
+      db.selections.insert(db.selections.begin(), controllerVariable._selected);
+    }
   }
 
-  if (_variables.empty() && variables.empty())
+  if (_variables.empty() && db.variables.empty())
   {
     db.addLabel("No settings", 0, 0, HEADER_WIDTH + VALUE_WIDTH, LINE_HEIGHT);
     y = LINE_HEIGHT;
@@ -573,37 +745,58 @@ void Config::showDialog(const std::string& coreName, Input& input)
     const WORD MAX_ROWS = 16;
     WORD row = 0;
     WORD id = 0;
+    int generalCount = db.variables.size();
+    int selectedCategoryIndex;
+
+    for (auto& category : _categories)
+    {
+      db.categoryNames.push_back(category._name);
+      category._visibleCount = 0;
+    }
 
     for (auto& var : _variables)
     {
       if (!var._hidden)
-        variables.push_back(&var);
+      {
+        if (var._category)
+          var._category->_visibleCount++;
+        else
+          generalCount++;
+
+        db.variables.push_back(&var);
+        db.selections.push_back(var._selected);
+      }
     }
 
-    selections.reserve(variables.size());
+    db.maxCount = generalCount;
+    if (_categories.size() > 0)
+    {
+      db.addCombobox(49999, x, y, VALUE_WIDTH + HEADER_WIDTH + 5, LINE_HEIGHT, 100, nullptr, nullptr, nullptr);
+      y += 20;
+
+      for (const auto& category : _categories)
+      {
+        if (category._visibleCount > db.maxCount)
+          db.maxCount = category._visibleCount;
+      }
+    }
 
     // evenly distribute the variables across multiple columns so no more than MAX_ROWS rows exist
-    const WORD columns = ((WORD)variables.size() + MAX_ROWS - 1) / MAX_ROWS;
-    const WORD rows = ((WORD)variables.size() + columns - 1) / columns;
+    WORD top = y;
+    const WORD columns = ((WORD)db.maxCount + MAX_ROWS - 1) / MAX_ROWS;
+    const WORD rows = ((WORD)db.maxCount + columns - 1) / columns;
 
-    for (unsigned i = 0; i < variables.size(); ++i)
+    for (unsigned i = 0; i < db.maxCount; ++i)
     {
-      auto& var = *variables[i];
-      selections.push_back(var._selected);
+      db.addLabel("Label", 50000 + id, x, y + 2, HEADER_WIDTH - 5, 8);
+      db.addCombobox(51000 + id, x + HEADER_WIDTH + 5, y, VALUE_WIDTH, LINE_HEIGHT, 100,
+        s_getOption, (void*)&db, &db.selections[i]);
 
-      const auto* options = &var._options;
-      if (!var._labels.empty())
-        options = &var._labels;
-
-      db.addLabel(var._name.c_str(), x, y + 2, HEADER_WIDTH - 5, 8);
-      db.addCombobox(50000 + id, x + HEADER_WIDTH + 5, y, VALUE_WIDTH, LINE_HEIGHT, 100,
-        s_getOption, (void*)options, &selections[i]);
-
-      if (++id < variables.size())
+      if (++id < db.maxCount)
       {
         if (++row == rows)
         {
-          y = 0;
+          y = top;
           row = 0;
           x += HEADER_WIDTH + VALUE_WIDTH + 15;
         }
@@ -614,7 +807,7 @@ void Config::showDialog(const std::string& coreName, Input& input)
       }
     }
 
-    y = rows * LINE_HEIGHT;
+    y = top + rows * LINE_HEIGHT;
   }
 
   x += HEADER_WIDTH + VALUE_WIDTH + 15;
@@ -631,14 +824,14 @@ void Config::showDialog(const std::string& coreName, Input& input)
       const rc_disallowed_setting_t* disallowed_settings = rc_libretro_get_disallowed_settings(coreName.c_str());
       if (disallowed_settings)
       {
-        for (unsigned i = 0; i < variables.size(); ++i)
+        for (unsigned i = 0; i < db.variables.size(); ++i)
         {
-          auto& var = *variables[i];
-          const char* value = var._options[selections[i]].c_str();
+          auto& var = *db.variables[i];
+          const char* value = var._options[db.selections[i]].c_str();
           if (!rc_libretro_is_setting_allowed(disallowed_settings, var._key.c_str(), value))
           {
-            if (selections[i] < (int)var._labels.size())
-              value = var._labels[selections[i]].c_str();
+            if (db.selections[i] < (int)var._labels.size())
+              value = var._labels[db.selections[i]].c_str();
 
             std::string setting = "set " + var._name + " to " + value;
             if (!RA_WarnDisableHardcore(setting.c_str()))
@@ -650,19 +843,19 @@ void Config::showDialog(const std::string& coreName, Input& input)
       }
     }
 
-    for (unsigned i = 0; i < variables.size(); ++i)
+    for (unsigned i = 0; i < db.variables.size(); ++i)
     {
-      auto& var = *variables[i];
+      auto& var = *db.variables[i];
 
       if (var._key.length() == 13 && SDL_strncmp(var._key.c_str(), "__controller", 12) == 0)
       {
         const unsigned port = var._key[12] - '1';
-        input.setSelectedControllerIndex(port, selections[i]);
+        input.setSelectedControllerIndex(port, db.selections[i]);
       }
       else
       {
         // keep track of the selected item
-        var._selected = selections[i];
+        var._selected = db.selections[i];
 
         // and selected value
         _selections[var._key] = var._options[var._selected];

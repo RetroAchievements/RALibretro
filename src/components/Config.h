@@ -42,6 +42,8 @@ public:
 
   virtual void setVariables(const struct retro_variable* variables, unsigned count) override;
   virtual void setVariables(const struct retro_core_option_definition* options, unsigned count) override;
+  virtual void setVariables(const struct retro_core_option_v2_definition* options, unsigned count,
+    const struct retro_core_option_v2_category* categories, unsigned category_count) override;
   virtual void setVariableDisplay(const struct retro_core_option_display* display) override;
   virtual bool varUpdated() override;
   virtual const char* getVariable(const char* variable) override;
@@ -80,6 +82,14 @@ public:
 protected:
   static const char* s_getOption(int index, void* udata);
 
+  struct Category
+  {
+    std::string _key;
+    std::string _name;
+    std::string _description;
+    int         _visibleCount;
+  };
+
   struct Variable
   {
     std::string _key;
@@ -87,11 +97,36 @@ protected:
     int         _selected;
     bool        _hidden;
 
+    Category*   _category;
+
     std::vector<std::string> _options;
     std::vector<std::string> _labels;
   };
 
+  class ConfigDialog : public Dialog
+  {
+  public:
+    std::vector<Variable*> variables;
+    std::vector<int> selections;
+    std::vector<std::string> categoryNames;
+    Config* owner;
+    int maxCount;
+    Category* category;
+    bool updated;
+
+    void updateVariables();
+
+  protected:
+    void initControls(HWND hwnd) override;
+
+    INT_PTR dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
+    void retrieveData(HWND hwnd) override;
+
+    HWND hwnd;
+  };
+
   static void initializeControllerVariable(Variable& variable, const char* name, const char* key, const std::map<std::string, unsigned>& names, unsigned selectedDevice);
+  void setOptions(Variable& var, const retro_core_option_value* values, const char* default_value);
 
   libretro::LoggerComponent* _logger;
 
@@ -101,6 +136,7 @@ protected:
   std::string _systemFolder;
   std::string _screenshotsFolder;
 
+  std::vector<Category> _categories;
   std::vector<Variable> _variables;
   std::unordered_map<std::string, std::string> _selections;
 
