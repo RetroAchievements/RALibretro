@@ -1166,6 +1166,7 @@ bool Application::loadGame(const std::string& path)
 {
   const struct retro_system_info* info = _core.getSystemInfo();
   std::string unzippedFileName;
+  std::string extension;
   const char* ptr;
   size_t size;
   void* data;
@@ -1223,29 +1224,36 @@ bool Application::loadGame(const std::string& path)
     size = 0;
     data = NULL;
   }
-  else if (info->need_fullpath)
-  {
-    /* core wants the full path, don't load the data unless we need it to hash */
-    size = 0;
-    data = NULL;
-  }
   else
   {
-    if (iszip)
+    extension = util::extension(path);
+    if (extension.front() == '.')
+      extension.erase(extension.begin()); /* remove leading period */
+
+    if (_core.getNeedsFullPath(extension))
     {
-      /* core doesn't support zip files, unzip it into a buffer */
-      data = util::loadZippedFile(&_logger, path, &size, unzippedFileName);
+      /* core wants the full path, don't load the data unless we need it to hash */
+      size = 0;
+      data = NULL;
     }
     else
     {
-      /* load the file into a buffer so we can hash it */
-      data = util::loadFile(&_logger, path, &size);
-    }
+      if (iszip)
+      {
+        /* core doesn't support zip files, unzip it into a buffer */
+        data = util::loadZippedFile(&_logger, path, &size, unzippedFileName);
+      }
+      else
+      {
+        /* load the file into a buffer so we can hash it */
+        data = util::loadFile(&_logger, path, &size);
+      }
 
-    if (data == NULL)
-    {
-      MessageBox(g_mainWindow, "Unable to open file", "Error", MB_OK);
-      return false;
+      if (data == NULL)
+      {
+        MessageBox(g_mainWindow, "Unable to open file", "Error", MB_OK);
+        return false;
+      }
     }
   }
 
@@ -1258,7 +1266,7 @@ bool Application::loadGame(const std::string& path)
   /* must update save path before loading the game */
   _states.setGame(unzippedFileName, _system, _coreName, &_core);
 
-  std::string extension = util::extension(unzippedFileName);
+  extension = util::extension(unzippedFileName);
   if (extension.front() == '.')
     extension.erase(extension.begin()); /* remove leading period */
 
