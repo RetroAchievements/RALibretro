@@ -42,6 +42,12 @@ SOFTWARE.
 
 #define TAG "[COR] "
 
+/* These are RetroArch specific callbacks. Some cores expect at least minimal support for them */
+#define RETRO_ENVIRONMENT_RETROARCH_START_BLOCK 0x800000
+#define RETRO_ENVIRONMENT_SET_SAVE_STATE_IN_BACKGROUND (2 | RETRO_ENVIRONMENT_RETROARCH_START_BLOCK)
+#define RETRO_ENVIRONMENT_GET_CLEAR_ALL_THREAD_WAITS_CB (3 | RETRO_ENVIRONMENT_RETROARCH_START_BLOCK)
+#define RETRO_ENVIRONMENT_POLL_TYPE_OVERRIDE (4 | RETRO_ENVIRONMENT_RETROARCH_START_BLOCK)
+
 /* Some libretro callbacks need access to the other frontend elements that are stored
  * in the core instance (like _input). Since we can't pass pointers through libretro,
  * keep a global pointer to the current core object (there should be only one).
@@ -1567,6 +1573,11 @@ bool libretro::Core::setCoreOptionsDisplay(const struct retro_core_option_displa
   return true;
 }
 
+static bool clearAllWaitThreadsCallback(unsigned clear_threads, void* data)
+{
+  return true;
+}
+
 static void getEnvName(char* name, size_t size, unsigned cmd)
 {
   static const char* names[] =
@@ -1829,6 +1840,21 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
    * we don't update the variable values in real time. values are only updated when the config
    * dialog is closed.
    */
+
+  case RETRO_ENVIRONMENT_SET_SAVE_STATE_IN_BACKGROUND:
+    _logger->warn(TAG "Unimplemented env call: %s", "RETRO_ENVIRONMENT_SET_SAVE_STATE_IN_BACKGROUND");
+    return false;
+
+  case RETRO_ENVIRONMENT_GET_CLEAR_ALL_THREAD_WAITS_CB:
+    /* flycast crashes on exit unless this provides a valid callback. This is just a
+     * dummy function, so we're still going to log it like it's unimplemented. */
+    _logger->warn(TAG "Unimplemented env call: %s", "RETRO_ENVIRONMENT_GET_CLEAR_ALL_THREAD_WAITS_CB");
+    *(retro_environment_t*)data = clearAllWaitThreadsCallback;
+    return false;
+
+  case RETRO_ENVIRONMENT_POLL_TYPE_OVERRIDE:
+    _logger->warn(TAG "Unimplemented env call: %s", "RETRO_ENVIRONMENT_POLL_TYPE_OVERRIDE");
+    return false;
 
   default:
     /* we don't care about private events */
