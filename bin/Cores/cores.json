@@ -161,7 +161,7 @@
     "name": "Flycast",
     "extensions": "gdi|m3u",
     "systems": [40],
-    "platforms": "none"
+    "platforms": "win64"
   },
   "fmsx_libretro":{
     "name": "fMSX",

@@ -1019,6 +1019,11 @@ bool Application::loadCore(const std::string& coreName)
       // see https://github.com/hrydgard/ppsspp/issues/14748
       _config.deserialize("{\"ppsspp_frame_duplication\":\"enabled\"}");
     }
+    else if (coreName == "flycast_libretro")
+    {
+      // flycast crashes on save/load state when using threaded rendering
+      _config.deserialize("{\"reicast_threaded_rendering\":\"disabled\"}");
+    }
     else if (coreName == "fbneo_libretro")
     {
       // this setting must be off for hardcore mode, but defaults to enabled
