@@ -528,6 +528,7 @@ void Input::poll()
 
 int16_t Input::read(unsigned port, unsigned device, unsigned index, unsigned id)
 {
+  const int16_t EDGE_DETECT = 32700;
   int port_device;
 
   if (port < kMaxPorts)
@@ -575,6 +576,28 @@ int16_t Input::read(unsigned port, unsigned device, unsigned index, unsigned id)
           case RETRO_DEVICE_ID_POINTER_X: return _mouse._relative_x;
           case RETRO_DEVICE_ID_POINTER_Y: return _mouse._relative_y;
           case RETRO_DEVICE_ID_POINTER_PRESSED: return _mouse._button[RETRO_DEVICE_ID_MOUSE_LEFT];
+          default: break;
+        }
+
+      case RETRO_DEVICE_LIGHTGUN:
+        switch (id)
+        {
+          case RETRO_DEVICE_ID_LIGHTGUN_SCREEN_X: return _mouse._relative_x;
+          case RETRO_DEVICE_ID_LIGHTGUN_SCREEN_Y: return _mouse._relative_y;
+          case RETRO_DEVICE_ID_LIGHTGUN_TRIGGER: return _mouse._button[RETRO_DEVICE_ID_MOUSE_LEFT];
+          case RETRO_DEVICE_ID_LIGHTGUN_RELOAD: return _mouse._button[RETRO_DEVICE_ID_MOUSE_RIGHT];
+          case RETRO_DEVICE_ID_LIGHTGUN_DPAD_UP: return (_info[port][_devices[port]]._state >> RETRO_DEVICE_ID_JOYPAD_UP) & 1;
+          case RETRO_DEVICE_ID_LIGHTGUN_DPAD_DOWN: return (_info[port][_devices[port]]._state >> RETRO_DEVICE_ID_JOYPAD_DOWN) & 1;
+          case RETRO_DEVICE_ID_LIGHTGUN_DPAD_LEFT: return (_info[port][_devices[port]]._state >> RETRO_DEVICE_ID_JOYPAD_LEFT) & 1;
+          case RETRO_DEVICE_ID_LIGHTGUN_DPAD_RIGHT: return (_info[port][_devices[port]]._state >> RETRO_DEVICE_ID_JOYPAD_RIGHT) & 1;
+          case RETRO_DEVICE_ID_LIGHTGUN_START: return (_info[port][_devices[port]]._state >> RETRO_DEVICE_ID_JOYPAD_START) & 1;
+          case RETRO_DEVICE_ID_LIGHTGUN_SELECT: return (_info[port][_devices[port]]._state >> RETRO_DEVICE_ID_JOYPAD_SELECT) & 1;
+          case RETRO_DEVICE_ID_LIGHTGUN_AUX_A: return (_info[port][_devices[port]]._state >> RETRO_DEVICE_ID_JOYPAD_A) & 1;
+          case RETRO_DEVICE_ID_LIGHTGUN_AUX_B: return (_info[port][_devices[port]]._state >> RETRO_DEVICE_ID_JOYPAD_B) & 1;
+          case RETRO_DEVICE_ID_LIGHTGUN_AUX_C: return (_info[port][_devices[port]]._state >> RETRO_DEVICE_ID_JOYPAD_X) & 1;
+          case RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN:
+            return (_mouse._relative_y > EDGE_DETECT || _mouse._relative_x > EDGE_DETECT ||
+                    _mouse._relative_x < -EDGE_DETECT || _mouse._relative_y < -EDGE_DETECT);
           default: break;
         }
 
