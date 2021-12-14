@@ -322,7 +322,12 @@ void Input::mouseMoveEvent(int relative_x, int relative_y, int absolute_x, int a
 void Input::keyboardEvent(enum retro_key key, bool pressed)
 {
   if (key < RETROK_LAST)
+  {
     _keyboard._keys[key] = pressed;
+
+    if (_keyboard._callbacks.callback != nullptr)
+      _keyboard._callbacks.callback(pressed, key, 0, 0);
+  }
 }
 
 void Input::setInputDescriptors(const struct retro_input_descriptor* descs, unsigned count)
@@ -347,6 +352,14 @@ void Input::setInputDescriptors(const struct retro_input_descriptor* descs, unsi
       _logger->warn(TAG "Port %u above %d limit", desc._port + 1, kMaxPorts);
     }
   }
+}
+
+void Input::setKeyboardCallback(const struct retro_keyboard_callback* data)
+{
+  if (data == nullptr)
+    memset(&_keyboard._callbacks, 0, sizeof(_keyboard._callbacks));
+  else
+    memcpy(&_keyboard._callbacks, data, sizeof(_keyboard._callbacks));
 }
 
 void Input::setControllerInfo(const struct retro_controller_info* rinfo, unsigned count)

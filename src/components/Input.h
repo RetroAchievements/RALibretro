@@ -81,6 +81,7 @@ public:
   void keyboardEvent(enum retro_key key, bool pressed);
 
   virtual void setInputDescriptors(const struct retro_input_descriptor* descs, unsigned count) override;
+  virtual void setKeyboardCallback(const struct retro_keyboard_callback* data) override;
 
   virtual void     setControllerInfo(const struct retro_controller_info* info, unsigned count) override;
   virtual bool     ctrlUpdated() override;
@@ -143,6 +144,7 @@ protected:
   struct KeyboardInfo
   {
     std::array<bool, RETROK_LAST> _keys;
+    struct retro_keyboard_callback _callbacks;
   };
 
   enum
