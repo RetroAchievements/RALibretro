@@ -67,7 +67,9 @@ namespace libretro
 
     inline unsigned                getNumDiscs()            const { return (_diskControlInterface.get_num_images != NULL) ? _diskControlInterface.get_num_images() : 0; }
     inline unsigned                getCurrentDiscIndex()    const { return (_diskControlInterface.get_image_index != NULL) ? _diskControlInterface.get_image_index() : 0; }
-    void                           setCurrentDiscIndex(unsigned);
+    void                           setCurrentDiscIndex(unsigned index);
+    bool                           getDiscLabel(unsigned index, std::string& label);
+    bool                           getDiscPath(unsigned index, std::string& path);
     inline bool                    getTrayOpen()            const { return (_diskControlInterface.get_eject_state != NULL) ? (bool)_diskControlInterface.get_eject_state() : false; }
     void                           setTrayOpen(bool open);
 
@@ -135,6 +137,7 @@ namespace libretro
     bool getSystemDirectory(const char** data) const;
     bool setPixelFormat(enum retro_pixel_format data);
     bool setInputDescriptors(const struct retro_input_descriptor* data);
+    bool getDiskControlInterfaceVersion(unsigned* data);
     bool setDiskControlInterface(const struct retro_disk_control_callback* data);
     bool setDiskControlExtInterface(const struct retro_disk_control_ext_callback* data);
     bool getVfsInterface(struct retro_vfs_interface_info* data);
@@ -232,7 +235,7 @@ namespace libretro
     struct retro_controller_info*   _controllerInfo;
     unsigned*                       _ports;
 
-    struct retro_disk_control_callback _diskControlInterface;
+    struct retro_disk_control_ext_callback _diskControlInterface;
 
     struct retro_memory_map         _memoryMap;
 
