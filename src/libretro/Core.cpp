@@ -767,14 +767,15 @@ bool libretro::Core::setKeyboardCallback(const struct retro_keyboard_callback* d
   return true;
 }
 
-bool libretro::Core::setDiskControlInterface(const struct retro_disk_control_callback* data)
+bool libretro::Core::getDiskControlInterfaceVersion(unsigned* data)
 {
-  memcpy(&_diskControlInterface, data, sizeof(_diskControlInterface));
+  *data = 1;
   return true;
 }
 
-bool libretro::Core::setDiskControlExtInterface(const struct retro_disk_control_ext_callback* data)
+bool libretro::Core::setDiskControlInterface(const struct retro_disk_control_callback* data)
 {
+  memset(&_diskControlInterface, 0, sizeof(_diskControlInterface));
   _diskControlInterface.set_eject_state = data->set_eject_state;
   _diskControlInterface.get_eject_state = data->get_eject_state;
   _diskControlInterface.get_image_index = data->get_image_index;
@@ -783,6 +784,42 @@ bool libretro::Core::setDiskControlExtInterface(const struct retro_disk_control_
   _diskControlInterface.replace_image_index = data->replace_image_index;
   _diskControlInterface.add_image_index = data->add_image_index;
   return true;
+}
+
+bool libretro::Core::setDiskControlExtInterface(const struct retro_disk_control_ext_callback* data)
+{
+  memcpy(&_diskControlInterface, data, sizeof(_diskControlInterface));
+  return true;
+}
+
+bool libretro::Core::getDiscLabel(unsigned index, std::string& label)
+{
+  if (_diskControlInterface.get_image_label)
+  {
+    char buffer[256];
+    if (_diskControlInterface.get_image_label(index, buffer, sizeof(buffer)))
+    {
+      label = buffer;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool libretro::Core::getDiscPath(unsigned index, std::string& path)
+{
+  if (_diskControlInterface.get_image_path)
+  {
+    char buffer[1024];
+    if (_diskControlInterface.get_image_path(index, buffer, sizeof(buffer)))
+    {
+      path = buffer;
+      return true;
+    }
+  }
+
+  return false;
 }
 
 #ifndef _WINDOWS
@@ -1835,6 +1872,10 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
 
   case RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER:
     ret = getPreferredHWRender((unsigned*)data);
+    break;
+
+  case RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION:
+    ret = getDiskControlInterfaceVersion((unsigned*)data);
     break;
 
   case RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE:

@@ -1743,6 +1743,7 @@ void Application::updateDiscMenu(bool updateLabels)
   {
     unsigned selectedDisc = _core.getCurrentDiscIndex();
     bool trayOpen = _core.getTrayOpen();
+    std::string discLabel;
     char buffer[128];
 
     MENUITEMINFO info;
@@ -1767,7 +1768,11 @@ void Application::updateDiscMenu(bool updateLabels)
 
       if (updateLabels)
       {
-        if (i < _discPaths.size())
+        if (_core.getDiscLabel(i, discLabel))
+        {
+          info.dwTypeData = (char*)discLabel.data();
+        }
+        else if (i < _discPaths.size())
         {
           const std::string& path = _discPaths.at(i);
           size_t index = path.find_last_of('\\');
@@ -2368,9 +2373,15 @@ void Application::handle(const SDL_SysWMEvent* syswm)
         unsigned newDiscIndex = cmd - IDM_CD_DISC_FIRST;
         if (_core.getCurrentDiscIndex() != newDiscIndex)
         {
-          if (newDiscIndex < _discPaths.size())
+          std::string path;
+          if (_core.getDiscPath(newDiscIndex, path))
           {
-            std::string path = util::replaceFileName(_gamePath, _discPaths.at(newDiscIndex).c_str());
+            if (!romLoaded(&_logger, _system, path, NULL, 0, true))
+              break;
+          }
+          else if (newDiscIndex < _discPaths.size())
+          {
+            path = util::replaceFileName(_gamePath, _discPaths.at(newDiscIndex).c_str());
             if (!romLoaded(&_logger, _system, path, NULL, 0, true))
               break;
           }
