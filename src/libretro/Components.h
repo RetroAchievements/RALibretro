@@ -210,7 +210,8 @@ namespace libretro
   class InputComponent
   {
   public:
-    virtual void setInputDescriptors(const struct retro_input_descriptor* descs, unsigned count) = 0;
+    virtual void     setInputDescriptors(const struct retro_input_descriptor* descs, unsigned count) = 0;
+    virtual void     setKeyboardCallback(const struct retro_keyboard_callback* data) = 0;
 
     virtual void     setControllerInfo(const struct retro_controller_info* info, unsigned count) = 0;
     virtual bool     ctrlUpdated() = 0;

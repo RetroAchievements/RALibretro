@@ -240,6 +240,11 @@ namespace
       (void)count;
     }
 
+    virtual void setKeyboardCallback(const struct retro_keyboard_callback* data) override
+    {
+      (void)data;
+    }
+
     virtual void setControllerInfo(const struct retro_controller_info* info, unsigned count) override
     {
       (void)info;
@@ -441,6 +446,7 @@ void libretro::Core::destroy()
   }
 
   memset(&_diskControlInterface, 0, sizeof(_diskControlInterface));
+  _input->setKeyboardCallback(nullptr);
 
   _core.deinit();
   _core.destroy();
@@ -619,6 +625,7 @@ void libretro::Core::reset()
   _controllerInfoCount = 0;
   _controllerInfo = NULL;
   _ports = NULL;
+  _input->setKeyboardCallback(nullptr);
   memset(&_diskControlInterface, 0, sizeof(_diskControlInterface));
   memset(&_memoryMap, 0, sizeof(_memoryMap));
   memset(&_calls, 0, sizeof(_calls));
@@ -751,6 +758,12 @@ bool libretro::Core::setInputDescriptors(const struct retro_input_descriptor* da
   }
 
   _input->setInputDescriptors(_inputDescriptors, _inputDescriptorsCount);
+  return true;
+}
+
+bool libretro::Core::setKeyboardCallback(const struct retro_keyboard_callback* data)
+{
+  _input->setKeyboardCallback(data);
   return true;
 }
 
@@ -1706,6 +1719,10 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
 
   case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS:
     ret = setInputDescriptors((const struct retro_input_descriptor*)data);
+    break;
+
+  case RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK:
+    ret = setKeyboardCallback((const struct retro_keyboard_callback*)data);
     break;
 
   case RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE:
