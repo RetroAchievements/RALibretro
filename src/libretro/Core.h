@@ -137,6 +137,7 @@ namespace libretro
     bool getSystemDirectory(const char** data) const;
     bool setPixelFormat(enum retro_pixel_format data);
     bool setInputDescriptors(const struct retro_input_descriptor* data);
+    bool setKeyboardCallback(const struct retro_keyboard_callback* data);
     bool getDiskControlInterfaceVersion(unsigned* data);
     bool setDiskControlInterface(const struct retro_disk_control_callback* data);
     bool setDiskControlExtInterface(const struct retro_disk_control_ext_callback* data);
