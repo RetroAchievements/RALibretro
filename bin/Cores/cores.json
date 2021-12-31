@@ -135,6 +135,7 @@
   "duckstation_libretro":{
     "name": "DuckStation",
     "extensions": "m3u|cue",
+    "deprecated": "DuckStation is no longer maintained. Please use SwanStation.",
     "systems": [12]
   },
   "fbalpha_libretro":{
@@ -614,8 +615,7 @@
   "swanstation_libretro":{
     "name": "SwanStation",
     "extensions": "m3u|cue",
-    "systems": [12],
-    "platforms": "none"
+    "systems": [12]
   },
   "tgbdual_libretro":{
     "name": "TGB Dual",
