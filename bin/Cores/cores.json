@@ -155,12 +155,14 @@
   "flycast_libretro":{
     "name": "Flycast",
     "extensions": "zip|7z",
-    "systems": [27]
+    "systems": [27],
+    "platforms": "win64"
   },
   "flycast_libretro":{
     "name": "Flycast",
     "extensions": "gdi|cue|m3u",
-    "systems": [40]
+    "systems": [40],
+    "platforms": "win64"
   },
   "fmsx_libretro":{
     "name": "fMSX",
