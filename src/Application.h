@@ -87,6 +87,7 @@ protected:
   void        processEvents();
   void        runSmoothed();
   void        runTurbo();
+  void        pauseForBadPerformance();
 
   void        loadGame();
   void        enableItems(const UINT* items, size_t count, UINT enable);
@@ -139,6 +140,12 @@ protected:
   Input        _input;
   Memory       _memory;
   States       _states;
+
+  int          _numAudioFaults;
+  int          _numAudioRecoveries;
+  int          _audioGeneratedDuringFastForward;
+  bool         _vsyncDisabledByAudioFaults;
+  bool         _processingEvents;
 
   KeyBinds _keybinds;
   std::vector<RecentItem> _recentList;

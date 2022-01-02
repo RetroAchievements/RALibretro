@@ -64,6 +64,7 @@ namespace libretro
     inline bool                    getSupportAchievements() const { return _supportAchievements; }
     inline void                    unloadGame()                   { _core.unloadGame(); }
     inline bool                    gameLoaded()             const { return _gameLoaded; }
+    void                           resetVsync();
 
     inline unsigned                getNumDiscs()            const { return (_diskControlInterface.get_num_images != NULL) ? _diskControlInterface.get_num_images() : 0; }
     inline unsigned                getCurrentDiscIndex()    const { return (_diskControlInterface.get_image_index != NULL) ? _diskControlInterface.get_image_index() : 0; }
@@ -155,6 +156,7 @@ namespace libretro
     bool getSaveDirectory(const char** data) const;
     bool setContentInfoOverride(const struct retro_system_content_info_override* data);
     bool setSystemAVInfo(const struct retro_system_av_info* data);
+    bool handleSystemAVInfoChanged();
     bool setSubsystemInfo(const struct retro_subsystem_info* data);
     bool setControllerInfo(const struct retro_controller_info* data);
     bool setMemoryMaps(const struct retro_memory_map* data);

@@ -561,37 +561,8 @@ bool libretro::Core::initAV()
   _core.setInputPoll(s_inputPollCallback);
   
   _core.getSystemAVInfo(&_systemAVInfo);
-
-  _logger->debug(TAG "retro_system_av_info");
-  _logger->debug(TAG "  base_width   = %u", _systemAVInfo.geometry.base_width);
-  _logger->debug(TAG "  base_height  = %u", _systemAVInfo.geometry.base_height);
-  _logger->debug(TAG "  max_width    = %u", _systemAVInfo.geometry.max_width);
-  _logger->debug(TAG "  max_height   = %u", _systemAVInfo.geometry.max_height);
-  _logger->debug(TAG "  aspect_ratio = %f", _systemAVInfo.geometry.aspect_ratio);
-  _logger->debug(TAG "  fps          = %f", _systemAVInfo.timing.fps);
-  _logger->debug(TAG "  sample_rate  = %f", _systemAVInfo.timing.sample_rate);
-
-  if (_systemAVInfo.geometry.aspect_ratio <= 0.0f)
-  {
-    _systemAVInfo.geometry.aspect_ratio = (float)_systemAVInfo.geometry.base_width / (float)_systemAVInfo.geometry.base_height;
-  }
-
-  const struct retro_hw_render_callback* cb = _needsHardwareRender ? &_hardwareRenderCallback : NULL;
-
-  if (!_video->setGeometry(_systemAVInfo.geometry.base_width, _systemAVInfo.geometry.base_height, _systemAVInfo.geometry.max_width, _systemAVInfo.geometry.max_height, _systemAVInfo.geometry.aspect_ratio, _pixelFormat, cb))
-  {
+  if (!handleSystemAVInfoChanged())
     goto error;
-  }
-  
-  if (!_audio->setRate(_systemAVInfo.timing.sample_rate))
-  {
-    goto error;
-  }
-
-  if (_needsHardwareRender)
-  {
-    _hardwareRenderCallback.context_reset();
-  }
   
   return true;
   
@@ -1212,8 +1183,12 @@ bool libretro::Core::setSystemAVInfo(const struct retro_system_av_info* data)
 {
   _systemAVInfo = *data;
 
-  _logger->debug(TAG "retro_system_av_info");
+  return handleSystemAVInfoChanged();
+}
 
+bool libretro::Core::handleSystemAVInfoChanged()
+{
+  _logger->debug(TAG "retro_system_av_info");
   _logger->debug(TAG "  base_width   = %u", _systemAVInfo.geometry.base_width);
   _logger->debug(TAG "  base_height  = %u", _systemAVInfo.geometry.base_height);
   _logger->debug(TAG "  max_width    = %u", _systemAVInfo.geometry.max_width);
@@ -1234,7 +1209,41 @@ bool libretro::Core::setSystemAVInfo(const struct retro_system_av_info* data)
     return false;
   }
 
+  if (_needsHardwareRender)
+  {
+    _hardwareRenderCallback.context_reset();
+  }
+
+  if (!_audio->setRate(_systemAVInfo.timing.sample_rate))
+  {
+    return false;
+  }
+
+  resetVsync();
+
   return true;
+}
+
+void libretro::Core::resetVsync()
+{
+  SDL_DisplayMode displayMode;
+  int monitorRefreshRate = 60; // assume 60Hz if we can't get an actual value
+  if (SDL_GetCurrentDisplayMode(0, &displayMode) == 0 && displayMode.refresh_rate > 0)
+  {
+    monitorRefreshRate = displayMode.refresh_rate;
+  }
+
+  // give two fps of leniency so things like 60.1 NES will run on 59.97 monitors
+  if (_systemAVInfo.timing.fps > monitorRefreshRate + 2)
+  {
+    // requested refresh rate is greater than monitor refresh rate, disable vsync
+    SDL_GL_SetSwapInterval(0);
+  }
+  else
+  {
+    // requested refresh rate is greater than monitor refresh rate, disable vsync
+    SDL_GL_SetSwapInterval(1);
+  }
 }
 
 bool libretro::Core::setSubsystemInfo(const struct retro_subsystem_info* data)
