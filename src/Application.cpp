@@ -53,7 +53,6 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #define TAG "[APP] "
 
 //#define DISPLAY_FRAMERATE 1
-//#define DEBUG_FRAMERATE 1
 
 //#define DEBUG_AUDIO 1
 
@@ -409,6 +408,18 @@ void Application::processEvents()
   }
 }
 
+void Application::pauseForBadPerformance()
+{
+  if (hardcore())
+  {
+    _fsm.pauseGame();
+
+    MessageBox(g_mainWindow, "Game has been paused.\n\n"
+      "Your system doesn't appear to be able to run this core at the desired speed. Consider changing some of the settings for the core.",
+      "Performance Problem Detected", MB_OK);
+  }
+}
+
 void Application::runTurbo()
 {
   const auto tTurboStart = std::chrono::steady_clock::now();
@@ -453,189 +464,57 @@ void Application::runTurbo()
 
 void Application::runSmoothed()
 {
-  const unsigned int TARGET_FRAMES = (int)round(_core.getSystemAVInfo()->timing.fps * 100);
-  const unsigned int SMOOTHING_FRAMES = 64;
-  uint32_t frameMicroseconds[SMOOTHING_FRAMES];
-#ifdef DEBUG_FRAMERATE
-  char renders[SMOOTHING_FRAMES + 1];
-#endif
-  uint32_t totalMicroseconds;
-  int frameIndex = 0;
-  int nFaults = 0;
-  int nRecoveries = 0;
-  bool canVsync = true;
-  bool vsyncOn = true;
+  int numFrames = 0;
+  auto tFirstFrame = std::chrono::steady_clock::now();
+  int numFaults = 0;
 
-  const unsigned int SMOOTHING_RATES = 1;
-  int skipRates[SMOOTHING_RATES];
-  int totalSkipRate = 0;
-  int skipIndex = 0;
-  int skipRate = 0;
-  int nextSkip = 0;
-
-  constexpr int SKIP_DROPPED = 1;
-  constexpr int SKIP_PLANNED = 2;
-  int skipFrame = 0;
-
-  int skippedFrames = 0;
-  int totalDroppedFrames = 0;
-  int totalSkippedFrames = 0;
-
-#ifdef DEBUG_FRAMERATE
-  memset(renders, 0, sizeof(renders));
-#endif
-
-  for (unsigned int i = 0; i < SMOOTHING_RATES; ++i)
-    skipRates[i] = SMOOTHING_FRAMES * 100;
-  totalSkipRate = SMOOTHING_FRAMES * 100 * SMOOTHING_RATES;
-
-  // if the system wants to render more frames than the display is capable of, turn off vsync
-  {
-    SDL_DisplayMode displayMode;
-
-    int refreshRate = 60; // assume 60Hz if we can't get an actual value
-    if (SDL_GetCurrentDisplayMode(0, &displayMode) == 0 && displayMode.refresh_rate > 0)
-      refreshRate = displayMode.refresh_rate;
-
-    if (TARGET_FRAMES / 100 > (unsigned)refreshRate + 1) // allow 60.1Hz NES to vsync on 59.97 monitor
-    {
-      canVsync = false;
-      vsyncOn = false;
-      SDL_GL_SetSwapInterval(0);
-    }
-
-    _logger.info(TAG "attempting to achieve %u.%02u fps (vsync %s)", TARGET_FRAMES / 100, TARGET_FRAMES % 100,
-      (SDL_GL_GetSwapInterval() == 1) ? "on" : "off");
-  }
-
-  const auto tFirstFrameStart = std::chrono::steady_clock::now();
-
-  // do a few frames with audio (and no event processing) to establish a baseline
-  constexpr int STARTUP_FRAMES = 2;
-  for (int i = 0; i < STARTUP_FRAMES; ++i)
-  {
-    _core.step(true, true);
-    RA_DoAchievementsFrame();
-  }
-
-  const auto tFirstFrameEnd = std::chrono::steady_clock::now();
-  const auto tFirstFrameElapsed = std::chrono::duration_cast<std::chrono::microseconds>(tFirstFrameEnd - tFirstFrameStart);
-
-  const auto firstFrameElapsedMicroseconds = (uint32_t)tFirstFrameElapsed.count() / STARTUP_FRAMES;
-  for (unsigned int i = 0; i < SMOOTHING_FRAMES; ++i)
-    frameMicroseconds[i] = firstFrameElapsedMicroseconds;
-  totalMicroseconds = firstFrameElapsedMicroseconds * SMOOTHING_FRAMES;
-
-#ifdef DEBUG_FRAMERATE
-  {
-    const unsigned int fps = (SMOOTHING_FRAMES * 1000000) / (totalMicroseconds / 100);
-    _logger.info(TAG "FPS: initial frames, fps:%u.%02u", fps / 100, fps % 100);
-  }
-#endif
-
-  // our rolling window has been populated with data from the startup frames, start the processing loop
   do
   {
-    auto tFrameStart = std::chrono::steady_clock::now();
-
+    _processingEvents = true;
     processEvents();
-
-    // state is not running - return to outer handler
+    _processingEvents = false;
     if (_fsm.currentState() != Fsm::State::GameRunning)
-      break;
+      return;
 
-    // handle fast forwarding
     if (_config.getFastForwarding())
     {
+      // do five frames without audio
       runTurbo();
-      continue;
-    }
-
-    // state is running - do one frame with audio
-    if (!skipFrame)
-    {
-      // render it
-      _core.step(true, true);
-
-      // check for periodic SRAM flush
-      _states.periodicSaveSRAM(&_core);
-
-      skippedFrames = 0;
-
-#ifdef DEBUG_FRAMERATE
-      renders[frameIndex] = '-';
-#endif
+      numFrames += 5;
     }
     else
     {
-#ifdef DEBUG_FRAMERATE
-      renders[frameIndex] = (skipFrame == SKIP_PLANNED) ? '.' : '_';
-#endif
+      // do one frame with audio
+      _core.step(true, true);
+      RA_DoAchievementsFrame();
 
-      if (skipFrame == SKIP_PLANNED)
-        ++totalSkippedFrames;
-      else
-        ++totalDroppedFrames;
-
-      // four skipped frames in a row is a fault - render anyway
-      if (++skippedFrames == 4)
-      {
-        skippedFrames = 0;
-
-        // render it
-        _core.step(true, true);
-
-        // check for periodic SRAM flush
-        _states.periodicSaveSRAM(&_core);
-
-#ifdef DEBUG_FRAMERATE
-        renders[frameIndex] = 'F';
-#endif
-      }
-      else
-      {
-        // dont render it
-        _core.step(false, true);
-      }
+      _audioGeneratedDuringFastForward = 0;
+      ++numFrames;
     }
 
-    RA_DoAchievementsFrame();
-
-    const auto tFrameEnd = std::chrono::steady_clock::now();
-    const auto tFrameElapsed = std::chrono::duration_cast<std::chrono::microseconds>(tFrameEnd - tFrameStart);
-
-    if (tFrameElapsed > std::chrono::milliseconds(500))
+    if (numFrames > 50)
     {
-      // processEvents will block while the user is interacting with the UI. treat this frame
-      // as a fault and ignore it. If the framerate returns to normal, it'll be canceled out.
-#ifdef DEBUG_FRAMERATE
-      renders[frameIndex] = 'X';
-#endif
-      skipFrame = 0;
-      continue;
-    }
+      const auto tNow = std::chrono::steady_clock::now();
+      const auto tElapsed = std::chrono::duration_cast<std::chrono::microseconds>(tNow - tFirstFrame).count();
+      const uint32_t fps = (uint32_t)(((long long)numFrames * 1000000) / (tElapsed / 100));
 
-    totalMicroseconds -= frameMicroseconds[frameIndex];
-    const auto frameElapsedMicroseconds = (uint32_t)tFrameElapsed.count();
-    frameMicroseconds[frameIndex] = frameElapsedMicroseconds;
-    totalMicroseconds += frameElapsedMicroseconds;
+      if (_config.getFastForwarding())
+      {
+        if (fps < 2000)
+        {
+          if (++numFaults == 5)
+          {
+            pauseForBadPerformance();
+            numFaults = 0;
+          }
+        }
+        else if (numFaults > 0)
+        {
+          numFaults--;
+        }
+      }
 
-    frameIndex++;
-    frameIndex %= SMOOTHING_FRAMES;
-
-    // determine our current frame rate
-    //   captured frames / total microseconds = n frames / second (1000000 micro seconds)
-    //   so: n fames = captured frames * 1000000 / total microseconds
-    // however, our fps is acurrate to two places after the decimal, so we need to multiply the
-    // result by 100. this overflows the size of an int, so instead of multiplying by an
-    // additional 100, we divide totalMicroseconds by 100.
-    const unsigned int fps = (SMOOTHING_FRAMES * 1000000) / (totalMicroseconds / 100);
-    static_assert(SMOOTHING_FRAMES * 1000000 <= 0xFFFFFFFFU, "SMOOTHING_FRAMES multiplication exceeds sizeof(uint)");
-    skipFrame = (fps < TARGET_FRAMES - 200) ? SKIP_DROPPED : 0; // TARGET_FRAMES is in hundredths of fps
-
-    if (frameIndex == 0)
-    {
-#if DISPLAY_FRAMERATE
+#ifdef DISPLAY_FRAMERATE
       char buffer[256];
       GetWindowText(g_mainWindow, buffer, sizeof(buffer));
       char* ptr = buffer + strlen(buffer);
@@ -650,124 +529,9 @@ void Application::runSmoothed()
       sprintf(ptr, " - %u.%02ufps", fps / 100, fps % 100);
       SetWindowText(g_mainWindow, buffer);
 #endif
-#ifdef DEBUG_FRAMERATE
-      _logger.info(TAG "FPS: rendered frames %s (vsync %s %d)", renders, (SDL_GL_GetSwapInterval() == 1) ? "on" : "off", nRecoveries);
-      _logger.info(TAG "FPS: %u.%02u (%d skipped, %d dropped, %d faults)", fps / 100, fps % 100, totalSkippedFrames, totalDroppedFrames, nFaults);
-#endif
 
-      if (fps < TARGET_FRAMES * 3 / 4)
-      {
-        // if we drop below 75% target fps for 5 frames in a row, inform the user they need a better machine
-        if (++nFaults == 5)
-        {
-          if (SDL_GL_GetSwapInterval() == 1)
-          {
-            // try turning off VSYNC to see if we can achieve the target framerate
-#ifdef DEBUG_FRAMERATE
-            _logger.info(TAG "FPS: disabling vsync");
-#endif
-            SDL_GL_SetSwapInterval(0);
-            vsyncOn = false;
-          }
-          else if (hardcore())
-          {
-            _fsm.pauseGame();
-
-            MessageBox(g_mainWindow, "Game has been paused.\n\nYour system doesn't appear to be able to run this core at the desired speed. Consider changing some of the settings for the core.", "Performance Problem Detected", MB_OK);
-          }
-
-          nFaults = 0;
-        }
-      }
-      else if (nFaults > 0)
-      {
-        --nFaults;
-        if (nFaults > 0 && fps > TARGET_FRAMES * 9 / 10)
-          --nFaults;
-      }
-
-      // always try to back off skipped frames to see if they were added due to a particularly demanding chunk of code
-      if (totalSkippedFrames > 2)
-      {
-        totalSkippedFrames -= 2;
-        totalDroppedFrames += totalSkippedFrames / 2;
-      }
-      else
-      {
-        totalSkippedFrames = 0;
-      }
-
-      // determine how frequently we should skip a frame
-      // in the next interval - 233 would indicate we should skip (on average) one frame of every 2 1/3 frames
-      if (totalDroppedFrames > 0)
-      {
-        // if we dropped more than 25% of the frames this interval, try disabling VSYNC
-        if ((unsigned)totalDroppedFrames > SMOOTHING_FRAMES / 4)
-        {
-          if (SDL_GL_GetSwapInterval() == 1)
-          {
-#ifdef DEBUG_FRAMERATE
-            _logger.info(TAG "FPS: disabling vsync");
-#endif
-            SDL_GL_SetSwapInterval(0);
-            vsyncOn = false;
-          }
-        }
-
-        skipRate = SMOOTHING_FRAMES * 100 / totalDroppedFrames;
-
-        nRecoveries = 0;
-      }
-      else
-      {
-        skipRate = SMOOTHING_FRAMES * 100;
-
-        if (!vsyncOn && canVsync)
-        {
-          if (++nRecoveries == 5)
-          {
-#ifdef DEBUG_FRAMERATE
-            _logger.info(TAG "FPS: re-enabling vsync");
-#endif
-            SDL_GL_SetSwapInterval(1);
-            vsyncOn = true;
-          }
-        }
-      }
-
-      totalSkipRate -= skipRates[skipIndex];
-      skipRates[skipIndex] = skipRate;
-      totalSkipRate += skipRate;
-
-      skipIndex++;
-      skipIndex %= SMOOTHING_RATES;
-
-      skipRate = totalSkipRate / SMOOTHING_RATES;
-      if (skipRate == SMOOTHING_FRAMES * 100)
-      {
-        nextSkip = 0;
-      }
-      else
-      {
-        nextSkip = skipRate;
-#ifdef DEBUG_FRAMERATE
-        _logger.info(TAG "FPS: skip rate set at %d.%02d", skipRate / 100, skipRate % 100);
-#endif
-      }
-
-      totalSkippedFrames = 0;
-      totalDroppedFrames = 0;
-    }
-
-    if (nextSkip > 0)
-    {
-      if (nextSkip <= 100)
-      {
-        skipFrame = SKIP_PLANNED;
-        nextSkip += skipRate;
-      }
-
-      nextSkip -= 100;
+      numFrames = 0;
+      tFirstFrame = tNow;
     }
 
   } while (true);
@@ -788,15 +552,7 @@ void Application::run()
       {
         case Fsm::State::GameRunning:
         {
-          if (_config.getFastForwarding())
-          {
-            // do five frames without audio
-            runTurbo();
-          }
-          else
-          {
-            runSmoothed();
-          }
+          runSmoothed();
           continue;
         }
 
@@ -1369,7 +1125,12 @@ bool Application::loadGame(const std::string& path)
   }
 
   // reset the vertical sync flag
-  SDL_GL_SetSwapInterval(1);
+  _core.resetVsync();
+
+  _numAudioFaults = 0;
+  _numAudioRecoveries = 0;
+  _vsyncDisabledByAudioFaults = false;
+  _audioGeneratedDuringFastForward = 0;
 
   if (_core.getNumDiscs() == 0)
   {
@@ -1565,7 +1326,7 @@ void Application::s_audioCallback(void* udata, Uint8* stream, int len)
 {
   Application* app = (Application*)udata;
 
-  if (app->_fsm.currentState() == Fsm::State::GameRunning)
+  if (app->_fsm.currentState() == Fsm::State::GameRunning && !app->_processingEvents)
   {
     size_t avail = app->_fifo.occupied();
 
@@ -1574,9 +1335,45 @@ void Application::s_audioCallback(void* udata, Uint8* stream, int len)
       app->_fifo.read((void*)stream, avail);
       memset((void*)(stream + avail), 0, len - avail);
       app->_logger.debug("[AUD] Audio hardware requested %d bytes, only %zu available, padding with zeroes", len, avail);
+
+      app->_numAudioRecoveries = 0;
+      if (++app->_numAudioFaults > 200)
+      {
+        if (app->_config.getFastForwarding() && app->_audioGeneratedDuringFastForward < 10)
+        {
+          // some cores don't generate audio when fast forwarding
+        }
+        else if (SDL_GL_GetSwapInterval() == 1)
+        {
+          // try turning off VSYNC to see if we can achieve the target framerate
+          SDL_GL_SetSwapInterval(0);
+          app->_vsyncDisabledByAudioFaults = true;
+        }
+        else
+        {
+          app->pauseForBadPerformance();
+        }
+
+        app->_numAudioFaults /= 2;
+      }
     }
     else
     {
+      if (app->_numAudioFaults > 3)
+      {
+        app->_numAudioFaults -= 3;
+        if (app->_config.getFastForwarding())
+          ++app->_audioGeneratedDuringFastForward;
+      }
+      else if (app->_vsyncDisabledByAudioFaults)
+      {
+        if (++app->_numAudioRecoveries == 5)
+        {
+          SDL_GL_SetSwapInterval(1);
+          app->_vsyncDisabledByAudioFaults = false;
+        }
+      }
+
       app->_fifo.read((void*)stream, len);
 #ifdef DEBUG_AUDIO
       app->_logger.debug("[AUD] Audio hardware requested %d bytes", len);
