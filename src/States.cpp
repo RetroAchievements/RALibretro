@@ -29,6 +29,7 @@ along with RALibRetro.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <jsonsax/jsonsax.h>
 #include <rcheevos/include/rc_consoles.h>
+#include <miniz/miniz.h>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -327,6 +328,82 @@ bool States::loadRAState1(unsigned char* input, size_t size)
   return ret;
 }
 
+static void* decompressRzip(uint8_t* data, size_t* size, Logger* logger)
+{
+  const uint32_t headerSize = 20;
+
+  if (memcmp(data, "#RZIPv", 6) != 0 || data[7] != '#')
+    return NULL;
+
+  if (data[6] != 1)
+  {
+    logger->warn(TAG "Unsupported rzip version: %d", (int)data[6]);
+    return NULL;
+  }
+
+  const uint32_t chunkSize = (data[11] << 24) | (data[10] << 16) | (data[9] << 8) | (data[8]);
+  if (chunkSize == 0)
+    return NULL;
+
+  uint64_t decompressedSize = ((uint64_t)data[19] << 56) | ((uint64_t)data[18] << 48) |
+    ((uint64_t)data[17] << 40) | ((uint64_t)data[16] << 32) | ((uint64_t)data[15] << 24) |
+    ((uint64_t)data[14] << 16) | ((uint64_t)data[13] << 8) | ((uint64_t)data[12]);
+  if (decompressedSize == 0)
+    return NULL;
+
+  uint8_t* decompressed = (uint8_t*)malloc(decompressedSize);
+  if (decompressed == NULL)
+    return NULL;
+
+  uint8_t* writePtr = decompressed;
+  uint64_t remaining = decompressedSize;
+  mz_stream stream;
+
+  data += headerSize;
+  do {
+    const uint32_t compressedChunkHeaderSize = 4;
+    const uint32_t compressedChunkSize = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
+    if (compressedChunkSize == 0)
+    {
+      free(decompressed);
+      return NULL;
+    }
+
+    memset(&stream, 0, sizeof(stream));
+    stream.next_in = data + compressedChunkHeaderSize;
+    stream.avail_in = compressedChunkSize;
+    stream.next_out = writePtr;
+    stream.avail_out = (uint32_t)remaining;
+
+    int result = mz_inflateInit2(&stream, MZ_DEFAULT_WINDOW_BITS);
+    if (result == MZ_OK)
+    {
+      result = mz_inflate(&stream, MZ_FINISH);
+      mz_inflateEnd(&stream);
+    }
+
+    if (result != MZ_OK && result != MZ_STREAM_END)
+    {
+      logger->error(TAG "miniz error %d", result);
+      free(decompressed);
+      return NULL;
+    }
+
+    // expectation: stream.total_out == remaining (done) or stream.total_out == chunk_size (more to go)
+    if (remaining <= stream.total_out)
+      break;
+
+    // ASSERT: stream.total_out == chunk_size
+    remaining -= stream.total_out;
+    writePtr += stream.total_out;
+
+    data += (compressedChunkSize + compressedChunkHeaderSize);
+  } while (true);
+
+  *size = decompressedSize;
+  return decompressed;
+}
+
 bool States::loadState(const std::string& path)
 {
   if (!RA_WarnDisableHardcore("load a state"))
@@ -345,9 +422,15 @@ bool States::loadState(const std::string& path)
 
   if (memcmp(data, "#RZIPv", 6) == 0)
   {
-    _logger->error(TAG "Compressed save states not supported");
-    MessageBox(g_mainWindow, "Compressed save states not supported", "RALibRetro", MB_OK);
-    return false;
+    void* decompressed = decompressRzip((uint8_t*)data, &size, _logger);
+    if (decompressed == NULL)
+    {
+      _logger->error(TAG "Failed to decompress rzip save state");
+      MessageBox(g_mainWindow, "Failed to decompress rzip save state", "RALibRetro", MB_OK);
+    }
+
+    free(data);
+    data = decompressed;
   }
 
   bool ret = true;
