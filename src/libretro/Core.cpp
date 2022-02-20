@@ -996,6 +996,16 @@ bool libretro::Core::getVfsInterface(struct retro_vfs_interface_info* data)
 
 #endif
 
+bool libretro::Core::getLEDInterface(struct retro_led_interface* data)
+{
+  data->set_led_state = &s_setLEDState;
+  return true;
+}
+
+void libretro::Core::setLEDState(int led, int state)
+{
+}
+
 bool libretro::Core::setContentInfoOverride(const struct retro_system_content_info_override* data)
 {
   _contentInfoOverride = alloc<struct retro_system_content_info_override>(1);
@@ -1855,6 +1865,10 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
     ret = getVfsInterface((struct retro_vfs_interface_info*)data);
     break;
 
+  case RETRO_ENVIRONMENT_GET_LED_INTERFACE:
+    ret = getLEDInterface((struct retro_led_interface*)data);
+    break;
+
   case RETRO_ENVIRONMENT_GET_INPUT_BITMASKS:
     ret = getInputBitmasks((bool*)data);
     break;
@@ -2125,4 +2139,9 @@ bool libretro::Core::s_setRumbleCallback(unsigned port, enum retro_rumble_effect
 bool libretro::Core::setRumble(unsigned port, enum retro_rumble_effect effect, uint16_t strength)
 {
   return _input->setRumble(port, effect, strength);
+}
+
+void libretro::Core::s_setLEDState(int led, int state)
+{
+  s_instance->setLEDState(led, state);
 }
