@@ -160,6 +160,7 @@ protected:
   std::string _gameFileName;
   void*       _gameData;
   unsigned    _validSlots;
+  bool        _gamePathIsTemporary;
 
   HMENU _menu;
   HMENU _cdRomMenu;

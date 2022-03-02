@@ -977,6 +977,32 @@ bool Application::loadGame(const std::string& path)
 
       return false;
     }
+
+    /* when a core needs fullpath for a zip file, RetroArch unzips the zip file (unless blocked by the core) */
+    if (!info->block_extract)
+    {
+      _logger.debug(TAG "%s requires uncompressed content - extracting", info->library_name);
+
+      data = util::loadZippedFile(&_logger, path, &size, unzippedFileName);
+      if (data == NULL)
+      {
+        MessageBox(g_mainWindow, "Unable to open file", "Error", MB_OK);
+        return false;
+      }
+
+      std::string newPath = util::replaceFileName(path, unzippedFileName.c_str());
+      util::saveFile(&_logger, newPath, data, size);
+      free(data);
+
+      if (!loadGame(newPath))
+      {
+        util::deleteFile(newPath);
+        return false;
+      }
+
+      _gamePathIsTemporary = true;
+      return true;
+    }
   }
 
   if (issupportedzip)
@@ -1144,6 +1170,7 @@ bool Application::loadGame(const std::string& path)
   }
 
   _gamePath = path;
+  _gamePathIsTemporary = false;
 
   for (size_t i = 0; i < _recentList.size(); i++)
   {
@@ -1244,6 +1271,13 @@ bool Application::unloadGame()
   romUnloaded(&_logger);
 
   _video.clear();
+
+  if (_gamePathIsTemporary)
+  {
+    _logger.debug(TAG "Deleting temporary content %s", _gamePath);
+    util::deleteFile(_gamePath);
+    _gamePathIsTemporary = false;
+  }
 
   _gamePath.clear();
   _gameFileName.clear();
