@@ -59,6 +59,8 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 HWND g_mainWindow;
 Application app;
 
+#define CDROM_MENU_INDEX 10
+
 static void s_onRotationChanged(Video::Rotation oldRotation, Video::Rotation newRotation)
 {
   app.onRotationChanged(oldRotation, newRotation);
@@ -273,7 +275,7 @@ bool Application::init(const char* title, int width, int height)
     g_mainWindow = wminfo.info.win.window;
 
     _menu = LoadMenu(NULL, "MAIN");
-    _cdRomMenu = GetSubMenu(GetSubMenu(_menu, 0), 10);
+    _cdRomMenu = GetSubMenu(GetSubMenu(_menu, 0), CDROM_MENU_INDEX);
     assert(GetMenuItemID(_cdRomMenu, 0) == IDM_CD_OPEN_TRAY);
 
     SetMenu(g_mainWindow, _menu);
@@ -305,6 +307,7 @@ bool Application::init(const char* title, int width, int height)
   _coreName.clear();
   _gameData = NULL;
   _validSlots = 0;
+  _isDriveFloppy = false;
   lastHardcore = hardcore();
   cancelLoad = false;
   updateMenu();
@@ -811,6 +814,49 @@ bool Application::loadCore(const std::string& coreName)
     ++scan;
   }
   RA_SetUserAgentDetail(coreDetail.c_str());
+
+  MENUITEMINFO info;
+  memset(&info, 0, sizeof(info));
+  info.cbSize = sizeof(info);
+  info.fMask = MIIM_TYPE | MIIM_DATA;
+
+  switch (_system)
+  {
+  case RC_CONSOLE_AMIGA:
+  case RC_CONSOLE_AMSTRAD_PC:
+  case RC_CONSOLE_APPLE_II:
+  case RC_CONSOLE_ATARI_ST:
+  case RC_CONSOLE_COMMODORE_64:
+  case RC_CONSOLE_MS_DOS:
+  case RC_CONSOLE_MSX:
+  case RC_CONSOLE_NINTENDO: // FDS
+  case RC_CONSOLE_ORIC:
+  case RC_CONSOLE_PC6000:
+  case RC_CONSOLE_PC8800:
+  case RC_CONSOLE_PC9800:
+  case RC_CONSOLE_SHARPX1:
+  case RC_CONSOLE_VIC20:
+  case RC_CONSOLE_ZX_SPECTRUM:
+    info.dwTypeData = (LPSTR)"Insert Disk";
+    SetMenuItemInfo(_menu, IDM_CD_OPEN_TRAY, false, &info);
+    info.dwTypeData = (LPSTR)"Floppy Drive";
+    SetMenuItemInfo(GetSubMenu(_menu, 0), CDROM_MENU_INDEX, true, &info);
+    _isDriveFloppy = true;
+    break;
+
+  default:
+    info.dwTypeData = (LPSTR)"Close Tray";
+    SetMenuItemInfo(_menu, IDM_CD_OPEN_TRAY, false, &info);
+    info.dwTypeData = (LPSTR)"CD-ROM";
+    SetMenuItemInfo(GetSubMenu(_menu, 0), CDROM_MENU_INDEX, true, &info);
+    _isDriveFloppy = false;
+    break;
+  }
+  EnableMenuItem(_cdRomMenu, IDM_CD_OPEN_TRAY, MF_DISABLED);
+
+  size_t menuItemCount = GetMenuItemCount(_cdRomMenu);
+  while (menuItemCount > 1)
+    DeleteMenu(_cdRomMenu, --menuItemCount, MF_BYPOSITION);
 
   return true;
 }
@@ -1582,7 +1628,9 @@ void Application::updateDiscMenu(bool updateLabels)
     info.cbSize = sizeof(info);
     GetMenuItemInfo(_menu, IDM_CD_OPEN_TRAY, false, &info);
     info.fMask = MIIM_TYPE | MIIM_DATA;
-    info.dwTypeData = (LPSTR)(trayOpen ? "Close Tray" : "Open Tray");
+    info.dwTypeData = (LPSTR)(_isDriveFloppy ?
+      (trayOpen ? "Insert Disk" : "Remove Disk") :
+      (trayOpen ? "Close Tray" : "Open Tray"));
     SetMenuItemInfo(_menu, IDM_CD_OPEN_TRAY, false, &info);
 
     for (; i < coreDiscCount; i++)

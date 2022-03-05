@@ -150,6 +150,7 @@ protected:
   KeyBinds _keybinds;
   std::vector<RecentItem> _recentList;
   std::vector<std::string> _discPaths;
+  bool _isDriveFloppy;
 
   Allocator<256 * 1024> _allocator;
 
