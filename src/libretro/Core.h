@@ -143,6 +143,7 @@ namespace libretro
     bool setDiskControlInterface(const struct retro_disk_control_callback* data);
     bool setDiskControlExtInterface(const struct retro_disk_control_ext_callback* data);
     bool getVfsInterface(struct retro_vfs_interface_info* data);
+    bool getLEDInterface(struct retro_led_interface* data);
     bool setHWRender(struct retro_hw_render_callback* data);
     bool getVariable(struct retro_variable* data);
     bool setVariables(const struct retro_variable* data);
@@ -185,6 +186,7 @@ namespace libretro
     retro_proc_address_t getProcAddress(const char* symbol);
     void                 logCallback(enum retro_log_level level, const char *fmt, va_list args);
     bool                 setRumble(unsigned port, enum retro_rumble_effect effect, uint16_t strength);
+    void                 setLEDState(int led, int state);
 
     // Static callbacks that use s_instance to call into the core's implementation
     static bool                 s_environmentCallback(unsigned cmd, void* data);
@@ -197,6 +199,7 @@ namespace libretro
     static retro_proc_address_t s_getProcAddress(const char* symbol);
     static void                 s_logCallback(enum retro_log_level level, const char *fmt, ...);
     static bool                 s_setRumbleCallback(unsigned port, enum retro_rumble_effect effect, uint16_t strength);
+    static void                 s_setLEDState(int led, int state);
 
     LoggerComponent*                _logger;
     ConfigComponent*                _config;
