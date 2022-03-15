@@ -4,6 +4,11 @@
     "systems": [31],
     "platforms": "none"
   },
+  "arduous_libretro":{
+    "name": "Arduous",
+    "systems": [71],
+    "platforms": "none"
+  },
   "atari800_libretro":{
     "name": "Atari800",
     "systems": [50],
@@ -100,8 +105,7 @@
   },
   "cap32_libretro":{
     "name": "Caprice32",
-    "systems": [37],
-    "platforms": "none"
+    "systems": [37]
   },
   "citra_libretro":{
     "name": "Citra",
@@ -572,6 +576,11 @@
     "name": "SameBoy",
     "extensions": "gbc",
     "systems": [6],
+    "platforms": "none"
+  },
+  "sameduck_libretro":{
+    "name": "SameDuck",
+    "systems": [69],
     "platforms": "none"
   },
   "smsplus_libretro":{
