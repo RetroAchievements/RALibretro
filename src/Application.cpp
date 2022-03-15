@@ -1027,12 +1027,18 @@ bool Application::loadGame(const std::string& path)
     /* when a core needs fullpath for a zip file, RetroArch unzips the zip file (unless blocked by the core) */
     if (!info->block_extract)
     {
-      _logger.debug(TAG "%s requires uncompressed content - extracting", info->library_name);
+      _logger.info(TAG "%s requires uncompressed content - extracting", info->library_name);
 
       data = util::loadZippedFile(&_logger, path, &size, unzippedFileName);
       if (data == NULL)
       {
         MessageBox(g_mainWindow, "Unable to open file", "Error", MB_OK);
+        return false;
+      }
+
+      if (unzippedFileName.empty())
+      {
+        MessageBox(g_mainWindow, "Could not determine which file to extract from zip", "Error", MB_OK);
         return false;
       }
 
