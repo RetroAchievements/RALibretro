@@ -10,6 +10,9 @@ CXX=g++
 
 ifeq ($(OS),Windows_NT)
   EXE=.exe
+  KERNEL=windows
+else
+  KERNEL := $(shell uname -s)
 endif
 
 # compile flags
@@ -38,9 +41,9 @@ OBJS=\
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-all: $(OUTDIR)/RAHasher$(EXE)
+all: $(OUTDIR)/RAHasher-$(ARCH)-$(KERNEL)$(EXE)
 
-$(OUTDIR)/RAHasher$(EXE): $(OBJS)
+$(OUTDIR)/RAHasher-$(ARCH)-$(KERNEL)$(EXE): $(OBJS)
 	mkdir -p $(OUTDIR)
 	$(CXX) -o $@ $+ $(LDFLAGS)
 
@@ -48,6 +51,6 @@ src/Git.cpp: etc/Git.cpp.template FORCE
 	cat $< | sed s/GITFULLHASH/`git rev-parse HEAD | tr -d "\n"`/g | sed s/GITMINIHASH/`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`/g | sed s/GITRELEASE/`git describe --tags | sed s/\-.*//g | tr -d "\n"`/g > $@
 
 clean:
-	rm -f $(OUTDIR)/RAHasher$(EXE) $(OBJS)
+	rm -f $(OUTDIR)/RAHasher-$(ARCH)-$(KERNEL)$(EXE) $(OBJS)
 
 .PHONY: clean FORCE
