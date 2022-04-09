@@ -79,12 +79,12 @@ void RebuildMenu()
 }
 
 
-//  sNameOut points to a 64 character buffer.
+//  sNameOut points to a 256 character buffer.
 //  sNameOut should have copied into it the estimated game title 
 //   for the ROM, if one can be inferred from the ROM.
 void GetEstimatedGameTitle(char* sNameOut)
 {
-    getGameName(sNameOut, 64);
+    getGameName(sNameOut, 256);
 }
 
 
