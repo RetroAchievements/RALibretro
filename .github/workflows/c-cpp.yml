@@ -56,14 +56,6 @@ jobs:
         uses: egor-tensin/setup-mingw@v2
       - name: Build
         run: make ARCH=x86
-      - name: Zip
-        if: startsWith(github.ref, 'refs/tags/')
-        run: make ARCH=x86 zip
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: RALibretro-x86*.zip
 
   RALibretro-Win64-cross-compile:
     runs-on: ubuntu-latest
@@ -80,14 +72,6 @@ jobs:
         uses: egor-tensin/setup-mingw@v2
       - name: Build
         run: make ARCH=x64
-      - name: Zip
-        if: startsWith(github.ref, 'refs/tags/')
-        run: make ARCH=x64 zip
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: RALibretro-x64*.zip
 
   RAHasher-x86:
     runs-on: ubuntu-latest

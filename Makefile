@@ -125,7 +125,7 @@ src/Git.cpp: etc/Git.cpp.template FORCE
 
 zip:
 	rm -f $(OUTDIR)/RALibretro-*.zip RALibretro-*.zip
-	zip -9 RALibretro-$(ARCH)-`git describe --tags | sed s/\-.*//g | tr -d "\n"`.zip $(OUTDIR)/RALibretro.exe
+	zip -9 RALibretro-`git describe | tr -d "\n"`.zip $(OUTDIR)/RALibretro.exe
 
 clean:
 	rm -f $(OUTDIR)/RALibretro.exe $(OBJS) $(OUTDIR)/RALibretro-*.zip RALibretro-*.zip
