@@ -584,6 +584,9 @@ int16_t Input::read(unsigned port, unsigned device, unsigned index, unsigned id)
         }
 
       case RETRO_DEVICE_POINTER:
+        if (index != 0) // we don't support multi-touch
+          return false;
+
         switch (id)
         {
           case RETRO_DEVICE_ID_POINTER_X: return _mouse._relative_x;

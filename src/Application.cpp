@@ -788,6 +788,11 @@ bool Application::loadCore(const std::string& coreName)
       // this setting must be off for hardcore mode, but defaults to enabled
       _config.deserialize("{\"fbneo-allow-patched-romsets\":\"disabled\"}");
     }
+    else if (coreName == "wasm4_libretro")
+    {
+      // we don't currently support RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK
+      _config.deserialize("{\"wasm4_audio_type\":\"normal\"}");
+    }
   }
 
   // tell the core to startup (must be done after reading configs)
