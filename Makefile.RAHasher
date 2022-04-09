@@ -55,6 +55,6 @@ zip:
 	zip -9 RAHasher-$(ARCH)-$(KERNEL)-`git describe --tags | sed s/\-.*//g | tr -d "\n"`.zip $(OUTDIR)/RAHasher$(EXE)
 
 clean:
-	rm -f $(OUTDIR)/RAHasher-$(ARCH)-$(KERNEL)$(EXE) $(OBJS)
+	rm -f $(OUTDIR)/RAHasher$(EXE) $(OBJS)
 
 .PHONY: clean FORCE
