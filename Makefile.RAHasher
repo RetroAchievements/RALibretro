@@ -50,11 +50,11 @@ $(OUTDIR)/RAHasher$(EXE): $(OBJS)
 src/Git.cpp: etc/Git.cpp.template FORCE
 	cat $< | sed s/GITFULLHASH/`git rev-parse HEAD | tr -d "\n"`/g | sed s/GITMINIHASH/`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`/g | sed s/GITRELEASE/`git describe --tags | sed s/\-.*//g | tr -d "\n"`/g > $@
 
-zip:
-	rm -f $(OUTDIR)/RALHasher-*.zip RAHasher-*.zip
+zip: $(OUTDIR)/RAHasher$(EXE)
+	rm -f $(OUTDIR)/RAHasher-*.zip RAHasher-*.zip
 	zip -9 RAHasher-$(ARCH)-$(KERNEL)-`git describe --tags | sed s/\-.*//g | tr -d "\n"`.zip $(OUTDIR)/RAHasher$(EXE)
 
 clean:
-	rm -f $(OUTDIR)/RAHasher$(EXE) $(OBJS)
+	rm -f $(OUTDIR)/RAHasher$(EXE) $(OBJS) $(OUTDIR)/RAHasher*.zip RAHasher*.zip
 
 .PHONY: clean FORCE
