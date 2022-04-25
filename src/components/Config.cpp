@@ -24,6 +24,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #include "RA_Interface.h"
 
 #include <rcheevos/src/rcheevos/rc_libretro.h>
+#include <rcheevos/include/rc_consoles.h>
 
 #ifdef _WINDOWS
 #define WIN32_LEAN_AND_MEAN
@@ -435,7 +436,7 @@ void Config::deserialize(const char* json)
   _updated = true;
 }
 
-bool Config::validateSettingsForHardcore(const char* library_name, bool prompt)
+bool Config::validateSettingsForHardcore(const char* library_name, int console_id, bool prompt)
 {
 #ifdef _WINDOWS
   // previously detected a disallowed setting and not trying to enable hardcore, return success
@@ -513,6 +514,23 @@ bool Config::validateSettingsForHardcore(const char* library_name, bool prompt)
     }
   }
 #endif
+
+  if (RA_HardcoreModeIsActive() && !rc_libretro_is_system_allowed(library_name, console_id))
+  {
+    char message[256];
+    if (prompt)
+    {
+      snprintf(message, sizeof(message), "earn achievements for %s using %s", rc_console_name(console_id), library_name);
+      if (!RA_WarnDisableHardcore(message))
+        return false;
+    }
+    else
+    {
+      snprintf(message, sizeof(message), "You cannot earn hardcore achievements for %s using %s", rc_console_name(console_id), library_name);
+      MessageBox(g_mainWindow, message, "Error", MB_OK);
+      return false;
+    }
+  }
 
   return true;
 }

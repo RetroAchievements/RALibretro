@@ -297,7 +297,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     <ClInclude Include="libretro\Core.h" />
     <ClInclude Include="libretro\libretro.h" />
     <ClInclude Include="rcheevos\include\rcheevos.h" />
-    <ClInclude Include="rcheevos\include\rconsoles.h" />
+    <ClInclude Include="rcheevos\include\rc_consoles.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
   <ItemGroup>
