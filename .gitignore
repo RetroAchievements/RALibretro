@@ -7,9 +7,9 @@
 *.swp
 *.log
 *.pdb
+*.zip
 .vs
 /bin
 /bin64
-/RALibretro*.zip
 /obj
 /src/Git.cpp
