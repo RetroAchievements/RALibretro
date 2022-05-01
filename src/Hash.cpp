@@ -19,6 +19,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Hash.h"
 
+#include "Core.h"
 #include "Util.h"
 
 #include <RA_Interface.h>
