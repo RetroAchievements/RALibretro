@@ -229,7 +229,15 @@ void Memory::attachToCore(libretro::Core* core, int consoleId)
     if (memcmp(memoryRegions.data, g_memoryRegions.data, memoryRegions.count * sizeof(memoryRegions.data[0])) == 0 &&
         memcmp(memoryRegions.size, g_memoryRegions.size, memoryRegions.count * sizeof(memoryRegions.size[0])) == 0)
     {
+      _logger->info(TAG "no change detected. using existing memory map");
       return;
+    }
+
+    _logger->info(TAG "change detected. updating memory map");
+    for (int i = 0; i < memoryRegions.count; i++)
+    {
+      if (memoryRegions.data[i] != g_memoryRegions.data[i])
+        _logger->info(TAG "memoryRegion[%d] changed from %p to %p", g_memoryRegions.data[i], memoryRegions.data[i]);
     }
   }
 
@@ -242,6 +250,7 @@ void Memory::attachToCore(libretro::Core* core, int consoleId)
   }
   else if (g_lastMemoryRefresh == 0)
   {
+    _logger->info(TAG "delaying memory bank installation");
     g_lastMemoryRefresh = clock();
     RA_ClearMemoryBanks();
     RA_InstallMemoryBank(0, deferredMemoryRead, memoryWrite0, g_memoryRegions.total_size);
@@ -253,6 +262,7 @@ static bool g_bVersionSupported = false;
 
 void Memory::installMemoryBanks()
 {
+  _logger->info(TAG "installing memory banks");
   RA_ClearMemoryBanks();
 
   // 0.78 DLL will crash if passed NULL as a read function - detect 0.79 DLL by looking for the _RA_SuspendRepaint export

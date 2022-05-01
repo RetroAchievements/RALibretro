@@ -1304,6 +1304,8 @@ void Application::resetGame()
 {
   if (isGameActive())
   {
+    _logger.info(TAG "resetting game");
+
     _core.resetGame();
     _video.clear();
     refreshMemoryMap();
