@@ -6,8 +6,7 @@
   },
   "arduous_libretro":{
     "name": "Arduous",
-    "systems": [71],
-    "platforms": "none"
+    "systems": [71]
   },
   "atari800_libretro":{
     "name": "Atari800",
@@ -725,6 +724,10 @@
     "name": "Virtual Jaguar",
     "systems": [17]
   },
+  "wasm4_libretro":{
+    "name": "WASM-4",
+    "systems": [72]
+  }
   "x1_libretro":{
     "name": "X1",
     "systems": [64],
