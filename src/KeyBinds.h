@@ -86,6 +86,7 @@ public:
     kReset,
 
     // Keyboard
+    kGameFocusToggle,
     kKeyboardInput  // (extra = key << 8 | pressed)
   };
 
@@ -124,6 +125,8 @@ public:
 
   std::string serializeBindings() const;
   bool deserializeBindings(const char* json);
+
+  bool hasGameFocus() const noexcept { return _gameFocus; }
 
 protected:
   libretro::LoggerComponent* _logger;

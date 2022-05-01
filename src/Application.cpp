@@ -965,7 +965,8 @@ void Application::updateMenu()
   else if (isGameActive())
   {
     char msg[256];
-    snprintf(msg, sizeof(msg), "%s %s - %s", _core.getSystemInfo()->library_name, _core.getSystemInfo()->library_version, getSystemName(_system));
+    snprintf(msg, sizeof(msg), "%s %s - %s%s", _core.getSystemInfo()->library_name, _core.getSystemInfo()->library_version,
+      getSystemName(_system), _keybinds.hasGameFocus() ? " [Game Focus]" : "");
     RA_UpdateAppTitle(msg);
   }
   else
@@ -2473,6 +2474,10 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
 
   case KeyBinds::Action::kKeyboardInput:
     _input.keyboardEvent(static_cast<enum retro_key>(extra >> 8), static_cast<bool>(extra & 0xFF));
+    break;
+
+  case KeyBinds::Action::kGameFocusToggle:
+    updateMenu();
     break;
   }
 }
