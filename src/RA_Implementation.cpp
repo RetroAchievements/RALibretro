@@ -60,10 +60,6 @@ void CausePause()
 //  Perform whatever function in the case of needing to rebuild the menu.
 void RebuildMenu()
 {
-  //Meka uses Allegro window (Not Win32)
-  //So going to use the Console window from message.c to attach the RA Menu to because using SetMenu distorts the window
-  //We actually need to create the entire menu in the first place to do this (Console doesn't have one)
-
   HMENU mainMenu = GetMenu(g_mainWindow);
   if (!mainMenu) return;
   

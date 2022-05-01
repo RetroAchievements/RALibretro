@@ -69,7 +69,7 @@ public:
   std::string serialize();
   void deserialize(const char* json);
 
-  bool validateSettingsForHardcore(const char* library_name, bool prompt);
+  bool validateSettingsForHardcore(const char* library_name, int console_id, bool prompt);
 
   std::string serializeEmulatorSettings();
   bool deserializeEmulatorSettings(const char* json);

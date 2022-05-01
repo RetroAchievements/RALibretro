@@ -868,7 +868,7 @@ bool Application::loadCore(const std::string& coreName)
 
 bool Application::validateHardcoreEnablement()
 {
-  if (_config.validateSettingsForHardcore(_core.getSystemInfo()->library_name, false))
+  if (_config.validateSettingsForHardcore(_core.getSystemInfo()->library_name, _system, false))
     return true;
 
 #if defined(MINGW) || defined(__MINGW32__) || defined(__MINGW64__)
@@ -987,7 +987,7 @@ bool Application::loadGame(const std::string& path)
   bool issupportedzip = false;
 
   /* make sure none of the forbidden settings are set */
-  if (!_config.validateSettingsForHardcore(_core.getSystemInfo()->library_name, true))
+  if (!_config.validateSettingsForHardcore(_core.getSystemInfo()->library_name, _system, true))
   {
     MessageBox(g_mainWindow, "Game load was canceled.", "Failed", MB_OK);
     return false;
@@ -1155,7 +1155,7 @@ bool Application::loadGame(const std::string& path)
   }
 
   /* calling loadGame may change one or more settings - revalidate */
-  if (!_config.validateSettingsForHardcore(_core.getSystemInfo()->library_name, true))
+  if (!_config.validateSettingsForHardcore(_core.getSystemInfo()->library_name, _system, true))
   {
     if (data)
       free(data);

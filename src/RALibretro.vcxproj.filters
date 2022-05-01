@@ -221,10 +221,10 @@
     <ClInclude Include="GlUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="rcheevos\include\rconsoles.h">
+    <ClInclude Include="rcheevos\include\rcheevos.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="rcheevos\include\rcheevos.h">
+    <ClInclude Include="rcheevos\include\rc_consoles.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
