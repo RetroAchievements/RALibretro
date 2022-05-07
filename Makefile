@@ -99,6 +99,8 @@ src/components/Config.o: CFLAGS += -I./src/libretro
 
 src/Memory.o: CFLAGS += -I./src/libretro
 
+src/Hash.o: CFLAGS += -I./src/libretro
+
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 

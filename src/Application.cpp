@@ -1171,7 +1171,7 @@ bool Application::loadGame(const std::string& path)
 
   _gameFileName = unzippedFileName; // store for GetEstimatedTitle callback
 
-  if (!romLoaded(&_logger, _system, path, data, size, false))
+  if (!romLoaded(&_core, &_logger, _system, path, data, size, false))
   {
     _discPaths.clear();
     updateDiscMenu(true);
@@ -2269,13 +2269,13 @@ void Application::handle(const SDL_SysWMEvent* syswm)
           std::string path;
           if (_core.getDiscPath(newDiscIndex, path))
           {
-            if (!romLoaded(&_logger, _system, path, NULL, 0, true))
+            if (!romLoaded(&_core, &_logger, _system, path, NULL, 0, true))
               break;
           }
           else if (newDiscIndex < _discPaths.size())
           {
             path = util::replaceFileName(_gamePath, _discPaths.at(newDiscIndex).c_str());
-            if (!romLoaded(&_logger, _system, path, NULL, 0, true))
+            if (!romLoaded(&_core, &_logger, _system, path, NULL, 0, true))
               break;
           }
 

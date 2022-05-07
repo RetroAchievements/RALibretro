@@ -19,10 +19,12 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Hash.h"
 
+#include "Core.h"
 #include "Util.h"
 
 #include <RA_Interface.h>
 #include <rc_hash.h>
+#include <rcheevos/src/rcheevos/rc_libretro.h>
 
 #include <memory.h>
 #include <string.h>
@@ -35,6 +37,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 //  Manages multi-disc games
 static int g_activeGame = 0;
+static rc_libretro_hash_set_t g_hashSet;
 
 static void rhash_display_error_message(const char* message)
 {
@@ -47,6 +50,7 @@ static void rhash_display_error_message(const char* message)
 }
 
 static Logger* g_logger = NULL;
+static libretro::Core* g_core = NULL;
 static void* rhash_file_open(const char* path)
 {
   return util::openFile(g_logger, path, "rb");
@@ -57,11 +61,21 @@ static void rhash_log_error_message(const char* message)
   g_logger->warn(TAG "%s", message);
 }
 
-bool romLoaded(Logger* logger, int system, const std::string& path, void* rom, size_t size, bool changingDiscs)
+static int rhash_get_image_path(unsigned index, char* buffer, size_t buffer_size)
+{
+  std::string path;
+  if (!g_core->getDiscPath(index, path))
+    return 0;
+
+  strncpy(buffer, path.c_str(), buffer_size);
+  return 1;
+}
+
+bool romLoaded(libretro::Core* core, Logger* logger, int system, const std::string& path, void* rom, size_t size, bool changingDiscs)
 {
   unsigned int gameId = 0;
   char hash[33];
-  struct rc_hash_filereader filereader;
+  bool found = false;
 
   g_logger = logger;
 
@@ -71,20 +85,49 @@ bool romLoaded(Logger* logger, int system, const std::string& path, void* rom, s
   else
     rc_hash_init_error_message_callback(rhash_display_error_message);
 
-  /* register a custom file_open handler for unicode support. use the default implementation for the other methods */
-  memset(&filereader, 0, sizeof(filereader));
-  filereader.open = rhash_file_open;
-  rc_hash_init_custom_filereader(&filereader);
-
-  rc_hash_init_default_cdreader();
-
-  /* generate a hash for the new content */
   hash[0] = '\0';
-  if (!rom || !rc_hash_generate_from_buffer(hash, system, (uint8_t*)rom, size))
-    rc_hash_generate_from_file(hash, (int)system, path.c_str());
 
-  /* identify the game associated to the hash */
-  gameId = hash[0] ? RA_IdentifyHash(hash) : 0;
+  if (changingDiscs)
+  {
+    const char* existingHash = rc_libretro_hash_set_get_hash(&g_hashSet, path.c_str());
+    if (existingHash)
+    {
+      memcpy(hash, existingHash, sizeof(hash));
+      gameId = rc_libretro_hash_set_get_game_id(&g_hashSet, existingHash);
+      found = true;
+    }
+  }
+  else
+  {
+    g_core = core;
+    rc_libretro_hash_set_init(&g_hashSet, path.c_str(), rhash_get_image_path);
+    g_core = NULL;
+  }
+
+  if (!found)
+  {
+    if (!hash[0])
+    {
+      struct rc_hash_filereader filereader;
+
+      /* register a custom file_open handler for unicode support. use the default implementation for the other methods */
+      memset(&filereader, 0, sizeof(filereader));
+      filereader.open = rhash_file_open;
+      rc_hash_init_custom_filereader(&filereader);
+
+      rc_hash_init_default_cdreader();
+
+      /* generate a hash for the new content */
+      if (!rom || !rc_hash_generate_from_buffer(hash, system, (uint8_t*)rom, size))
+        rc_hash_generate_from_file(hash, (int)system, path.c_str());
+    }
+
+    /* identify the game associated to the hash */
+    gameId = hash[0] ? RA_IdentifyHash(hash) : 0;
+
+    /* remember the hash/game so we don't have to look it up again if the user switches back */
+    rc_libretro_hash_set_add(&g_hashSet, path.c_str(), gameId, hash);
+  }
 
   if (!changingDiscs)
   {
@@ -117,6 +160,7 @@ bool romLoaded(Logger* logger, int system, const std::string& path, void* rom, s
 
 void romUnloaded(Logger* logger)
 {
+  rc_libretro_hash_set_destroy(&g_hashSet);
   g_activeGame = 0;
   RA_ActivateGame(0);
 }

@@ -33,5 +33,10 @@ void RA_OnLoadNewRom(BYTE* pROMData, unsigned int nROMSize);
 
 #include "Emulator.h"
 
-bool   romLoaded(Logger* logger, int consoleId, const std::string& path, void* rom, size_t size, bool changingDiscs);
+namespace libretro
+{
+  class Core;
+}
+
+bool   romLoaded(libretro::Core* core, Logger* logger, int consoleId, const std::string& path, void* rom, size_t size, bool changingDiscs);
 void   romUnloaded(Logger* logger);
