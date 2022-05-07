@@ -382,7 +382,7 @@ KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
     case kScreenshot:        return Action::kScreenshot;
 
     // Game Focus
-    case kGameFocusToggle:   _gameFocus = !_gameFocus; return Action::kNothing;
+    case kGameFocusToggle:   _gameFocus = !_gameFocus; return Action::kGameFocusToggle;
 
     default:                 return Action::kNothing;
   }
