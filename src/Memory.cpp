@@ -52,6 +52,36 @@ static unsigned char memoryRead(unsigned addr, int firstRegion)
   return 0;
 }
 
+static unsigned memoryReadBlock(unsigned addr, uint8_t* buffer, unsigned count, int firstRegion)
+{
+  unsigned provided = 0;
+  unsigned i;
+  for (i = firstRegion; i < g_memoryRegions.count; ++i)
+  {
+    const size_t size = g_memoryRegions.size[i];
+    if (addr < size)
+    {
+      if (g_memoryRegions.data[i] == NULL)
+        break;
+
+      const size_t avail = std::min(size - addr, (size_t)count);
+      memcpy(buffer, &g_memoryRegions.data[i][addr], avail);
+
+      provided += avail;
+      count -= avail;
+      if (count == 0)
+        break;
+
+      buffer += avail;
+      addr += avail;
+    }
+
+    addr -= size;
+  }
+
+  return provided;
+}
+
 static void memoryWrite(unsigned addr, int firstRegion, unsigned char value)
 {
   unsigned i;
@@ -87,6 +117,23 @@ static unsigned char memoryRead13(unsigned addr) { return memoryRead(addr, g_mem
 static unsigned char memoryRead14(unsigned addr) { return memoryRead(addr, g_memoryBankFirstRegion[14]); }
 static unsigned char memoryRead15(unsigned addr) { return memoryRead(addr, g_memoryBankFirstRegion[15]); }
 
+static unsigned memoryReadBlock0(unsigned addr, uint8_t* buffer, unsigned count) { return memoryReadBlock(addr, buffer, count, g_memoryBankFirstRegion[0]); }
+static unsigned memoryReadBlock1(unsigned addr, uint8_t* buffer, unsigned count) { return memoryReadBlock(addr, buffer, count, g_memoryBankFirstRegion[1]); }
+static unsigned memoryReadBlock2(unsigned addr, uint8_t* buffer, unsigned count) { return memoryReadBlock(addr, buffer, count, g_memoryBankFirstRegion[2]); }
+static unsigned memoryReadBlock3(unsigned addr, uint8_t* buffer, unsigned count) { return memoryReadBlock(addr, buffer, count, g_memoryBankFirstRegion[3]); }
+static unsigned memoryReadBlock4(unsigned addr, uint8_t* buffer, unsigned count) { return memoryReadBlock(addr, buffer, count, g_memoryBankFirstRegion[4]); }
+static unsigned memoryReadBlock5(unsigned addr, uint8_t* buffer, unsigned count) { return memoryReadBlock(addr, buffer, count, g_memoryBankFirstRegion[5]); }
+static unsigned memoryReadBlock6(unsigned addr, uint8_t* buffer, unsigned count) { return memoryReadBlock(addr, buffer, count, g_memoryBankFirstRegion[6]); }
+static unsigned memoryReadBlock7(unsigned addr, uint8_t* buffer, unsigned count) { return memoryReadBlock(addr, buffer, count, g_memoryBankFirstRegion[7]); }
+static unsigned memoryReadBlock8(unsigned addr, uint8_t* buffer, unsigned count) { return memoryReadBlock(addr, buffer, count, g_memoryBankFirstRegion[8]); }
+static unsigned memoryReadBlock9(unsigned addr, uint8_t* buffer, unsigned count) { return memoryReadBlock(addr, buffer, count, g_memoryBankFirstRegion[9]); }
+static unsigned memoryReadBlock10(unsigned addr, uint8_t* buffer, unsigned count) { return memoryReadBlock(addr, buffer, count, g_memoryBankFirstRegion[10]); }
+static unsigned memoryReadBlock11(unsigned addr, uint8_t* buffer, unsigned count) { return memoryReadBlock(addr, buffer, count, g_memoryBankFirstRegion[11]); }
+static unsigned memoryReadBlock12(unsigned addr, uint8_t* buffer, unsigned count) { return memoryReadBlock(addr, buffer, count, g_memoryBankFirstRegion[12]); }
+static unsigned memoryReadBlock13(unsigned addr, uint8_t* buffer, unsigned count) { return memoryReadBlock(addr, buffer, count, g_memoryBankFirstRegion[13]); }
+static unsigned memoryReadBlock14(unsigned addr, uint8_t* buffer, unsigned count) { return memoryReadBlock(addr, buffer, count, g_memoryBankFirstRegion[14]); }
+static unsigned memoryReadBlock15(unsigned addr, uint8_t* buffer, unsigned count) { return memoryReadBlock(addr, buffer, count, g_memoryBankFirstRegion[15]); }
+
 static void memoryWrite0(unsigned addr, unsigned char value) { memoryWrite(addr, g_memoryBankFirstRegion[0], value); }
 static void memoryWrite1(unsigned addr, unsigned char value) { memoryWrite(addr, g_memoryBankFirstRegion[1], value); }
 static void memoryWrite2(unsigned addr, unsigned char value) { memoryWrite(addr, g_memoryBankFirstRegion[2], value); }
@@ -108,22 +155,70 @@ static void installMemoryBank(int bankId, int validBankId, int firstRegion, size
 {
   switch (validBankId)
   {
-    case 0: RA_InstallMemoryBank(bankId, memoryRead0, memoryWrite0, bankSize); break;
-    case 1: RA_InstallMemoryBank(bankId, memoryRead1, memoryWrite1, bankSize); break;
-    case 2: RA_InstallMemoryBank(bankId, memoryRead2, memoryWrite2, bankSize); break;
-    case 3: RA_InstallMemoryBank(bankId, memoryRead3, memoryWrite3, bankSize); break;
-    case 4: RA_InstallMemoryBank(bankId, memoryRead4, memoryWrite4, bankSize); break;
-    case 5: RA_InstallMemoryBank(bankId, memoryRead5, memoryWrite5, bankSize); break;
-    case 6: RA_InstallMemoryBank(bankId, memoryRead6, memoryWrite6, bankSize); break;
-    case 7: RA_InstallMemoryBank(bankId, memoryRead7, memoryWrite7, bankSize); break;
-    case 8: RA_InstallMemoryBank(bankId, memoryRead8, memoryWrite8, bankSize); break;
-    case 9: RA_InstallMemoryBank(bankId, memoryRead9, memoryWrite9, bankSize); break;
-    case 10: RA_InstallMemoryBank(bankId, memoryRead10, memoryWrite10, bankSize); break;
-    case 11: RA_InstallMemoryBank(bankId, memoryRead11, memoryWrite11, bankSize); break;
-    case 12: RA_InstallMemoryBank(bankId, memoryRead12, memoryWrite12, bankSize); break;
-    case 13: RA_InstallMemoryBank(bankId, memoryRead13, memoryWrite13, bankSize); break;
-    case 14: RA_InstallMemoryBank(bankId, memoryRead14, memoryWrite14, bankSize); break;
-    case 15: RA_InstallMemoryBank(bankId, memoryRead15, memoryWrite15, bankSize); break;
+    case 0:
+      RA_InstallMemoryBank(bankId, memoryRead0, memoryWrite0, bankSize);
+      RA_InstallMemoryBankBlockReader(bankId, memoryReadBlock0);
+      break;
+    case 1:
+      RA_InstallMemoryBank(bankId, memoryRead1, memoryWrite1, bankSize);
+      RA_InstallMemoryBankBlockReader(bankId, memoryReadBlock1);
+      break;
+    case 2:
+      RA_InstallMemoryBank(bankId, memoryRead2, memoryWrite2, bankSize);
+      RA_InstallMemoryBankBlockReader(bankId, memoryReadBlock2);
+      break;
+    case 3:
+      RA_InstallMemoryBank(bankId, memoryRead3, memoryWrite3, bankSize);
+      RA_InstallMemoryBankBlockReader(bankId, memoryReadBlock3);
+      break;
+    case 4:
+      RA_InstallMemoryBank(bankId, memoryRead4, memoryWrite4, bankSize);
+      RA_InstallMemoryBankBlockReader(bankId, memoryReadBlock4);
+      break;
+    case 5:
+      RA_InstallMemoryBank(bankId, memoryRead5, memoryWrite5, bankSize);
+      RA_InstallMemoryBankBlockReader(bankId, memoryReadBlock5);
+      break;
+    case 6:
+      RA_InstallMemoryBank(bankId, memoryRead6, memoryWrite6, bankSize);
+      RA_InstallMemoryBankBlockReader(bankId, memoryReadBlock6);
+      break;
+    case 7:
+      RA_InstallMemoryBank(bankId, memoryRead7, memoryWrite7, bankSize);
+      RA_InstallMemoryBankBlockReader(bankId, memoryReadBlock7);
+      break;
+    case 8:
+      RA_InstallMemoryBank(bankId, memoryRead8, memoryWrite8, bankSize);
+      RA_InstallMemoryBankBlockReader(bankId, memoryReadBlock8);
+      break;
+    case 9:
+      RA_InstallMemoryBank(bankId, memoryRead9, memoryWrite9, bankSize);
+      RA_InstallMemoryBankBlockReader(bankId, memoryReadBlock9);
+      break;
+    case 10:
+      RA_InstallMemoryBank(bankId, memoryRead10, memoryWrite10, bankSize);
+      RA_InstallMemoryBankBlockReader(bankId, memoryReadBlock10);
+      break;
+    case 11:
+      RA_InstallMemoryBank(bankId, memoryRead11, memoryWrite11, bankSize);
+      RA_InstallMemoryBankBlockReader(bankId, memoryReadBlock11);
+      break;
+    case 12:
+      RA_InstallMemoryBank(bankId, memoryRead12, memoryWrite12, bankSize);
+      RA_InstallMemoryBankBlockReader(bankId, memoryReadBlock12);
+      break;
+    case 13:
+      RA_InstallMemoryBank(bankId, memoryRead13, memoryWrite13, bankSize);
+      RA_InstallMemoryBankBlockReader(bankId, memoryReadBlock13);
+      break;
+    case 14:
+      RA_InstallMemoryBank(bankId, memoryRead14, memoryWrite14, bankSize);
+      RA_InstallMemoryBankBlockReader(bankId, memoryReadBlock14);
+      break;
+    case 15:
+      RA_InstallMemoryBank(bankId, memoryRead15, memoryWrite15, bankSize);
+      RA_InstallMemoryBankBlockReader(bankId, memoryReadBlock15);
+      break;
     default: logger->warn(TAG "Too many unsupported memory regions"); return;
   }
 
