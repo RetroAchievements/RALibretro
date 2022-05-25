@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Suggest a new toolkit feature
+    url: https://github.com/RetroAchievements/RAIntegration/discussions/new?category=ideas
+    about: Share ideas for new features or enhancements to the toolkit
+  - name: Report a toolkit bug
+    url: https://github.com/RetroAchievements/RAIntegration/issues/new
+    about: Report an issue with one of the toolkit features

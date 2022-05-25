@@ -1,9 +1,6 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
-title: ''
-labels: ''
-assignees: ''
+name: Suggest an emulator feature
+about: Share ideas for new features or enhancements to the emulator
 
 ---
 
