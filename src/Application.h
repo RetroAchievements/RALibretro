@@ -40,12 +40,22 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #include "Memory.h"
 #include "States.h"
 
+/* Parsed command line arguments */
+struct parsedArgs
+{
+  std::string core; // -c or --core
+  int system = 0;   // -s or --system
+  std::string game; // -g or --game
+};
+
 class Application
 {
 public:
   Application();
 
   // Lifecycle
+  parsedArgs parseArgs(int argc, char *argv[]);
+  
   bool init(const char* title, int width, int height);
   void run();
   void destroy();
@@ -71,6 +81,8 @@ public:
   void onRotationChanged(Video::Rotation oldRotation, Video::Rotation newRotation);
 
   void refreshMemoryMap();
+
+  bool tryLoadContent(parsedArgs parsedArgs);
 
 protected:
   struct RecentItem

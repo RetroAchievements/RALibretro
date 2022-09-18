@@ -52,6 +52,8 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 #define TAG "[APP] "
 
+#include <thread>
+
 //#define DISPLAY_FRAMERATE 1
 
 //#define DEBUG_AUDIO 1
@@ -2508,4 +2510,79 @@ void Application::toggleFastForwarding(unsigned extra)
       SetMenuItemInfo(_menu, IDM_TURBO_GAME, false, &info);
       break;
   }
+}
+
+parsedArgs Application::parseArgs(int argc, char* argv[])
+{
+  parsedArgs result;
+
+  char argCategory = '\0';  // remember the argument category, e.g. "c" for core, "s" for system, "g" for game
+  for (int i = 0; i < argc; i++) {
+    char *currentArg = argv[i];
+
+    if (strlen(currentArg) == 0) {
+      continue;
+    }
+
+    if (currentArg[0] == '-') {
+      if (strcmp(currentArg, "-c") == 0 || strcmp(currentArg, "--core") == 0) {
+        argCategory = 'c';
+      } else if (strcmp(currentArg, "-s") == 0 || strcmp(currentArg, "--system") == 0) {
+        argCategory = 's';
+      }
+      else if (strcmp(currentArg, "-g") == 0 || strcmp(currentArg, "--game") == 0) {
+        argCategory = 'g';
+      } else {
+        argCategory = '\0';
+      }
+
+      continue;
+    }
+
+    switch (argCategory)
+    {
+      case 'c':
+        result.core.assign(currentArg);
+        break;
+      case 's':
+        try {
+          result.system = std::stoi(currentArg);
+        } catch (const std::exception& e) {
+          _logger.error(TAG "error while parsing 'system' command line argument '%s' (integer expected)", currentArg);
+          result.system = 0;
+        }
+        break;
+      case 'g':
+        result.game.assign(currentArg);
+        break;
+      
+      default:
+        break;
+    }
+  }
+  return result;
+}
+
+bool Application::tryLoadContent(parsedArgs parsedArgs)
+{
+  if (parsedArgs.core.length() == 0 || parsedArgs.system == 0 || parsedArgs.game.length() == 0) {
+    return true;  // nothing to do
+  }
+
+  if (!util::exists(parsedArgs.game)) {
+    _logger.error("file not found provided in 'game' command line argument '%s'", parsedArgs.game.c_str());
+    return false;
+  }
+  
+  RA_AttemptLogin(true); // attempt login with blocking, so that we go on exactly after the login was successful
+
+  _system = parsedArgs.system;
+  bool ok = _fsm.loadCore(parsedArgs.core);
+  if (!ok) {
+    return false;
+  }
+
+  ok &= _fsm.loadGame(parsedArgs.game);
+
+  return ok;
 }

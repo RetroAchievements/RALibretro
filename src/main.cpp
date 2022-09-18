@@ -34,9 +34,9 @@ bool isGameActive()
 
 void getGameName(char name[], size_t len)
 {
-    std::string fileName = util::fileName(app.gameName());
-    strncpy(name, fileName.c_str(), len);
-    name[len - 1] = '\0';
+  std::string fileName = util::fileName(app.gameName());
+  strncpy(name, fileName.c_str(), len);
+  name[len - 1] = '\0';
 }
 
 void pause()
@@ -73,6 +73,13 @@ int main(int argc, char* argv[])
   signal(SIGABRT, &abort_handler);
 
   bool ok = app.init("RALibRetro", 640, 480);
+
+  parsedArgs parsedArgs = app.parseArgs(argc, argv);
+  app.logger().info("[ARGS] core: %s", parsedArgs.core.c_str());
+  app.logger().info("[ARGS] system: %i", parsedArgs.system);
+  app.logger().info("[ARGS] game: %s", parsedArgs.game.c_str());
+
+  ok &= app.tryLoadContent(parsedArgs);
 
   if (ok)
   {
