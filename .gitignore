@@ -13,3 +13,5 @@
 /bin64
 /obj
 /src/Git.cpp
+
+.vscode
