@@ -54,7 +54,7 @@ Load `RALibretro.sln` in Visual Studio and build it.
 Argument|Description
 -|-
 -c [--core]|the core's name, e.g. `--core picodrive_libretro`
--s [--system]|the system id, see ConsoleID in [src/RAInterface/RA_Consoles.h](src/RAInterface/RA_Consoles.h), e.g. `--system 1`
+-s [--system]|the system id, see ConsoleID in [RAInterface/RA_Consoles.h](https://github.com/RetroAchievements/RAInterface/blob/master/RA_Consoles.h), e.g. `--system 1`
 -g [--game]|full path to the game's file, e.g. `--game "C:\ROMS\GEN\Demons Of Asteborg Demo.gen"`
 
 In order to successfully run a game on startup, provide the core, system and game, e.g.:
