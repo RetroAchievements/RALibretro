@@ -361,14 +361,25 @@
   },
   "mednafen_pce_libretro":{
     "name": "Beetle PCE",
-    "extensions": "pce|cue",
+    "extensions": "pce",
     "systems": [8],
+    "platforms": "none"
+  },
+  "mednafen_pce_libretro":{
+    "name": "Beetle PCE",
+    "extensions": "m3u|cue",
+    "systems": [76],
     "platforms": "none"
   },
   "mednafen_pce_fast_libretro":{
     "name": "Beetle PCE Fast",
-    "extensions": "pce|cue",
+    "extensions": "pce",
     "systems": [8]
+  },
+  "mednafen_pce_fast_libretro":{
+    "name": "Beetle PCE Fast",
+    "extensions": "m3u|cue",
+    "systems": [76]
   },
   "mednafen_pcfx_libretro":{
     "name": "Beetle PC-FX",
@@ -397,8 +408,13 @@
   },
   "mednafen_supergrafx_libretro":{
     "name": "Beetle SuperGrafX",
-    "extensions": "pce|sgx|cue",
+    "extensions": "m3u|pce|sgx",
     "systems": [8]
+  },
+  "mednafen_supergrafx_libretro":{
+    "name": "Beetle SuperGrafX",
+    "extensions": "cue",
+    "systems": [76]
   },
   "mednafen_vb_libretro":{
     "name": "Beetle VB",
