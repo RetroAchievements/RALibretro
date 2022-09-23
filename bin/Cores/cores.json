@@ -408,12 +408,12 @@
   },
   "mednafen_supergrafx_libretro":{
     "name": "Beetle SuperGrafX",
-    "extensions": "m3u|pce|sgx",
+    "extensions": "pce|sgx",
     "systems": [8]
   },
   "mednafen_supergrafx_libretro":{
     "name": "Beetle SuperGrafX",
-    "extensions": "cue",
+    "extensions": "m3u|cue",
     "systems": [76]
   },
   "mednafen_vb_libretro":{
