@@ -361,7 +361,7 @@
   },
   "mednafen_pce_libretro":{
     "name": "Beetle PCE",
-    "extensions": "pce",
+    "extensions": "pce|sgx",
     "systems": [8],
     "platforms": "none"
   },
@@ -738,6 +738,7 @@
   },
   "virtualjaguar_libretro":{
     "name": "Virtual Jaguar",
+    "extensions": "j64|rom"
     "systems": [17]
   },
   "wasm4_libretro":{
