@@ -52,8 +52,6 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 #define TAG "[APP] "
 
-#include <thread>
-
 //#define DISPLAY_FRAMERATE 1
 
 //#define DEBUG_AUDIO 1
