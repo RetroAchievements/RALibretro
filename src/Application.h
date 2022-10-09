@@ -82,7 +82,7 @@ public:
 
   void refreshMemoryMap();
 
-  bool tryLoadContent(ParsedArgs parsedArgs);
+  bool tryLoadContent(const ParsedArgs& parsedArgs);
 
 protected:
   struct RecentItem

@@ -2563,7 +2563,7 @@ ParsedArgs Application::parseArgs(int argc, char* argv[])
   return result;
 }
 
-bool Application::tryLoadContent(ParsedArgs parsedArgs)
+bool Application::tryLoadContent(const ParsedArgs& parsedArgs)
 {
   if (parsedArgs.core.length() == 0 || parsedArgs.system == 0 || parsedArgs.game.length() == 0) {
     return true;  // nothing to do
