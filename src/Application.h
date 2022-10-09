@@ -41,7 +41,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #include "States.h"
 
 /* Parsed command line arguments */
-struct parsedArgs
+struct ParsedArgs
 {
   std::string core; // -c or --core
   int system = 0;   // -s or --system
@@ -54,7 +54,7 @@ public:
   Application();
 
   // Lifecycle
-  parsedArgs parseArgs(int argc, char *argv[]);
+  ParsedArgs parseArgs(int argc, char *argv[]);
   
   bool init(const char* title, int width, int height);
   void run();
@@ -82,7 +82,7 @@ public:
 
   void refreshMemoryMap();
 
-  bool tryLoadContent(parsedArgs parsedArgs);
+  bool tryLoadContent(ParsedArgs parsedArgs);
 
 protected:
   struct RecentItem

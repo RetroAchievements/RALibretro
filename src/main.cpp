@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 
   bool ok = app.init("RALibRetro", 640, 480);
 
-  parsedArgs parsedArgs = app.parseArgs(argc, argv);
+  ParsedArgs parsedArgs = app.parseArgs(argc, argv);
   app.logger().info("[ARGS] core: %s", parsedArgs.core.c_str());
   app.logger().info("[ARGS] system: %i", parsedArgs.system);
   app.logger().info("[ARGS] game: %s", parsedArgs.game.c_str());

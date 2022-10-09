@@ -2512,9 +2512,9 @@ void Application::toggleFastForwarding(unsigned extra)
   }
 }
 
-parsedArgs Application::parseArgs(int argc, char* argv[])
+ParsedArgs Application::parseArgs(int argc, char* argv[])
 {
-  parsedArgs result;
+  ParsedArgs result;
 
   char argCategory = '\0';  // remember the argument category, e.g. "c" for core, "s" for system, "g" for game
   for (int i = 0; i < argc; i++) {
@@ -2563,7 +2563,7 @@ parsedArgs Application::parseArgs(int argc, char* argv[])
   return result;
 }
 
-bool Application::tryLoadContent(parsedArgs parsedArgs)
+bool Application::tryLoadContent(ParsedArgs parsedArgs)
 {
   if (parsedArgs.core.length() == 0 || parsedArgs.system == 0 || parsedArgs.game.length() == 0) {
     return true;  // nothing to do
