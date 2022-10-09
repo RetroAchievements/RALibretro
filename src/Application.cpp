@@ -2568,7 +2568,13 @@ bool Application::tryLoadContent(const ParsedArgs& parsedArgs)
   }
 
   if (!util::exists(parsedArgs.game)) {
-    _logger.error("file not found provided in 'game' command line argument '%s'", parsedArgs.game.c_str());
+    std::string message = "File not found provided in 'game' command line argument '" + parsedArgs.game + "'";
+    
+    _logger.error(message.c_str());
+
+    MessageBox(g_mainWindow, message.c_str(), "Failed to load game", MB_OK);
+    return false;
+    
     return false;
   }
   
