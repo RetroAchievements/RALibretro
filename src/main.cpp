@@ -73,15 +73,7 @@ int main(int argc, char* argv[])
   signal(SIGABRT, &abort_handler);
 
   bool ok = app.init("RALibRetro", 640, 480);
-
-  if (ok && argc > 1) {
-  ParsedArgs parsedArgs = app.parseArgs(argc, argv);
-    app.logger().info("[APP] cli argument core: %s", parsedArgs.core.c_str());
-    app.logger().info("[APP] cli argument system: %i", parsedArgs.system);
-    app.logger().info("[APP] cli argument game: %s", parsedArgs.game.c_str());
-
-    ok &= app.tryLoadContent(parsedArgs);
-  }
+  ok &= app.handleArgs(argc, argv);
 
   if (ok)
   {

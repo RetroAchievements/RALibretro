@@ -105,7 +105,6 @@ void RA_Init(HWND hWnd)
 
   // add a placeholder menu item and start the login process - menu will be updated when login completes
   RebuildMenu();
-  RA_AttemptLogin(false);
 
   // ensure titlebar text matches expected format
   RA_UpdateAppTitle("");

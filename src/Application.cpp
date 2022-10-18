@@ -2510,9 +2510,11 @@ void Application::toggleFastForwarding(unsigned extra)
   }
 }
 
-ParsedArgs Application::parseArgs(int argc, char* argv[])
+bool Application::handleArgs(int argc, char* argv[])
 {
-  ParsedArgs result;
+  std::string core; // -c or --core
+  int system = 0;   // -s or --system
+  std::string game; // -g or --game
 
   char argCategory = '\0';  // remember the argument category, e.g. "c" for core, "s" for system, "g" for game
   for (int i = 0; i < argc; i++) {
@@ -2540,53 +2542,57 @@ ParsedArgs Application::parseArgs(int argc, char* argv[])
     switch (argCategory)
     {
       case 'c':
-        result.core.assign(currentArg);
+        core.assign(currentArg);
         break;
       case 's':
         try {
-          result.system = std::stoi(currentArg);
+          system = std::stoi(currentArg);
         } catch (const std::exception& e) {
           _logger.error(TAG "error while parsing 'system' command line argument '%s' (integer expected)", currentArg);
-          result.system = 0;
+          system = 0;
         }
         break;
       case 'g':
-        result.game.assign(currentArg);
+        game.assign(currentArg);
         break;
       
       default:
         break;
     }
   }
-  return result;
-}
 
-bool Application::tryLoadContent(const ParsedArgs& parsedArgs)
-{
-  if (parsedArgs.core.length() == 0 || parsedArgs.system == 0 || parsedArgs.game.length() == 0) {
-    return true;  // nothing to do
+  if (core.empty() || system == 0 || game.empty()) {
+    RA_AttemptLogin(false); // start login process, should be done by the time the user loads a game
+    return true;
   }
 
-  if (!util::exists(parsedArgs.game)) {
-    std::string message = "File not found provided in 'game' command line argument '" + parsedArgs.game + "'";
+  _logger.info("[APP] cli argument core: %s", core.c_str());
+  _logger.info("[APP] cli argument system: %i", system);
+  _logger.info("[APP] cli argument game: %s", game.c_str());
+
+  if (!util::exists(game)) {
+    std::string message = "File not found provided in 'game' command line argument '" + game + "'";
     
     _logger.error(message.c_str());
 
     MessageBox(g_mainWindow, message.c_str(), "Failed to load game", MB_OK);
     return false;
+  }
+
+  if (!doesCoreSupportSystem(core, system)) {
+    std::string message = core + " core does not support system " + std::to_string(system);
     
+    _logger.error(message.c_str());
+
+    MessageBox(g_mainWindow, message.c_str(), "Failed to load game", MB_OK);
     return false;
   }
-  
+
   RA_AttemptLogin(true); // attempt login with blocking, so that we go on exactly after the login was successful
 
-  _system = parsedArgs.system;
-  bool ok = _fsm.loadCore(parsedArgs.core);
-  if (!ok) {
+  _system = system;
+  if (!_fsm.loadCore(core))
     return false;
-  }
 
-  ok &= _fsm.loadGame(parsedArgs.game);
-
-  return ok;
+  return _fsm.loadGame(game);
 }

@@ -32,6 +32,7 @@ class Config;
 class Logger;
 bool   loadCores(Config* config, Logger* logger);
 
+bool   doesCoreSupportSystem(const std::string& coreFilename, int system);
 void   getAvailableSystems(std::set<int>& systems);
 void   getAvailableSystemCores(int system, std::set<std::string>& coreNames);
 int    encodeCoreName(const std::string& coreName, int system);
