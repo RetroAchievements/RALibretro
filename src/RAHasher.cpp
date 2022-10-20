@@ -10,6 +10,10 @@
 #include <memory>
 #include <string.h>
 
+#ifdef HAVE_CHD
+void rc_hash_init_chd_cdreader(); /* in HashCHD.cpp */
+#endif
+
 static void usage(const char* appname)
 {
   printf("RAHasher %s\n====================\n", git::getReleaseVersion());
@@ -117,7 +121,19 @@ int main(int argc, char* argv[])
       filereader.open = rhash_file_open;
       rc_hash_init_custom_filereader(&filereader);
 
-      rc_hash_init_default_cdreader();
+      if (ext.length() == 4 && tolower(ext[1]) == 'c' && tolower(ext[2]) == 'h' && tolower(ext[3]) == 'd')
+      {
+#ifdef HAVE_CHD
+        rc_hash_init_chd_cdreader();
+#else
+        printf("CHD not supported without HAVE_CHD compile flag\n");
+        return 0;
+#endif
+      }
+      else
+      {
+        rc_hash_init_default_cdreader();
+      }
 
       if (consoleId > RC_CONSOLE_MAX)
       {

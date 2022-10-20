@@ -14,3 +14,7 @@
 [submodule "src/rcheevos"]
 	path = src/rcheevos
 	url = https://github.com/RetroAchievements/rcheevos.git
+[submodule "src/libchdr"]
+	path = src/libchdr
+	url = https://github.com/rtissera/libchdr.git
+	ignore = untracked

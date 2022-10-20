@@ -153,6 +153,9 @@
     <ClCompile Include="rcheevos\src\rcheevos\rc_libretro.c">
       <Filter>Source Files\rcheevos</Filter>
     </ClCompile>
+    <ClCompile Include="HashCHD.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="About.h">
