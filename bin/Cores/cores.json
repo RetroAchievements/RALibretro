@@ -174,8 +174,7 @@
   },
   "freechaf_libretro":{
     "name": "FreeChaF",
-    "systems": [57],
-    "platforms": "none"
+    "systems": [57]
   },
   "freeintv_libretro":{
     "name": "FreeIntV",
@@ -595,8 +594,7 @@
   },
   "sameduck_libretro":{
     "name": "SameDuck",
-    "systems": [69],
-    "platforms": "none"
+    "systems": [69]
   },
   "smsplus_libretro":{
     "name": "SMS Plus GX",
