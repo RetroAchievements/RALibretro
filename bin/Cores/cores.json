@@ -738,7 +738,7 @@
   },
   "virtualjaguar_libretro":{
     "name": "Virtual Jaguar",
-    "extensions": "j64|rom"
+    "extensions": "j64|rom",
     "systems": [17]
   },
   "wasm4_libretro":{
