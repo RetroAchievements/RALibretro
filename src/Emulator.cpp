@@ -222,6 +222,17 @@ void getAvailableSystemCores(int system, std::set<std::string>& coreNames)
   }
 }
 
+bool doesCoreSupportSystem(const std::string& coreFilename, int system)
+{
+  for (const auto& core : s_coreInfos)
+  {
+    if (core.filename == coreFilename && core.systems.find(system) != core.systems.end())
+      return true;
+  }
+
+  return false;
+}
+
 int encodeCoreName(const std::string& coreName, int system)
 {
   for (size_t i = 0; i < s_coreInfos.size(); ++i)

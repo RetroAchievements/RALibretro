@@ -47,6 +47,8 @@ public:
 
   // Lifecycle
   bool init(const char* title, int width, int height);
+  bool handleArgs(int argc, char *argv[]);
+
   void run();
   void destroy();
 

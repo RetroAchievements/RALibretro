@@ -2509,3 +2509,90 @@ void Application::toggleFastForwarding(unsigned extra)
       break;
   }
 }
+
+bool Application::handleArgs(int argc, char* argv[])
+{
+  std::string core; // -c or --core
+  int system = 0;   // -s or --system
+  std::string game; // -g or --game
+
+  char argCategory = '\0';  // remember the argument category, e.g. "c" for core, "s" for system, "g" for game
+  for (int i = 0; i < argc; i++) {
+    char *currentArg = argv[i];
+
+    if (strlen(currentArg) == 0) {
+      continue;
+    }
+
+    if (currentArg[0] == '-') {
+      if (strcmp(currentArg, "-c") == 0 || strcmp(currentArg, "--core") == 0) {
+        argCategory = 'c';
+      } else if (strcmp(currentArg, "-s") == 0 || strcmp(currentArg, "--system") == 0) {
+        argCategory = 's';
+      }
+      else if (strcmp(currentArg, "-g") == 0 || strcmp(currentArg, "--game") == 0) {
+        argCategory = 'g';
+      } else {
+        argCategory = '\0';
+      }
+
+      continue;
+    }
+
+    switch (argCategory)
+    {
+      case 'c':
+        core.assign(currentArg);
+        break;
+      case 's':
+        try {
+          system = std::stoi(currentArg);
+        } catch (const std::exception& e) {
+          _logger.error(TAG "error while parsing 'system' command line argument '%s' (integer expected)", currentArg);
+          system = 0;
+        }
+        break;
+      case 'g':
+        game.assign(currentArg);
+        break;
+      
+      default:
+        break;
+    }
+  }
+
+  if (core.empty() || system == 0 || game.empty()) {
+    RA_AttemptLogin(false); // start login process, should be done by the time the user loads a game
+    return true;
+  }
+
+  _logger.info("[APP] cli argument core: %s", core.c_str());
+  _logger.info("[APP] cli argument system: %i", system);
+  _logger.info("[APP] cli argument game: %s", game.c_str());
+
+  if (!util::exists(game)) {
+    std::string message = "File not found provided in 'game' command line argument '" + game + "'";
+    
+    _logger.error(message.c_str());
+
+    MessageBox(g_mainWindow, message.c_str(), "Failed to load game", MB_OK);
+    return false;
+  }
+
+  if (!doesCoreSupportSystem(core, system)) {
+    std::string message = core + " core does not support system " + std::to_string(system);
+    
+    _logger.error(message.c_str());
+
+    MessageBox(g_mainWindow, message.c_str(), "Failed to load game", MB_OK);
+    return false;
+  }
+
+  RA_AttemptLogin(true); // attempt login with blocking, so that we go on exactly after the login was successful
+
+  _system = system;
+  if (!_fsm.loadCore(core))
+    return false;
+
+  return _fsm.loadGame(game);
+}
