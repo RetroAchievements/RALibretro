@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2022 Brian Weiss
+Copyright (C) 2022 Jamiras
 
 This file is part of RALibretro.
 
@@ -24,6 +24,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #include <libchdr/include/libchdr/chd.h>
 
 #include <memory.h>
+#include <stdlib.h>
 #include <string.h>
 
 typedef struct chd_track_handle_t
