@@ -119,8 +119,9 @@ static bool rc_hash_find_chd_track(chd_file* file, uint32_t track, metadata_t* m
      * RetroArch implementation. I don't see anything in the CHD documentation
      * that explains the need for it. Apparently each track is padded to a
      * multiple of 4 frames, regardless of the number of frames in a hunk. */
-    padding_frames = ((metadata->frames + 3) & ~3) - metadata->frames;
+    frame_offset += metadata->pregap;
     metadata->frame_offset = frame_offset;
+    padding_frames = ((metadata->frames + 3) & ~3) - metadata->frames;
     frame_offset += metadata->frames + padding_frames;
 
     if (metadata->track == track)
@@ -250,7 +251,16 @@ static void* rc_hash_handle_chd_open_track(const char* path, uint32_t track)
   chd_track->frames_per_hunk = header->hunkbytes / header->unitbytes;
   chd_track->first_sector = metadata.sector_offset;
   chd_track->first_frame = metadata.frame_offset;
-  chd_track->sector_size = header->unitbytes;
+
+  if (strcmp(metadata.type, "MODE1_RAW") == 0 ||
+      strcmp(metadata.type, "MODE2_RAW") == 0)
+  {
+    chd_track->sector_size = 2352;
+  }
+  else
+  {
+    chd_track->sector_size = header->unitbytes;
+  }
 
   /* read the first 32 bytes of sector 16 (TOC) so we can attempt to identify the disc format */
   if (rc_hash_handle_chd_read_sector(chd_track, chd_track->first_sector + 16, buffer, sizeof(buffer)) != sizeof(buffer))
