@@ -35,6 +35,11 @@ OBJS=\
 	src/Util.o \
 	src/RAHasher.o
 
+ifdef HAVE_CHD
+  OBJS += $(CHD_OBJS) \
+          src/HashCHD.o
+endif
+
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 

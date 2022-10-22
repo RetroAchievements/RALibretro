@@ -30,7 +30,7 @@ typedef struct chd_track_handle_t
 {
   chd_file* file;              /* CHD file handle */
   uint8_t *hunkmem;            /* Loaded hunk data */
-  int32_t hunknum;             /* Loaded hunk number */
+  uint32_t hunknum;            /* Loaded hunk number */
   uint32_t frames_per_hunk;    /* Number of frames per hunk */
   uint32_t first_sector;       /* First sector associated to the track */
   uint32_t first_frame;        /* First CHD frame associated to the track */
@@ -52,6 +52,11 @@ typedef struct metadata
    char pgtype[32];
    char pgsub[32];
 } metadata_t;
+
+#ifdef _MSC_VER
+ #pragma warning(push)
+ #pragma warning(disable : 4996)
+#endif
 
 static bool rc_hash_get_chd_metadata(chd_file* file, uint32_t idx, metadata_t* metadata)
 {
@@ -87,6 +92,10 @@ static bool rc_hash_get_chd_metadata(chd_file* file, uint32_t idx, metadata_t* m
 
   return false;
 }
+
+#ifdef _MSC_VER
+ #pragma warning(pop)
+#endif
 
 static bool rc_hash_find_chd_track(chd_file* file, uint32_t track, metadata_t* metadata)
 {
@@ -236,7 +245,7 @@ static void* rc_hash_handle_chd_open_track(const char* path, uint32_t track)
 
   chd_track = (chd_track_handle_t*)calloc(1, sizeof(chd_track_handle_t));
   chd_track->file = file;
-  chd_track->hunknum = -1;
+  chd_track->hunknum = (uint32_t)-1;
   chd_track->hunkmem = (uint8_t*)malloc(header->hunkbytes);
   chd_track->frames_per_hunk = header->hunkbytes / header->unitbytes;
   chd_track->first_sector = metadata.sector_offset;
