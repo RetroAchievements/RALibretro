@@ -1823,6 +1823,25 @@ void Application::aboutDialog()
   ::aboutDialog(_logger.contents().c_str());
 }
 
+static void buildSystemMenu(HMENU parentMenu, int system, std::string systemName)
+{
+  std::set<std::string> systemCores;
+  getAvailableSystemCores(system, systemCores);
+
+  std::map<std::string, int> systemItems;
+  for (const auto& systemCore : systemCores)
+  {
+    int id = encodeCoreName(systemCore, system);
+    systemItems.emplace(getEmulatorName(systemCore, system), id);
+  }
+
+  HMENU systemMenu = CreateMenu();
+  for (const auto& systemItem : systemItems)
+    AppendMenu(systemMenu, MF_STRING, IDM_SYSTEM_FIRST + systemItem.second, systemItem.first.c_str());
+
+  AppendMenu(parentMenu, MF_POPUP | MF_STRING, (UINT_PTR)systemMenu, systemName.c_str());
+}
+
 void Application::buildSystemsMenu()
 {
   std::set<int> availableSystems;
@@ -1833,9 +1852,14 @@ void Application::buildSystemsMenu()
   // use map to sort labels
   std::set<std::string> systemCores;
   std::map<std::string, int> systemMap;
-  std::map<std::string, int> systemItems;
+
   for (auto system : availableSystems)
-    systemMap.emplace(getSystemName(system), system);
+  {
+    systemCores.clear();
+    getAvailableSystemCores(system, systemCores);
+    if (!systemCores.empty())
+      systemMap.emplace(getSystemName(system), system);
+  }
 
   HMENU fileMenu = GetSubMenu(_menu, 0);
   HMENU systemsMenu = GetSubMenu(fileMenu, 0);
@@ -1843,26 +1867,34 @@ void Application::buildSystemsMenu()
   while (GetMenuItemCount(systemsMenu) > 0)
     DeleteMenu(systemsMenu, 0, MF_BYPOSITION);
 
-  for (const auto& pair : systemMap)
+  if (systemMap.size() > 20)
   {
-    int system = pair.second;
-    systemCores.clear();
-    getAvailableSystemCores(system, systemCores);
-    if (systemCores.empty())
-      continue;
-
-    systemItems.clear();
-    for (const auto& systemCore : systemCores)
+    std::map<std::string, std::vector<int>> manufacturerMap;
+    for (const auto& pair : systemMap)
     {
-      int id = encodeCoreName(systemCore, pair.second);
-      systemItems.emplace(getEmulatorName(systemCore, system), id);
+      int system = pair.second;
+      std::string manufacturer = getSystemManufacturer(system);
+      manufacturerMap[manufacturer].push_back(system);
     }
 
-    HMENU systemMenu = CreateMenu();
-    for (const auto& systemItem : systemItems)
-      AppendMenu(systemMenu, MF_STRING, IDM_SYSTEM_FIRST + systemItem.second, systemItem.first.c_str());
+    for (const auto& pair : manufacturerMap)
+    {
+      HMENU manufacturerMenu = CreateMenu();
 
-    AppendMenu(systemsMenu, MF_POPUP | MF_STRING, (UINT_PTR)systemMenu, pair.first.c_str());
+      for (const auto& systemPair : systemMap)
+      {
+        int system = systemPair.second;
+        if (std::find(pair.second.begin(), pair.second.end(), system) != pair.second.end())
+          buildSystemMenu(manufacturerMenu, system, systemPair.first);
+      }
+
+      AppendMenu(systemsMenu, MF_POPUP | MF_STRING, (UINT_PTR)manufacturerMenu, pair.first.c_str());
+    }
+  }
+  else
+  {
+    for (const auto& pair : systemMap)
+      buildSystemMenu(systemsMenu, pair.second, pair.first);
   }
 }
 
