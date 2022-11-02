@@ -91,5 +91,5 @@ private:
   void saveSRAM(void* sramData, size_t sramSize);
   void restoreFrameBuffer(const void* pixels, unsigned image_width, unsigned image_height, unsigned pitch);
 
-  bool loadRAState1(unsigned char* input, size_t size);
+  bool loadRAState1(unsigned char* input, size_t size, std::string& errorBuffer);
 };

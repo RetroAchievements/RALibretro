@@ -53,7 +53,7 @@ namespace libretro
     void     resetGame();
     size_t   serializeSize();
     bool     serialize(void* data, size_t size);
-    bool     unserialize(const void* data, size_t size);
+    bool     unserialize(const void* data, size_t size, std::string* errorBuffer);
     
     inline unsigned                getPerformanceLevel()    const { return _performanceLevel; }
     inline enum retro_pixel_format getPixelFormat()         const { return _pixelFormat; }

@@ -365,7 +365,7 @@ public:
   {
     _logger->log(level, line, length);
 
-    if (level == RETRO_LOG_ERROR && _errorBuffer)
+    if ((level == RETRO_LOG_ERROR || level == RETRO_LOG_WARN) && _errorBuffer)
     {
       if (!_errorBuffer->empty())
         _errorBuffer->push_back('\n');
@@ -518,9 +518,17 @@ bool libretro::Core::serialize(void* data, size_t size)
   return _core.serialize(data, size);
 }
 
-bool libretro::Core::unserialize(const void* data, size_t size)
+bool libretro::Core::unserialize(const void* data, size_t size, std::string* errorBuffer)
 {
-  return _core.unserialize(data, size);
+  bool result;
+
+  CoreErrorLogger errorLogger(_logger, errorBuffer);
+  libretro::LoggerComponent* oldLogger = _logger;
+  _logger = &errorLogger;
+  result = _core.unserialize(data, size);
+  _logger = oldLogger;
+
+  return result;
 }
 
 bool libretro::Core::initCore()

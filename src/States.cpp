@@ -286,7 +286,7 @@ void States::saveState(unsigned ndx)
   }
 }
 
-bool States::loadRAState1(unsigned char* input, size_t size)
+bool States::loadRAState1(unsigned char* input, size_t size, std::string& errorBuffer)
 {
   unsigned char* stop = input + size;
   unsigned char* marker;
@@ -301,7 +301,7 @@ bool States::loadRAState1(unsigned char* input, size_t size)
 
     if (memcmp(marker, RASTATE_MEM_BLOCK, 4) == 0)
     {
-      ret = _core->unserialize(input, block_size);
+      ret = _core->unserialize(input, block_size, &errorBuffer);
     }
     else if (memcmp(marker, RASTATE_CHEEVOS_BLOCK, 4) == 0)
     {
@@ -433,11 +433,12 @@ bool States::loadState(const std::string& path)
     data = decompressed;
   }
 
+  std::string errorBuffer;
   bool ret = true;
   if (memcmp(data, "RASTATE", 7) != 0)
   {
     /* old format is just core data, load it directly */
-    ret = _core->unserialize(data, size);
+    ret = _core->unserialize(data, size, &errorBuffer);
     if (ret)
       RA_OnLoadState(path.c_str());
 
@@ -458,7 +459,7 @@ bool States::loadState(const std::string& path)
     switch (input[7]) /* version */
     {
       case 1:
-        ret = loadRAState1(input, size);
+        ret = loadRAState1(input, size, errorBuffer);
         break;
 
       default:
@@ -471,6 +472,17 @@ bool States::loadState(const std::string& path)
   if (!ret)
   {
     _logger->error(TAG "Error loading savestate");
+
+    if (!errorBuffer.empty())
+    {
+      errorBuffer = "Failed to load state.\n\n" + errorBuffer;
+      MessageBox(g_mainWindow, errorBuffer.c_str(), "Core Error", MB_OK);
+    }
+    else
+    {
+      MessageBox(g_mainWindow, "Failed to load state.", "Core Error", MB_OK);
+    }
+
     return false;
   }
 
