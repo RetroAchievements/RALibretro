@@ -1884,8 +1884,14 @@ void Application::buildSystemsMenu()
       for (const auto& systemPair : systemMap)
       {
         int system = systemPair.second;
-        if (std::find(pair.second.begin(), pair.second.end(), system) != pair.second.end())
-          buildSystemMenu(manufacturerMenu, system, systemPair.first);
+        for (const auto manufacturerSystem : pair.second)
+        {
+          if (manufacturerSystem == system)
+          {
+            buildSystemMenu(manufacturerMenu, system, systemPair.first);
+            break;
+          }
+        }
       }
 
       AppendMenu(systemsMenu, MF_POPUP | MF_STRING, (UINT_PTR)manufacturerMenu, pair.first.c_str());
