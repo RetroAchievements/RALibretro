@@ -1,0 +1,109 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="libchdr">
+      <UniqueIdentifier>{1b09ea08-feeb-4e7c-9bc0-0170bd1de538}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="zlib">
+      <UniqueIdentifier>{76db1418-5622-496b-9c92-8bcd9649b6f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lzma">
+      <UniqueIdentifier>{ad972f61-02df-4c5a-af25-b997be37894e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="libchdr\src\libchdr_bitstream.c">
+      <Filter>libchdr</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\src\libchdr_cdrom.c">
+      <Filter>libchdr</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\src\libchdr_chd.c">
+      <Filter>libchdr</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\src\libchdr_flac.c">
+      <Filter>libchdr</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\src\libchdr_huffman.c">
+      <Filter>libchdr</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\zlib-1.2.12\adler32.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\zlib-1.2.12\compress.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\zlib-1.2.12\crc32.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\zlib-1.2.12\deflate.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\zlib-1.2.12\gzclose.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\zlib-1.2.12\gzlib.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\zlib-1.2.12\gzread.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\zlib-1.2.12\gzwrite.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\zlib-1.2.12\infback.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\zlib-1.2.12\inffast.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\zlib-1.2.12\inflate.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\zlib-1.2.12\inftrees.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\zlib-1.2.12\trees.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\zlib-1.2.12\uncompr.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\zlib-1.2.12\zutil.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\lzma-22.01\src\Lzma86Dec.c">
+      <Filter>lzma</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\lzma-22.01\src\LzmaDec.c">
+      <Filter>lzma</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\lzma-22.01\src\LzmaEnc.c">
+      <Filter>lzma</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\lzma-22.01\src\LzFind.c">
+      <Filter>lzma</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\lzma-22.01\src\CpuArch.c">
+      <Filter>lzma</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\lzma-22.01\src\Sort.c">
+      <Filter>lzma</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\lzma-22.01\src\Alloc.c">
+      <Filter>lzma</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\lzma-22.01\src\Bra86.c">
+      <Filter>lzma</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\lzma-22.01\src\BraIA64.c">
+      <Filter>lzma</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\lzma-22.01\src\Delta.c">
+      <Filter>lzma</Filter>
+    </ClCompile>
+    <ClCompile Include="libchdr\deps\lzma-22.01\src\Lzma86Enc.c">
+      <Filter>lzma</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

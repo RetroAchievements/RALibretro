@@ -93,6 +93,11 @@ OBJS=\
 	src/States.o \
 	src/Util.o
 
+ifdef HAVE_CHD
+  OBJS += $(CHD_OBJS) \
+          src/HashCHD.o
+endif
+
 src/rcheevos/src/rcheevos/rc_libretro.o: CFLAGS += -I./src/libretro
 
 src/components/Config.o: CFLAGS += -I./src/libretro

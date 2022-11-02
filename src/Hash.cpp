@@ -33,6 +33,10 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #include <windows.h>
 #include <winuser.h>
 
+#ifdef HAVE_CHD
+void rc_hash_init_chd_cdreader(); /* in HashCHD.cpp */
+#endif
+
 #define TAG "[HASH]"
 
 //  Manages multi-disc games
@@ -109,13 +113,27 @@ bool romLoaded(libretro::Core* core, Logger* logger, int system, const std::stri
     if (!hash[0])
     {
       struct rc_hash_filereader filereader;
+      std::string ext = util::extension(path);
 
       /* register a custom file_open handler for unicode support. use the default implementation for the other methods */
       memset(&filereader, 0, sizeof(filereader));
       filereader.open = rhash_file_open;
       rc_hash_init_custom_filereader(&filereader);
 
-      rc_hash_init_default_cdreader();
+      if (ext.length() == 4 && tolower(ext[1]) == 'c' && tolower(ext[2]) == 'h' && tolower(ext[3]) == 'd')
+      {
+#ifdef HAVE_CHD
+        rc_hash_init_chd_cdreader();
+#else
+        extern HWND g_mainWindow;
+        MessageBox(g_mainWindow, "CHD not supported without HAVE_CHD compile flag", "Error", MB_OK);
+        return false;
+#endif
+      }
+      else
+      {
+        rc_hash_init_default_cdreader();
+      }
 
       /* generate a hash for the new content */
       if (!rom || !rc_hash_generate_from_buffer(hash, system, (uint8_t*)rom, size))

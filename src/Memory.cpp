@@ -234,7 +234,7 @@ void Memory::attachToCore(libretro::Core* core, int consoleId)
     }
 
     _logger->info(TAG "change detected. updating memory map");
-    for (int i = 0; i < memoryRegions.count; i++)
+    for (unsigned i = 0; i < memoryRegions.count; i++)
     {
       if (memoryRegions.data[i] != g_memoryRegions.data[i])
         _logger->info(TAG "memoryRegion[%d] changed from %p to %p", g_memoryRegions.data[i], memoryRegions.data[i]);

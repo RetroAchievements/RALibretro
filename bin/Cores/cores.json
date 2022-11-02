@@ -137,7 +137,7 @@
   },
   "duckstation_libretro":{
     "name": "DuckStation",
-    "extensions": "m3u|cue",
+    "extensions": "m3u|cue|chd",
     "deprecated": "DuckStation is no longer maintained. Please use SwanStation.",
     "systems": [12]
   },
@@ -163,7 +163,7 @@
   },
   "flycast_libretro":{
     "name": "Flycast",
-    "extensions": "gdi|cue|m3u",
+    "extensions": "gdi|cue|m3u|chd",
     "systems": [40],
     "platforms": "win64"
   },
@@ -237,7 +237,7 @@
   },
   "genesis_plus_gx_libretro":{
     "name": "Genesis Plus GX",
-    "extensions": "cue|iso|m3u",
+    "extensions": "cue|iso|m3u|chd",
     "systems": [9]
   },
   "genesis_plus_gx_libretro":{
@@ -377,22 +377,22 @@
   },
   "mednafen_pce_fast_libretro":{
     "name": "Beetle PCE Fast",
-    "extensions": "m3u|cue",
+    "extensions": "m3u|cue|chd",
     "systems": [76]
   },
   "mednafen_pcfx_libretro":{
     "name": "Beetle PC-FX",
-    "extensions": "m3u|cue",
+    "extensions": "m3u|cue|chd",
     "systems": [49]
   },
   "mednafen_psx_libretro":{
     "name": "Beetle PSX",
-    "extensions": "m3u|cue",
+    "extensions": "m3u|cue|chd",
     "systems": [12]
   },
   "mednafen_psx_hw_libretro":{
     "name": "Beetle PSX HW",
-    "extensions": "m3u|cue",
+    "extensions": "m3u|cue|chd",
     "systems": [12]
   },
   "mednafen_saturn_libretro":{
@@ -412,7 +412,7 @@
   },
   "mednafen_supergrafx_libretro":{
     "name": "Beetle SuperGrafX",
-    "extensions": "m3u|cue",
+    "extensions": "m3u|cue|chd",
     "systems": [76]
   },
   "mednafen_vb_libretro":{
@@ -515,7 +515,7 @@
   },
   "pcsx_rearmed_libretro":{
     "name": "PCSX-ReARMed",
-    "extensions": "m3u|cue",
+    "extensions": "m3u|cue|chd",
     "systems": [12],
     "platforms": "win64"
   },
@@ -526,7 +526,7 @@
   },
   "picodrive_libretro":{
     "name": "PicoDrive",
-    "extensions": "cue|m3u",
+    "extensions": "cue|m3u|chd",
     "systems": [9]
   },
   "picodrive_libretro":{
@@ -636,7 +636,7 @@
   },
   "swanstation_libretro":{
     "name": "SwanStation",
-    "extensions": "m3u|cue",
+    "extensions": "m3u|cue|chd",
     "systems": [12]
   },
   "tgbdual_libretro":{
