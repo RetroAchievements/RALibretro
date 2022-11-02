@@ -107,6 +107,10 @@ static bool rc_hash_find_chd_track(chd_file* file, uint32_t track, metadata_t* m
   uint32_t padding_frames = 0;
   uint32_t idx;
 
+  /* CHD doesn't keep track of sessions. Assume the first session is a single track and hope for the best */
+  if (track == RC_HASH_CDTRACK_FIRST_OF_SECOND_SESSION)
+    track = 2;
+
   for (idx = 0; true; idx++)
   {
     if (!rc_hash_get_chd_metadata(file, idx, metadata))
