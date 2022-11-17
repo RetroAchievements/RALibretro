@@ -300,6 +300,62 @@ const char* getSystemName(int system)
   return rc_console_name(system);
 }
 
+const char* getSystemManufacturer(int system)
+{
+  switch (system)
+  {
+    case RC_CONSOLE_GAMEBOY:
+    case RC_CONSOLE_GAMEBOY_COLOR:
+    case RC_CONSOLE_GAMEBOY_ADVANCE:
+    case RC_CONSOLE_NINTENDO:
+    case RC_CONSOLE_SUPER_NINTENDO:
+    case RC_CONSOLE_NINTENDO_64:
+    case RC_CONSOLE_NINTENDO_DS:
+    case RC_CONSOLE_NINTENDO_3DS:
+    case RC_CONSOLE_POKEMON_MINI:
+    case RC_CONSOLE_VIRTUAL_BOY:
+    case RC_CONSOLE_WII:
+    case RC_CONSOLE_WII_U:
+      return "Nintendo";
+
+    case RC_CONSOLE_PLAYSTATION:
+    case RC_CONSOLE_PLAYSTATION_2:
+    case RC_CONSOLE_PSP:
+      return "Sony";
+
+    case RC_CONSOLE_ATARI_2600:
+    case RC_CONSOLE_ATARI_5200:
+    case RC_CONSOLE_ATARI_7800:
+    case RC_CONSOLE_ATARI_JAGUAR:
+    case RC_CONSOLE_ATARI_JAGUAR_CD:
+    case RC_CONSOLE_ATARI_LYNX:
+    case RC_CONSOLE_ATARI_ST:
+      return "Atari";
+
+    case RC_CONSOLE_PC_ENGINE:
+    case RC_CONSOLE_PC_ENGINE_CD:
+    case RC_CONSOLE_PC6000:
+    case RC_CONSOLE_PC8800:
+    case RC_CONSOLE_PC9800:
+    case RC_CONSOLE_PCFX:
+      return "NEC";
+
+    case RC_CONSOLE_SG1000:
+    case RC_CONSOLE_MASTER_SYSTEM:
+    case RC_CONSOLE_GAME_GEAR:
+    case RC_CONSOLE_MEGA_DRIVE:
+    case RC_CONSOLE_PICO:
+    case RC_CONSOLE_SEGA_32X:
+    case RC_CONSOLE_SEGA_CD:
+    case RC_CONSOLE_SATURN:
+    case RC_CONSOLE_DREAMCAST:
+      return "Sega";
+
+    default:
+      return "Other";
+  }
+}
+
 #ifdef _WINDOWS
 
 class CoreDialog : public Dialog

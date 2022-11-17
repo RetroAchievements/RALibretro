@@ -27,6 +27,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 const std::string& getEmulatorName(const std::string& coreName, int system);
 const char* getEmulatorExtensions(const std::string& coreName, int system);
 const char* getSystemName(int system);
+const char* getSystemManufacturer(int system);
 
 class Config;
 class Logger;
