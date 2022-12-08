@@ -132,6 +132,17 @@ bool romLoaded(libretro::Core* core, Logger* logger, int system, const std::stri
       }
       else
       {
+        if (!rom && ext.length() == 4 && tolower(ext[1]) == 'z' && tolower(ext[2]) == 'i' && tolower(ext[3]) == 'p')
+        {
+          /* file is a zip and we haven't preloaded it into memory. see if the core extracted it somewhere */
+          if (core->getNumDiscs() > 0)
+          {
+            std::string discPath;
+            if (core->getDiscPath(core->getCurrentDiscIndex(), discPath))
+              return romLoaded(core, logger, system, discPath, rom, size, changingDiscs);
+          }
+        }
+
         rc_hash_init_default_cdreader();
       }
 
