@@ -1438,6 +1438,18 @@ bool libretro::Core::setControllerInfo(const struct retro_controller_info* data)
   return true;
 }
 
+static size_t fill_bits(size_t n)
+{
+  /* ensures all bits in a value after the first set bit are 1. i.e. 00101000 -> 00111111 */
+  n |= n >> 1;
+  n |= n >> 2;
+  n |= n >> 4;
+  n |= n >> 8;
+  n |= n >> 16;
+  n |= n >> 16 >> 16; /* double shift to avoid warning on 32-bit compilers */
+  return n;
+}
+
 bool libretro::Core::setMemoryMaps(const struct retro_memory_map* data)
 {
   _memoryMap.num_descriptors = data->num_descriptors;
@@ -1466,6 +1478,25 @@ bool libretro::Core::setMemoryMaps(const struct retro_memory_map* data)
     else
     {
       desc->addrspace = NULL;
+    }
+
+    if (desc->ptr && desc->len == 0 && desc->select) {
+      /* pointer was provided, but length was not specified. calculate length. */
+      const size_t top_addr = fill_bits(desc->select);
+      const size_t live_bits = top_addr & ~desc->select;
+
+      /* remove any bits from the reduced_address that correspond to the bits in the disconnect
+       * mask and collapse the remaining bits. this code was copied from the mmap_reduce function
+       * in RetroArch. i'm not exactly sure how it works, but it does. */
+      size_t reduced_address = live_bits;
+      size_t disconnect_mask = desc->disconnect;
+      while (disconnect_mask) {
+        const unsigned tmp = (disconnect_mask - 1) & ~disconnect_mask;
+        reduced_address = (reduced_address & tmp) | ((reduced_address >> 1) & ~tmp);
+        disconnect_mask = (disconnect_mask & (disconnect_mask - 1)) >> 1;
+      }
+
+      desc->len = reduced_address + 1;
     }
   }
 
