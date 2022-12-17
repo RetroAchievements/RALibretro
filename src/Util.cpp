@@ -90,70 +90,46 @@ bool util::exists(const std::string& path)
   return util::fileTime(path) != 0;
 }
 
+static void log_errno(Logger* logger, const char* action, const char* target)
+{
+  char buffer[256];
+#ifdef _WIN32
+  strerror_s(buffer, sizeof(buffer), errno);
+  logger->error(TAG "Error %s \"%s\": %s", action, target, buffer);
+#else
+  logger->error(TAG "Error %s \"%s\": %s", action, target, strerror_r(errno, buffer, sizeof(buffer)));
+#endif
+}
+
 FILE* util::openFile(Logger* logger, const std::string& path, const char* mode)
 {
   FILE* file;
 
-#ifdef _WIN32
-  errno_t err;
+#ifdef _WINDOWS
+  /* fopen is not thread safe. fopen_s locks the file for reading and writing on Windows.
+   * so use _fsopen on Windows where we can only lock for writing */
+  int shflag;
+  if (mode[0] == 'r' && mode[1] != '+')
+    shflag = SH_DENYNO; /* if we're just reading the file, don't lock it. something else may have it open for writing */
+  else
+    shflag = SH_DENYWR; /* prevent anything else from writing to the file while we have it open */
 
   if (isAsciiOnly(path))
   {
-    err = fopen_s(&file, path.c_str(), mode);
-#ifdef _WINDOWS
-    if (err == EACCES)
-    {
-      /* fopen_s doesn't allow sharing files. if we're just reading, try again in sharing mode */
-      if (mode[0] == 'r' && (!mode[1] || mode[1] == 'b'))
-      {
-        file = _fsopen(path.c_str(), mode, SH_DENYNO);
-        err = (file) ? 0 : errno;
-      }
-    }
-#endif
+    file = _fsopen(path.c_str(), mode, shflag);
   }
   else
   {
-#ifdef _WINDOWS
     std::wstring unicodePath = util::utf8ToUChar(path);
     std::wstring unicodeMode = util::utf8ToUChar(mode);
-    err = _wfopen_s(&file, unicodePath.c_str(), unicodeMode.c_str());
-    if (err == EACCES)
-    {
-      /* _wfopen_s doesn't allow sharing files. if we're just reading, try again in sharing mode */
-      if (mode[0] == 'r' && (!mode[1] || mode[1] == 'b'))
-      {
-        file = _wfsopen(unicodePath.c_str(), unicodeMode.c_str(), SH_DENYNO);
-        err = (file) ? 0 : errno;
-      }
-    }
-#else
-    err = EINVAL;
-#endif
+    file = _wfsopen(unicodePath.c_str(), unicodeMode.c_str(), shflag);
   }
-
-  if (err)
-  {
-    if (logger)
-    {
-      char buffer[256];
-      strerror_s(buffer, sizeof(buffer), err);
-      logger->error(TAG "Error opening \"%s\": %s", path.c_str(), buffer);
-    }
-    file = NULL;
-  }
-#else
+#else /* !_WINDOWS */
   file = fopen(path.c_str(), mode);
-  if (errno)
-  {
-    if (logger)
-    {
-      char buffer[256];
-      logger->error(TAG "Error opening \"%s\": %s", path.c_str(), strerror_r(errno, buffer, sizeof(buffer)));
-    }
-    file = NULL;
-  }
 #endif
+
+  if (!file && logger)
+    log_errno(logger, "opening", path.c_str());
 
   return file;
 }
@@ -181,7 +157,7 @@ void* util::loadFile(Logger* logger, const std::string& path, size_t* size)
 
   if (numread < 0 || numread != *size)
   {
-    logger->error(TAG "Error reading \"%s\": %s", path.c_str(), strerror(errno));
+    log_errno(logger, "reading", path.c_str());
     free(data);
     return NULL;
   }
@@ -205,7 +181,7 @@ void* util::loadZippedFile(Logger* logger, const std::string& path, size_t* size
   status = mz_zip_reader_init_file(&zip_archive, path.c_str(), 0);
   if (!status)
   {
-    logger->error(TAG "Error opening \"%s\": %s", path.c_str(), strerror(errno));
+    log_errno(logger, "opening", path.c_str());
     return NULL;
   }
 
@@ -245,7 +221,7 @@ void* util::loadZippedFile(Logger* logger, const std::string& path, size_t* size
   if (!status)
   {
     mz_zip_reader_end(&zip_archive);
-    logger->error(TAG "Error decompressing file in \"%s\": %s", path.c_str(), strerror(errno));
+    log_errno(logger, "decompressing file in", path.c_str());
     free(data);
     return NULL;
   }
@@ -265,14 +241,14 @@ bool util::unzipFile(Logger* logger, const std::string& zipPath, const std::stri
   status = mz_zip_reader_init_file(&zip_archive, zipPath.c_str(), 0);
   if (!status)
   {
-    logger->error(TAG "Error opening \"%s\": %s", zipPath.c_str(), strerror(errno));
+    log_errno(logger, "opening", zipPath.c_str());
   }
   else
   {
     status = mz_zip_reader_extract_file_to_file(&zip_archive, archiveFileName.c_str(), unzippedPath.c_str(), 0);
     if (!status)
     {
-      logger->error(TAG "Error decompressing file in \"%s\": %s", zipPath.c_str(), strerror(errno));
+      log_errno(logger, "decompressing file in", zipPath.c_str());
     }
     else
     {
@@ -291,7 +267,7 @@ std::string util::loadFile(Logger* logger, const std::string& path)
   FILE* file = util::openFile(logger, path, "r");
   if (!file)
   {
-    logger->error(TAG "Error opening \"%s\": %s", path.c_str(), strerror(errno));
+    log_errno(logger, "opening", path.c_str());
     return "";
   }
 
@@ -311,13 +287,13 @@ bool util::saveFile(Logger* logger, const std::string& path, const void* data, s
   FILE* file = util::openFile(logger, path, "wb");
   if (file == NULL)
   {
-    logger->error(TAG "Error creating file \"%s\": %s", path.c_str(), strerror(errno));
+    log_errno(logger, "creating file", path.c_str());
     return false;
   }
 
   if (fwrite(data, 1, size, file) != size)
   {
-    logger->error(TAG "Error writing file \"%s\": %s", path.c_str(), strerror(errno));
+    log_errno(logger, "writing file", path.c_str());
     fclose(file);
     return false;
   }
@@ -410,7 +386,7 @@ bool util::downloadFile(Logger* logger, const std::string& url, const std::strin
           FILE* file = util::openFile(logger, path, "wb");
           if (file == NULL)
           {
-            logger->error(TAG "Error opening file \"%s\": %s", path.c_str(), strerror(errno));
+            /* openFile will log an error */
           }
           else
           {
