@@ -534,6 +534,11 @@
     "extensions": "32x|bin",
     "systems": [10]
   },
+  "picodrive_libretro":{
+    "name": "PicoDrive",
+    "extensions": "gg",
+    "systems": [15]
+  },
   "play_libretro":{
     "name": "Play!",
     "systems": [21],
