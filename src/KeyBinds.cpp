@@ -179,7 +179,7 @@ static const char* bindingNames[] = {
 };
 static_assert(sizeof(bindingNames) / sizeof(bindingNames[0]) == kMaxBindings, "bindingNames does not contain an appropriate number of elements");
 
-bool KeyBinds::init(libretro::LoggerComponent* logger)
+bool KeyBinds::init(Logger* logger)
 {
   static_assert(sizeof(_bindings) / sizeof(_bindings[0]) == kMaxBindings, "BindingList does not contain an appropriate number of elements");
 
@@ -1380,6 +1380,7 @@ public:
   void initControllerButtons(const KeyBinds::BindingList& bindings, int base)
   {
     _bindings = bindings;
+    _firstBinding = base;
 
     const WORD WIDTH = 478;
     const WORD HEIGHT = 220;
@@ -1409,6 +1410,9 @@ public:
     addButtonInput(6, 10, "Right Analog Right", kJoy0RightAnalogRight + base);
     addButtonInput(7, 1, "Left Analog Down", kJoy0LeftAnalogDown + base);
     addButtonInput(7, 9, "Right Analog Down", kJoy0RightAnalogDown + base);
+
+    addButton("Export", IDC_EXPORT, 0, HEIGHT - 14, 50, 14, false);
+    addButton("Import", IDC_IMPORT, 55, HEIGHT - 14, 50, 14, false);
 
     addButton("OK", IDOK, WIDTH - 55 - 50, HEIGHT - 14, 50, 14, true);
     addButton("Cancel", IDCANCEL, WIDTH - 50, HEIGHT - 14, 50, 14, false);
@@ -1468,12 +1472,17 @@ public:
 
   Input* _input = nullptr;
   std::map<SDL_JoystickID, SDL_JoystickID>* _bindingMap = nullptr;
+  Logger* _logger = nullptr;
 
   const KeyBinds::BindingList& getBindings() const { return _bindings; }
 
 protected:
   KeyBinds::BindingList _bindings = {};
+  int _firstBinding = kJoy0Up;
   std::array<char[32], kMaxBindings> _buttonLabels = {};
+
+  static const WORD IDC_EXPORT = 20000 - 1;
+  static const WORD IDC_IMPORT = IDC_EXPORT - 1;
 
   void retrieveData(HWND hwnd) override
   {
@@ -1513,6 +1522,10 @@ protected:
         int controlId = LOWORD(wparam);
         if (controlId >= 20000 && controlId <= 20000 + kMaxBindings)
           updateButton(hwnd, controlId - 20000);
+        else if (controlId == IDC_EXPORT)
+          exportJson(hwnd);
+        else if (controlId == IDC_IMPORT)
+          importJson(hwnd);
         break;
       }
     }
@@ -1553,6 +1566,89 @@ protected:
 
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "0");
   }
+
+  void exportJson(HWND hwnd)
+  {
+    std::string extensions = "JSON Files (*.json)";
+    extensions.append("\0", 1);
+    extensions.append("*.json");
+    extensions.append("\0", 2);
+    std::string path = util::saveFileDialog(hwnd, extensions, "json");
+
+    if (!path.empty())
+    {
+      const int numBindings = (kJoy1Up - kJoy0Up);
+      char binding[32];
+      std::string bindings = "{";
+      bindings.reserve(numBindings * 16);
+
+      for (int i = 0; i < numBindings; ++i)
+      {
+        if (i != 0)
+          bindings += ",";
+
+        bindings += "\"";
+        bindings += bindingNames[kJoy0Up + i]; /* always write J0_ */
+        bindings += "\":\"";
+
+        KeyBinds::getBindingString(binding, _bindings[_firstBinding + i]);
+        bindings += util::jsonEscape(binding);
+        bindings += "\"";
+      }
+
+      bindings += "}";
+
+      util::saveFile(_logger, path, bindings.data(), bindings.length());
+    }
+  }
+
+  void importJson(HWND hwnd)
+  {
+    std::string extensions = "JSON Files (*.json)";
+    extensions.append("\0", 1);
+    extensions.append("*.json");
+    extensions.append("\0", 2);
+    std::string path = util::openFileDialog(hwnd, extensions);
+
+    if (!path.empty())
+    {
+      std::string json = util::loadFile(_logger, path);
+      struct Deserialize
+      {
+        InputDialog* dialog;
+        HWND hwnd;
+        std::string key;
+      };
+      Deserialize ud;
+      ud.dialog = this;
+      ud.hwnd = hwnd;
+
+      jsonsax_result_t res = jsonsax_parse((char*)json.c_str(), &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+      {
+        auto* ud = (Deserialize*)udata;
+
+        if (event == JSONSAX_KEY)
+        {
+          ud->key = std::string(str, num);
+        }
+        else if (event == JSONSAX_STRING)
+        {
+          for (int i = kJoy0Up; i < kJoy1Up; ++i)
+          {
+            if (ud->key == bindingNames[i])
+            {
+              const int button = ud->dialog->_firstBinding + i;
+              parseBindingString(util::jsonUnescape(std::string(str, num)), ud->dialog->_bindings[button]);
+              ud->dialog->updateButtonLabel(button);
+              SetDlgItemText(ud->hwnd, 10000 + button, ud->dialog->_buttonLabels[button]);
+            }
+          }
+        }
+
+        return 0;
+      });
+    }
+  }
 };
 
 void KeyBinds::showControllerDialog(Input& input, int port)
@@ -1564,6 +1660,7 @@ void KeyBinds::showControllerDialog(Input& input, int port)
   db.init(label);
   db._input = &input;
   db._bindingMap = &_bindingMap;
+  db._logger = _logger;
 
   switch (port)
   {
@@ -1585,6 +1682,7 @@ void KeyBinds::showHotKeyDialog(Input& input)
   db.init("Hot Keys");
   db._input = &input;
   db._bindingMap = &_bindingMap;
+  db._logger = _logger;
 
   db.initHotKeyButtons(_bindings);
 

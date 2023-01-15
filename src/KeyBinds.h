@@ -19,7 +19,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "libretro/Components.h"
+#include "components/Logger.h"
 
 #include <SDL_events.h>
 
@@ -90,7 +90,7 @@ public:
     kKeyboardInput  // (extra = key << 8 | pressed)
   };
 
-  bool init(libretro::LoggerComponent* logger);
+  bool init(Logger* logger);
   void destroy() {}
 
   Action translate(const SDL_KeyboardEvent* event, unsigned* extra);
@@ -129,7 +129,7 @@ public:
   bool hasGameFocus() const noexcept { return _gameFocus; }
 
 protected:
-  libretro::LoggerComponent* _logger;
+  Logger* _logger;
 
   KeyBinds::Action translateButtonPress(int button, unsigned* extra);
   KeyBinds::Action translateButtonReleased(int button, unsigned* extra);

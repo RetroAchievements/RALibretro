@@ -1491,7 +1491,7 @@ bool libretro::Core::setMemoryMaps(const struct retro_memory_map* data)
       size_t reduced_address = live_bits;
       size_t disconnect_mask = desc->disconnect;
       while (disconnect_mask) {
-        const unsigned tmp = (disconnect_mask - 1) & ~disconnect_mask;
+        const size_t tmp = (disconnect_mask - 1) & ~disconnect_mask;
         reduced_address = (reduced_address & tmp) | ((reduced_address >> 1) & ~tmp);
         disconnect_mask = (disconnect_mask & (disconnect_mask - 1)) >> 1;
       }
