@@ -50,10 +50,14 @@ enum
   kJoy0R3,
   kJoy0Select,
   kJoy0Start,
-  kJoy0LeftAnalogX,
-  kJoy0LeftAnalogY,
-  kJoy0RightAnalogX,
-  kJoy0RightAnalogY,
+  kJoy0LeftAnalogLeft,
+  kJoy0LeftAnalogRight,
+  kJoy0LeftAnalogUp,
+  kJoy0LeftAnalogDown,
+  kJoy0RightAnalogLeft,
+  kJoy0RightAnalogRight,
+  kJoy0RightAnalogUp,
+  kJoy0RightAnalogDown,
 
   kJoy1Up,
   kJoy1Down,
@@ -71,10 +75,14 @@ enum
   kJoy1R3,
   kJoy1Select,
   kJoy1Start,
-  kJoy1LeftAnalogX,
-  kJoy1LeftAnalogY,
-  kJoy1RightAnalogX,
-  kJoy1RightAnalogY,
+  kJoy1LeftAnalogLeft,
+  kJoy1LeftAnalogRight,
+  kJoy1LeftAnalogUp,
+  kJoy1LeftAnalogDown,
+  kJoy1RightAnalogLeft,
+  kJoy1RightAnalogRight,
+  kJoy1RightAnalogUp,
+  kJoy1RightAnalogDown,
 
   // State management
   kSaveState1,
@@ -144,11 +152,13 @@ enum
 static const char* bindingNames[] = {
   "J0_UP", "J0_DOWN", "J0_LEFT", "J0_RIGHT", "J0_X", "J0_Y", "J0_A", "J0_B",
   "J0_L", "J0_R", "J0_L2", "J0_R2", "J0_L3", "J0_R3", "J0_SELECT", "J0_START",
-  "J0_LSTICK_X", "J0_LSTICK_Y", "J0_RSTICK_X", "J0_RSTICK_Y",
+  "J0_LSTICK_LEFT", "J0_LSTICK_RIGHT", "J0_LSTICK_UP", "J0_LSTICK_DOWN",
+  "J0_RSTICK_LEFT", "J0_RSTICK_RIGHT", "J0_RSTICK_UP", "J0_RSTICK_DOWN",
 
   "J1_UP", "J1_DOWN", "J1_LEFT", "J1_RIGHT", "J1_X", "J1_Y", "J1_A", "J1_B",
   "J1_L", "J1_R", "J1_L2", "J1_R2", "J1_L3", "J1_R3", "J1_SELECT", "J1_START",
-  "J1_LSTICK_X", "J1_LSTICK_Y", "J1_RSTICK_X", "J1_RSTICK_Y",
+  "J1_LSTICK_LEFT", "J1_LSTICK_RIGHT", "J1_LSTICK_UP", "J1_LSTICK_DOWN",
+  "J1_RSTICK_LEFT", "J1_RSTICK_RIGHT", "J1_RSTICK_UP", "J1_RSTICK_DOWN",
 
   "SAVE1", "SAVE2", "SAVE3", "SAVE4", "SAVE5", "SAVE6", "SAVE7", "SAVE8", "SAVE9", "SAVE0",
   "LOAD1", "LOAD2", "LOAD3", "LOAD4", "LOAD5", "LOAD6", "LOAD7", "LOAD8", "LOAD9", "LOAD0",
@@ -193,10 +203,14 @@ bool KeyBinds::init(libretro::LoggerComponent* logger)
     _bindings[kJoy0R2] = { 0, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, Binding::Type::Axis, 0 };
     _bindings[kJoy0L3] = { 0, SDL_CONTROLLER_BUTTON_LEFTSTICK, Binding::Type::Button, 0 };
     _bindings[kJoy0R3] = { 0, SDL_CONTROLLER_BUTTON_RIGHTSTICK, Binding::Type::Button, 0 };
-    _bindings[kJoy0LeftAnalogX] = { 0, SDL_CONTROLLER_AXIS_LEFTX, Binding::Type::Axis, 0 };
-    _bindings[kJoy0LeftAnalogY] = { 0, SDL_CONTROLLER_AXIS_LEFTY, Binding::Type::Axis, 0 };
-    _bindings[kJoy0RightAnalogX] = { 0, SDL_CONTROLLER_AXIS_RIGHTX, Binding::Type::Axis, 0 };
-    _bindings[kJoy0RightAnalogY] = { 0, SDL_CONTROLLER_AXIS_RIGHTY, Binding::Type::Axis, 0 };
+    _bindings[kJoy0LeftAnalogLeft] = { 0, SDL_CONTROLLER_AXIS_LEFTX, Binding::Type::Axis, 0xFF };
+    _bindings[kJoy0LeftAnalogRight] = { 0, SDL_CONTROLLER_AXIS_LEFTX, Binding::Type::Axis, 1 };
+    _bindings[kJoy0LeftAnalogUp] = { 0, SDL_CONTROLLER_AXIS_LEFTY, Binding::Type::Axis, 0xFF };
+    _bindings[kJoy0LeftAnalogDown] = { 0, SDL_CONTROLLER_AXIS_LEFTY, Binding::Type::Axis, 1 };
+    _bindings[kJoy0RightAnalogLeft] = { 0, SDL_CONTROLLER_AXIS_RIGHTX, Binding::Type::Axis, 0xFF };
+    _bindings[kJoy0RightAnalogRight] = { 0, SDL_CONTROLLER_AXIS_RIGHTX, Binding::Type::Axis, 1 };
+    _bindings[kJoy0RightAnalogUp] = { 0, SDL_CONTROLLER_AXIS_RIGHTY, Binding::Type::Axis, 0xFF };
+    _bindings[kJoy0RightAnalogDown] = { 0, SDL_CONTROLLER_AXIS_RIGHTY, Binding::Type::Axis, 1 };
     _bindings[kJoy0Select] = { 0, SDL_CONTROLLER_BUTTON_BACK, Binding::Type::Button, 0 };
     _bindings[kJoy0Start] = { 0, SDL_CONTROLLER_BUTTON_START, Binding::Type::Button, 0 };
   }
@@ -441,14 +455,22 @@ KeyBinds::Action KeyBinds::translateAnalog(int button, Sint16 value, unsigned* e
 
   switch (button)
   {
-    case kJoy0LeftAnalogX:  action = Action::kAxisLeftX;  controller = 0; break;
-    case kJoy0LeftAnalogY:  action = Action::kAxisLeftY;  controller = 0; break;
-    case kJoy0RightAnalogX: action = Action::kAxisRightX; controller = 0; break;
-    case kJoy0RightAnalogY: action = Action::kAxisRightY; controller = 0; break;
-    case kJoy1LeftAnalogX:  action = Action::kAxisLeftX;  controller = 1; break;
-    case kJoy1LeftAnalogY:  action = Action::kAxisLeftY;  controller = 1; break;
-    case kJoy1RightAnalogX: action = Action::kAxisRightX; controller = 1; break;
-    case kJoy1RightAnalogY: action = Action::kAxisRightY; controller = 1; break;
+    case kJoy0LeftAnalogLeft:
+    case kJoy0LeftAnalogRight:  action = Action::kAxisLeftX;  controller = 0; break;
+    case kJoy0LeftAnalogUp:
+    case kJoy0LeftAnalogDown:   action = Action::kAxisLeftY;  controller = 0; break;
+    case kJoy0RightAnalogLeft:
+    case kJoy0RightAnalogRight: action = Action::kAxisRightX; controller = 0; break;
+    case kJoy0RightAnalogUp:
+    case kJoy0RightAnalogDown:  action = Action::kAxisRightY; controller = 0; break;
+    case kJoy1LeftAnalogLeft:
+    case kJoy1LeftAnalogRight:  action = Action::kAxisLeftX;  controller = 1; break;
+    case kJoy1LeftAnalogUp:
+    case kJoy1LeftAnalogDown:   action = Action::kAxisLeftY;  controller = 1; break;
+    case kJoy1RightAnalogLeft:
+    case kJoy1RightAnalogRight: action = Action::kAxisRightX; controller = 1; break;
+    case kJoy1RightAnalogUp:
+    case kJoy1RightAnalogDown:  action = Action::kAxisRightY; controller = 1; break;
 
     default:
       return Action::kNothing;
@@ -698,14 +720,14 @@ unsigned KeyBinds::getNavigationPort(SDL_JoystickID joystickID)
   if (_bindings[kJoy1Right].type == Binding::Type::Button && _bindings[kJoy1Right].joystick_id == joystickID)
     return 1;
 
-  if (_bindings[kJoy0LeftAnalogX].type == Binding::Type::Axis && _bindings[kJoy0LeftAnalogX].joystick_id == joystickID)
+  if (_bindings[kJoy0LeftAnalogLeft].type == Binding::Type::Axis && _bindings[kJoy0LeftAnalogLeft].joystick_id == joystickID)
     return 0;
-  if (_bindings[kJoy1LeftAnalogX].type == Binding::Type::Axis && _bindings[kJoy1LeftAnalogX].joystick_id == joystickID)
+  if (_bindings[kJoy1LeftAnalogLeft].type == Binding::Type::Axis && _bindings[kJoy1LeftAnalogLeft].joystick_id == joystickID)
     return 1;
 
-  if (_bindings[kJoy0LeftAnalogX].type == Binding::Type::Button && _bindings[kJoy0LeftAnalogX].joystick_id == joystickID)
+  if (_bindings[kJoy0LeftAnalogLeft].type == Binding::Type::Button && _bindings[kJoy0LeftAnalogLeft].joystick_id == joystickID)
     return 0;
-  if (_bindings[kJoy1LeftAnalogX].type == Binding::Type::Button && _bindings[kJoy1LeftAnalogX].joystick_id == joystickID)
+  if (_bindings[kJoy1LeftAnalogLeft].type == Binding::Type::Button && _bindings[kJoy1LeftAnalogLeft].joystick_id == joystickID)
     return 1;
 
   return 0xFFFFFFFF;
@@ -738,14 +760,22 @@ static bool IsAnalog(int button)
 {
   switch (button)
   {
-    case kJoy0LeftAnalogX:
-    case kJoy0LeftAnalogY:
-    case kJoy0RightAnalogX:
-    case kJoy0RightAnalogY:
-    case kJoy1LeftAnalogX:
-    case kJoy1LeftAnalogY:
-    case kJoy1RightAnalogX:
-    case kJoy1RightAnalogY:
+    case kJoy0LeftAnalogLeft:
+    case kJoy0LeftAnalogRight:
+    case kJoy0LeftAnalogUp:
+    case kJoy0LeftAnalogDown:
+    case kJoy0RightAnalogLeft:
+    case kJoy0RightAnalogRight:
+    case kJoy0RightAnalogUp:
+    case kJoy0RightAnalogDown:
+    case kJoy1LeftAnalogLeft:
+    case kJoy1LeftAnalogRight:
+    case kJoy1LeftAnalogUp:
+    case kJoy1LeftAnalogDown:
+    case kJoy1RightAnalogLeft:
+    case kJoy1RightAnalogRight:
+    case kJoy1RightAnalogUp:
+    case kJoy1RightAnalogDown:
       return true;
 
     default:
@@ -934,6 +964,21 @@ static bool parseBindingString(const std::string& str, KeyBinds::Binding& bindin
   return false;
 }
 
+static void remapBinding(KeyBinds::BindingList& keyBinds, const std::string& key, KeyBinds::Binding& binding)
+{
+  int bindIndex = (key[10] == 'Y') ? kJoy0LeftAnalogUp : kJoy0LeftAnalogLeft;
+  if (key[3] == 'R')
+    bindIndex += (kJoy0RightAnalogLeft - kJoy0LeftAnalogLeft);
+  if (key[1] == '1')
+    bindIndex += (kJoy1LeftAnalogLeft - kJoy0LeftAnalogLeft);
+
+  keyBinds[bindIndex] = binding;
+  keyBinds[bindIndex].modifiers = 0xFF;
+
+  keyBinds[bindIndex + 1] = binding;
+  keyBinds[bindIndex + 1].modifiers = 1;
+}
+
 std::string KeyBinds::serializeBindings() const
 {
   char binding[32];
@@ -978,6 +1023,14 @@ bool KeyBinds::deserializeBindings(const char* json)
     }
     else if (event == JSONSAX_STRING)
     {
+      if (ud->key.length() == 11 && ud->key[0] == 'J' && ud->key[4] == 'S' && ud->key[5] == 'T' && ud->key[6] == 'I' && ud->key[9] == '_')
+      {
+        // Jn_xSTICK_d | n=0/1 x=L/R d=X/Y
+        Binding binding;
+        parseBindingString(util::jsonUnescape(std::string(str, num)), binding);
+        remapBinding(ud->self->_bindings, ud->key, binding);
+      }
+
       for (int i = 0; i < kMaxBindings; ++i)
       {
         if (ud->key == bindingNames[i])
@@ -1329,7 +1382,7 @@ public:
     _bindings = bindings;
 
     const WORD WIDTH = 478;
-    const WORD HEIGHT = 200;
+    const WORD HEIGHT = 220;
 
     addButtonInput(0, 1, "L2", kJoy0L2 + base);
     addButtonInput(0, 9, "R2", kJoy0R2 + base);
@@ -1346,12 +1399,16 @@ public:
     addButtonInput(4, 1, "Down", kJoy0Down + base);
     addButtonInput(4, 9, "B", kJoy0B + base);
 
-    addButtonInput(5, 1, "L3", kJoy0L3 + base);
-    addButtonInput(5, 9, "R3", kJoy0R3 + base);
-    addButtonInput(6, 0, "Left Analog X", kJoy0LeftAnalogX + base);
-    addButtonInput(6, 2, "Left Analog Y", kJoy0LeftAnalogY + base);
-    addButtonInput(6, 8, "Right Analog X", kJoy0RightAnalogX + base);
-    addButtonInput(6, 10, "Right Analog Y", kJoy0RightAnalogY + base);
+    addButtonInput(5, 1, "Left Analog Up", kJoy0LeftAnalogUp + base);
+    addButtonInput(5, 4, "L3", kJoy0L3 + base);
+    addButtonInput(5, 6, "R3", kJoy0R3 + base);
+    addButtonInput(5, 9, "Right Analog Up", kJoy0RightAnalogUp + base);
+    addButtonInput(6, 0, "Left Analog Left", kJoy0LeftAnalogLeft + base);
+    addButtonInput(6, 2, "Left Analog Right", kJoy0LeftAnalogRight + base);
+    addButtonInput(6, 8, "Right Analog Left", kJoy0RightAnalogLeft + base);
+    addButtonInput(6, 10, "Right Analog Right", kJoy0RightAnalogRight + base);
+    addButtonInput(7, 1, "Left Analog Down", kJoy0LeftAnalogDown + base);
+    addButtonInput(7, 9, "Right Analog Down", kJoy0RightAnalogDown + base);
 
     addButton("OK", IDOK, WIDTH - 55 - 50, HEIGHT - 14, 50, 14, true);
     addButton("Cancel", IDCANCEL, WIDTH - 50, HEIGHT - 14, 50, 14, false);
