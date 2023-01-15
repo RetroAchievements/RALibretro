@@ -230,6 +230,14 @@ bool KeyBinds::init(Logger* logger)
     _bindings[kJoy0R2] = { 0, SDLK_v, Binding::Type::Key, 0 };
     _bindings[kJoy0L3] = { 0, SDLK_g, Binding::Type::Key, 0 };
     _bindings[kJoy0R3] = { 0, SDLK_h, Binding::Type::Key, 0 };
+    _bindings[kJoy0LeftAnalogLeft] = { 0, SDLK_j, Binding::Type::Key, 0 };
+    _bindings[kJoy0LeftAnalogRight] = { 0, SDLK_l, Binding::Type::Key, 0 };
+    _bindings[kJoy0LeftAnalogUp] = { 0, SDLK_i, Binding::Type::Key, 0 };
+    _bindings[kJoy0LeftAnalogDown] = { 0, SDLK_k, Binding::Type::Key, 0 };
+    _bindings[kJoy0RightAnalogLeft] = { 0, SDLK_DELETE, Binding::Type::Key, 0 };
+    _bindings[kJoy0RightAnalogRight] = { 0, SDLK_PAGEDOWN, Binding::Type::Key, 0 };
+    _bindings[kJoy0RightAnalogUp] = { 0, SDLK_HOME, Binding::Type::Key, 0 };
+    _bindings[kJoy0RightAnalogDown] = { 0, SDLK_END, Binding::Type::Key, 0 };
     _bindings[kJoy0Select] = { 0, SDLK_TAB, Binding::Type::Key, 0 };
     _bindings[kJoy0Start] = { 0, SDLK_RETURN, Binding::Type::Key, 0 };
   }
@@ -296,6 +304,7 @@ bool KeyBinds::init(Logger* logger)
 }
 
 #define JOY_EXTRA(port, pressed) ((port << 8) | pressed)
+#define AXIS_EXTRA(controller, value) ((controller << 16) | value)
 
 KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
 {
@@ -319,6 +328,15 @@ KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
     case kJoy0Select:   *extra = JOY_EXTRA(0, 1); return Action::kButtonSelect;
     case kJoy0Start:    *extra = JOY_EXTRA(0, 1); return Action::kButtonStart;
 
+    case kJoy0LeftAnalogLeft:   *extra = AXIS_EXTRA(0, 0x8001); return Action::kAxisLeftX;
+    case kJoy0LeftAnalogRight:  *extra = AXIS_EXTRA(0, 0x7FFF); return Action::kAxisLeftX;
+    case kJoy0LeftAnalogUp:     *extra = AXIS_EXTRA(0, 0x8001); return Action::kAxisLeftY;
+    case kJoy0LeftAnalogDown:   *extra = AXIS_EXTRA(0, 0x7FFF); return Action::kAxisLeftY;
+    case kJoy0RightAnalogLeft:  *extra = AXIS_EXTRA(0, 0x8001); return Action::kAxisRightX;
+    case kJoy0RightAnalogRight: *extra = AXIS_EXTRA(0, 0x7FFF); return Action::kAxisRightX;
+    case kJoy0RightAnalogUp:    *extra = AXIS_EXTRA(0, 0x8001); return Action::kAxisRightY;
+    case kJoy0RightAnalogDown:  *extra = AXIS_EXTRA(0, 0x7FFF); return Action::kAxisRightY;
+
     case kJoy1Up:       *extra = JOY_EXTRA(1, 1); return Action::kButtonUp;
     case kJoy1Down:     *extra = JOY_EXTRA(1, 1); return Action::kButtonDown;
     case kJoy1Left:     *extra = JOY_EXTRA(1, 1); return Action::kButtonLeft;
@@ -335,6 +353,15 @@ KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
     case kJoy1R3:       *extra = JOY_EXTRA(1, 1); return Action::kButtonR3;
     case kJoy1Select:   *extra = JOY_EXTRA(1, 1); return Action::kButtonSelect;
     case kJoy1Start:    *extra = JOY_EXTRA(1, 1); return Action::kButtonStart;
+
+    case kJoy1LeftAnalogLeft:   *extra = AXIS_EXTRA(1, 0x8001); return Action::kAxisLeftX;
+    case kJoy1LeftAnalogRight:  *extra = AXIS_EXTRA(1, 0x7FFF); return Action::kAxisLeftX;
+    case kJoy1LeftAnalogUp:     *extra = AXIS_EXTRA(1, 0x8001); return Action::kAxisLeftY;
+    case kJoy1LeftAnalogDown:   *extra = AXIS_EXTRA(1, 0x7FFF); return Action::kAxisLeftY;
+    case kJoy1RightAnalogLeft:  *extra = AXIS_EXTRA(1, 0x8001); return Action::kAxisRightX;
+    case kJoy1RightAnalogRight: *extra = AXIS_EXTRA(1, 0x7FFF); return Action::kAxisRightX;
+    case kJoy1RightAnalogUp:    *extra = AXIS_EXTRA(1, 0x8001); return Action::kAxisRightY;
+    case kJoy1RightAnalogDown:  *extra = AXIS_EXTRA(1, 0x7FFF); return Action::kAxisRightY;
 
     // State state management
     case kSaveState1:   *extra = 1; return Action::kSaveState;
@@ -424,6 +451,15 @@ KeyBinds::Action KeyBinds::translateButtonReleased(int button, unsigned* extra)
     case kJoy0Select:   *extra = JOY_EXTRA(0, 0); return Action::kButtonSelect;
     case kJoy0Start:    *extra = JOY_EXTRA(0, 0); return Action::kButtonStart;
 
+    case kJoy0LeftAnalogLeft:
+    case kJoy0LeftAnalogRight:  *extra = AXIS_EXTRA(0, 0); return Action::kAxisLeftX;
+    case kJoy0LeftAnalogUp:
+    case kJoy0LeftAnalogDown:   *extra = AXIS_EXTRA(0, 0); return Action::kAxisLeftY;
+    case kJoy0RightAnalogLeft:
+    case kJoy0RightAnalogRight: *extra = AXIS_EXTRA(0, 0); return Action::kAxisRightX;
+    case kJoy0RightAnalogUp:
+    case kJoy0RightAnalogDown:  *extra = AXIS_EXTRA(0, 0); return Action::kAxisRightY;
+
     case kJoy1Up:       *extra = JOY_EXTRA(1, 0); return Action::kButtonUp;
     case kJoy1Down:     *extra = JOY_EXTRA(1, 0); return Action::kButtonDown;
     case kJoy1Left:     *extra = JOY_EXTRA(1, 0); return Action::kButtonLeft;
@@ -440,6 +476,15 @@ KeyBinds::Action KeyBinds::translateButtonReleased(int button, unsigned* extra)
     case kJoy1R3:       *extra = JOY_EXTRA(1, 0); return Action::kButtonR3;
     case kJoy1Select:   *extra = JOY_EXTRA(1, 0); return Action::kButtonSelect;
     case kJoy1Start:    *extra = JOY_EXTRA(1, 0); return Action::kButtonStart;
+
+    case kJoy1LeftAnalogLeft:
+    case kJoy1LeftAnalogRight:  *extra = AXIS_EXTRA(1, 0); return Action::kAxisLeftX;
+    case kJoy1LeftAnalogUp:
+    case kJoy1LeftAnalogDown:   *extra = AXIS_EXTRA(1, 0); return Action::kAxisLeftY;
+    case kJoy1RightAnalogLeft:
+    case kJoy1RightAnalogRight: *extra = AXIS_EXTRA(1, 0); return Action::kAxisRightX;
+    case kJoy1RightAnalogUp:
+    case kJoy1RightAnalogDown:  *extra = AXIS_EXTRA(1, 0); return Action::kAxisRightY;
 
     // Emulation speed
     case kFastForward:  *extra = 0; return Action::kFastForward;
@@ -480,7 +525,7 @@ KeyBinds::Action KeyBinds::translateAnalog(int button, Sint16 value, unsigned* e
   if (value == -32768)
     value = -32767;
 
-  *extra = (((unsigned)value) & 0xFFFF) | (controller << 16);
+  *extra = AXIS_EXTRA(controller, ((unsigned)value) & 0xFFFF);
   return action;
 }
 
@@ -1172,7 +1217,6 @@ public:
   KeyBinds::BindingList* _bindings = nullptr;
   KeyBinds::Action _button = KeyBinds::Action::kNothing;
   bool _isOpen = false;
-  bool _isAnalog = false;
 
   bool show(HWND hParent)
   {
@@ -1199,9 +1243,6 @@ public:
             case WM_KEYDOWN:
             case WM_SYSKEYDOWN:
             {
-              if (_isAnalog)
-                break;
-
               const auto code = WindowsScanCodeToSDLScanCode(msg.lParam, msg.wParam);
               const auto sdlKey = SDL_GetKeyFromScancode(code);
               switch (sdlKey)
@@ -1280,25 +1321,6 @@ protected:
     _isOpen = false;
   }
 
-  bool MakeAnalog(KeyBinds::Binding& button)
-  {
-    if (button.type != KeyBinds::Binding::Type::Axis)
-      return false;
-
-    switch (button.button)
-    {
-      case SDL_CONTROLLER_AXIS_LEFTX:
-      case SDL_CONTROLLER_AXIS_LEFTY:
-      case SDL_CONTROLLER_AXIS_RIGHTX:
-      case SDL_CONTROLLER_AXIS_RIGHTY:
-        button.modifiers = 0;
-        return true;
-
-      default:
-        return false;
-    }
-  }
-
   INT_PTR dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override
   {
     switch (msg)
@@ -1324,9 +1346,6 @@ protected:
           KeyBinds::Binding button = _input->captureButtonPress();
           if (button.type != KeyBinds::Binding::Type::None)
           {
-            if (_isAnalog && !MakeAnalog(button))
-              break;
-
             _buttonDescriptor = button;
 
             auto pair = _bindingMap->find(button.joystick_id);
@@ -1543,7 +1562,6 @@ protected:
     db._input = _input;
     db._bindingMap = _bindingMap;
     db._bindings = &_bindings;
-    db._isAnalog = IsAnalog(button);
     db._button = static_cast<KeyBinds::Action>(button);
 
     GetDlgItemText(hwnd, 10000 + button, buffer, sizeof(buffer));
