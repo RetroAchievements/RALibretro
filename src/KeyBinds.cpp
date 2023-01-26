@@ -50,10 +50,14 @@ enum
   kJoy0R3,
   kJoy0Select,
   kJoy0Start,
-  kJoy0LeftAnalogX,
-  kJoy0LeftAnalogY,
-  kJoy0RightAnalogX,
-  kJoy0RightAnalogY,
+  kJoy0LeftAnalogLeft,
+  kJoy0LeftAnalogRight,
+  kJoy0LeftAnalogUp,
+  kJoy0LeftAnalogDown,
+  kJoy0RightAnalogLeft,
+  kJoy0RightAnalogRight,
+  kJoy0RightAnalogUp,
+  kJoy0RightAnalogDown,
 
   kJoy1Up,
   kJoy1Down,
@@ -71,10 +75,14 @@ enum
   kJoy1R3,
   kJoy1Select,
   kJoy1Start,
-  kJoy1LeftAnalogX,
-  kJoy1LeftAnalogY,
-  kJoy1RightAnalogX,
-  kJoy1RightAnalogY,
+  kJoy1LeftAnalogLeft,
+  kJoy1LeftAnalogRight,
+  kJoy1LeftAnalogUp,
+  kJoy1LeftAnalogDown,
+  kJoy1RightAnalogLeft,
+  kJoy1RightAnalogRight,
+  kJoy1RightAnalogUp,
+  kJoy1RightAnalogDown,
 
   // State management
   kSaveState1,
@@ -144,11 +152,13 @@ enum
 static const char* bindingNames[] = {
   "J0_UP", "J0_DOWN", "J0_LEFT", "J0_RIGHT", "J0_X", "J0_Y", "J0_A", "J0_B",
   "J0_L", "J0_R", "J0_L2", "J0_R2", "J0_L3", "J0_R3", "J0_SELECT", "J0_START",
-  "J0_LSTICK_X", "J0_LSTICK_Y", "J0_RSTICK_X", "J0_RSTICK_Y",
+  "J0_LSTICK_LEFT", "J0_LSTICK_RIGHT", "J0_LSTICK_UP", "J0_LSTICK_DOWN",
+  "J0_RSTICK_LEFT", "J0_RSTICK_RIGHT", "J0_RSTICK_UP", "J0_RSTICK_DOWN",
 
   "J1_UP", "J1_DOWN", "J1_LEFT", "J1_RIGHT", "J1_X", "J1_Y", "J1_A", "J1_B",
   "J1_L", "J1_R", "J1_L2", "J1_R2", "J1_L3", "J1_R3", "J1_SELECT", "J1_START",
-  "J1_LSTICK_X", "J1_LSTICK_Y", "J1_RSTICK_X", "J1_RSTICK_Y",
+  "J1_LSTICK_LEFT", "J1_LSTICK_RIGHT", "J1_LSTICK_UP", "J1_LSTICK_DOWN",
+  "J1_RSTICK_LEFT", "J1_RSTICK_RIGHT", "J1_RSTICK_UP", "J1_RSTICK_DOWN",
 
   "SAVE1", "SAVE2", "SAVE3", "SAVE4", "SAVE5", "SAVE6", "SAVE7", "SAVE8", "SAVE9", "SAVE0",
   "LOAD1", "LOAD2", "LOAD3", "LOAD4", "LOAD5", "LOAD6", "LOAD7", "LOAD8", "LOAD9", "LOAD0",
@@ -169,7 +179,7 @@ static const char* bindingNames[] = {
 };
 static_assert(sizeof(bindingNames) / sizeof(bindingNames[0]) == kMaxBindings, "bindingNames does not contain an appropriate number of elements");
 
-bool KeyBinds::init(libretro::LoggerComponent* logger)
+bool KeyBinds::init(Logger* logger)
 {
   static_assert(sizeof(_bindings) / sizeof(_bindings[0]) == kMaxBindings, "BindingList does not contain an appropriate number of elements");
 
@@ -193,10 +203,14 @@ bool KeyBinds::init(libretro::LoggerComponent* logger)
     _bindings[kJoy0R2] = { 0, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, Binding::Type::Axis, 0 };
     _bindings[kJoy0L3] = { 0, SDL_CONTROLLER_BUTTON_LEFTSTICK, Binding::Type::Button, 0 };
     _bindings[kJoy0R3] = { 0, SDL_CONTROLLER_BUTTON_RIGHTSTICK, Binding::Type::Button, 0 };
-    _bindings[kJoy0LeftAnalogX] = { 0, SDL_CONTROLLER_AXIS_LEFTX, Binding::Type::Axis, 0 };
-    _bindings[kJoy0LeftAnalogY] = { 0, SDL_CONTROLLER_AXIS_LEFTY, Binding::Type::Axis, 0 };
-    _bindings[kJoy0RightAnalogX] = { 0, SDL_CONTROLLER_AXIS_RIGHTX, Binding::Type::Axis, 0 };
-    _bindings[kJoy0RightAnalogY] = { 0, SDL_CONTROLLER_AXIS_RIGHTY, Binding::Type::Axis, 0 };
+    _bindings[kJoy0LeftAnalogLeft] = { 0, SDL_CONTROLLER_AXIS_LEFTX, Binding::Type::Axis, 0xFF };
+    _bindings[kJoy0LeftAnalogRight] = { 0, SDL_CONTROLLER_AXIS_LEFTX, Binding::Type::Axis, 1 };
+    _bindings[kJoy0LeftAnalogUp] = { 0, SDL_CONTROLLER_AXIS_LEFTY, Binding::Type::Axis, 0xFF };
+    _bindings[kJoy0LeftAnalogDown] = { 0, SDL_CONTROLLER_AXIS_LEFTY, Binding::Type::Axis, 1 };
+    _bindings[kJoy0RightAnalogLeft] = { 0, SDL_CONTROLLER_AXIS_RIGHTX, Binding::Type::Axis, 0xFF };
+    _bindings[kJoy0RightAnalogRight] = { 0, SDL_CONTROLLER_AXIS_RIGHTX, Binding::Type::Axis, 1 };
+    _bindings[kJoy0RightAnalogUp] = { 0, SDL_CONTROLLER_AXIS_RIGHTY, Binding::Type::Axis, 0xFF };
+    _bindings[kJoy0RightAnalogDown] = { 0, SDL_CONTROLLER_AXIS_RIGHTY, Binding::Type::Axis, 1 };
     _bindings[kJoy0Select] = { 0, SDL_CONTROLLER_BUTTON_BACK, Binding::Type::Button, 0 };
     _bindings[kJoy0Start] = { 0, SDL_CONTROLLER_BUTTON_START, Binding::Type::Button, 0 };
   }
@@ -216,6 +230,14 @@ bool KeyBinds::init(libretro::LoggerComponent* logger)
     _bindings[kJoy0R2] = { 0, SDLK_v, Binding::Type::Key, 0 };
     _bindings[kJoy0L3] = { 0, SDLK_g, Binding::Type::Key, 0 };
     _bindings[kJoy0R3] = { 0, SDLK_h, Binding::Type::Key, 0 };
+    _bindings[kJoy0LeftAnalogLeft] = { 0, SDLK_j, Binding::Type::Key, 0 };
+    _bindings[kJoy0LeftAnalogRight] = { 0, SDLK_l, Binding::Type::Key, 0 };
+    _bindings[kJoy0LeftAnalogUp] = { 0, SDLK_i, Binding::Type::Key, 0 };
+    _bindings[kJoy0LeftAnalogDown] = { 0, SDLK_k, Binding::Type::Key, 0 };
+    _bindings[kJoy0RightAnalogLeft] = { 0, SDLK_DELETE, Binding::Type::Key, 0 };
+    _bindings[kJoy0RightAnalogRight] = { 0, SDLK_PAGEDOWN, Binding::Type::Key, 0 };
+    _bindings[kJoy0RightAnalogUp] = { 0, SDLK_HOME, Binding::Type::Key, 0 };
+    _bindings[kJoy0RightAnalogDown] = { 0, SDLK_END, Binding::Type::Key, 0 };
     _bindings[kJoy0Select] = { 0, SDLK_TAB, Binding::Type::Key, 0 };
     _bindings[kJoy0Start] = { 0, SDLK_RETURN, Binding::Type::Key, 0 };
   }
@@ -282,6 +304,7 @@ bool KeyBinds::init(libretro::LoggerComponent* logger)
 }
 
 #define JOY_EXTRA(port, pressed) ((port << 8) | pressed)
+#define AXIS_EXTRA(controller, value) ((controller << 16) | value)
 
 KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
 {
@@ -305,6 +328,15 @@ KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
     case kJoy0Select:   *extra = JOY_EXTRA(0, 1); return Action::kButtonSelect;
     case kJoy0Start:    *extra = JOY_EXTRA(0, 1); return Action::kButtonStart;
 
+    case kJoy0LeftAnalogLeft:   *extra = AXIS_EXTRA(0, 0x8001); return Action::kAxisLeftX;
+    case kJoy0LeftAnalogRight:  *extra = AXIS_EXTRA(0, 0x7FFF); return Action::kAxisLeftX;
+    case kJoy0LeftAnalogUp:     *extra = AXIS_EXTRA(0, 0x8001); return Action::kAxisLeftY;
+    case kJoy0LeftAnalogDown:   *extra = AXIS_EXTRA(0, 0x7FFF); return Action::kAxisLeftY;
+    case kJoy0RightAnalogLeft:  *extra = AXIS_EXTRA(0, 0x8001); return Action::kAxisRightX;
+    case kJoy0RightAnalogRight: *extra = AXIS_EXTRA(0, 0x7FFF); return Action::kAxisRightX;
+    case kJoy0RightAnalogUp:    *extra = AXIS_EXTRA(0, 0x8001); return Action::kAxisRightY;
+    case kJoy0RightAnalogDown:  *extra = AXIS_EXTRA(0, 0x7FFF); return Action::kAxisRightY;
+
     case kJoy1Up:       *extra = JOY_EXTRA(1, 1); return Action::kButtonUp;
     case kJoy1Down:     *extra = JOY_EXTRA(1, 1); return Action::kButtonDown;
     case kJoy1Left:     *extra = JOY_EXTRA(1, 1); return Action::kButtonLeft;
@@ -321,6 +353,15 @@ KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
     case kJoy1R3:       *extra = JOY_EXTRA(1, 1); return Action::kButtonR3;
     case kJoy1Select:   *extra = JOY_EXTRA(1, 1); return Action::kButtonSelect;
     case kJoy1Start:    *extra = JOY_EXTRA(1, 1); return Action::kButtonStart;
+
+    case kJoy1LeftAnalogLeft:   *extra = AXIS_EXTRA(1, 0x8001); return Action::kAxisLeftX;
+    case kJoy1LeftAnalogRight:  *extra = AXIS_EXTRA(1, 0x7FFF); return Action::kAxisLeftX;
+    case kJoy1LeftAnalogUp:     *extra = AXIS_EXTRA(1, 0x8001); return Action::kAxisLeftY;
+    case kJoy1LeftAnalogDown:   *extra = AXIS_EXTRA(1, 0x7FFF); return Action::kAxisLeftY;
+    case kJoy1RightAnalogLeft:  *extra = AXIS_EXTRA(1, 0x8001); return Action::kAxisRightX;
+    case kJoy1RightAnalogRight: *extra = AXIS_EXTRA(1, 0x7FFF); return Action::kAxisRightX;
+    case kJoy1RightAnalogUp:    *extra = AXIS_EXTRA(1, 0x8001); return Action::kAxisRightY;
+    case kJoy1RightAnalogDown:  *extra = AXIS_EXTRA(1, 0x7FFF); return Action::kAxisRightY;
 
     // State state management
     case kSaveState1:   *extra = 1; return Action::kSaveState;
@@ -410,6 +451,15 @@ KeyBinds::Action KeyBinds::translateButtonReleased(int button, unsigned* extra)
     case kJoy0Select:   *extra = JOY_EXTRA(0, 0); return Action::kButtonSelect;
     case kJoy0Start:    *extra = JOY_EXTRA(0, 0); return Action::kButtonStart;
 
+    case kJoy0LeftAnalogLeft:
+    case kJoy0LeftAnalogRight:  *extra = AXIS_EXTRA(0, 0); return Action::kAxisLeftX;
+    case kJoy0LeftAnalogUp:
+    case kJoy0LeftAnalogDown:   *extra = AXIS_EXTRA(0, 0); return Action::kAxisLeftY;
+    case kJoy0RightAnalogLeft:
+    case kJoy0RightAnalogRight: *extra = AXIS_EXTRA(0, 0); return Action::kAxisRightX;
+    case kJoy0RightAnalogUp:
+    case kJoy0RightAnalogDown:  *extra = AXIS_EXTRA(0, 0); return Action::kAxisRightY;
+
     case kJoy1Up:       *extra = JOY_EXTRA(1, 0); return Action::kButtonUp;
     case kJoy1Down:     *extra = JOY_EXTRA(1, 0); return Action::kButtonDown;
     case kJoy1Left:     *extra = JOY_EXTRA(1, 0); return Action::kButtonLeft;
@@ -427,6 +477,15 @@ KeyBinds::Action KeyBinds::translateButtonReleased(int button, unsigned* extra)
     case kJoy1Select:   *extra = JOY_EXTRA(1, 0); return Action::kButtonSelect;
     case kJoy1Start:    *extra = JOY_EXTRA(1, 0); return Action::kButtonStart;
 
+    case kJoy1LeftAnalogLeft:
+    case kJoy1LeftAnalogRight:  *extra = AXIS_EXTRA(1, 0); return Action::kAxisLeftX;
+    case kJoy1LeftAnalogUp:
+    case kJoy1LeftAnalogDown:   *extra = AXIS_EXTRA(1, 0); return Action::kAxisLeftY;
+    case kJoy1RightAnalogLeft:
+    case kJoy1RightAnalogRight: *extra = AXIS_EXTRA(1, 0); return Action::kAxisRightX;
+    case kJoy1RightAnalogUp:
+    case kJoy1RightAnalogDown:  *extra = AXIS_EXTRA(1, 0); return Action::kAxisRightY;
+
     // Emulation speed
     case kFastForward:  *extra = 0; return Action::kFastForward;
 
@@ -441,14 +500,22 @@ KeyBinds::Action KeyBinds::translateAnalog(int button, Sint16 value, unsigned* e
 
   switch (button)
   {
-    case kJoy0LeftAnalogX:  action = Action::kAxisLeftX;  controller = 0; break;
-    case kJoy0LeftAnalogY:  action = Action::kAxisLeftY;  controller = 0; break;
-    case kJoy0RightAnalogX: action = Action::kAxisRightX; controller = 0; break;
-    case kJoy0RightAnalogY: action = Action::kAxisRightY; controller = 0; break;
-    case kJoy1LeftAnalogX:  action = Action::kAxisLeftX;  controller = 1; break;
-    case kJoy1LeftAnalogY:  action = Action::kAxisLeftY;  controller = 1; break;
-    case kJoy1RightAnalogX: action = Action::kAxisRightX; controller = 1; break;
-    case kJoy1RightAnalogY: action = Action::kAxisRightY; controller = 1; break;
+    case kJoy0LeftAnalogLeft:
+    case kJoy0LeftAnalogRight:  action = Action::kAxisLeftX;  controller = 0; break;
+    case kJoy0LeftAnalogUp:
+    case kJoy0LeftAnalogDown:   action = Action::kAxisLeftY;  controller = 0; break;
+    case kJoy0RightAnalogLeft:
+    case kJoy0RightAnalogRight: action = Action::kAxisRightX; controller = 0; break;
+    case kJoy0RightAnalogUp:
+    case kJoy0RightAnalogDown:  action = Action::kAxisRightY; controller = 0; break;
+    case kJoy1LeftAnalogLeft:
+    case kJoy1LeftAnalogRight:  action = Action::kAxisLeftX;  controller = 1; break;
+    case kJoy1LeftAnalogUp:
+    case kJoy1LeftAnalogDown:   action = Action::kAxisLeftY;  controller = 1; break;
+    case kJoy1RightAnalogLeft:
+    case kJoy1RightAnalogRight: action = Action::kAxisRightX; controller = 1; break;
+    case kJoy1RightAnalogUp:
+    case kJoy1RightAnalogDown:  action = Action::kAxisRightY; controller = 1; break;
 
     default:
       return Action::kNothing;
@@ -458,7 +525,7 @@ KeyBinds::Action KeyBinds::translateAnalog(int button, Sint16 value, unsigned* e
   if (value == -32768)
     value = -32767;
 
-  *extra = (((unsigned)value) & 0xFFFF) | (controller << 16);
+  *extra = AXIS_EXTRA(controller, ((unsigned)value) & 0xFFFF);
   return action;
 }
 
@@ -698,14 +765,14 @@ unsigned KeyBinds::getNavigationPort(SDL_JoystickID joystickID)
   if (_bindings[kJoy1Right].type == Binding::Type::Button && _bindings[kJoy1Right].joystick_id == joystickID)
     return 1;
 
-  if (_bindings[kJoy0LeftAnalogX].type == Binding::Type::Axis && _bindings[kJoy0LeftAnalogX].joystick_id == joystickID)
+  if (_bindings[kJoy0LeftAnalogLeft].type == Binding::Type::Axis && _bindings[kJoy0LeftAnalogLeft].joystick_id == joystickID)
     return 0;
-  if (_bindings[kJoy1LeftAnalogX].type == Binding::Type::Axis && _bindings[kJoy1LeftAnalogX].joystick_id == joystickID)
+  if (_bindings[kJoy1LeftAnalogLeft].type == Binding::Type::Axis && _bindings[kJoy1LeftAnalogLeft].joystick_id == joystickID)
     return 1;
 
-  if (_bindings[kJoy0LeftAnalogX].type == Binding::Type::Button && _bindings[kJoy0LeftAnalogX].joystick_id == joystickID)
+  if (_bindings[kJoy0LeftAnalogLeft].type == Binding::Type::Button && _bindings[kJoy0LeftAnalogLeft].joystick_id == joystickID)
     return 0;
-  if (_bindings[kJoy1LeftAnalogX].type == Binding::Type::Button && _bindings[kJoy1LeftAnalogX].joystick_id == joystickID)
+  if (_bindings[kJoy1LeftAnalogLeft].type == Binding::Type::Button && _bindings[kJoy1LeftAnalogLeft].joystick_id == joystickID)
     return 1;
 
   return 0xFFFFFFFF;
@@ -738,14 +805,22 @@ static bool IsAnalog(int button)
 {
   switch (button)
   {
-    case kJoy0LeftAnalogX:
-    case kJoy0LeftAnalogY:
-    case kJoy0RightAnalogX:
-    case kJoy0RightAnalogY:
-    case kJoy1LeftAnalogX:
-    case kJoy1LeftAnalogY:
-    case kJoy1RightAnalogX:
-    case kJoy1RightAnalogY:
+    case kJoy0LeftAnalogLeft:
+    case kJoy0LeftAnalogRight:
+    case kJoy0LeftAnalogUp:
+    case kJoy0LeftAnalogDown:
+    case kJoy0RightAnalogLeft:
+    case kJoy0RightAnalogRight:
+    case kJoy0RightAnalogUp:
+    case kJoy0RightAnalogDown:
+    case kJoy1LeftAnalogLeft:
+    case kJoy1LeftAnalogRight:
+    case kJoy1LeftAnalogUp:
+    case kJoy1LeftAnalogDown:
+    case kJoy1RightAnalogLeft:
+    case kJoy1RightAnalogRight:
+    case kJoy1RightAnalogUp:
+    case kJoy1RightAnalogDown:
       return true;
 
     default:
@@ -934,6 +1009,21 @@ static bool parseBindingString(const std::string& str, KeyBinds::Binding& bindin
   return false;
 }
 
+static void remapBinding(KeyBinds::BindingList& keyBinds, const std::string& key, KeyBinds::Binding& binding)
+{
+  int bindIndex = (key[10] == 'Y') ? kJoy0LeftAnalogUp : kJoy0LeftAnalogLeft;
+  if (key[3] == 'R')
+    bindIndex += (kJoy0RightAnalogLeft - kJoy0LeftAnalogLeft);
+  if (key[1] == '1')
+    bindIndex += (kJoy1LeftAnalogLeft - kJoy0LeftAnalogLeft);
+
+  keyBinds[bindIndex] = binding;
+  keyBinds[bindIndex].modifiers = 0xFF;
+
+  keyBinds[bindIndex + 1] = binding;
+  keyBinds[bindIndex + 1].modifiers = 1;
+}
+
 std::string KeyBinds::serializeBindings() const
 {
   char binding[32];
@@ -978,6 +1068,14 @@ bool KeyBinds::deserializeBindings(const char* json)
     }
     else if (event == JSONSAX_STRING)
     {
+      if (ud->key.length() == 11 && ud->key[0] == 'J' && ud->key[4] == 'S' && ud->key[5] == 'T' && ud->key[6] == 'I' && ud->key[9] == '_')
+      {
+        // Jn_xSTICK_d | n=0/1 x=L/R d=X/Y
+        Binding binding;
+        parseBindingString(util::jsonUnescape(std::string(str, num)), binding);
+        remapBinding(ud->self->_bindings, ud->key, binding);
+      }
+
       for (int i = 0; i < kMaxBindings; ++i)
       {
         if (ud->key == bindingNames[i])
@@ -1119,7 +1217,6 @@ public:
   KeyBinds::BindingList* _bindings = nullptr;
   KeyBinds::Action _button = KeyBinds::Action::kNothing;
   bool _isOpen = false;
-  bool _isAnalog = false;
 
   bool show(HWND hParent)
   {
@@ -1146,9 +1243,6 @@ public:
             case WM_KEYDOWN:
             case WM_SYSKEYDOWN:
             {
-              if (_isAnalog)
-                break;
-
               const auto code = WindowsScanCodeToSDLScanCode(msg.lParam, msg.wParam);
               const auto sdlKey = SDL_GetKeyFromScancode(code);
               switch (sdlKey)
@@ -1227,25 +1321,6 @@ protected:
     _isOpen = false;
   }
 
-  bool MakeAnalog(KeyBinds::Binding& button)
-  {
-    if (button.type != KeyBinds::Binding::Type::Axis)
-      return false;
-
-    switch (button.button)
-    {
-      case SDL_CONTROLLER_AXIS_LEFTX:
-      case SDL_CONTROLLER_AXIS_LEFTY:
-      case SDL_CONTROLLER_AXIS_RIGHTX:
-      case SDL_CONTROLLER_AXIS_RIGHTY:
-        button.modifiers = 0;
-        return true;
-
-      default:
-        return false;
-    }
-  }
-
   INT_PTR dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override
   {
     switch (msg)
@@ -1271,9 +1346,6 @@ protected:
           KeyBinds::Binding button = _input->captureButtonPress();
           if (button.type != KeyBinds::Binding::Type::None)
           {
-            if (_isAnalog && !MakeAnalog(button))
-              break;
-
             _buttonDescriptor = button;
 
             auto pair = _bindingMap->find(button.joystick_id);
@@ -1327,9 +1399,10 @@ public:
   void initControllerButtons(const KeyBinds::BindingList& bindings, int base)
   {
     _bindings = bindings;
+    _firstBinding = base;
 
     const WORD WIDTH = 478;
-    const WORD HEIGHT = 200;
+    const WORD HEIGHT = 220;
 
     addButtonInput(0, 1, "L2", kJoy0L2 + base);
     addButtonInput(0, 9, "R2", kJoy0R2 + base);
@@ -1346,12 +1419,19 @@ public:
     addButtonInput(4, 1, "Down", kJoy0Down + base);
     addButtonInput(4, 9, "B", kJoy0B + base);
 
-    addButtonInput(5, 1, "L3", kJoy0L3 + base);
-    addButtonInput(5, 9, "R3", kJoy0R3 + base);
-    addButtonInput(6, 0, "Left Analog X", kJoy0LeftAnalogX + base);
-    addButtonInput(6, 2, "Left Analog Y", kJoy0LeftAnalogY + base);
-    addButtonInput(6, 8, "Right Analog X", kJoy0RightAnalogX + base);
-    addButtonInput(6, 10, "Right Analog Y", kJoy0RightAnalogY + base);
+    addButtonInput(5, 1, "Left Analog Up", kJoy0LeftAnalogUp + base);
+    addButtonInput(5, 4, "L3", kJoy0L3 + base);
+    addButtonInput(5, 6, "R3", kJoy0R3 + base);
+    addButtonInput(5, 9, "Right Analog Up", kJoy0RightAnalogUp + base);
+    addButtonInput(6, 0, "Left Analog Left", kJoy0LeftAnalogLeft + base);
+    addButtonInput(6, 2, "Left Analog Right", kJoy0LeftAnalogRight + base);
+    addButtonInput(6, 8, "Right Analog Left", kJoy0RightAnalogLeft + base);
+    addButtonInput(6, 10, "Right Analog Right", kJoy0RightAnalogRight + base);
+    addButtonInput(7, 1, "Left Analog Down", kJoy0LeftAnalogDown + base);
+    addButtonInput(7, 9, "Right Analog Down", kJoy0RightAnalogDown + base);
+
+    addButton("Export", IDC_EXPORT, 0, HEIGHT - 14, 50, 14, false);
+    addButton("Import", IDC_IMPORT, 55, HEIGHT - 14, 50, 14, false);
 
     addButton("OK", IDOK, WIDTH - 55 - 50, HEIGHT - 14, 50, 14, true);
     addButton("Cancel", IDCANCEL, WIDTH - 50, HEIGHT - 14, 50, 14, false);
@@ -1411,12 +1491,17 @@ public:
 
   Input* _input = nullptr;
   std::map<SDL_JoystickID, SDL_JoystickID>* _bindingMap = nullptr;
+  Logger* _logger = nullptr;
 
   const KeyBinds::BindingList& getBindings() const { return _bindings; }
 
 protected:
   KeyBinds::BindingList _bindings = {};
+  int _firstBinding = kJoy0Up;
   std::array<char[32], kMaxBindings> _buttonLabels = {};
+
+  static const WORD IDC_EXPORT = 20000 - 1;
+  static const WORD IDC_IMPORT = IDC_EXPORT - 1;
 
   void retrieveData(HWND hwnd) override
   {
@@ -1456,6 +1541,10 @@ protected:
         int controlId = LOWORD(wparam);
         if (controlId >= 20000 && controlId <= 20000 + kMaxBindings)
           updateButton(hwnd, controlId - 20000);
+        else if (controlId == IDC_EXPORT)
+          exportJson(hwnd);
+        else if (controlId == IDC_IMPORT)
+          importJson(hwnd);
         break;
       }
     }
@@ -1473,7 +1562,6 @@ protected:
     db._input = _input;
     db._bindingMap = _bindingMap;
     db._bindings = &_bindings;
-    db._isAnalog = IsAnalog(button);
     db._button = static_cast<KeyBinds::Action>(button);
 
     GetDlgItemText(hwnd, 10000 + button, buffer, sizeof(buffer));
@@ -1496,6 +1584,89 @@ protected:
 
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "0");
   }
+
+  void exportJson(HWND hwnd)
+  {
+    std::string extensions = "JSON Files (*.json)";
+    extensions.append("\0", 1);
+    extensions.append("*.json");
+    extensions.append("\0", 2);
+    std::string path = util::saveFileDialog(hwnd, extensions, "json");
+
+    if (!path.empty())
+    {
+      const int numBindings = (kJoy1Up - kJoy0Up);
+      char binding[32];
+      std::string bindings = "{";
+      bindings.reserve(numBindings * 16);
+
+      for (int i = 0; i < numBindings; ++i)
+      {
+        if (i != 0)
+          bindings += ",";
+
+        bindings += "\"";
+        bindings += bindingNames[kJoy0Up + i]; /* always write J0_ */
+        bindings += "\":\"";
+
+        KeyBinds::getBindingString(binding, _bindings[_firstBinding + i]);
+        bindings += util::jsonEscape(binding);
+        bindings += "\"";
+      }
+
+      bindings += "}";
+
+      util::saveFile(_logger, path, bindings.data(), bindings.length());
+    }
+  }
+
+  void importJson(HWND hwnd)
+  {
+    std::string extensions = "JSON Files (*.json)";
+    extensions.append("\0", 1);
+    extensions.append("*.json");
+    extensions.append("\0", 2);
+    std::string path = util::openFileDialog(hwnd, extensions);
+
+    if (!path.empty())
+    {
+      std::string json = util::loadFile(_logger, path);
+      struct Deserialize
+      {
+        InputDialog* dialog;
+        HWND hwnd;
+        std::string key;
+      };
+      Deserialize ud;
+      ud.dialog = this;
+      ud.hwnd = hwnd;
+
+      jsonsax_result_t res = jsonsax_parse((char*)json.c_str(), &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+      {
+        auto* ud = (Deserialize*)udata;
+
+        if (event == JSONSAX_KEY)
+        {
+          ud->key = std::string(str, num);
+        }
+        else if (event == JSONSAX_STRING)
+        {
+          for (int i = kJoy0Up; i < kJoy1Up; ++i)
+          {
+            if (ud->key == bindingNames[i])
+            {
+              const int button = ud->dialog->_firstBinding + i;
+              parseBindingString(util::jsonUnescape(std::string(str, num)), ud->dialog->_bindings[button]);
+              ud->dialog->updateButtonLabel(button);
+              SetDlgItemText(ud->hwnd, 10000 + button, ud->dialog->_buttonLabels[button]);
+            }
+          }
+        }
+
+        return 0;
+      });
+    }
+  }
 };
 
 void KeyBinds::showControllerDialog(Input& input, int port)
@@ -1507,6 +1678,7 @@ void KeyBinds::showControllerDialog(Input& input, int port)
   db.init(label);
   db._input = &input;
   db._bindingMap = &_bindingMap;
+  db._logger = _logger;
 
   switch (port)
   {
@@ -1528,6 +1700,7 @@ void KeyBinds::showHotKeyDialog(Input& input)
   db.init("Hot Keys");
   db._input = &input;
   db._bindingMap = &_bindingMap;
+  db._logger = _logger;
 
   db.initHotKeyButtons(_bindings);
 
