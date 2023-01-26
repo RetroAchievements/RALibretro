@@ -1731,12 +1731,22 @@ std::string Application::getScreenshotPath()
 
 void Application::saveState(const std::string& path)
 {
-  _states.saveState(path);
+  if (!_states.saveState(path))
+    MessageBox(g_mainWindow, "Failed to create save state.", "Failed to create save state", MB_OK);
 }
 
 void Application::saveState(unsigned ndx)
 {
-  _states.saveState(ndx);
+  if (!_states.saveState(ndx))
+  {
+    std::string message = "Failed to create save state.";
+    std::string filename = _states.getStatePath(ndx);
+    if (filename.length() > MAX_PATH)
+      message += "\n\nGenerated path is too long:\n" + filename;
+
+    MessageBox(g_mainWindow, message.c_str(), "Failed to create save state", MB_OK);
+    return;
+  }
 
   _validSlots |= 1 << ndx;
   enableSlots();
