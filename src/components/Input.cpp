@@ -29,7 +29,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 static const char* s_gameControllerDB[] =
 {
-  // Updated on 2020-06-20 (https://github.com/gabomdq/SDL_GameControllerDB)
+  // Updated on 2023-01-15 (https://github.com/gabomdq/SDL_GameControllerDB)
   //
   //   to convert to .inl file, remove leading comments and everything not in the #Windows block,
   //   then run this command to wrap each line in quotes:
