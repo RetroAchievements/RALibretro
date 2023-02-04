@@ -1356,6 +1356,25 @@ protected:
           }
         }
         break;
+
+      case WM_ACTIVATE:
+        if (wparam != WA_INACTIVE)
+        {
+          updateBindingString(hwnd);
+        }
+        else
+        {
+          std::string sMessage;
+          sMessage.resize(128);
+          int nChars = GetDlgItemText(hwnd, ID_LABEL, (LPSTR)sMessage.data(), sMessage.capacity());
+          sMessage.resize(nChars);
+          size_t nIndex = sMessage.find_first_of('\n');
+          if (nIndex != std::string::npos)
+            sMessage.resize(nIndex);
+          sMessage.append("\nFocus this window to enter new input");
+          SetDlgItemText(hwnd, ID_LABEL, sMessage.c_str());
+        }
+        break;
     }
 
     return Dialog::dialogProc(hwnd, msg, wparam, lparam);
@@ -1565,7 +1584,7 @@ protected:
     db._button = static_cast<KeyBinds::Action>(button);
 
     GetDlgItemText(hwnd, 10000 + button, buffer, sizeof(buffer));
-    db.addLabel(buffer, ChangeInputDialog::ID_LABEL, 0, 0, 100, 18);
+    db.addLabel(buffer, ChangeInputDialog::ID_LABEL, 0, 0, 200, 18);
 
     db.addButton("Clear", ChangeInputDialog::IDC_CLEAR, 0, 20, 50, 14, false);
     db.addButton("OK", IDOK, 80, 20, 50, 14, true);
