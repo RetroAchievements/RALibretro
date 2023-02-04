@@ -36,7 +36,7 @@ public:
   std::string getStatePath(unsigned ndx) const;
 
   bool        saveState(const std::string& path);
-  void        saveState(unsigned ndx);
+  bool        saveState(unsigned ndx);
   bool        loadState(const std::string& path);
   bool        loadState(unsigned ndx);
 

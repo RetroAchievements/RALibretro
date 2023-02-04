@@ -271,19 +271,21 @@ bool States::saveState(const std::string& path)
   return result;
 }
 
-void States::saveState(unsigned ndx)
+bool States::saveState(unsigned ndx)
 {
   std::string path = getStatePath(ndx, _statePath, false);
-  if (saveState(path))
+  if (!saveState(path))
+    return false;
+
+  path = getStatePath(ndx, _statePath, true);
+  if (util::exists(path))
   {
-    path = getStatePath(ndx, _statePath, true);
-    if (util::exists(path))
-    {
-      util::deleteFile(path);
-      util::deleteFile(path + ".png");
-      util::deleteFile(path + ".rap");
-    }
+    util::deleteFile(path);
+    util::deleteFile(path + ".png");
+    util::deleteFile(path + ".rap");
   }
+
+  return true;
 }
 
 bool States::loadRAState1(unsigned char* input, size_t size, std::string& errorBuffer)
