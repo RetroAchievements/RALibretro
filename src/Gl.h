@@ -75,6 +75,8 @@ namespace Gl
   void viewport(GLint x, GLint y, GLsizei width, GLsizei height);
   void drawArrays(GLenum mode, GLint first, GLsizei count);
 
+  void bindSampler(GLuint unit, GLuint sampler);
+
   int getVersion();
 }
 
