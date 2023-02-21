@@ -145,24 +145,5 @@ protected:
   bool _gameFocus;
 
   unsigned _axesHeld;
-  enum {
-    kJ0LL = 1<<0,
-    kJ0LR = 1<<1,
-    kJ0LU = 1<<2,
-    kJ0LD = 1<<3,
-    kJ0RL = 1<<4,
-    kJ0RR = 1<<5,
-    kJ0RU = 1<<6,
-    kJ0RD = 1<<7,
-    kJ1LL = 1<<8,
-    kJ1LR = 1<<9,
-    kJ1LU = 1<<10,
-    kJ1LD = 1<<11,
-    kJ1RL = 1<<12,
-    kJ1RR = 1<<13,
-    kJ1RU = 1<<14,
-    kJ1RD = 1<<15,
-    kNegative = 0x5555,
-  };
 };
 
