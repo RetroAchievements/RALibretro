@@ -68,6 +68,7 @@ bool Video::init(libretro::LoggerComponent* logger, libretro::VideoContextCompon
 
 void Video::destroy()
 {
+  _ctx->enableCoreContext(false);
   if (_texture != 0)
   {
     Gl::deleteTextures(1, &_texture);
@@ -92,6 +93,7 @@ void Video::destroy()
     _program = 0;
   }
 
+  _ctx->enableCoreContext(true);
   if (_hw.frameBuffer != 0)
   {
     Gl::deleteFramebuffers(1, &_hw.frameBuffer);
@@ -119,10 +121,12 @@ void Video::clear()
     Gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   }
 
+  _ctx->enableCoreContext(false);
   Gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
   Gl::clearColor(0.0, 0.0, 0.0, 1.0);
   Gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+  _ctx->enableCoreContext(true);
   _ctx->swapBuffers();
 }
 
@@ -156,8 +160,6 @@ void Video::draw(bool force)
 bool Video::setGeometry(unsigned width, unsigned height, unsigned maxWidth, unsigned maxHeight, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback)
 {
   bool hardwareRender = hwRenderCallback != nullptr;
-  if (!hardwareRender && _hw.enabled)
-    postHwRenderReset();
 
   if (hardwareRender)
   {
@@ -188,6 +190,7 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
   }
   else if (data != RETRO_HW_FRAME_BUFFER_VALID)
   {
+    _ctx->enableCoreContext(false);
     Gl::bindTexture(GL_TEXTURE_2D, _texture);
 
     unsigned rowLength = pitch;
@@ -223,12 +226,14 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
 
     ensureView(width, height, _windowWidth, _windowHeight, _preserveAspect, _rotation);
     draw();
+    _ctx->enableCoreContext(true);
   }
   else if (_hw.enabled && data == RETRO_HW_FRAME_BUFFER_VALID)
   {
-    postHwRenderReset();
+    _ctx->enableCoreContext(false);
     ensureView(width, height, _windowWidth, _windowHeight, _preserveAspect, _rotation);
     draw();
+    _ctx->enableCoreContext(true);
   }
 }
 
@@ -265,10 +270,12 @@ void Video::showMessage(const char* msg, unsigned frames)
 
 void Video::windowResized(unsigned width, unsigned height)
 {
+  _ctx->enableCoreContext(false);
   Gl::viewport(0, 0, width, height);
   ensureView(_viewWidth, _viewHeight, width, height, _preserveAspect, _rotation);
   draw(true);
   _logger->debug(TAG "Window resized to %u x %u", width, height);
+  _ctx->enableCoreContext(true);
 }
 
 void Video::getFramebufferSize(unsigned* width, unsigned* height, enum retro_pixel_format* format)
@@ -528,6 +535,7 @@ bool Video::ensureVertexArray(unsigned windowWidth, unsigned windowHeight, float
 
   float winScaleX, winScaleY;
 
+  _ctx->enableCoreContext(false);
   if (_preserveAspect)
   {
     unsigned w, h;
@@ -685,6 +693,7 @@ GLuint Video::createTexture(unsigned width, unsigned height, retro_pixel_format 
 bool Video::ensureFramebuffer(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linearFilter)
 {
   const bool hwEnabled = (_hw.frameBuffer != 0);
+  _ctx->enableCoreContext(true);
   if (_texture == 0
     || (_hw.enabled != hwEnabled)
     || width > _textureWidth || height > _textureHeight
@@ -770,23 +779,4 @@ bool Video::ensureView(unsigned width, unsigned height, unsigned windowWidth, un
   }
 
   return true;
-}
-
-void Video::postHwRenderReset() const
-{
-  // when hardware rendering, the core may leave behind OpenGL
-  // state that interferes with our own software rendering
-
-  Gl::getError();  // clear the error flag, it's not ours
-
-  Gl::disable(GL_SCISSOR_TEST);
-  Gl::disable(GL_DEPTH_TEST);
-  Gl::disable(GL_CULL_FACE);
-  Gl::disable(GL_DITHER);
-  Gl::disable(GL_STENCIL_TEST);
-  Gl::disable(GL_BLEND);
-  Gl::blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  Gl::blendEquation(GL_FUNC_ADD);
-  Gl::bindSampler(0, 0);
-  Gl::clearColor(0.0, 0.0, 0.0, 1.0);
 }

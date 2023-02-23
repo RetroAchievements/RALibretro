@@ -161,6 +161,7 @@ namespace libretro
   class VideoContextComponent
   {
   public:
+    virtual void enableCoreContext(bool enable) = 0;
     virtual void swapBuffers() = 0;
   };
 

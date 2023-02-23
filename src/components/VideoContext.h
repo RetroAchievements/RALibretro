@@ -29,9 +29,12 @@ public:
   bool init(libretro::LoggerComponent* logger, SDL_Window* window);
   void destroy();
 
+  virtual void enableCoreContext(bool enable) override;
   virtual void swapBuffers() override;
 
 private:
   libretro::LoggerComponent* _logger;
   SDL_Window* _window;
+  SDL_GLContext _raContext;
+  SDL_GLContext _coreContext;
 };

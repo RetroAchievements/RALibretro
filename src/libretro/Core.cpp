@@ -149,6 +149,9 @@ namespace
   class DummyVideoContext : public libretro::VideoContextComponent
   {
   public:
+    virtual void enableCoreContext(bool enable) override
+    {
+    }
     virtual void swapBuffers() override
     {
     }

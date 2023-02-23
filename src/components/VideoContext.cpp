@@ -19,16 +19,38 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "VideoContext.h"
 
+#define TAG "[CONTEXT] "
+
 bool VideoContext::init(libretro::LoggerComponent* logger, SDL_Window* window)
 {
   _logger = logger;
   _window = window;
+
+  _raContext = SDL_GL_CreateContext(_window);
+  _coreContext = SDL_GL_CreateContext(_window);
+  if (SDL_GL_MakeCurrent(_window, _raContext) != 0)
+  {
+    _logger->error(TAG "SDL_GL_MakeCurrent: %s", SDL_GetError());
+    return false;
+  }
 
   return true;
 }
 
 void VideoContext::destroy()
 {
+}
+
+void VideoContext::enableCoreContext(bool enable)
+{
+  if (enable)
+  {
+    SDL_GL_MakeCurrent(_window, _coreContext);
+  }
+  else
+  {
+    SDL_GL_MakeCurrent(_window, _raContext);
+  }
 }
 
 void VideoContext::swapBuffers()
