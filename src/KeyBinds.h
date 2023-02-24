@@ -143,5 +143,7 @@ protected:
 
   unsigned _slot;
   bool _gameFocus;
+
+  unsigned _axesHeld;
 };
 
