@@ -307,6 +307,7 @@ const char* getSystemManufacturer(int system)
     case RC_CONSOLE_GAMEBOY:
     case RC_CONSOLE_GAMEBOY_COLOR:
     case RC_CONSOLE_GAMEBOY_ADVANCE:
+    case RC_CONSOLE_GAMECUBE:
     case RC_CONSOLE_NINTENDO:
     case RC_CONSOLE_SUPER_NINTENDO:
     case RC_CONSOLE_NINTENDO_64:
