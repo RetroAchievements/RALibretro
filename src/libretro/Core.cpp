@@ -440,6 +440,10 @@ error:
 
 void libretro::Core::destroy()
 {
+  if (_needsHardwareRender && _hardwareRenderCallback.context_destroy) {
+    _hardwareRenderCallback.context_destroy();
+  }
+
   if (_gameLoaded)
   {
     _core.unloadGame();

@@ -787,5 +787,6 @@ void Video::postHwRenderReset() const
   Gl::disable(GL_BLEND);
   Gl::blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   Gl::blendEquation(GL_FUNC_ADD);
+  Gl::bindSampler(0, 0);
   Gl::clearColor(0.0, 0.0, 0.0, 1.0);
 }

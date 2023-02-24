@@ -57,6 +57,8 @@ static PFNGLRENDERBUFFERSTORAGEPROC s_glRenderbufferStorage;
 
 static PFNGLBLENDEQUATIONEXTPROC s_glBlendEquationEXT;
 
+static PFNGLBINDSAMPLERPROC s_glBindSampler;
+
 static void* getProcAddress(const char* symbol)
 {
   void* address = SDL_GL_GetProcAddress(symbol);
@@ -179,6 +181,8 @@ void Gl::init(libretro::LoggerComponent* logger)
   s_glDeleteRenderbuffers = (PFNGLDELETERENDERBUFFERSPROC)getProcAddress("glDeleteRenderbuffers");
 
   s_glBlendEquationEXT = (PFNGLBLENDEQUATIONEXTPROC)getProcAddress("glBlendEquationEXT");
+
+  s_glBindSampler = (PFNGLBINDSAMPLERPROC)getProcAddress("glBindSampler");
 }
 
 bool Gl::ok()
@@ -600,3 +604,9 @@ void Gl::drawArrays(GLenum mode, GLint first, GLsizei count)
   check(__FUNCTION__);
 }
 
+void Gl::bindSampler(GLuint unit, GLuint sampler)
+{
+  if (!s_ok) return;
+  s_glBindSampler(unit, sampler);
+  check(__FUNCTION__);
+}
