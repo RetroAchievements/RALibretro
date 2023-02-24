@@ -138,7 +138,7 @@ bool romLoaded(libretro::Core* core, Logger* logger, int system, const std::stri
           if (core->getNumDiscs() > 0)
           {
             std::string discPath;
-            if (core->getDiscPath(core->getCurrentDiscIndex(), discPath))
+            if (core->getDiscPath(core->getCurrentDiscIndex(), discPath) && discPath != path)
               return romLoaded(core, logger, system, discPath, rom, size, changingDiscs);
           }
         }
