@@ -152,6 +152,9 @@ namespace
     virtual void enableCoreContext(bool enable) override
     {
     }
+    virtual void resetCoreContext() override
+    {
+    }
     virtual void swapBuffers() override
     {
     }
@@ -182,6 +185,10 @@ namespace
       (void)width;
       (void)height;
       (void)pitch;
+    }
+
+    virtual void reset() override
+    {
     }
 
     virtual bool supportsContext(enum retro_hw_context_type type) override

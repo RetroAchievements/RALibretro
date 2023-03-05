@@ -162,6 +162,7 @@ namespace libretro
   {
   public:
     virtual void enableCoreContext(bool enable) = 0;
+    virtual void resetCoreContext() = 0;
     virtual void swapBuffers() = 0;
   };
 
@@ -175,6 +176,7 @@ namespace libretro
 
     virtual bool setGeometry(unsigned width, unsigned height, unsigned maxWidth, unsigned maxHeight, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback) = 0;
     virtual void refresh(const void* data, unsigned width, unsigned height, size_t pitch) = 0;
+    virtual void reset() = 0;
 
     virtual bool                 supportsContext(enum retro_hw_context_type type) = 0;
     virtual uintptr_t            getCurrentFramebuffer() = 0;

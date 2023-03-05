@@ -30,6 +30,7 @@ public:
   void destroy();
 
   virtual void enableCoreContext(bool enable) override;
+  virtual void resetCoreContext() override;
   virtual void swapBuffers() override;
 
 private:

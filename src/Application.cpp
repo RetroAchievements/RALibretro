@@ -1290,6 +1290,7 @@ void Application::unloadCore()
 
   _memory.destroy();
   _core.destroy();
+  _video.reset();
 }
 
 void Application::resetGame()

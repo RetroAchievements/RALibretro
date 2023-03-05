@@ -237,6 +237,19 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
   }
 }
 
+void Video::reset() {
+  if (_hw.enabled) {
+    if (_hw.frameBuffer != 0)
+    {
+      Gl::deleteRenderbuffers(1, &_hw.renderBuffer);
+      Gl::deleteFramebuffers(1, &_hw.frameBuffer);
+      _hw.renderBuffer = _hw.frameBuffer = 0;
+    }
+    _ctx->resetCoreContext();
+    ensureFramebuffer(_textureWidth, _textureHeight, _pixelFormat, _linearFilter);
+  }
+}
+
 bool Video::supportsContext(enum retro_hw_context_type type)
 {
   switch (type)

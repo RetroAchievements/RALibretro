@@ -53,6 +53,12 @@ void VideoContext::enableCoreContext(bool enable)
   }
 }
 
+void VideoContext::resetCoreContext() {
+  SDL_GL_MakeCurrent(_window, _raContext);
+  SDL_GL_DeleteContext(_coreContext);
+  _coreContext = SDL_GL_CreateContext(_window);
+}
+
 void VideoContext::swapBuffers()
 {
   SDL_GL_SwapWindow(_window);
