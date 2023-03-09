@@ -87,13 +87,13 @@ bool Application::init(const char* title, int width, int height)
     kAllocatorInited,
     kSdlInited,
     kWindowInited,
-    kGlInited,
     kAudioDeviceInited,
     kFifoInited,
     kAudioInited,
     kInputInited,
     kKeyBindsInited,
     kVideoContextInited,
+    kGlInited,
     kVideoInited
   }
   inited = kNothingInited;
@@ -160,6 +160,7 @@ bool Application::init(const char* title, int width, int height)
   SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+  SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 
   _window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
@@ -169,27 +170,7 @@ bool Application::init(const char* title, int width, int height)
     goto error;
   }
 
-  {
-    SDL_GLContext context = SDL_GL_CreateContext(_window);
-
-    if (SDL_GL_MakeCurrent(_window, context) != 0)
-    {
-      _logger.error(TAG "SDL_GL_MakeCurrent: %s", SDL_GetError());
-      goto error;
-    }
-  }
-
   inited = kWindowInited;
-
-  Gl::init(&_logger);
-  GlUtil::init(&_logger);
-
-  if (!Gl::ok())
-  {
-    goto error;
-  }
-
-  inited = kGlInited;
 
   // Init audio
   SDL_AudioSpec want;
@@ -253,6 +234,16 @@ bool Application::init(const char* title, int width, int height)
   }
 
   inited = kVideoContextInited;
+
+  Gl::init(&_logger);
+  GlUtil::init(&_logger);
+
+  if (!Gl::ok())
+  {
+    goto error;
+  }
+
+  inited = kGlInited;
 
   if (!_video.init(&_logger, &_videoContext, &_config))
   {
@@ -318,13 +309,13 @@ error:
   switch (inited)
   {
   case kVideoInited:        _video.destroy();
+  case kGlInited:           // nothing to undo
   case kVideoContextInited: _videoContext.destroy();
   case kKeyBindsInited:     _keybinds.destroy();
   case kInputInited:        _input.destroy();
   case kAudioInited:        _audio.destroy();
   case kFifoInited:         _fifo.destroy();
   case kAudioDeviceInited:  SDL_CloseAudioDevice(_audioDev);
-  case kGlInited:           // nothing to undo
   case kWindowInited:       SDL_DestroyWindow(_window);
   case kSdlInited:          SDL_Quit();
   case kAllocatorInited:    _allocator.destroy();
@@ -1299,6 +1290,7 @@ void Application::unloadCore()
 
   _memory.destroy();
   _core.destroy();
+  _video.reset();
 }
 
 void Application::resetGame()

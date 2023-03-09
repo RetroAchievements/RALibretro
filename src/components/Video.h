@@ -38,6 +38,7 @@ public:
 
   virtual bool setGeometry(unsigned width, unsigned height, unsigned maxWidth, unsigned maxHeight, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback) override;
   virtual void refresh(const void* data, unsigned width, unsigned height, size_t pitch) override;
+  virtual void reset() override;
 
   virtual bool                 supportsContext(enum retro_hw_context_type type) override;
   virtual uintptr_t            getCurrentFramebuffer() override;
@@ -75,7 +76,6 @@ protected:
   GLuint createTexture(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linear);
   bool ensureFramebuffer(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linearFilter);
   bool ensureView(unsigned width, unsigned height, unsigned windowWidth, unsigned windowHeight, bool preserveAspect, Rotation rotation);
-  void postHwRenderReset() const;
 
   libretro::LoggerComponent* _logger;
   libretro::VideoContextComponent* _ctx;
