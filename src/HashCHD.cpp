@@ -20,6 +20,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef HAVE_CHD
 
 #include <rc_hash.h>
+extern "C" int rc_hash_error(const char* message);
 
 #include <libchdr/include/libchdr/chd.h>
 
@@ -237,8 +238,12 @@ static void* rc_hash_handle_chd_open_track(const char* path, uint32_t track)
   uint8_t buffer[32];
 
   chd_error err = chd_open(path, CHD_OPEN_READ, NULL, &file);
-  if (err != CHDERR_NONE)
+  if (err != CHDERR_NONE) {
+    char errmessage[128];
+    snprintf(errmessage, sizeof(errmessage), "CHD %s", chd_error_string(err));
+    rc_hash_error(errmessage);
     return NULL;
+  }
 
   memset(&metadata, 0, sizeof(metadata));
   if (!rc_hash_find_chd_track(file, track, &metadata))
