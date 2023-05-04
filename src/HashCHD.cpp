@@ -36,7 +36,7 @@ typedef struct chd_track_handle_t
   uint32_t frames_per_hunk;    /* Number of frames per hunk */
   uint32_t first_sector;       /* First sector associated to the track */
   uint32_t first_frame;        /* First CHD frame associated to the track */
-  uint32_t sector_size;        /* Size of each sector */
+  uint32_t sector_data_size;   /* Number of data bytes in each sector */
   uint32_t sector_header_size; /* Size of header data for each sector */
 } chd_track_handle_t;
 
@@ -187,17 +187,17 @@ static size_t rc_hash_handle_chd_read_sector(void* track_handle, uint32_t sector
       chd_track->hunknum = hunk;
     }
 
-    if (requested_bytes <= chd_track->sector_size)
+    if (requested_bytes <= chd_track->sector_data_size)
     {
       memcpy(buffer, &chd_track->hunkmem[offset], requested_bytes);
       bytes_read += requested_bytes;
       break;
     }
 
-    memcpy(buffer, &chd_track->hunkmem[offset], chd_track->sector_size);
-    bytes_read += chd_track->sector_size;
-    buffer = ((uint8_t*)buffer) + chd_track->sector_size;
-    requested_bytes -= chd_track->sector_size;
+    memcpy(buffer, &chd_track->hunkmem[offset], chd_track->sector_data_size);
+    bytes_read += chd_track->sector_data_size;
+    buffer = ((uint8_t*)buffer) + chd_track->sector_data_size;
+    requested_bytes -= chd_track->sector_data_size;
 
     offset += header->unitbytes;
     if (offset > header->hunkbytes)
@@ -262,14 +262,43 @@ static void* rc_hash_handle_chd_open_track(const char* path, uint32_t track)
   chd_track->first_sector = metadata.sector_offset;
   chd_track->first_frame = metadata.frame_offset;
 
-  if (strcmp(metadata.type, "MODE1_RAW") == 0 ||
-      strcmp(metadata.type, "MODE2_RAW") == 0)
+  /* https://github.com/libyal/libodraw/blob/main/documentation/Optical%20disc%20RAW%20format.asciidoc */
+  if (strcmp(metadata.type, "MODE1_RAW") == 0)
   {
-    chd_track->sector_size = 2352;
+    /* 16-byte header, 2048 bytes data, 288 byte footer */
+    chd_track->sector_data_size = 2048;
+    chd_track->sector_header_size = 16;
+    return chd_track;
+  }
+  else if (strcmp(metadata.type, "MODE2_RAW") == 0)
+  {
+    /* MODE2: 16-byte header, 2336 bytes data */
+    /* MODE2 XA1: 16-byte header, 8 byte subheader, 2048 bytes data */
+    /* MODE2 XA2: 16-byte header, 8 byte subheader, 2324 bytes data */
+
+    /* assume MODE2 until we know otherwise */
+    chd_track->sector_data_size = 2336;
+  }
+  else if (strcmp(metadata.type, "MODE1") == 0)
+  {
+    /* 2048 bytes of data from MODE1_RAW without header/footer */
+    chd_track->sector_data_size = 2048;
+    chd_track->sector_header_size = 0;
+    return chd_track;
+  }
+  else if (strcmp(metadata.type, "AUDIO") == 0)
+  {
+    /* 2352 bytes of raw data */
+    chd_track->sector_data_size = 2352;
+    chd_track->sector_header_size = 0;
+    return chd_track;
   }
   else
   {
-    chd_track->sector_size = header->unitbytes;
+    /* libchdr claims all sectors are 2448 bytes (header->unitbytes).
+     * assume the whole sector is used, and we'll try to determine a more appropiate size */
+    chd_track->sector_data_size = 2352;
+    chd_track->sector_header_size = 0;
   }
 
   /* read the first 32 bytes of sector 16 (TOC) so we can attempt to identify the disc format */
@@ -280,50 +309,45 @@ static void* rc_hash_handle_chd_open_track(const char* path, uint32_t track)
   }
 
   /* if this is a CDROM-XA data source, the "CD001" tag will be 25 bytes into the sector */
-  if (buffer[25] == 0x43 && buffer[26] == 0x44 &&
-      buffer[27] == 0x30 && buffer[28] == 0x30 && buffer[29] == 0x31)
+  if (memcmp(&buffer[25], "CD001", 5) == 0)
   {
-    chd_track->sector_size = 2352;
+    /* MODE2 XA1: 16-byte header, 8 byte subheader, 2048 bytes data */
+    /* MODE2 XA2: 16-byte header, 8 byte subheader, 2324 bytes data */
+    /* subheader[2] & 0x20 indicates the XA form */
+    chd_track->sector_data_size = (buffer[16 + 2] & 0x20) ? 2324 : 2048;
     chd_track->sector_header_size = 24;
   }
   /* otherwise it should be 17 bytes into the sector */
-  else if (buffer[17] == 0x43 && buffer[18] == 0x44 &&
-      buffer[19] == 0x30 && buffer[20] == 0x30 && buffer[21] == 0x31)
+  else if (memcmp(&buffer[17], "CD001", 5) == 0)
   {
-    chd_track->sector_size = 2352;
+    /* MODE0: 16-byte header, 2336 bytes data */
+    /* MODE1: 16-byte header, 2048 bytes data, 288 byte footer */
+    /* MODE2: 16-byte header, 2336 bytes data */
+    /* header[15] & 0x03 indicates the mode */
+    chd_track->sector_data_size = ((buffer[15] & 3) == 1) ? 2048 : 2336;
     chd_track->sector_header_size = 16;
+  }
+  /* also check for data not containing header/footer */
+  else if (memcmp(&buffer[1], "CD001", 5) == 0)
+  {
+    /* with no header data, we can't determine the mode, assume 2048 as that's the most common format */
+    chd_track->sector_data_size = 2048;
+    chd_track->sector_header_size = 0;
   }
   /* if we didn't find a CD001 tag, this format may predate ISO-9660 */
   /* ISO-9660 says the first twelve bytes of a sector should be the sync pattern 00 FF FF FF FF FF FF FF FF FF FF 00 */
-  else if (buffer[0] == 0 && buffer[1] == 0xFF && buffer[2] == 0xFF && buffer[3] == 0xFF &&
-      buffer[4] == 0xFF && buffer[5] == 0xFF && buffer[6] == 0xFF && buffer[7] == 0xFF &&
-      buffer[8] == 0xFF && buffer[9] == 0xFF && buffer[10] == 0xFF && buffer[11] == 0)
+  else if (memcmp(&buffer[0], "\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00", 12) == 0)
   {
     /* after the 12 byte sync pattern is three bytes identifying the sector and then one byte for the mode (total 16 bytes) */
-    chd_track->sector_size = 2352;
+    /* MODE0 and MODE2 are both 2336 bytes of data. MODE1 is 2048 bytes */
+    chd_track->sector_data_size = ((buffer[15] & 3) == 1) ? 2048 : 2336;
     chd_track->sector_header_size = 16;
   }
   else
   {
-    /* no header information found, attempt to determine from file size */
-    if ((header->logicalbytes % 2352) == 0)
-    {
-      /* raw tracks use all 2352 bytes and have a 24 byte header */
-      chd_track->sector_size = 2352;
-      chd_track->sector_header_size = 24;
-    }
-    else if ((header->logicalbytes % 2048) == 0)
-    {
-      /* cooked tracks eliminate all header/footer data */
-      chd_track->sector_size = 2048;
-      chd_track->sector_header_size = 0;
-    }
-    else if ((header->logicalbytes % 2336) == 0)
-    {
-      /* MODE 2 format without 16-byte sync data */
-      chd_track->sector_size = 2336;
-      chd_track->sector_header_size = 8;
-    }
+    /* with no header data, we can't determine the mode, assume 2048 as that's the most common format */
+    chd_track->sector_data_size = 2048;
+    chd_track->sector_header_size = 0;
   }
 
   return chd_track;
