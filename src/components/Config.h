@@ -48,6 +48,9 @@ public:
   virtual bool varUpdated() override;
   virtual const char* getVariable(const char* variable) override;
 
+  virtual bool getBackgroundInput() override { return _backgroundInput; }
+  virtual void setBackgroundInput(bool value) override { _backgroundInput = value; }
+
   virtual bool getFastForwarding() override { return _fastForwarding; }
   virtual void setFastForwarding(bool value) override { _fastForwarding = value; }
 
@@ -144,6 +147,7 @@ protected:
   bool _fastForwarding;
   bool _hadDisallowedSetting;
   bool _audioWhileFastForwarding;
+  bool _backgroundInput;
 
   int _fastForwardRatio;
 

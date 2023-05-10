@@ -125,6 +125,16 @@ namespace
       return NULL;
     }
 
+    virtual bool getBackgroundInput() override
+    {
+      return false;
+    }
+
+    virtual void setBackgroundInput(bool value) override
+    {
+      (void)value;
+    }
+
     virtual bool getFastForwarding() override
     {
       return false;

@@ -560,6 +560,10 @@ std::string Config::serializeEmulatorSettings()
 
   json.append("\"_fastForwardRatio\":");
   json.append(std::to_string(_fastForwardRatio));
+  json.append(",");
+
+  json.append("\"backgroundInput\":");
+  json.append(_backgroundInput ? "true" : "false");
 
   json.append("}");
   return json;
@@ -589,6 +593,10 @@ bool Config::deserializeEmulatorSettings(const char* json)
       if (ud->key == "_audioWhileFastForwarding")
       {
         ud->self->_audioWhileFastForwarding = num != 0;
+      }
+      else if (ud->key == "backgroundInput")
+      {
+        ud->self->_backgroundInput = num != 0;
       }
     }
     else if (event == JSONSAX_NUMBER)

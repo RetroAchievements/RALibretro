@@ -19,6 +19,8 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Dialog.h"
 
+#include "Application.h"
+
 #include <stdint.h>
 
 extern HWND g_mainWindow;
@@ -175,8 +177,18 @@ void Dialog::addEditbox(DWORD id, WORD x, WORD y, WORD w, WORD h, WORD lines, ch
 
 bool Dialog::show()
 {
+  extern Application app;
+  const bool hasBackgroundInput = app.config().getBackgroundInput();
+
+  if (hasBackgroundInput) /* disable background input while dialog is open */
+    SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "0");
+
   _updated = false;
   DialogBoxIndirectParam(NULL, (LPCDLGTEMPLATE)_template, g_mainWindow, s_dialogProc, (LPARAM)this);
+
+  if (hasBackgroundInput)
+    SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
+
   return _updated;
 }
 

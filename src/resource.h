@@ -90,3 +90,4 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #define IDM_MANAGE_CORES                        40016
 #define IDM_SAVING_CONFIG                       40017
 #define IDM_EMULATOR_CONFIG                     40018
+#define IDM_INPUT_BACKGROUND_INPUT              40019
