@@ -86,12 +86,12 @@ bool Application::init(const char* title, int width, int height)
     kConfigInited,
     kAllocatorInited,
     kSdlInited,
+    kKeyBindsInited,
     kWindowInited,
     kAudioDeviceInited,
     kFifoInited,
     kAudioInited,
     kInputInited,
-    kKeyBindsInited,
     kVideoContextInited,
     kGlInited,
     kVideoInited
@@ -147,6 +147,30 @@ bool Application::init(const char* title, int width, int height)
 
   inited = kSdlInited;
 
+  // keybinds must be initialized before calling loadConfiguration
+  if (!_keybinds.init(&_logger))
+  {
+    goto error;
+  }
+
+  inited = kKeyBindsInited;
+
+  // states must be initialized before calling loadConfiguration
+  if (!_states.init(&_logger, &_config, &_video))
+  {
+    goto error;
+  }
+
+  // Load the configuration from previous runs - primarily after the window size/location.
+  int window_x = SDL_WINDOWPOS_CENTERED, window_y = SDL_WINDOWPOS_CENTERED;
+  loadConfiguration(&window_x, &window_y, &width, &height);
+  if (window_y != SDL_WINDOWPOS_CENTERED)
+  {
+    // captured window position includes menu bar, which won't exist at initial positioning
+    // adjust for it.
+    window_y -= GetSystemMetrics(SM_CYMENU);
+  }
+
   // Setup window
   if (SDL_GL_LoadLibrary(NULL) != 0)
   {
@@ -162,12 +186,27 @@ bool Application::init(const char* title, int width, int height)
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
   SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 
-  _window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+  _window = SDL_CreateWindow(title, window_x, window_y, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
   if (_window == NULL)
   {
     _logger.error(TAG "SDL_CreateWindow: %s", SDL_GetError());
     goto error;
+  }
+  else
+  {
+    SDL_SysWMinfo wminfo;
+    SDL_VERSION(&wminfo.version);
+
+    if (SDL_GetWindowWMInfo(_window, &wminfo) != SDL_TRUE)
+    {
+      _logger.error(TAG "SDL_GetWindowWMInfo: %s", SDL_GetError());
+      goto error;
+    }
+
+    g_mainWindow = wminfo.info.win.window;
+    _menu = LoadMenu(NULL, "MAIN");
+    SetMenu(g_mainWindow, _menu);
   }
 
   inited = kWindowInited;
@@ -221,13 +260,6 @@ bool Application::init(const char* title, int width, int height)
 
   inited = kInputInited;
 
-  if (!_keybinds.init(&_logger))
-  {
-    goto error;
-  }
-
-  inited = kKeyBindsInited;
-
   if (!_videoContext.init(&_logger, _window))
   {
     goto error;
@@ -254,22 +286,8 @@ bool Application::init(const char* title, int width, int height)
   inited = kVideoInited;
 
   {
-    SDL_SysWMinfo wminfo;
-    SDL_VERSION(&wminfo.version);
-
-    if (SDL_GetWindowWMInfo(_window, &wminfo) != SDL_TRUE)
-    {
-      _logger.error(TAG "SDL_GetWindowWMInfo: %s", SDL_GetError());
-      goto error;
-    }
-
-    g_mainWindow = wminfo.info.win.window;
-
-    _menu = LoadMenu(NULL, "MAIN");
     _cdRomMenu = GetSubMenu(GetSubMenu(_menu, 0), CDROM_MENU_INDEX);
     assert(GetMenuItemID(_cdRomMenu, 0) == IDM_CD_OPEN_TRAY);
-
-    SetMenu(g_mainWindow, _menu);
 
     if (!loadCores(&_config, &_logger))
     {
@@ -278,18 +296,12 @@ bool Application::init(const char* title, int width, int height)
     }
 
     buildSystemsMenu();
-    loadConfiguration();
 
     extern void RA_Init(HWND hwnd);
     RA_Init(g_mainWindow);
   }
 
   if (!_memory.init(&_logger))
-  {
-    goto error;
-  }
-
-  if (!_states.init(&_logger, &_config, &_video))
   {
     goto error;
   }
@@ -311,12 +323,12 @@ error:
   case kVideoInited:        _video.destroy();
   case kGlInited:           // nothing to undo
   case kVideoContextInited: _videoContext.destroy();
-  case kKeyBindsInited:     _keybinds.destroy();
   case kInputInited:        _input.destroy();
   case kAudioInited:        _audio.destroy();
   case kFifoInited:         _fifo.destroy();
   case kAudioDeviceInited:  SDL_CloseAudioDevice(_audioDev);
   case kWindowInited:       SDL_DestroyWindow(_window);
+  case kKeyBindsInited:     _keybinds.destroy();
   case kSdlInited:          SDL_Quit();
   case kAllocatorInited:    _allocator.destroy();
   case kConfigInited:       _config.destroy();
@@ -1906,7 +1918,7 @@ void Application::buildSystemsMenu()
   }
 }
 
-void Application::loadConfiguration()
+void Application::loadConfiguration(int* window_x, int* window_y, int* window_width, int* window_height)
 {
   _recentList.clear();
   _logger.debug(TAG "Recent file list cleared");
@@ -2016,15 +2028,6 @@ void Application::loadConfiguration()
             else if (ud->key == "h")
               ud->h = (int)strtoul(str, NULL, 10);
           }
-          else if (event == JSONSAX_OBJECT && num == 0)
-          {
-            if (ud->w > 0 && ud->h > 0)
-            {
-              SDL_SetWindowPosition(ud->self->_window, ud->x, ud->y);
-              SDL_SetWindowSize(ud->self->_window, ud->w, ud->h);
-              ud->self->_logger.debug(TAG "Remembered window position %d,%d (%dx%d)", ud->x, ud->y, ud->w, ud->h);
-            }
-          }
 
           return 0;
         });
@@ -2065,6 +2068,15 @@ void Application::loadConfiguration()
 
       return 0;
     });
+
+    if (ud.w > 0 && ud.h > 0)
+    {
+      _logger.debug(TAG "Remembered window position %d,%d (%dx%d)", ud.x, ud.y, ud.w, ud.h);
+      *window_x = ud.x;
+      *window_y = ud.y;
+      *window_width = ud.w;
+      *window_height = ud.h;
+    }
 
     free(data);
   }
