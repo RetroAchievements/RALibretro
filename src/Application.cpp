@@ -162,31 +162,34 @@ bool Application::init(const char* title, int width, int height)
   }
 
   // Load the configuration from previous runs - primarily after the window size/location.
-  int window_x = SDL_WINDOWPOS_CENTERED, window_y = SDL_WINDOWPOS_CENTERED;
-  loadConfiguration(&window_x, &window_y, &width, &height);
-  if (window_y != SDL_WINDOWPOS_CENTERED)
   {
-    // captured window position includes menu bar, which won't exist at initial positioning
-    // adjust for it.
-    window_y -= GetSystemMetrics(SM_CYMENU);
+    int window_x = SDL_WINDOWPOS_CENTERED, window_y = SDL_WINDOWPOS_CENTERED;
+
+    loadConfiguration(&window_x, &window_y, &width, &height);
+    if (window_y != SDL_WINDOWPOS_CENTERED)
+    {
+      // captured window position includes menu bar, which won't exist at initial positioning
+      // adjust for it.
+      window_y -= GetSystemMetrics(SM_CYMENU);
+    }
+
+    // Setup window
+    if (SDL_GL_LoadLibrary(NULL) != 0)
+    {
+      _logger.error(TAG "SDL_GL_LoadLibrary: %s", SDL_GetError());
+      goto error;
+    }
+
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
+
+    _window = SDL_CreateWindow(title, window_x, window_y, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
   }
-
-  // Setup window
-  if (SDL_GL_LoadLibrary(NULL) != 0)
-  {
-    _logger.error(TAG "SDL_GL_LoadLibrary: %s", SDL_GetError());
-    goto error;
-  }
-
-  SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-  SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-  SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-  SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-  SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
-
-  _window = SDL_CreateWindow(title, window_x, window_y, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
   if (_window == NULL)
   {
