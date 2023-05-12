@@ -161,7 +161,7 @@ bool Application::init(const char* title, int width, int height)
     goto error;
   }
 
-  // Load the configuration from previous runs - primarily after the window size/location.
+  // Load the configuration from previous runs - primarily looking for the window size/location.
   {
     int window_x = SDL_WINDOWPOS_CENTERED, window_y = SDL_WINDOWPOS_CENTERED;
 
