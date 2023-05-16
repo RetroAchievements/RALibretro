@@ -31,7 +31,7 @@ void aboutDialog(const char* log)
 
   WORD y = 0;
 
-  db.addLabel("RALibretro \u00A9 2017-2022 RetroAchievements", 0, y, WIDTH, 8);
+  db.addLabel("RALibretro \u00A9 2017-2023 RetroAchievements", 0, y, WIDTH, 8);
   y += LINE;
 
   db.addEditbox(40000, 0, y, WIDTH, LINE, 12, (char*)log, 0, true);
