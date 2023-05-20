@@ -119,7 +119,7 @@ protected:
   void        handle(const SDL_MouseButtonEvent* button);
   void        handle(const KeyBinds::Action action, unsigned extra);
   void        buildSystemsMenu();
-  void        loadConfiguration();
+  void        loadConfiguration(int* window_x, int* window_y, int* window_width, int* window_height);
   void        saveConfiguration();
   std::string serializeRecentList();
   void        toggleFastForwarding(unsigned extra);
