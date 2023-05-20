@@ -148,6 +148,9 @@ namespace libretro
     virtual bool varUpdated() = 0;
     virtual const char* getVariable(const char* variable) = 0;
 
+    virtual bool getBackgroundInput() = 0;
+    virtual void setBackgroundInput(bool value) = 0;
+
     virtual bool getFastForwarding() = 0;
     virtual void setFastForwarding(bool value) = 0;
 

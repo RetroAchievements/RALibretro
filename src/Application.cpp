@@ -2061,6 +2061,10 @@ void Application::loadConfiguration()
         {
           return -1;
         }
+        if (ud->self->_config.getBackgroundInput())
+        {
+          ud->self->setBackgroundInput(true);
+        }
       }
 
       return 0;
@@ -2262,6 +2266,10 @@ void Application::handle(const SDL_SysWMEvent* syswm)
 
     case IDM_INPUT_CONTROLLER_2:
       _keybinds.showControllerDialog(_input, 1);
+      break;
+
+    case IDM_INPUT_BACKGROUND_INPUT:
+      toggleBackgroundInput();
       break;
 
     case IDM_VIDEO_CONFIG:
@@ -2548,6 +2556,26 @@ void Application::toggleFastForwarding(unsigned extra)
       SetMenuItemInfo(_menu, IDM_TURBO_GAME, false, &info);
       break;
   }
+}
+
+void Application::toggleBackgroundInput()
+{
+  const bool enabled = !_config.getBackgroundInput();
+  _config.setBackgroundInput(enabled);
+
+  setBackgroundInput(enabled);
+}
+
+void Application::setBackgroundInput(bool enabled)
+{
+  SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, enabled ? "1" : "0");
+
+  MENUITEMINFO info;
+  memset(&info, 0, sizeof(info));
+  info.cbSize = sizeof(info);
+  info.fMask = MIIM_STATE;
+  info.fState = enabled ? MFS_CHECKED : MFS_UNCHECKED;
+  SetMenuItemInfo(_menu, IDM_INPUT_BACKGROUND_INPUT, false, &info);
 }
 
 bool Application::handleArgs(int argc, char* argv[])

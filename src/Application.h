@@ -74,6 +74,8 @@ public:
 
   void refreshMemoryMap();
 
+  Config& config() { return _config; }
+
 protected:
   struct RecentItem
   {
@@ -121,6 +123,8 @@ protected:
   void        saveConfiguration();
   std::string serializeRecentList();
   void        toggleFastForwarding(unsigned extra);
+  void        toggleBackgroundInput();
+  void        setBackgroundInput(bool enabled);
 
   Fsm _fsm;
   bool lastHardcore;

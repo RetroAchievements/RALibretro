@@ -106,6 +106,7 @@ main MENU
             MENUITEM "Hot Keys...", IDM_INPUT_CONFIG
             MENUITEM "Controller 1...", IDM_INPUT_CONTROLLER_1
             MENUITEM "Controller 2...", IDM_INPUT_CONTROLLER_2
+            MENUITEM "Background Input", IDM_INPUT_BACKGROUND_INPUT
         }
         MENUITEM "Emulator...", IDM_EMULATOR_CONFIG
         MENUITEM "Saving...", IDM_SAVING_CONFIG
