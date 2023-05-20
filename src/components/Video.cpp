@@ -30,12 +30,8 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 #define TAG "[VID] "
 
-bool Video::init(libretro::LoggerComponent* logger, libretro::VideoContextComponent *ctx, Config* config)
+Video::Video()
 {
-  _logger = logger;
-  _ctx = ctx;
-  _config = config;
-
   _enabled = true;
 
   _pixelFormat = RETRO_PIXEL_FORMAT_UNKNOWN;
@@ -51,11 +47,21 @@ bool Video::init(libretro::LoggerComponent* logger, libretro::VideoContextCompon
   _preserveAspect = false;
   _linearFilter = false;
 
-  _program = createProgram(&_posAttribute, &_uvAttribute, &_texUniform);
-
   _hw.enabled = false;
   _hw.frameBuffer = _hw.renderBuffer = 0;
   _hw.callback = nullptr;
+}
+
+bool Video::init(libretro::LoggerComponent* logger, libretro::VideoContextComponent *ctx, Config* config)
+{
+  _logger = logger;
+  _ctx = ctx;
+  _config = config;
+
+  // NOTE: Video::init is called after Video::deserializeSettings. Make sure not to overwrite anyting
+  // stored in the .cfg file.
+
+  _program = createProgram(&_posAttribute, &_uvAttribute, &_texUniform);
 
   if (!Gl::ok())
   {
@@ -414,11 +420,11 @@ std::string Video::serializeSettings()
 {
   std::string json("{");
 
-  json.append("\"_preserveAspect\":");
+  json.append("\"preserveAspect\":");
   json.append(_preserveAspect ? "true" : "false");
   json.append(",");
 
-  json.append("\"_linearFilter\":");
+  json.append("\"linearFilter\":");
   json.append(_linearFilter ? "true" : "false");
 
   json.append("}");
@@ -446,11 +452,11 @@ bool Video::deserializeSettings(const char* json)
     }
     else if (event == JSONSAX_BOOLEAN)
     {
-      if (ud->key == "_preserveAspect")
+      if (ud->key == "preserveAspect" || ud->key == "_preserveAspect")
       {
         ud->self->_preserveAspect = num != 0;
       }
-      if (ud->key == "_linearFilter")
+      if (ud->key == "linearFilter" || ud->key == "_linearFilter")
       {
         ud->self->_linearFilter = num != 0;
       }

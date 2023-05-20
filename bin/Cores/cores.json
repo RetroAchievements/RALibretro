@@ -132,6 +132,7 @@
   },
   "dolphin_libretro":{
     "name": "Dolphin",
+    "extensions": "iso|m3u",
     "systems": [16,19],
     "platforms": "none"
   },

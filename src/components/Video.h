@@ -28,6 +28,8 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 class Video: public libretro::VideoComponent
 {
 public:
+  Video();
+
   bool init(libretro::LoggerComponent* logger, libretro::VideoContextComponent* ctx, Config* config);
   void destroy();
 
