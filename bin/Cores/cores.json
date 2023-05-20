@@ -752,7 +752,7 @@
   "wasm4_libretro":{
     "name": "WASM-4",
     "systems": [72]
-  }
+  },
   "x1_libretro":{
     "name": "X1",
     "systems": [64],
