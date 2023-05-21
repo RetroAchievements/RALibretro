@@ -210,6 +210,9 @@ bool Application::init(const char* title, int width, int height)
     g_mainWindow = wminfo.info.win.window;
     _menu = LoadMenu(NULL, "MAIN");
     SetMenu(g_mainWindow, _menu);
+
+    if (_config.getBackgroundInput())
+      setBackgroundInput(true);
   }
 
   inited = kWindowInited;
@@ -2066,10 +2069,6 @@ void Application::loadConfiguration(int* window_x, int* window_y, int* window_wi
         if (!ud->self->_config.deserializeEmulatorSettings(str))
         {
           return -1;
-        }
-        if (ud->self->_config.getBackgroundInput())
-        {
-          ud->self->setBackgroundInput(true);
         }
       }
 
