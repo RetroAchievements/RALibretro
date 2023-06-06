@@ -236,6 +236,7 @@ void Video::refresh(const void* data, unsigned width, unsigned height, size_t pi
   }
   else if (_hw.enabled && data == RETRO_HW_FRAME_BUFFER_VALID)
   {
+    clearErrors();
     _ctx->enableCoreContext(false);
     ensureView(width, height, _windowWidth, _windowHeight, _preserveAspect, _rotation);
     draw();
@@ -798,4 +799,11 @@ bool Video::ensureView(unsigned width, unsigned height, unsigned windowWidth, un
   }
 
   return true;
+}
+
+void Video::clearErrors() {
+  for (GLenum error = Gl::getError(); error != GL_NO_ERROR; error = Gl::getError())
+  {
+    _logger->error(TAG "Unhandled OpenGL error from core: %s", Gl::getErrorMsg(error));
+  }
 }

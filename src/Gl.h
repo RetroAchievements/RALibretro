@@ -10,6 +10,7 @@ namespace Gl
   bool ok();
 
   GLenum getError();
+  const char* getErrorMsg(GLenum error);
   void getIntegerv(GLenum pname, GLint *params);
 
   void genTextures(GLsizei n, GLuint* textures);

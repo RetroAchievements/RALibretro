@@ -78,6 +78,7 @@ protected:
   GLuint createTexture(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linear);
   bool ensureFramebuffer(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linearFilter);
   bool ensureView(unsigned width, unsigned height, unsigned windowWidth, unsigned windowHeight, bool preserveAspect, Rotation rotation);
+  void clearErrors();
 
   libretro::LoggerComponent* _logger;
   libretro::VideoContextComponent* _ctx;
