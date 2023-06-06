@@ -252,7 +252,6 @@ void Video::reset() {
       _hw.renderBuffer = _hw.frameBuffer = 0;
     }
     _ctx->resetCoreContext();
-    ensureFramebuffer(_textureWidth, _textureHeight, _pixelFormat, _linearFilter);
   }
 }
 
