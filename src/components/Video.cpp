@@ -252,7 +252,6 @@ void Video::reset() {
       _hw.renderBuffer = _hw.frameBuffer = 0;
     }
     _ctx->resetCoreContext();
-    ensureFramebuffer(_textureWidth, _textureHeight, _pixelFormat, _linearFilter);
   }
 }
 
@@ -347,6 +346,7 @@ const void* Video::getFramebuffer(unsigned* width, unsigned* height, unsigned* p
     return NULL;
   }
 
+  _ctx->enableCoreContext(false);
   Gl::bindTexture(GL_TEXTURE_2D, _texture);
 
   switch (_pixelFormat)
@@ -364,6 +364,7 @@ const void* Video::getFramebuffer(unsigned* width, unsigned* height, unsigned* p
     Gl::getTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, pixels);
     break;
   }
+  _ctx->enableCoreContext(true);
 
   if (_hw.enabled && _hw.callback->bottom_left_origin)
     verticalFlipRawTexture(pixels, _viewHeight, _textureWidth * bpp);
@@ -383,6 +384,7 @@ void Video::setFramebuffer(void* pixels, unsigned width, unsigned height, unsign
   if (_hw.enabled && _hw.callback->bottom_left_origin)
     verticalFlipRawTexture(p, height, pitch);
 
+  _ctx->enableCoreContext(false);
   Gl::bindTexture(GL_TEXTURE_2D, _texture);
 
   switch (_pixelFormat)
@@ -414,6 +416,7 @@ void Video::setFramebuffer(void* pixels, unsigned width, unsigned height, unsign
   }
 
   draw(true);
+  _ctx->enableCoreContext(true);
 }
 
 std::string Video::serializeSettings()
