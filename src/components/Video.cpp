@@ -44,7 +44,7 @@ Video::Video()
   _rotation = Rotation::None;
   _rotationHandler = NULL;
 
-  _preserveAspect = false;
+  _preserveAspect = true;
   _linearFilter = false;
 
   _hw.enabled = false;
