@@ -82,29 +82,7 @@ static void check(const char* function, bool ok = true)
 
     do
     {
-      switch (err)
-      {
-      case GL_INVALID_OPERATION:
-        s_logger->error(TAG "  INVALID_OPERATION");
-        break;
-
-      case GL_INVALID_ENUM:
-        s_logger->error(TAG "  INVALID_ENUM");
-        break;
-
-      case GL_INVALID_VALUE:
-        s_logger->error(TAG "  INVALID_VALUE");
-        break;
-
-      case GL_OUT_OF_MEMORY:
-        s_logger->error(TAG "  OUT_OF_MEMORY");
-        break;
-
-      case GL_INVALID_FRAMEBUFFER_OPERATION:
-        s_logger->error(TAG "  INVALID_FRAMEBUFFER_OPERATION");
-        break;
-      }
-
+      s_logger->error(TAG "  %s", Gl::getErrorMsg(err));
       err = glGetError();
     } while (err != GL_NO_ERROR);
   }
@@ -193,6 +171,29 @@ bool Gl::ok()
 GLenum Gl::getError()
 {
   return glGetError();
+}
+
+const char* Gl::getErrorMsg(GLenum error)
+{
+  switch (error)
+  {
+  case GL_INVALID_ENUM:
+    return "INVALID_ENUM";
+  case GL_INVALID_VALUE:
+    return "INVALID_VALUE";
+  case GL_INVALID_OPERATION:
+    return "INVALID_OPERATION";
+  case GL_STACK_OVERFLOW:
+    return "STACK_OVERFLOW";
+  case GL_STACK_UNDERFLOW:
+    return "STACK_UNDERFLOW";
+  case GL_OUT_OF_MEMORY:
+    return "OUT_OF_MEMORY";
+  case GL_INVALID_FRAMEBUFFER_OPERATION:
+    return "INVALID_FRAMEBUFFER_OPERATION";
+  default:
+    return "Unknown";
+  }
 }
 
 int Gl::getVersion()
