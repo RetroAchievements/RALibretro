@@ -211,6 +211,8 @@ bool Application::init(const char* title, int width, int height)
     _menu = LoadMenu(NULL, "MAIN");
     SetMenu(g_mainWindow, _menu);
 
+    SDL_SetWindowSize(_window, width, height);
+
     if (_config.getBackgroundInput())
       setBackgroundInput(true);
   }
