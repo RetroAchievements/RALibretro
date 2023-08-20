@@ -312,6 +312,7 @@ const char* getSystemManufacturer(int system)
     case RC_CONSOLE_SUPER_NINTENDO:
     case RC_CONSOLE_NINTENDO_64:
     case RC_CONSOLE_NINTENDO_DS:
+    case RC_CONSOLE_NINTENDO_DSI:
     case RC_CONSOLE_NINTENDO_3DS:
     case RC_CONSOLE_POKEMON_MINI:
     case RC_CONSOLE_VIRTUAL_BOY:
