@@ -674,8 +674,7 @@
   },
   "uzem_libretro":{
     "name": "Uzem",
-    "systems": [80],
-    "platforms": "none"
+    "systems": [80]
   },
   "vba_next_libretro":{
     "name": "VBA Next",
