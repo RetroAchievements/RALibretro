@@ -292,6 +292,7 @@ bool States::loadRAState1(unsigned char* input, size_t size, std::string& errorB
 {
   unsigned char* stop = input + size;
   unsigned char* marker;
+  bool seenCheevos = false;
   bool ret = true;
 
   input += 8;
@@ -308,6 +309,7 @@ bool States::loadRAState1(unsigned char* input, size_t size, std::string& errorB
     else if (memcmp(marker, RASTATE_CHEEVOS_BLOCK, 4) == 0)
     {
       RA_RestoreState((const char*)input);
+      seenCheevos = true;
     }
     else if (memcmp(marker, RASTATE_SCREEN_BLOCK, 4) == 0)
     {
@@ -325,6 +327,13 @@ bool States::loadRAState1(unsigned char* input, size_t size, std::string& errorB
     }
 
     input += alignSize(block_size);
+  }
+
+  if (!seenCheevos)
+  {
+    _logger->warn("No achievement data in save state");
+    unsigned char buffer[4] = { 0,0,0,0 };
+    RA_RestoreState((const char*)buffer);
   }
 
   return ret;
