@@ -656,7 +656,7 @@ static void getCoreSystemTimes(Config* config, Logger* logger)
   }
 }
 
-bool showCoresDialog(Config* config, Logger* logger, const std::string& loadedCore)
+bool showCoresDialog(Config* config, Logger* logger, const std::string& loadedCore, int selectedSystem)
 {
   CoreDialog db;
   db.init("Manage Cores");
@@ -687,15 +687,22 @@ bool showCoresDialog(Config* config, Logger* logger, const std::string& loadedCo
     }
   }
 
+  int selectedCoreIndex = 0;
+
+  // allSystems is a std::map keyed on the system name. iterating it will result in an alphabetically sorted list.
   for (const auto& pair : allSystems)
+  {
+    if (pair.second == selectedSystem)
+      selectedCoreIndex = db.numSystems;
+
     db.systemIds[db.numSystems++] = pair.second;
+  }
 
   db.coreNames.resize(maxSystemCoreCount);
 
   const DWORD WIDTH = 420;
   WORD y = 0;
 
-  int selectedCoreIndex = 0;
   db.addCombobox(50000, 0, 0, 200, 16, 120, s_getCoreName, &db, &selectedCoreIndex);
   y += 20;
 

@@ -2309,7 +2309,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       break;
 
     case IDM_MANAGE_CORES:
-      if (showCoresDialog(&_config, &_logger, _coreName))
+      if (showCoresDialog(&_config, &_logger, _coreName, 0))
         buildSystemsMenu();
       break;
 
@@ -2351,6 +2351,27 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       else if (cmd >= IDM_SYSTEM_FIRST && cmd <= IDM_SYSTEM_LAST)
       {
         const std::string& coreName = getCoreName(cmd - IDM_SYSTEM_FIRST, _system);
+        if (coreName != _coreName) // cannot update active core, so don't check if it's outdated
+        {
+          std::string path = _config.getRootFolder();
+          path += "Cores\\";
+          path += coreName;
+          path += ".dll";
+
+          const time_t coreUpdated = util::fileTime(path);
+          const time_t coreAge = time(NULL) - coreUpdated;
+          const time_t oneYear = (time_t)365 * 24 * 60 * 60;
+          if (coreAge > oneYear)
+          {
+            std::string message = "The " + getEmulatorName(coreName, _system) + " core hasn't been updated in over a year.\r\n\r\nWould you like to do so now?";
+            if (MessageBox(g_mainWindow, message.c_str(), "RALibRetro", MB_YESNO) == IDYES)
+            {
+              if (showCoresDialog(&_config, &_logger, _coreName, _system))
+                buildSystemsMenu();
+            }
+          }
+        }
+
         if (!_fsm.loadCore(coreName))
           _system = 0;
       }

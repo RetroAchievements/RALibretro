@@ -40,4 +40,4 @@ int    encodeCoreName(const std::string& coreName, int system);
 const std::string& getCoreName(int encoded, int& systemOut);
 const std::string* getCoreDeprecationMessage(const std::string& coreName);
 
-bool   showCoresDialog(Config* config, Logger* logger, const std::string& loadedCoreName);
+bool   showCoresDialog(Config* config, Logger* logger, const std::string& loadedCoreName, int selectedSystem);
