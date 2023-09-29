@@ -1801,9 +1801,9 @@ void Application::loadState(unsigned ndx)
 
 void Application::loadState()
 {
-  std::string extensions = "State Files (*.state)";
+  std::string extensions = "State Files (*.state*)";
   extensions.append("\0", 1);
-  extensions.append("*.state");
+  extensions.append("*.state*");
   extensions.append("\0", 1);
   extensions.append("All Files (*.*)");
   extensions.append("\0", 1);
