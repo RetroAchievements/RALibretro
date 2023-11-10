@@ -211,6 +211,20 @@ namespace libretro
   };
 
   /**
+   * A microphone component.
+   */
+  class MicrophoneComponent
+  {
+  public:
+    virtual retro_microphone_t* openMic(const retro_microphone_params_t* params) = 0;
+    virtual void closeMic(retro_microphone_t* microphone) = 0;
+    virtual bool getMicParams(const retro_microphone_t* microphone, retro_microphone_params_t* params) = 0;
+    virtual bool getMicState(const retro_microphone_t* microphone) = 0;
+    virtual bool setMicState(retro_microphone_t* microphone, bool state) = 0;
+    virtual int readMic(retro_microphone_t* microphone, int16_t* frames, size_t num_frames) = 0;
+  };
+
+  /**
    * A component that provides input state to CoreWrap instances.
    */
   class InputComponent
@@ -248,6 +262,7 @@ namespace libretro
     VideoContextComponent* videoContext;
     VideoComponent*        video;
     AudioComponent*        audio;
+    MicrophoneComponent*   microphone;
     InputComponent*        input;
     AllocatorComponent*    allocator;
   };

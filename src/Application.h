@@ -32,6 +32,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #include "components/Config.h"
 #include "components/Input.h"
 #include "components/Logger.h"
+#include "components/Microphone.h"
 #include "components/VideoContext.h"
 #include "components/Video.h"
 
@@ -61,6 +62,7 @@ public:
   bool hardcore();
   bool unloadGame();
   void pauseGame(bool pause);
+  bool isPaused() const;
 
   void printf(const char* fmt, ...);
   Logger& logger() { return _logger; }
@@ -143,6 +145,7 @@ protected:
   VideoContext _videoContext;
   Video        _video;
   Audio        _audio;
+  Microphone   _microphone;
   Input        _input;
   Memory       _memory;
   States       _states;

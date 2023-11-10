@@ -189,6 +189,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     <ClCompile Include="components\Dialog.cpp" />
     <ClCompile Include="components\Input.cpp" />
     <ClCompile Include="components\Logger.cpp" />
+    <ClCompile Include="components\Microphone.cpp" />
     <ClCompile Include="components\Video.cpp" />
     <ClCompile Include="components\VideoContext.cpp" />
     <ClCompile Include="dynlib\dynlib.c" />

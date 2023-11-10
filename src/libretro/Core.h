@@ -174,6 +174,7 @@ namespace libretro
     bool setCoreOptionsV2Intl(const struct retro_core_options_v2_intl* data);
     bool setCoreOptionsDisplay(const struct retro_core_option_display* data);
     bool getPreferredHWRender(unsigned* data);
+    bool getMicrophoneInterface(struct retro_microphone_interface* data);
 
     // Callbacks
     bool                 environmentCallback(unsigned cmd, void* data);
@@ -200,12 +201,19 @@ namespace libretro
     static void                 s_logCallback(enum retro_log_level level, const char *fmt, ...);
     static bool                 s_setRumbleCallback(unsigned port, enum retro_rumble_effect effect, uint16_t strength);
     static void                 s_setLEDState(int led, int state);
+    static retro_microphone_t*  s_openMic(const retro_microphone_params_t* params);
+    static void                 s_closeMic(retro_microphone_t* microphone);
+    static bool                 s_getMicParams(const retro_microphone_t* microphone, retro_microphone_params_t* params);
+    static bool                 s_getMicState(const retro_microphone_t* microphone);
+    static bool                 s_setMicState(retro_microphone_t* microphone, bool state);
+    static int                  s_readMic(retro_microphone_t* microphone, int16_t* frames, size_t num_frames);
 
     LoggerComponent*                _logger;
     ConfigComponent*                _config;
     VideoContextComponent*          _videoContext;
     VideoComponent*                 _video;
     AudioComponent*                 _audio;
+    MicrophoneComponent*            _microphone;
     InputComponent*                 _input;
     AllocatorComponent*             _allocator;
         

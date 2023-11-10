@@ -251,6 +251,49 @@ namespace
     }
   };
 
+  class DummyMicrophone : public libretro::MicrophoneComponent
+  {
+  public:
+    virtual retro_microphone_t* openMic(const retro_microphone_params_t* params) override
+    {
+      (void)params;
+      return NULL;
+    }
+
+    virtual void closeMic(retro_microphone_t* microphone) override
+    {
+      (void)microphone;
+    }
+
+    virtual bool getMicParams(const retro_microphone_t* microphone, retro_microphone_params_t* params) override
+    {
+      (void)microphone;
+      (void)params;
+      return false;
+    }
+
+    virtual bool getMicState(const retro_microphone_t* microphone) override
+    {
+      (void)microphone;
+      return false;
+    }
+
+    virtual bool setMicState(retro_microphone_t* microphone, bool state) override
+    {
+      (void)microphone;
+      (void)state;
+      return false;
+    }
+
+    virtual int readMic(retro_microphone_t* microphone, int16_t* frames, size_t num_frames) override
+    {
+      (void)microphone;
+      (void)frames;
+      (void)num_frames;
+      return 0;
+    }
+  };
+
   class DummyInput: public libretro::InputComponent
   {
   public:
@@ -322,6 +365,7 @@ static DummyConfig       s_config;
 static DummyVideoContext s_videoContext;
 static DummyVideo        s_video;
 static DummyAudio        s_audio;
+static DummyMicrophone   s_microphone;
 static DummyInput        s_input;
 static DummyAllocator    s_allocator;
 
@@ -332,6 +376,7 @@ bool libretro::Core::init(const Components* components)
   _videoContext = &s_videoContext;
   _video        = &s_video;
   _audio        = &s_audio;
+  _microphone   = &s_microphone;
   _input        = &s_input;
   _allocator    = &s_allocator;
 
@@ -344,6 +389,7 @@ bool libretro::Core::init(const Components* components)
     if (components->videoContext != NULL) _videoContext = components->videoContext;
     if (components->video != NULL)        _video        = components->video;
     if (components->audio != NULL)        _audio        = components->audio;
+    if (components->microphone != NULL)   _microphone   = components->microphone;
     if (components->input != NULL)        _input        = components->input;
     if (components->allocator != NULL)    _allocator    = components->allocator;
   }
@@ -1036,6 +1082,22 @@ bool libretro::Core::getLEDInterface(struct retro_led_interface* data)
 
 void libretro::Core::setLEDState(int led, int state)
 {
+}
+
+bool libretro::Core::getMicrophoneInterface(struct retro_microphone_interface* data)
+{
+  if (data->interface_version != 1)
+    return false;
+
+  memset(data, 0, sizeof(*data));
+  data->interface_version = 1;
+  data->open_mic = s_openMic;
+  data->close_mic = s_closeMic;
+  data->get_params = s_getMicParams;
+  data->set_mic_state = s_setMicState;
+  data->get_mic_state = s_getMicState;
+  data->read_mic = s_readMic;
+  return true;
 }
 
 bool libretro::Core::setContentInfoOverride(const struct retro_system_content_info_override* data)
@@ -1784,6 +1846,14 @@ static void getEnvName(char* name, size_t size, unsigned cmd)
     "SET_CORE_OPTIONS_V2",
     "SET_CORE_OPTIONS_V2_INTL",
     "SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK",
+    "SET_VARIABLE",                            // 70
+    "GET_THROTTLE_STATE",
+    "GET_SAVESTATE_CONTEXT",
+    "GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT",
+    "GET_JIT_CAPABLE",
+    "GET_MICROPHONE_INTERFACE",
+    "SET_NETPACKET_INTERFACE",
+    "GET_DEVICE_POWER",
   };
 
   cmd &= ~RETRO_ENVIRONMENT_EXPERIMENTAL;
@@ -1978,6 +2048,10 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
 
   case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL:
     ret = setCoreOptionsV2Intl((const struct retro_core_options_v2_intl*)data);
+    break;
+
+  case RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE:
+    ret = getMicrophoneInterface((struct retro_microphone_interface*)data);
     break;
 
   /* RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK cannot be supported because
@@ -2207,4 +2281,34 @@ bool libretro::Core::setRumble(unsigned port, enum retro_rumble_effect effect, u
 void libretro::Core::s_setLEDState(int led, int state)
 {
   s_instance->setLEDState(led, state);
+}
+
+retro_microphone_t* libretro::Core::s_openMic(const retro_microphone_params_t* params)
+{
+  return s_instance->_microphone->openMic(params);
+}
+
+void libretro::Core::s_closeMic(retro_microphone_t* microphone)
+{
+  s_instance->_microphone->closeMic(microphone);
+}
+
+bool libretro::Core::s_getMicParams(const retro_microphone_t* microphone, retro_microphone_params_t* params)
+{
+  return s_instance->_microphone->getMicParams(microphone, params);
+}
+
+bool libretro::Core::s_getMicState(const retro_microphone_t* microphone)
+{
+  return s_instance->_microphone->getMicState(microphone);
+}
+
+bool libretro::Core::s_setMicState(retro_microphone_t* microphone, bool state)
+{
+  return s_instance->_microphone->setMicState(microphone, state);
+}
+
+int libretro::Core::s_readMic(retro_microphone_t* microphone, int16_t* frames, size_t num_frames)
+{
+  return s_instance->_microphone->readMic(microphone, frames, num_frames);
 }

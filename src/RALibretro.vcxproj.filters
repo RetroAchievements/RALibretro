@@ -156,6 +156,9 @@
     <ClCompile Include="HashCHD.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="components\Microphone.cpp">
+      <Filter>Source Files\components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="About.h">
