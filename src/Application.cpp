@@ -2165,14 +2165,15 @@ void Application::resizeWindow(int width, int height)
 void Application::toggleFullscreen()
 {
   Uint32 fullscreen = SDL_GetWindowFlags(_window) & SDL_WINDOW_FULLSCREEN_DESKTOP;
-  SDL_SetWindowFullscreen(_window, fullscreen ^ SDL_WINDOW_FULLSCREEN_DESKTOP);
-  
   if (fullscreen)
   {
     SetMenu(g_mainWindow, _menu);
     SDL_ShowCursor(SDL_ENABLE);
   }
-  else
+
+  SDL_SetWindowFullscreen(_window, fullscreen ^ SDL_WINDOW_FULLSCREEN_DESKTOP);
+
+  if (!fullscreen)
   {
     SetMenu(g_mainWindow, NULL);
     SDL_ShowCursor(SDL_DISABLE);
