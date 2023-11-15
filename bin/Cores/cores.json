@@ -483,8 +483,7 @@
   },
   "neocd_libretro":{
     "name": "NeoCD",
-    "systems": [56],
-    "platforms": "none"
+    "systems": [56]
   },
   "nestopia_libretro":{
     "name": "Nestopia UE",
