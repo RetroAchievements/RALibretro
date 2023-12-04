@@ -24,6 +24,8 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #include <SDL_audio.h>
 #include "speex/speex_resampler.h"
 
+#include <math.h>
+
 #define TAG "[MIC] "
 
 struct Microphone::SDLData
