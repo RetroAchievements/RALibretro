@@ -65,6 +65,7 @@ OBJS=\
 	src/components/Dialog.o \
 	src/components/Input.o \
 	src/components/Logger.o \
+	src/components/Microphone.o \
 	src/components/Video.o \
 	src/components/VideoContext.o \
 	src/miniz/miniz.o \

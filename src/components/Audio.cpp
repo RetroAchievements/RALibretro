@@ -272,7 +272,7 @@ void Audio::mix(const int16_t* samples, size_t frames)
       if (error != RESAMPLER_ERR_SUCCESS)
       {
         memset(output, 0, output_size);
-        _logger->error(TAG "speex_resampler_process_interleaved_int: %s", speex_resampler_strerror(error));
+        _logger->error(TAG "speex_resampler_process_int: %s", speex_resampler_strerror(error));
       }
     }
   }

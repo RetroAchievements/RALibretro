@@ -73,6 +73,7 @@ Application::Application(): _fsm(*this)
   _components.videoContext = &_videoContext;
   _components.video        = &_video;
   _components.audio        = &_audio;
+  _components.microphone   = &_microphone;
   _components.input        = &_input;
   _components.allocator    = &_allocator;
 }
@@ -259,6 +260,11 @@ bool Application::init(const char* title, int width, int height)
     goto error;
   }
 
+  if (!_microphone.init(&_logger))
+  {
+    goto error;
+  }
+
   inited = kAudioInited;
 
   if (!_input.init(&_logger))
@@ -334,7 +340,8 @@ error:
   case kInputInited:        _input.destroy();
   case kAudioInited:        _audio.destroy();
   case kFifoInited:         _fifo.destroy();
-  case kAudioDeviceInited:  SDL_CloseAudioDevice(_audioDev);
+  case kAudioDeviceInited:  _microphone.destroy();
+                            SDL_CloseAudioDevice(_audioDev);
   case kWindowInited:       SDL_DestroyWindow(_window);
   case kKeyBindsInited:     _keybinds.destroy();
   case kSdlInited:          SDL_Quit();
@@ -692,6 +699,7 @@ void Application::destroy()
   _keybinds.destroy();
   _input.destroy();
   _config.destroy();
+  _microphone.destroy();
   _audio.destroy();
   _fifo.destroy();
 
@@ -1402,6 +1410,19 @@ bool Application::isGameActive()
   case Fsm::State::GamePaused:
   case Fsm::State::GamePausedNoOvl:
   case Fsm::State::FrameStep:
+    return true;
+
+  default:
+    return false;
+  }
+}
+
+bool Application::isPaused() const
+{
+  switch (_fsm.currentState())
+  {
+  case Fsm::State::GamePaused:
+  case Fsm::State::GamePausedNoOvl:
     return true;
 
   default:
