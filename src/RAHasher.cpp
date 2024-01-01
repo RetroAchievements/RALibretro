@@ -8,7 +8,13 @@
 #include <rcheevos/include/rc_hash.h>
 
 #include <memory>
+#include <stdio.h>
 #include <string.h>
+
+#ifdef _WIN32
+ #define WIN32_LEAN_AND_MEAN
+ #include <Windows.h>
+#endif
 
 #ifdef HAVE_CHD
 void rc_hash_init_chd_cdreader(); /* in HashCHD.cpp */
@@ -22,7 +28,7 @@ static void usage(const char* appname)
   printf("\n");
   printf("  -v           (optional) enables verbose messages for debugging\n");
   printf("  systemid     specifies the system id associated to the game (which hash algorithm to use)\n");
-  printf("  filepath     specifies the path to the game file\n");
+  printf("  filepath     specifies the path to the game file (file may include wildcards, path may not)\n");
 }
 
 class StdErrLogger : public Logger
@@ -70,12 +76,108 @@ static void* rhash_file_open(const char* path)
 
 #define RC_CONSOLE_MAX 90
 
+static int process_file(int consoleId, const std::string& file)
+{
+  char hash[33];
+  int result = 1;
+
+  std::string filePath = util::fullPath(file);
+  std::string ext = util::extension(file);
+
+  if (consoleId != RC_CONSOLE_ARCADE && consoleId <= RC_CONSOLE_MAX && ext.length() == 4 &&
+      tolower(ext[1]) == 'z' && tolower(ext[2]) == 'i' && tolower(ext[3]) == 'p')
+  {
+    std::string unzippedFilename;
+    size_t size;
+    void* data = util::loadZippedFile(logger.get(), filePath, &size, unzippedFilename);
+    if (data)
+    {
+      if (rc_hash_generate_from_buffer(hash, consoleId, (uint8_t*)data, size))
+        printf("%s", hash);
+
+      free(data);
+    }
+  }
+  else
+  {
+    /* register a custom file_open handler for unicode support. use the default implementation for the other methods */
+    struct rc_hash_filereader filereader;
+    memset(&filereader, 0, sizeof(filereader));
+    filereader.open = rhash_file_open;
+    rc_hash_init_custom_filereader(&filereader);
+
+    if (ext.length() == 4 && tolower(ext[1]) == 'c' && tolower(ext[2]) == 'h' && tolower(ext[3]) == 'd')
+    {
+#ifdef HAVE_CHD
+      rc_hash_init_chd_cdreader();
+#else
+      printf("CHD not supported without HAVE_CHD compile flag");
+      return 0;
+#endif
+    }
+    else
+    {
+      rc_hash_init_default_cdreader();
+    }
+
+    if (consoleId > RC_CONSOLE_MAX)
+    {
+      rc_hash_iterator iterator;
+      rc_hash_initialize_iterator(&iterator, filePath.c_str(), NULL, 0);
+      while (rc_hash_iterate(hash, &iterator))
+        printf("%s", hash);
+      rc_hash_destroy_iterator(&iterator);
+    }
+    else
+    {
+      if (rc_hash_generate_from_file(hash, consoleId, filePath.c_str()))
+        printf("%s", hash);
+    }
+  }
+
+  return result;
+}
+
+static int process_files(int consoleId, const std::string& pattern)
+{
+  int count = 0;
+
+#ifdef _WIN32
+  const std::string& path = util::directory(pattern);
+  WIN32_FIND_DATAA fileData;
+  HANDLE hFind;
+
+  hFind = FindFirstFileA(pattern.c_str(), &fileData);
+  if (hFind != INVALID_HANDLE_VALUE)
+  {
+    do
+    {
+      if (!(fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+      {
+        std::string filePath = path + "\\" + fileData.cFileName;
+        if (process_file(consoleId, filePath))
+          ++count;
+        else
+          printf("????????????????????????????????");
+
+        printf(" %s\n", fileData.cFileName);
+      }
+    } while (FindNextFileA(hFind, &fileData));
+
+    FindClose(hFind);
+  }
+#endif
+
+  if (count == 0)
+    printf("No matches found\n");
+
+  return count;
+}
+
 int main(int argc, char* argv[])
 {
   int consoleId = 0;
   std::string file;
-  char hash[33];
-  int result = 1;
 
   if (argc == 3)
   {
@@ -92,65 +194,27 @@ int main(int argc, char* argv[])
 
   if (consoleId != 0 && !file.empty())
   {
-    file = util::fullPath(file);
-
     logger.reset(new StdErrLogger);
-
     rc_hash_init_error_message_callback(rhash_log_error);
 
-    std::string ext = util::extension(file);
-    if (consoleId != RC_CONSOLE_ARCADE && consoleId <= RC_CONSOLE_MAX && ext.length() == 4 &&
-      tolower(ext[1]) == 'z' && tolower(ext[2]) == 'i' && tolower(ext[3]) == 'p')
+    if (file.find('*') != std::string::npos || file.find('?') != std::string::npos)
     {
-      std::string unzippedFilename;
-      size_t size;
-      void* data = util::loadZippedFile(logger.get(), file, &size, unzippedFilename);
-      if (data)
+      if (consoleId > RC_CONSOLE_MAX)
       {
-        if (rc_hash_generate_from_buffer(hash, consoleId, (uint8_t*)data, size))
-          printf("%s\n", hash);
-
-        free(data);
+        printf("Specific console must be specified when using wildcards\n");
+        return 0;
       }
+
+      rc_hash_init_verbose_message_callback(NULL); /* verbose logging not allowed when using wildcards */
+
+      return process_files(consoleId, file);
     }
     else
     {
-      /* register a custom file_open handler for unicode support. use the default implementation for the other methods */
-      struct rc_hash_filereader filereader;
-      memset(&filereader, 0, sizeof(filereader));
-      filereader.open = rhash_file_open;
-      rc_hash_init_custom_filereader(&filereader);
-
-      if (ext.length() == 4 && tolower(ext[1]) == 'c' && tolower(ext[2]) == 'h' && tolower(ext[3]) == 'd')
-      {
-#ifdef HAVE_CHD
-        rc_hash_init_chd_cdreader();
-#else
-        printf("CHD not supported without HAVE_CHD compile flag\n");
-        return 0;
-#endif
-      }
-      else
-      {
-        rc_hash_init_default_cdreader();
-      }
-
-      if (consoleId > RC_CONSOLE_MAX)
-      {
-        rc_hash_iterator iterator;
-        rc_hash_initialize_iterator(&iterator, file.c_str(), NULL, 0);
-        while (rc_hash_iterate(hash, &iterator))
-          printf("%s\n", hash);
-        rc_hash_destroy_iterator(&iterator);
-      }
-      else
-      {
-        if (rc_hash_generate_from_file(hash, consoleId, file.c_str()))
-          printf("%s\n", hash);
-      }
+      int result = process_file(consoleId, file);
+      printf("\n");
+      return result;
     }
-
-    return result;
   }
 
   usage(argv[0]);
