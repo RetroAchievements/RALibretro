@@ -177,25 +177,49 @@ static int process_files(int consoleId, const std::string& pattern)
 int main(int argc, char* argv[])
 {
   int consoleId = 0;
-  std::string file;
 
-  if (argc == 3)
-  {
-    consoleId = atoi(argv[1]);
-    file = argv[2];
-  }
-  else if (argc == 4 && strcmp(argv[1], "-v") == 0)
-  {
-    rc_hash_init_verbose_message_callback(rhash_log);
+  int argi = 1;
 
-    consoleId = atoi(argv[2]);
-    file = argv[3];
+  while (argv[argi][0] == '-')
+  {
+    if (strcmp(argv[argi], "-v") == 0)
+    {
+      rc_hash_init_verbose_message_callback(rhash_log);
+      ++argi;
+    }
   }
 
-  if (consoleId != 0 && !file.empty())
+  if (argi + 2 > argc)
   {
-    logger.reset(new StdErrLogger);
-    rc_hash_init_error_message_callback(rhash_log_error);
+    usage(argv[0]);
+    return 1;
+  }
+
+  consoleId = atoi(argv[argi++]);
+  if (consoleId == 0)
+  {
+    usage(argv[0]);
+    return 1;
+  }
+
+  logger.reset(new StdErrLogger);
+  rc_hash_init_error_message_callback(rhash_log_error);
+
+  if (argi + 1 < argc)
+  {
+    if (consoleId > RC_CONSOLE_MAX)
+    {
+      printf("Specific console must be specified when processing multiple files\n");
+      return 0;
+    }
+
+    /* verbose logging not allowed when processing multiple files */
+    rc_hash_init_verbose_message_callback(NULL);
+  }
+
+  while (argi < argc)
+  {
+    std::string file = argv[argi++];
 
     if (file.find('*') != std::string::npos || file.find('?') != std::string::npos)
     {
@@ -207,16 +231,17 @@ int main(int argc, char* argv[])
 
       rc_hash_init_verbose_message_callback(NULL); /* verbose logging not allowed when using wildcards */
 
-      return process_files(consoleId, file);
+      if (!process_files(consoleId, file))
+        return 0;
     }
     else
     {
       int result = process_file(consoleId, file);
       printf("\n");
-      return result;
+      if (!result)
+        return result;
     }
   }
 
-  usage(argv[0]);
   return 1;
 }
