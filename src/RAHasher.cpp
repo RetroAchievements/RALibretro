@@ -14,6 +14,13 @@
 #ifdef _WIN32
  #define WIN32_LEAN_AND_MEAN
  #include <Windows.h>
+#elif defined(__unix__)
+ #include <glob.h>
+ #include <sys/stat.h>
+#else
+ #include <dirent.h>
+ #include <fnmatch.h>
+ #include <sys/stat.h>
 #endif
 
 #ifdef HAVE_CHD
@@ -138,12 +145,22 @@ static int process_file(int consoleId, const std::string& file)
   return result;
 }
 
+static int process_iterated_file(int console_id, const std::string& file)
+{
+  int result = process_file(console_id, file);
+  if (!result)
+    printf("????????????????????????????????");
+
+  printf(" %s\n", util::fileNameWithExtension(file).c_str());
+  return result;
+}
+
 static int process_files(int consoleId, const std::string& pattern)
 {
   int count = 0;
 
 #ifdef _WIN32
-  const std::string& path = util::directory(pattern);
+  const std::string path = util::directory(pattern);
   WIN32_FIND_DATAA fileData;
   HANDLE hFind;
 
@@ -154,17 +171,55 @@ static int process_files(int consoleId, const std::string& pattern)
     {
       if (!(fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
       {
-        std::string filePath = path + "\\" + fileData.cFileName;
-        if (process_file(consoleId, filePath))
-          ++count;
-        else
-          printf("????????????????????????????????");
-
-        printf(" %s\n", fileData.cFileName);
+        const std::string filePath = path + "\\" + fileData.cFileName;
+        count += process_iterated_file(consoleId, filePath);
       }
     } while (FindNextFileA(hFind, &fileData));
 
     FindClose(hFind);
+  }
+#elif defined(__unix__)
+  glob_t globResult;
+  memset(&globResult, 0, sizeof(globResult));
+
+  if (glob(pattern.c_str(), GLOB_TILDE, NULL, &globResult) == 0)
+  {
+    struct stat filebuf;
+    size_t i;
+    for (i = 0; i < globResult.gl_pathc; ++i)
+    {
+      if (stat(globResult.gl_pathv[i], &filebuf) == 0 && !S_ISDIR(filebuf.st_mode))
+        count += process_iterated_file(consoleId, globResult.gl_pathv[i]);
+    }
+  }
+
+  globfree(&globResult);
+#else
+  const std::string filePattern = util::fileNameWithExtension(pattern);
+  char resolved_path[PATH_MAX];
+  std::string path = util::directory(pattern);
+  DIR* dirp;
+
+  realpath(path.c_str(), resolved_path);
+  path = resolved_path;
+
+  dirp = opendir(path.c_str());
+  if (dirp)
+  {
+    struct stat filebuf;
+    struct dirent *dp;
+
+    while ((dp = readdir(dirp)))
+    {
+      if (fnmatch(filePattern.c_str(), dp->d_name, 0) == 0)
+      {
+        if (stat(dp->d_name, &filebuf) == 0 && !S_ISDIR(filebuf.st_mode))
+        {
+          const std::string filePath = path + "/" + dp->d_name;
+          count += process_iterated_file(consoleId, filePath);
+        }
+      }
+    }
   }
 #endif
 
@@ -177,6 +232,7 @@ static int process_files(int consoleId, const std::string& pattern)
 int main(int argc, char* argv[])
 {
   int consoleId = 0;
+  int singleFile = 1;
 
   int argi = 1;
 
@@ -213,6 +269,25 @@ int main(int argc, char* argv[])
       return 0;
     }
 
+    singleFile = 0;
+  }
+  else
+  {
+    std::string file = argv[argi];
+    if (file.find('*') != std::string::npos || file.find('?') != std::string::npos)
+    {
+      if (consoleId > RC_CONSOLE_MAX)
+      {
+        printf("Specific console must be specified when using wildcards\n");
+        return 0;
+      }
+
+      singleFile = 0;
+    }
+  }
+
+  if (!singleFile)
+  {
     /* verbose logging not allowed when processing multiple files */
     rc_hash_init_verbose_message_callback(NULL);
   }
@@ -223,21 +298,18 @@ int main(int argc, char* argv[])
 
     if (file.find('*') != std::string::npos || file.find('?') != std::string::npos)
     {
-      if (consoleId > RC_CONSOLE_MAX)
-      {
-        printf("Specific console must be specified when using wildcards\n");
-        return 0;
-      }
-
-      rc_hash_init_verbose_message_callback(NULL); /* verbose logging not allowed when using wildcards */
-
       if (!process_files(consoleId, file))
         return 0;
     }
     else
     {
       int result = process_file(consoleId, file);
-      printf("\n");
+
+      if (singleFile)
+	printf("\n");
+      else
+        printf(" %s\n", util::fileNameWithExtension(file).c_str());
+
       if (!result)
         return result;
     }
