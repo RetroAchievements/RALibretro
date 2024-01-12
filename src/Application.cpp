@@ -1354,7 +1354,7 @@ bool Application::unloadGame()
 
   if (_gamePathIsTemporary)
   {
-    _logger.debug(TAG "Deleting temporary content %s", _gamePath);
+    _logger.debug(TAG "Deleting temporary content %s", _gamePath.c_str());
     util::deleteFile(_gamePath);
     _gamePathIsTemporary = false;
   }
