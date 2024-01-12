@@ -353,6 +353,10 @@ const char* getSystemManufacturer(int system)
     case RC_CONSOLE_DREAMCAST:
       return "Sega";
 
+    case RC_CONSOLE_NEO_GEO_CD:
+    case RC_CONSOLE_NEOGEO_POCKET:
+      return "SNK";
+
     default:
       return "Other";
   }
