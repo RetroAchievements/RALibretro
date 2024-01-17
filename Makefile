@@ -74,6 +74,7 @@ OBJS=\
 	src/miniz/miniz_zip.o \
 	src/rcheevos/src/rcheevos/consoleinfo.o \
 	src/rcheevos/src/rcheevos/rc_libretro.o \
+	src/rcheevos/src/rhash/aes.o \
 	src/rcheevos/src/rhash/cdreader.o \
 	src/rcheevos/src/rhash/md5.o \
 	src/rcheevos/src/rhash/hash.o \
