@@ -160,9 +160,12 @@ static int process_files(int consoleId, const std::string& pattern)
   int count = 0;
 
 #ifdef _WIN32
-  const std::string path = util::directory(pattern);
+  std::string path = util::directory(pattern);
   WIN32_FIND_DATAA fileData;
   HANDLE hFind;
+
+  if (path == pattern) /* no backslash found.scan is in current directory */
+    path = ".";
 
   hFind = FindFirstFileA(pattern.c_str(), &fileData);
   if (hFind != INVALID_HANDLE_VALUE)
