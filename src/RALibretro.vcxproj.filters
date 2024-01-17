@@ -150,14 +150,17 @@
     <ClCompile Include="States.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="rcheevos\src\rcheevos\rc_libretro.c">
-      <Filter>Source Files\rcheevos</Filter>
-    </ClCompile>
     <ClCompile Include="HashCHD.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="components\Microphone.cpp">
       <Filter>Source Files\components</Filter>
+    </ClCompile>
+    <ClCompile Include="rcheevos\src\rc_libretro.c">
+      <Filter>Source Files\rcheevos</Filter>
+    </ClCompile>
+    <ClCompile Include="rcheevos\src\rhash\aes.c">
+      <Filter>Source Files\rhash</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

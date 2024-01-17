@@ -164,7 +164,7 @@ static int process_files(int consoleId, const std::string& pattern)
   WIN32_FIND_DATAA fileData;
   HANDLE hFind;
 
-  if (path == pattern) /* no backslash found.scan is in current directory */
+  if (path == pattern) /* no backslash found. scan is in current directory */
     path = ".";
 
   hFind = FindFirstFileA(pattern.c_str(), &fileData);

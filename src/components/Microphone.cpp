@@ -68,7 +68,7 @@ void Microphone::recordCallback(void* data, Uint8* stream, int len)
   size_t output_size;
   int16_t* output;
 
-  if (sdlData->deviceSpec.freq == sdlData->coreRate)
+  if (sdlData->deviceSpec.freq == (int)sdlData->coreRate)
   {
     /* no resampling needed */
     output = (int16_t*)samples;

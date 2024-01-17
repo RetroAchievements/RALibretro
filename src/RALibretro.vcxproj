@@ -217,9 +217,10 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     <ClCompile Include="RAInterface\RA_Interface.cpp" />
     <ClCompile Include="RA_Implementation.cpp" />
     <ClCompile Include="rcheevos\src\rcheevos\consoleinfo.c" />
-    <ClCompile Include="rcheevos\src\rcheevos\rc_libretro.c">
+    <ClCompile Include="rcheevos\src\rc_libretro.c">
       <AdditionalIncludeDirectories>$(SolutionDir)src\libretro;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <ClCompile Include="rcheevos\src\rhash\aes.c" />
     <ClCompile Include="rcheevos\src\rhash\cdreader.c" />
     <ClCompile Include="rcheevos\src\rhash\hash.c">
       <ObjectFileName>$(IntDir)rhash</ObjectFileName>

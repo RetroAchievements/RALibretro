@@ -1124,7 +1124,7 @@ static bool extensionMatches(const char* extensions, const std::string& extensio
     while (*ptr && *ptr != '|')
       ++ptr;
 
-    if ((ptr - start) == extension.length() && strnicmp(start, extension.c_str(), extension.length()) == 0)
+    if ((size_t)(ptr - start) == extension.length() && strnicmp(start, extension.c_str(), extension.length()) == 0)
       return true;
 
     if (*ptr == '|')

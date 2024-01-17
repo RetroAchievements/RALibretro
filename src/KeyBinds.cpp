@@ -1683,7 +1683,7 @@ protected:
       ud.dialog = this;
       ud.hwnd = hwnd;
 
-      jsonsax_result_t res = jsonsax_parse((char*)json.c_str(), &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+      jsonsax_parse((char*)json.c_str(), &ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
       {
         auto* ud = (Deserialize*)udata;
 

@@ -23,7 +23,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <RA_Interface.h>
 #include <rcheevos.h>
-#include <rcheevos/src/rcheevos/rc_libretro.h>
+#include <rcheevos/src/rc_libretro.h>
 
 #include <time.h>
 
