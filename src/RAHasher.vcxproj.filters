@@ -60,6 +60,9 @@
     <ClCompile Include="HashCHD.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="rcheevos\src\rhash\aes.c">
+      <Filter>Source Files\rhash</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rcheevos\include\rhash.h">

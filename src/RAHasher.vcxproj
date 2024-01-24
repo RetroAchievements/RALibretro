@@ -169,6 +169,7 @@
     <ClCompile Include="miniz\miniz_tinfl.c" />
     <ClCompile Include="miniz\miniz_zip.c" />
     <ClCompile Include="RAHasher.cpp" />
+    <ClCompile Include="rcheevos\src\rhash\aes.c" />
     <ClCompile Include="rcheevos\src\rhash\cdreader.c" />
     <ClCompile Include="rcheevos\src\rhash\hash.c">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rhash</ObjectFileName>

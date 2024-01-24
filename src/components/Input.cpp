@@ -550,7 +550,7 @@ int16_t Input::read(unsigned port, unsigned device, unsigned index, unsigned id)
     {
       case RETRO_DEVICE_JOYPAD:
         port_device = _devices[port];
-        if (port_device > _info[port].size())
+        if (port_device >(int) _info[port].size())
           return 0;
 
         if (id == RETRO_DEVICE_ID_JOYPAD_MASK)
@@ -560,7 +560,7 @@ int16_t Input::read(unsigned port, unsigned device, unsigned index, unsigned id)
 
       case RETRO_DEVICE_ANALOG:
         port_device = _devices[port];
-        if (port_device > _info[port].size())
+        if (port_device > (int)_info[port].size())
           return 0;
 
         return _info[port][port_device]._axis[index << 1 | id];

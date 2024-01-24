@@ -129,7 +129,12 @@ FILE* util::openFile(Logger* logger, const std::string& path, const char* mode)
 #endif
 
   if (!file && logger)
-    log_errno(logger, "opening", path.c_str());
+  {
+    if (errno == ENOENT)
+      logger->warn(TAG "File not found: %s", path.c_str());
+    else
+      log_errno(logger, "opening", path.c_str());
+  }
 
   return file;
 }

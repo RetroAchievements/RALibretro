@@ -23,7 +23,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #include "jsonsax/jsonsax.h"
 #include "RA_Interface.h"
 
-#include <rcheevos/src/rcheevos/rc_libretro.h>
+#include <rcheevos/src/rc_libretro.h>
 #include <rcheevos/include/rc_consoles.h>
 
 #ifdef _WINDOWS
@@ -623,7 +623,7 @@ bool Config::deserializeEmulatorSettings(const char* json)
 void Config::ConfigDialog::updateVariables()
 {
   int id = 0;
-  for (int i = 0; i < variables.size(); ++i)
+  for (size_t i = 0; i < variables.size(); ++i)
   {
     auto& var = variables[i];
     if (var->_category != category)
@@ -637,7 +637,7 @@ void Config::ConfigDialog::updateVariables()
     HWND hComboBox = GetDlgItem(hwnd, 51000 + id);
     SendMessageW(hComboBox, CB_RESETCONTENT, 0, 0);
 
-    for (int j = 0; j < var->_options.size(); ++j)
+    for (size_t j = 0; j < var->_options.size(); ++j)
     {
       unicodeString = util::utf8ToUChar(var->_options[j]);
       SendMessageW(hComboBox, CB_ADDSTRING, 0, (LPARAM)unicodeString.c_str());
@@ -662,7 +662,7 @@ void Config::ConfigDialog::updateVariables()
 void Config::ConfigDialog::retrieveData(HWND hwnd)
 {
   int id = 0;
-  for (int i = 0; i < variables.size(); ++i)
+  for (size_t i = 0; i < variables.size(); ++i)
   {
     auto& var = variables[i];
     if (var->_category != category)
@@ -772,7 +772,6 @@ void Config::showDialog(const std::string& coreName, Input& input)
     WORD row = 0;
     WORD id = 0;
     int generalCount = db.variables.size();
-    int selectedCategoryIndex;
 
     for (auto& category : _categories)
     {
@@ -812,7 +811,7 @@ void Config::showDialog(const std::string& coreName, Input& input)
     const WORD columns = ((WORD)db.maxCount + MAX_ROWS - 1) / MAX_ROWS;
     const WORD rows = ((WORD)db.maxCount + columns - 1) / columns;
 
-    for (unsigned i = 0; i < db.maxCount; ++i)
+    for (int i = 0; i < db.maxCount; ++i)
     {
       db.addLabel("Label", 50000 + id, x, y + 2, HEADER_WIDTH - 5, 8);
       db.addCombobox(51000 + id, x + HEADER_WIDTH + 5, y, VALUE_WIDTH, LINE_HEIGHT, 100,

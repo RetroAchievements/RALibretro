@@ -24,7 +24,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <RA_Interface.h>
 #include <rc_hash.h>
-#include <rcheevos/src/rcheevos/rc_libretro.h>
+#include <rcheevos/src/rc_libretro.h>
 
 #include <memory.h>
 #include <string.h>

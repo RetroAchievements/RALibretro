@@ -73,7 +73,8 @@ OBJS=\
 	src/miniz/miniz_tinfl.o \
 	src/miniz/miniz_zip.o \
 	src/rcheevos/src/rcheevos/consoleinfo.o \
-	src/rcheevos/src/rcheevos/rc_libretro.o \
+	src/rcheevos/src/rc_libretro.o \
+	src/rcheevos/src/rhash/aes.o \
 	src/rcheevos/src/rhash/cdreader.o \
 	src/rcheevos/src/rhash/md5.o \
 	src/rcheevos/src/rhash/hash.o \
@@ -99,7 +100,7 @@ ifdef HAVE_CHD
           src/HashCHD.o
 endif
 
-src/rcheevos/src/rcheevos/rc_libretro.o: CFLAGS += -I./src/libretro
+src/rcheevos/src/rc_libretro.o: CFLAGS += -I./src/libretro
 
 src/components/Config.o: CFLAGS += -I./src/libretro
 
