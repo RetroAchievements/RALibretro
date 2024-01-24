@@ -429,6 +429,18 @@
     "systems": [18],
     "platforms": "none"
   },
+  "melondsds_libretro":{
+    "name": "melonDS DS",
+    "extensions": "nds|zip",
+    "systems": [18],
+    "platforms": "win64"
+  },
+  "melondsds_libretro":{
+    "name": "melonDS DS",
+    "extensions": "nds|zip",
+    "systems": [78],
+    "platforms": "win64"
+  },
   "mesen_libretro":{
     "name": "Mesen",
     "systems": [7]
