@@ -111,6 +111,11 @@ namespace libretro
     {
       return &_memoryMap;
     }
+
+    inline const std::string getSystemDirectory() const
+    {
+      return _config->getSystemPath();
+    }
     
   protected:
     // Initialization

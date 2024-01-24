@@ -22,6 +22,9 @@
     <Filter Include="Source Files\rhash">
       <UniqueIdentifier>{4ea653d5-1cc2-4ca4-b75e-4e5ec8fe3ecd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\libmincrypt">
+      <UniqueIdentifier>{be15c3d6-6a8d-418e-b432-31e7fc552895}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RAHasher.cpp">
@@ -58,10 +61,16 @@
       <Filter>Source Files\rhash</Filter>
     </ClCompile>
     <ClCompile Include="HashCHD.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\RALibRetro</Filter>
+    </ClCompile>
+    <ClCompile Include="Hash3DS.cpp">
+      <Filter>Source Files\RALibRetro</Filter>
     </ClCompile>
     <ClCompile Include="rcheevos\src\rhash\aes.c">
       <Filter>Source Files\rhash</Filter>
+    </ClCompile>
+    <ClCompile Include="libmincrypt/sha256.c">
+      <Filter>Source Files\libmincrypt</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

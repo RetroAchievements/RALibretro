@@ -201,9 +201,11 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     <ClCompile Include="Hash.cpp">
       <AdditionalIncludeDirectories>$(SolutionDir)src\libretro;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <ClCompile Include="Hash3DS.cpp" />
     <ClCompile Include="HashCHD.cpp" />
     <ClCompile Include="jsonsax\jsonsax.c" />
     <ClCompile Include="KeyBinds.cpp" />
+    <ClCompile Include="libmincrypt\sha256.c" />
     <ClCompile Include="libretro\BareCore.cpp" />
     <ClCompile Include="libretro\Core.cpp" />
     <ClCompile Include="main.cpp" />

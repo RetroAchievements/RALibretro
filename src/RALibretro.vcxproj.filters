@@ -40,6 +40,9 @@
     <Filter Include="Source Files\rcheevos">
       <UniqueIdentifier>{f03f66d3-40a1-4a92-8840-586859a3b6b5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\libmincrypt">
+      <UniqueIdentifier>{9892f223-13e3-46d2-86fd-47be605e3e2a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="About.cpp">
@@ -161,6 +164,12 @@
     </ClCompile>
     <ClCompile Include="rcheevos\src\rhash\aes.c">
       <Filter>Source Files\rhash</Filter>
+    </ClCompile>
+    <ClCompile Include="Hash3DS.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libmincrypt\sha256.c">
+      <Filter>Source Files\libmincrypt</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

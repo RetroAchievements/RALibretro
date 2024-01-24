@@ -24,6 +24,7 @@ CXXFLAGS += $(DEFINES)
 LIBS=
 OBJS=\
 	src/components/Logger.o \
+	src/libmincrypt/sha256.o \
 	src/miniz/miniz.o \
 	src/miniz/miniz_tdef.o \
 	src/miniz/miniz_tinfl.o \
@@ -33,6 +34,7 @@ OBJS=\
 	src/rcheevos/src/rhash/hash.o \
 	src/rcheevos/src/rhash/md5.o \
 	src/Git.o \
+	src/Hash3DS.o \
 	src/Util.o \
 	src/RAHasher.o
 

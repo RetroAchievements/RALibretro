@@ -37,6 +37,8 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 void rc_hash_init_chd_cdreader(); /* in HashCHD.cpp */
 #endif
 
+void initHash3DS(const std::string& systemDir); /* in Hash3DS.cpp */
+
 #define TAG "[HASH]"
 
 //  Manages multi-disc games
@@ -145,6 +147,9 @@ bool romLoaded(libretro::Core* core, Logger* logger, int system, const std::stri
 
         rc_hash_init_default_cdreader();
       }
+
+      if (system == RC_CONSOLE_NINTENDO_3DS)
+        initHash3DS(core->getSystemDirectory());
 
       /* generate a hash for the new content */
       if (!rom || !rc_hash_generate_from_buffer(hash, system, (uint8_t*)rom, size))
