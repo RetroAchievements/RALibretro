@@ -458,14 +458,12 @@
   "mgba_libretro":{
     "name": "mGBA",
     "extensions": "gb",
-    "systems": [4],
-    "platforms": "none"
+    "systems": [4]
   },
   "mgba_libretro":{
     "name": "mGBA",
     "extensions": "gbc",
-    "systems": [6],
-    "platforms": "none"
+    "systems": [6]
   },
   "mgba_libretro":{
     "name": "mGBA",
