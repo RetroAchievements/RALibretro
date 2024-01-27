@@ -570,7 +570,7 @@
   },
   "ppsspp_libretro":{
     "name": "PPSSPP",
-    "extensions": "iso",
+    "extensions": "iso|chd",
     "systems": [41]
   },
   "prosystem_libretro":{
