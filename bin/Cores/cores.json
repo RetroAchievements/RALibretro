@@ -136,6 +136,12 @@
     "systems": [16,19],
     "platforms": "none"
   },
+  "dosbox_pure_libretro":{
+    "name": "DOSBox Pure",
+    "extensions": "dosz",
+    "systems": [26],
+    "platforms": "none"
+  },
   "duckstation_libretro":{
     "name": "DuckStation",
     "extensions": "m3u|cue|chd",
