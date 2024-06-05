@@ -825,19 +825,25 @@ bool libretro::Core::getDiskControlInterfaceVersion(unsigned* data)
 bool libretro::Core::setDiskControlInterface(const struct retro_disk_control_callback* data)
 {
   memset(&_diskControlInterface, 0, sizeof(_diskControlInterface));
-  _diskControlInterface.set_eject_state = data->set_eject_state;
-  _diskControlInterface.get_eject_state = data->get_eject_state;
-  _diskControlInterface.get_image_index = data->get_image_index;
-  _diskControlInterface.set_image_index = data->set_image_index;
-  _diskControlInterface.get_num_images = data->get_num_images;
-  _diskControlInterface.replace_image_index = data->replace_image_index;
-  _diskControlInterface.add_image_index = data->add_image_index;
+  if (data)
+  {
+    _diskControlInterface.set_eject_state = data->set_eject_state;
+    _diskControlInterface.get_eject_state = data->get_eject_state;
+    _diskControlInterface.get_image_index = data->get_image_index;
+    _diskControlInterface.set_image_index = data->set_image_index;
+    _diskControlInterface.get_num_images = data->get_num_images;
+    _diskControlInterface.replace_image_index = data->replace_image_index;
+    _diskControlInterface.add_image_index = data->add_image_index;
+  }
   return true;
 }
 
 bool libretro::Core::setDiskControlExtInterface(const struct retro_disk_control_ext_callback* data)
 {
-  memcpy(&_diskControlInterface, data, sizeof(_diskControlInterface));
+  if (data)
+    memcpy(&_diskControlInterface, data, sizeof(_diskControlInterface));
+  else
+    memset(&_diskControlInterface, 0, sizeof(_diskControlInterface));
   return true;
 }
 
