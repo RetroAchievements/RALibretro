@@ -217,6 +217,11 @@
     "extensions": "gbc|cgb",
     "systems": [6]
   },
+  "gearcoleco_libretro":{
+    "name": "GearColeco",
+    "systems": [44],
+    "platforms": "none"
+  },
   "gearsystem_libretro":{
     "name": "Gearsystem",
     "extensions": "bin|sms|rom",
