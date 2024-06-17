@@ -242,7 +242,7 @@ int main(int argc, char* argv[])
 
   int argi = 1;
 
-  while (argv[argi][0] == '-')
+  while (argi < argc && argv[argi][0] == '-')
   {
     if (strcmp(argv[argi], "-v") == 0)
     {
@@ -253,6 +253,11 @@ int main(int argc, char* argv[])
     {
       systemDirectory = argv[++argi];
       ++argi;
+    }
+    else
+    {
+      usage(argv[0]);
+      return 1;
     }
   }
 
