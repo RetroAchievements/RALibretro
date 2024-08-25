@@ -94,6 +94,11 @@ protected:
   GLuint                  _vertexBuffer;
   GLuint                  _texture;
 
+  GLuint                  _messageTexture[4];
+  unsigned                _messageWidth[4];
+  unsigned                _messageFrames[4];
+  unsigned                _numMessages;
+
   unsigned                _windowWidth;
   unsigned                _windowHeight;
   unsigned                _textureWidth;

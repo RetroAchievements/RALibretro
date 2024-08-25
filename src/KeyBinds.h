@@ -62,6 +62,7 @@ public:
     // State state management (extra = slot)
     kSaveState,
     kLoadState,
+    kChangeCurrentState,
 
     // Window size
     kSetWindowSize1,

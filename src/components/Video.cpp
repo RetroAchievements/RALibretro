@@ -21,6 +21,8 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #include "Gl.h"
 #include "GlUtil.h"
 
+#include "BitmapFont.h"
+
 #include "Dialog.h"
 #include "jsonsax/jsonsax.h"
 
@@ -29,6 +31,10 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 
 #define TAG "[VID] "
+
+#define OSD_CHAR_WIDTH 8
+#define OSD_CHAR_HEIGHT 16
+#define OSD_PADDING 4
 
 Video::Video()
 {
@@ -43,6 +49,11 @@ Video::Video()
   _texture = 0;
   _rotation = Rotation::None;
   _rotationHandler = NULL;
+
+  memset(_messageTexture, 0, sizeof(_messageTexture));
+  memset(_messageWidth, 0, sizeof(_messageWidth));
+  memset(_messageFrames, 0, sizeof(_messageFrames));
+  _numMessages = 0;
 
   _preserveAspect = true;
   _linearFilter = false;
@@ -80,6 +91,16 @@ void Video::destroy()
     Gl::deleteTextures(1, &_texture);
     _texture = 0;
   }
+
+  for (int i = 0; i < _numMessages; ++i)
+  {
+    if (_messageTexture[i] != 0)
+    {
+      Gl::deleteTextures(1, &_messageTexture[i]);
+      _messageTexture[i] = 0;
+    }
+  }
+  _numMessages = 0;
 
   if (_vertexArray != 0)
   {
@@ -154,6 +175,39 @@ void Video::draw(bool force)
     Gl::uniform1i(_texUniform, 0);
 
     Gl::drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    if (_numMessages != 0)
+    {
+      const unsigned messageHeight = OSD_PADDING + OSD_CHAR_HEIGHT + OSD_PADDING;
+      GLint y = 8;
+      for (int i = _numMessages - 1; i >= 0; --i)
+      {
+        Gl::viewport(8, y, _messageWidth[i], messageHeight);
+        Gl::bindTexture(GL_TEXTURE_2D, _messageTexture[i]);
+        Gl::uniform1i(_texUniform, 0);
+
+        Gl::drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+        y += messageHeight + 4;
+
+        if (--_messageFrames[i] == 0)
+        {
+          Gl::deleteTextures(1, &_messageTexture[i]);
+
+          --_numMessages;
+          for (int j = i; j < _numMessages; ++j)
+          {
+            _messageTexture[j] = _messageTexture[j + 1];
+            _messageWidth[j] = _messageWidth[j + 1];
+            _messageFrames[j] = _messageFrames[j + 1];
+          }
+
+          _messageTexture[_numMessages] = 0;
+          _messageWidth[_numMessages] = 0;
+          _messageFrames[_numMessages] = 0;
+        }
+      }
+    }
 
     Gl::bindTexture(GL_TEXTURE_2D, 0);
     Gl::bindVertexArray(0);
@@ -285,6 +339,82 @@ retro_proc_address_t Video::getProcAddress(const char* symbol)
 void Video::showMessage(const char* msg, unsigned frames)
 {
   _logger->info(TAG "OSD message (%u): %s", frames, msg);
+
+  if (frames == 0)
+    return;
+
+  if (_numMessages == sizeof(_messageTexture) / sizeof(_messageTexture[0]))
+  {
+    /* list full, discard oldest */
+    Gl::deleteTextures(1, &_messageTexture[0]);
+
+    --_numMessages;
+    for (int i = 0; i < _numMessages; ++i)
+    {
+      _messageTexture[i] = _messageTexture[i + 1];
+      _messageWidth[i] = _messageWidth[i + 1];
+      _messageFrames[i] = _messageFrames[i + 1];
+    }
+  }
+
+  const size_t len = strlen(msg);
+  const size_t messageHeight = OSD_PADDING + OSD_CHAR_HEIGHT + OSD_PADDING;
+  const size_t messageWidth = OSD_PADDING + len * OSD_CHAR_WIDTH + OSD_PADDING;
+  const size_t numBytes = messageWidth * messageHeight * 2;
+
+  uint16_t* data = (uint16_t*)malloc(numBytes);
+  if (!data)
+  {
+    _numMessages--;
+    return;
+  }
+
+  memset(data, 0, numBytes);
+
+  uint16_t* start = &data[messageWidth * OSD_PADDING + OSD_PADDING];
+  for (int i = 0; i < len; i++)
+  {
+    uint16_t* out = &start[i * OSD_CHAR_WIDTH];
+    char c = msg[i];
+    if (c < 0x20 || c > 0x7F)
+      c = 0x80;
+    uint8_t* in = &_bitmapFont[(c - 0x20) * 16];
+    for (int j = 0; j < OSD_CHAR_HEIGHT; j++)
+    {
+      uint8_t pixels = *in++;
+
+      out[7] = 0xFFFF * (pixels & 0x01); pixels >>= 1;
+      out[6] = 0xFFFF * (pixels & 0x01); pixels >>= 1;
+      out[5] = 0xFFFF * (pixels & 0x01); pixels >>= 1;
+      out[4] = 0xFFFF * (pixels & 0x01); pixels >>= 1;
+      out[3] = 0xFFFF * (pixels & 0x01); pixels >>= 1;
+      out[2] = 0xFFFF * (pixels & 0x01); pixels >>= 1;
+      out[1] = 0xFFFF * (pixels & 0x01); pixels >>= 1;
+      out[0] = 0xFFFF * (pixels & 0x01);
+
+      out += messageWidth;
+    }
+  }
+
+  _ctx->enableCoreContext(false);
+
+  const GLuint texture = GlUtil::createTexture(messageWidth, messageHeight, GL_RGB, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, GL_NEAREST);
+  if (texture)
+  {
+    _messageTexture[_numMessages] = texture;
+    _messageFrames[_numMessages] = frames;
+    _messageWidth[_numMessages] = messageWidth;
+    ++_numMessages;
+
+    Gl::bindTexture(GL_TEXTURE_2D, texture);
+    Gl::pixelStorei(GL_UNPACK_ROW_LENGTH, messageWidth);
+    Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, 0, messageWidth, messageHeight, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, data);
+
+    Gl::pixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    Gl::bindTexture(GL_TEXTURE_2D, 0);
+  }
+
+  free(data);
 }
 
 void Video::windowResized(unsigned width, unsigned height)
