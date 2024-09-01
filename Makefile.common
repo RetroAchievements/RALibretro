@@ -9,6 +9,8 @@ ifeq ($(ARCH),)
     UNAME := $(shell uname -m)
     ifeq ($(UNAME), x86_64)
       ARCH=x64
+    else ifeq ($(UNAME), aarch64)
+      ARCH=arm64
     else
       ARCH=x86
     endif
@@ -19,20 +21,6 @@ INCLUDES=-Isrc -I./src/miniz -I./src/rcheevos/include
 CFLAGS=-Wall $(INCLUDES)
 CXXFLAGS=$(CFLAGS) -std=c++11
 LDFLAGS=-static-libgcc -static-libstdc++
-
-ifeq ($(ARCH), x86)
-  CFLAGS += -m32
-  CXXFLAGS += -m32
-  LDFLAGS += -m32
-  OUTDIR=bin
-else ifeq ($(ARCH), x64)
-  CFLAGS += -m64
-  CXXFLAGS += -m64
-  LDFLAGS += -m64
-  OUTDIR=bin64
-else
-  $(error unknown ARCH "$(ARCH)")
-endif
 
 ifneq ($(DEBUG),)
   CFLAGS   += -O0 -g
