@@ -4,18 +4,8 @@
 
 include Makefile.common
 
-ifeq ($(ARCH), x86)
-  CFLAGS += -m32
-  CXXFLAGS += -m32
-  LDFLAGS += -m32
-  OUTDIR=bin
-else ifeq ($(ARCH), x64)
-  CFLAGS += -m64
-  CXXFLAGS += -m64
-  LDFLAGS += -m64
-  OUTDIR=bin64
-else
-  $(error unknown ARCH "$(ARCH)")
+ifeq ($(ARCH), arm64)
+  $(error Cannot build for arm64)
 endif
 
 # Toolset setup

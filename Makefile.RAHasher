@@ -8,25 +8,6 @@ include Makefile.common
 CC=gcc
 CXX=g++
 
-ifeq ($(ARCH), x86)
-  CFLAGS += -m32
-  CXXFLAGS += -m32
-  LDFLAGS += -m32
-  OUTDIR=bin
-else ifeq ($(ARCH), x64)
-  CFLAGS += -m64
-  CXXFLAGS += -m64
-  LDFLAGS += -m64
-  OUTDIR=bin64
-else ifeq ($(ARCH), arm64)
-  CFLAGS += -march=armv8-a
-  CXXFLAGS += -march=armv8-a
-  LDFLAGS += -march=armv8-a
-  OUTDIR=bin64
-else
-  $(error unknown ARCH "$(ARCH)")
-endif
-
 ifeq ($(OS),Windows_NT)
   EXE=.exe
   KERNEL=windows

@@ -22,6 +22,25 @@ CFLAGS=-Wall $(INCLUDES)
 CXXFLAGS=$(CFLAGS) -std=c++11
 LDFLAGS=-static-libgcc -static-libstdc++
 
+ifeq ($(ARCH), x86)
+  CFLAGS += -m32
+  CXXFLAGS += -m32
+  LDFLAGS += -m32
+  OUTDIR=bin
+else ifeq ($(ARCH), x64)
+  CFLAGS += -m64
+  CXXFLAGS += -m64
+  LDFLAGS += -m64
+  OUTDIR=bin64
+else ifeq ($(ARCH), arm64)
+  CFLAGS += -march=armv8-a
+  CXXFLAGS += -march=armv8-a
+  LDFLAGS += -march=armv8-a
+  OUTDIR=bin64
+else
+  $(error unknown ARCH "$(ARCH)")
+endif
+
 ifneq ($(DEBUG),)
   CFLAGS   += -O0 -g
   CXXFLAGS += -O0 -g
