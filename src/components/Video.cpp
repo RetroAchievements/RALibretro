@@ -36,6 +36,11 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #define OSD_CHAR_HEIGHT 16
 #define OSD_PADDING 4
 
+struct VertexData
+{
+  float x, y, u, v;
+};
+
 Video::Video()
 {
   _enabled = true;
@@ -80,6 +85,18 @@ bool Video::init(libretro::LoggerComponent* logger, libretro::VideoContextCompon
     return false;
   }
 
+  const VertexData vertexData[] = {
+    {-1.0f, -1.0f,  0.0f,  1.0f},
+    {-1.0f,  1.0f,  0.0f,  0.0f},
+    { 1.0f, -1.0f,  1.0f,  1.0f},
+    { 1.0f,  1.0f,  1.0f,  0.0f}
+  };
+
+  Gl::genBuffers(1, &_indentityVertexBuffer);
+  Gl::bindBuffer(GL_ARRAY_BUFFER, _indentityVertexBuffer);
+  Gl::bufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
+  Gl::bindBuffer(GL_ARRAY_BUFFER, 0);
+
   return true;
 }
 
@@ -112,6 +129,12 @@ void Video::destroy()
   {
     Gl::deleteBuffers(1, &_vertexBuffer);
     _vertexBuffer = 0;
+  }
+
+  if (_indentityVertexBuffer != 0)
+  {
+    Gl::deleteBuffers(1, &_indentityVertexBuffer);
+    _indentityVertexBuffer = 0;
   }
 
   if (_program != 0)
@@ -178,14 +201,22 @@ void Video::draw(bool force)
 
     if (_numMessages != 0)
     {
-      const unsigned messageHeight = OSD_PADDING + OSD_CHAR_HEIGHT + OSD_PADDING;
+      const GLint messageHeight = (OSD_PADDING + OSD_CHAR_HEIGHT + OSD_PADDING);
+      const GLint x = 8;
       GLint y = 8;
+
+      Gl::bindBuffer(GL_ARRAY_BUFFER, _indentityVertexBuffer);
+      Gl::enableVertexAttribArray(_posAttribute);
+      Gl::vertexAttribPointer(_posAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, x));
+      Gl::enableVertexAttribArray(_uvAttribute);
+      Gl::vertexAttribPointer(_uvAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, u));
+      Gl::bindBuffer(GL_ARRAY_BUFFER, 0);
+
       for (int i = _numMessages - 1; i >= 0; --i)
       {
-        Gl::viewport(8, y, _messageWidth[i], messageHeight);
+        Gl::viewport(x, y, _messageWidth[i], messageHeight);
         Gl::bindTexture(GL_TEXTURE_2D, _messageTexture[i]);
         Gl::uniform1i(_texUniform, 0);
-
         Gl::drawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
         y += messageHeight + 4;
@@ -207,6 +238,13 @@ void Video::draw(bool force)
           _messageFrames[_numMessages] = 0;
         }
       }
+
+      Gl::bindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
+      Gl::enableVertexAttribArray(_posAttribute);
+      Gl::vertexAttribPointer(_posAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, x));
+      Gl::enableVertexAttribArray(_uvAttribute);
+      Gl::vertexAttribPointer(_uvAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, u));
+      Gl::bindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
     Gl::bindTexture(GL_TEXTURE_2D, 0);
@@ -681,11 +719,6 @@ GLuint Video::createProgram(GLint* pos, GLint* uv, GLint* tex)
 
 bool Video::ensureVertexArray(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv)
 {
-  struct VertexData
-  {
-    float x, y, u, v;
-  };
-
   float winScaleX, winScaleY;
 
   _ctx->enableCoreContext(false);
