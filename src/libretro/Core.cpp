@@ -974,8 +974,7 @@ static int64_t retro_vfs_file_seek_impl(retro_vfs_file_handle* stream, int64_t o
       break;
   }
 
-  _fseeki64(stream->fp, offset, whence);
-  return retro_vfs_file_tell_impl(stream);
+  return _fseeki64(stream->fp, offset, whence);
 }
 
 static int64_t retro_vfs_file_size_impl(retro_vfs_file_handle* stream)

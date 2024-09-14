@@ -594,8 +594,7 @@
   },
   "quasi88_libretro":{
     "name": "QUASI88",
-    "systems": [47],
-    "platforms": "none"
+    "systems": [47]
   },
   "quicknes_libretro":{
     "name": "QuickNES",
