@@ -92,7 +92,13 @@ protected:
   GLint                   _texUniform;
   GLuint                  _vertexArray;
   GLuint                  _vertexBuffer;
+  GLuint                  _indentityVertexBuffer;
   GLuint                  _texture;
+
+  GLuint                  _messageTexture[4];
+  unsigned                _messageWidth[4];
+  unsigned                _messageFrames[4];
+  unsigned                _numMessages;
 
   unsigned                _windowWidth;
   unsigned                _windowHeight;

@@ -1329,6 +1329,7 @@ void Application::resetGame()
 
     _core.resetGame();
     _video.clear();
+    _video.showMessage("Reset", 60);
     refreshMemoryMap();
     RA_OnReset();
   }
@@ -1781,6 +1782,10 @@ void Application::saveState(unsigned ndx)
     return;
   }
 
+  char message[128];
+  snprintf(message, sizeof(message), "Saved state %u", ndx);
+  _video.showMessage(message, 60);
+
   _validSlots |= 1 << ndx;
   enableSlots();
 }
@@ -1816,6 +1821,10 @@ void Application::loadState(unsigned ndx)
 
   if (_states.loadState(ndx))
   {
+    char message[128];
+    snprintf(message, sizeof(message), "Loaded state %u", ndx);
+    _video.showMessage(message, 60);
+
     updateDiscMenu(false);
   }
 }
@@ -1836,6 +1845,13 @@ void Application::loadState()
   {
     loadState(path);
   }
+}
+
+void Application::changeCurrentState(unsigned ndx)
+{
+  char message[128];
+  snprintf(message, sizeof(message), "Current state set to %u", ndx);
+  _video.showMessage(message, 60);
 }
 
 void Application::screenshot()
@@ -1859,6 +1875,8 @@ void Application::screenshot()
   std::string path = getScreenshotPath();
   util::saveImage(&_logger, path, data, width, height, pitch, format);
   free((void*)data);
+
+  _video.showMessage("Screenshot captured", 60);
 }
 
 void Application::aboutDialog()
@@ -2517,6 +2535,7 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
   // State management
   case KeyBinds::Action::kSaveState:        saveState(extra); break;
   case KeyBinds::Action::kLoadState:        loadState(extra); break;
+  case KeyBinds::Action::kChangeCurrentState: changeCurrentState(extra); break;
 
   // Window size
   case KeyBinds::Action::kSetWindowSize1:   resizeWindow(1); break;
@@ -2585,6 +2604,8 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
 
   case KeyBinds::Action::kGameFocusToggle:
     updateMenu();
+
+    _video.showMessage(_keybinds.hasGameFocus() ? "Game focus enabled" : "Game focus disabled", 60);
     break;
   }
 }

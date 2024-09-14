@@ -110,6 +110,7 @@ protected:
   void        loadState(const std::string& path);
   void        loadState(unsigned ndx);
   void        loadState();
+  void        changeCurrentState(unsigned ndx);
   void        screenshot();
   void        aboutDialog();
   void        resizeWindow(unsigned multiplier);
