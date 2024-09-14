@@ -154,6 +154,16 @@ namespace
     {
       return 5;
     }
+
+    virtual bool getShowSpeedIndicator() override
+    {
+      return false;
+    }
+
+    virtual void setShowSpeedIndicator(bool value) override
+    {
+      (void)value;
+    }
   };
 
   class DummyVideoContext : public libretro::VideoContextComponent
@@ -222,6 +232,11 @@ namespace
     {
       (void)msg;
       (void)frames;
+    }
+
+    virtual void showSpeedIndicator(Speed visibleIndicator) override
+    {
+      (void)visibleIndicator;
     }
 
     virtual void setRotation(Rotation rotation) override

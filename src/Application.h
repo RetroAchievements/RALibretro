@@ -125,6 +125,7 @@ protected:
   void        loadConfiguration(int* window_x, int* window_y, int* window_width, int* window_height);
   void        saveConfiguration();
   std::string serializeRecentList();
+  void        updateSpeedIndicator();
   void        toggleFastForwarding(unsigned extra);
   void        toggleBackgroundInput();
   void        setBackgroundInput(bool enabled);

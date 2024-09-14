@@ -35,6 +35,9 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #define OSD_CHAR_WIDTH 8
 #define OSD_CHAR_HEIGHT 16
 #define OSD_PADDING 4
+#define OSD_SPEED_INDICATOR_WIDTH 32
+#define OSD_SPEED_INDICATOR_HEIGHT 32
+#define OSD_SPEED_INDICATOR_PADDING 6
 
 struct VertexData
 {
@@ -51,7 +54,7 @@ Video::Video()
   _viewWidth = _viewHeight = 0;
 
   _vertexArray = _vertexBuffer = 0;
-  _texture = 0;
+  _texture = _speedIndicatorTexture = 0;
   _rotation = Rotation::None;
   _rotationHandler = NULL;
 
@@ -118,6 +121,12 @@ void Video::destroy()
     }
   }
   _numMessages = 0;
+
+  if (_speedIndicatorTexture != 0)
+  {
+    Gl::deleteTextures(1, &_speedIndicatorTexture);
+    _texture = 0;
+  }
 
   if (_vertexArray != 0)
   {
@@ -199,18 +208,27 @@ void Video::draw(bool force)
 
     Gl::drawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    if (_numMessages != 0)
+    if (_numMessages != 0 || _speedIndicatorTexture != 0)
     {
-      const GLint messageHeight = (OSD_PADDING + OSD_CHAR_HEIGHT + OSD_PADDING);
-      const GLint x = 8;
-      GLint y = 8;
-
       Gl::bindBuffer(GL_ARRAY_BUFFER, _indentityVertexBuffer);
       Gl::enableVertexAttribArray(_posAttribute);
       Gl::vertexAttribPointer(_posAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, x));
       Gl::enableVertexAttribArray(_uvAttribute);
       Gl::vertexAttribPointer(_uvAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (const GLvoid*)offsetof(VertexData, u));
       Gl::bindBuffer(GL_ARRAY_BUFFER, 0);
+
+      if (_speedIndicatorTexture != 0)
+      {
+        Gl::viewport(_windowWidth - 8 - OSD_SPEED_INDICATOR_WIDTH, _windowHeight - 8 - OSD_SPEED_INDICATOR_HEIGHT,
+          OSD_SPEED_INDICATOR_WIDTH, OSD_SPEED_INDICATOR_WIDTH);
+        Gl::bindTexture(GL_TEXTURE_2D, _speedIndicatorTexture);
+        Gl::uniform1i(_texUniform, 0);
+        Gl::drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+      }
+
+      const GLint messageHeight = (OSD_PADDING + OSD_CHAR_HEIGHT + OSD_PADDING);
+      const GLint x = 8;
+      GLint y = 8;
 
       for (int i = _numMessages - 1; i >= 0; --i)
       {
@@ -451,6 +469,89 @@ void Video::showMessage(const char* msg, unsigned frames)
     Gl::pixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     Gl::bindTexture(GL_TEXTURE_2D, 0);
   }
+
+  free(data);
+}
+
+void Video::showSpeedIndicator(Speed indicator)
+{
+  if (indicator == Speed::None)
+  {
+    if (_speedIndicatorTexture != 0)
+    {
+      Gl::deleteTextures(1, &_speedIndicatorTexture);
+      _speedIndicatorTexture = 0;
+    }
+
+    return;
+  }
+
+  const size_t numBytes = OSD_SPEED_INDICATOR_WIDTH * OSD_SPEED_INDICATOR_HEIGHT * 2;
+
+  uint16_t* data = (uint16_t*)malloc(numBytes);
+  if (!data)
+  {
+    showSpeedIndicator(Speed::None);
+    return;
+  }
+
+  if (_speedIndicatorTexture == 0)
+  {
+    _speedIndicatorTexture = GlUtil::createTexture(OSD_SPEED_INDICATOR_WIDTH, OSD_SPEED_INDICATOR_HEIGHT, GL_RGB, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, GL_NEAREST);
+    if (_speedIndicatorTexture == 0)
+    {
+      free(data);
+      return;
+    }
+  }
+
+  memset(data, 0, numBytes);
+  uint16_t* out = &data[OSD_SPEED_INDICATOR_PADDING * OSD_SPEED_INDICATOR_WIDTH + OSD_SPEED_INDICATOR_PADDING];
+  const size_t width = OSD_SPEED_INDICATOR_WIDTH - OSD_SPEED_INDICATOR_PADDING * 2;
+  const size_t height = OSD_SPEED_INDICATOR_HEIGHT - OSD_SPEED_INDICATOR_PADDING * 2;
+
+  switch (indicator)
+  {
+    case Speed::Paused:
+      for (size_t i = 0; i < (width + 2) / 3; ++i)
+      {
+        out[i] = 0xFFFF;
+        out[width - i - 1] = 0xFFFF;
+      }
+      for (int i = 1; i < height; ++i)
+        memcpy(&out[i * OSD_SPEED_INDICATOR_WIDTH], out, width * 2);
+      break;
+
+    case Speed::FastForwarding:
+      for (size_t i = 0; i < height / 2; ++i)
+      {
+        for (size_t j = 0; j <= i; ++j)
+        {
+          out[j] = 0xFFFF;
+          out[j + width / 2 + 1] = 0xFFFF;
+        }
+        out += OSD_SPEED_INDICATOR_WIDTH;
+      }
+      for (size_t i = 0; i < height / 2; ++i)
+      {
+        for (size_t j = 0; j < height / 2 - i; ++j)
+        {
+          out[j] = 0xFFFF;
+          out[j + width / 2 + 1] = 0xFFFF;
+        }
+        out += OSD_SPEED_INDICATOR_WIDTH;
+      }
+      break;
+
+    default:
+      break;
+  }
+
+  Gl::bindTexture(GL_TEXTURE_2D, _speedIndicatorTexture);
+  Gl::pixelStorei(GL_UNPACK_ROW_LENGTH, OSD_SPEED_INDICATOR_WIDTH);
+  Gl::texSubImage2D(GL_TEXTURE_2D, 0, 0, 0, OSD_SPEED_INDICATOR_WIDTH, OSD_SPEED_INDICATOR_HEIGHT, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, data);
+  Gl::pixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+  Gl::bindTexture(GL_TEXTURE_2D, 0);
 
   free(data);
 }

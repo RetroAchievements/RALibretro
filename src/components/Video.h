@@ -49,6 +49,8 @@ public:
   virtual void showMessage(const char* msg, unsigned frames) override;
   bool hasMessage() const { return _numMessages != 0; }
 
+  virtual void showSpeedIndicator(Speed visibleIndicator) override;
+
   void windowResized(unsigned width, unsigned height);
   void getFramebufferSize(unsigned* width, unsigned* height, enum retro_pixel_format* format);
   const void* getFramebuffer(unsigned* width, unsigned* height, unsigned* pitch, enum retro_pixel_format* format);
@@ -100,6 +102,7 @@ protected:
   unsigned                _messageWidth[4];
   unsigned                _messageFrames[4];
   unsigned                _numMessages;
+  GLuint                  _speedIndicatorTexture;
 
   unsigned                _windowWidth;
   unsigned                _windowHeight;

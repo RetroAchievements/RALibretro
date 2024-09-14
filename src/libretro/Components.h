@@ -156,6 +156,9 @@ namespace libretro
 
     virtual bool getAudioWhileFastForwarding() = 0;
     virtual int getFastForwardRatio() = 0;
+
+    virtual bool getShowSpeedIndicator() = 0;
+    virtual void setShowSpeedIndicator(bool value) = 0;
   };
 
   /**
@@ -186,6 +189,14 @@ namespace libretro
     virtual retro_proc_address_t getProcAddress(const char* symbol) = 0;
 
     virtual void showMessage(const char* msg, unsigned frames) = 0;
+
+    enum class Speed
+    {
+      None,
+      Paused,
+      FastForwarding,
+    };
+    virtual void showSpeedIndicator(Speed visibleIndicator) = 0;
 
     /* NOTE: these are counter-clockwise rotations per libretro.h */
     enum class Rotation
