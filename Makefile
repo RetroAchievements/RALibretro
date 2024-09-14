@@ -4,6 +4,10 @@
 
 include Makefile.common
 
+ifeq ($(ARCH), arm64)
+  $(error Cannot build for arm64)
+endif
+
 # Toolset setup
 ifeq ($(OS),Windows_NT)
   CC=gcc
