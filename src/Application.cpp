@@ -581,7 +581,17 @@ void Application::run()
         case Fsm::State::GamePausedNoOvl:
         default:
           // do no frames
-          Sleep(10);
+          Sleep(1000 / 60); // assume 60fps
+
+          // if a message is on-screen, force repaint to advance the message animation
+          if (_video.hasMessage())
+          {
+            _video.draw(true);
+
+            // no more on-screen messages, force repaint to clear the popups
+            if (!_video.hasMessage())
+              _video.draw(true);
+          }
           break;
 
         case Fsm::State::FrameStep:

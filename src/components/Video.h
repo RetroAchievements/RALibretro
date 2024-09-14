@@ -47,6 +47,7 @@ public:
   virtual retro_proc_address_t getProcAddress(const char* symbol) override;
 
   virtual void showMessage(const char* msg, unsigned frames) override;
+  bool hasMessage() const { return _numMessages != 0; }
 
   void windowResized(unsigned width, unsigned height);
   void getFramebufferSize(unsigned* width, unsigned* height, enum retro_pixel_format* format);
