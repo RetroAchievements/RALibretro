@@ -586,11 +586,11 @@ void Application::run()
           // if a message is on-screen, force repaint to advance the message animation
           if (_video.hasMessage())
           {
-            _video.draw(true);
+            _video.redraw();
 
             // no more on-screen messages, force repaint to clear the popups
             if (!_video.hasMessage())
-              _video.draw(true);
+              _video.redraw();
           }
           break;
 
@@ -2346,7 +2346,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     case IDM_EMULATOR_CONFIG:
       _config.showEmulatorSettingsDialog();
       updateSpeedIndicator();
-      _video.draw(true);
+      _video.redraw();
       break;
 
     case IDM_SAVING_CONFIG:
@@ -2669,7 +2669,7 @@ void Application::updateSpeedIndicator()
   case Fsm::State::GamePausedNoOvl:
   case Fsm::State::FrameStep:
     _video.showSpeedIndicator(Video::Speed::Paused);
-    _video.draw(true);
+    _video.redraw();
     break;
 
   default:

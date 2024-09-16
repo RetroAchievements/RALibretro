@@ -189,6 +189,13 @@ void Video::clear()
   _ctx->swapBuffers();
 }
 
+void Video::redraw()
+{
+  _ctx->enableCoreContext(false);
+  draw(true);
+  _ctx->enableCoreContext(true);
+}
+
 void Video::draw(bool force)
 {
   if (_texture != 0 && (force || _enabled))
@@ -469,6 +476,8 @@ void Video::showMessage(const char* msg, unsigned frames)
     Gl::pixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     Gl::bindTexture(GL_TEXTURE_2D, 0);
   }
+
+  _ctx->enableCoreContext(true);
 
   free(data);
 }
