@@ -1782,6 +1782,12 @@ void Application::saveState(const std::string& path)
 
 void Application::saveState(unsigned ndx)
 {
+  if (ndx == 0)
+  {
+    saveState();
+    return;
+  }
+
   if (!_states.saveState(ndx))
   {
     std::string message = "Failed to create save state.";
@@ -1825,6 +1831,12 @@ void Application::loadState(const std::string& path)
 
 void Application::loadState(unsigned ndx)
 {
+  if (ndx == 0)
+  {
+    loadState();
+    return;
+  }
+
   if ((_validSlots & (1 << ndx)) == 0)
   {
     return;

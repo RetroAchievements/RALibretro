@@ -120,7 +120,8 @@ public:
     Type type;
     uint16_t modifiers;
   };
-  typedef std::array<Binding, 98> BindingList;
+
+  typedef std::array<Binding, 100> BindingList;
 
   static void getBindingString(char buffer[32], const KeyBinds::Binding& desc);
 

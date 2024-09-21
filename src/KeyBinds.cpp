@@ -119,6 +119,8 @@ enum
   kSetSlot10,
   kLoadCurrent,
   kSaveCurrent,
+  kLoadCustom,
+  kSaveCustom,
 
   // Window size
   kSetWindowSize1,
@@ -164,7 +166,7 @@ static const char* bindingNames[] = {
   "LOAD1", "LOAD2", "LOAD3", "LOAD4", "LOAD5", "LOAD6", "LOAD7", "LOAD8", "LOAD9", "LOAD0",
   "NEXT_SLOT", "PREV_SLOT",
   "SLOT1", "SLOT2", "SLOT3", "SLOT4", "SLOT5", "SLOT6", "SLOT7", "SLOT8", "SLOT9", "SLOT0",
-  "LOAD_SLOT", "SAVE_SLOT",
+  "LOAD_SLOT", "SAVE_SLOT", "LOAD_CUSTOM", "SAVE_CUSTOM",
 
   "WINDOW_1X", "WINDOW_2X", "WINDOW_3X", "WINDOW_4X", "WINDOW_5X",
   "TOGGLE_FULLSCREEN", "ROTATE_RIGHT", "ROTATE_LEFT",
@@ -276,7 +278,9 @@ bool KeyBinds::init(Logger* logger)
   _bindings[kSetSlot9] = { 0, SDLK_9, Binding::Type::Key, 0 };
   _bindings[kSetSlot10] = { 0, SDLK_0, Binding::Type::Key, 0 };
   _bindings[kLoadCurrent] = { 0, SDLK_F11, Binding::Type::Key, 0 };
-  _bindings[kSaveCurrent] = { 0, SDLK_F12, Binding::Type::Key, 0 };
+  _bindings[kSaveCurrent] = { 0, SDLK_F11, Binding::Type::Key, KMOD_SHIFT };
+  _bindings[kLoadCustom] = { 0, SDLK_F12, Binding::Type::Key, 0 };
+  _bindings[kSaveCustom] = { 0, SDLK_F12, Binding::Type::Key, KMOD_SHIFT };
 
   _bindings[kSetWindowSize1] = { 0, SDLK_1, Binding::Type::Key, KMOD_ALT };
   _bindings[kSetWindowSize2] = { 0, SDLK_2, Binding::Type::Key, KMOD_ALT };
@@ -407,8 +411,8 @@ KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
     case kLoadState8:   *extra = 8; return Action::kLoadState;
     case kLoadState9:   *extra = 9; return Action::kLoadState;
     case kLoadState10:  *extra = 10; return Action::kLoadState;
-    case kPreviousSlot: *extra = _slot = (_slot == 1) ? 10 : _slot - 1; return Action::kChangeCurrentState;
-    case kNextSlot:     *extra = _slot = (_slot == 10) ? 1 : _slot + 1; return Action::kChangeCurrentState;
+    case kPreviousSlot: *extra = _slot = (_slot == 1) ? 99 : _slot - 1; return Action::kChangeCurrentState;
+    case kNextSlot:     *extra = _slot = (_slot == 99) ? 1 : _slot + 1; return Action::kChangeCurrentState;
     case kSetSlot1:     *extra = _slot = 1; return Action::kChangeCurrentState;
     case kSetSlot2:     *extra = _slot = 2; return Action::kChangeCurrentState;
     case kSetSlot3:     *extra = _slot = 3; return Action::kChangeCurrentState;
@@ -421,6 +425,8 @@ KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
     case kSetSlot10:    *extra = _slot = 10; return Action::kChangeCurrentState;
     case kLoadCurrent:  *extra = _slot; return Action::kLoadState;
     case kSaveCurrent:  *extra = _slot; return Action::kSaveState;
+    case kLoadCustom:   *extra = 0; return Action::kLoadState;
+    case kSaveCustom:   *extra = 0; return Action::kSaveState;
 
     // Window size
     case kSetWindowSize1:    return Action::kSetWindowSize1;
@@ -1511,6 +1517,7 @@ public:
       addButtonInput(i, 5, label, kSaveState1 + i);
     }
     addButtonInput(10, 5, "Save Current State", kSaveCurrent);
+    addButtonInput(11, 5, "Save Custom State", kSaveCustom);
 
     for (int i = 0; i < 10; ++i)
     {
@@ -1518,6 +1525,7 @@ public:
       addButtonInput(i, 7, label, kLoadState1 + i);
     }
     addButtonInput(10, 7, "Load Current State", kLoadCurrent);
+    addButtonInput(11, 7, "Load Custom State", kLoadCustom);
 
     for (int i = 0; i < 10; ++i)
     {
