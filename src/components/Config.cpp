@@ -93,6 +93,8 @@ bool Config::init(libretro::LoggerComponent* logger)
   // these settings are global and should not be modified by reset()
   _audioWhileFastForwarding = true;
   _fastForwardRatio = 5;
+  _backgroundInput = false;
+  _showSpeedIndicator = true;
 
   reset();
   return true;
@@ -550,7 +552,7 @@ void Config::initializeControllerVariable(Variable& variable, const char* name, 
   }
 }
 
-std::string Config::serializeEmulatorSettings()
+std::string Config::serializeEmulatorSettings() const
 {
   std::string json("{");
 
@@ -564,6 +566,10 @@ std::string Config::serializeEmulatorSettings()
 
   json.append("\"backgroundInput\":");
   json.append(_backgroundInput ? "true" : "false");
+  json.append(",");
+
+  json.append("\"showSpeedIndicator\":");
+  json.append(_showSpeedIndicator ? "true" : "false");
 
   json.append("}");
   return json;
@@ -597,6 +603,10 @@ bool Config::deserializeEmulatorSettings(const char* json)
       else if (ud->key == "backgroundInput")
       {
         ud->self->_backgroundInput = num != 0;
+      }
+      else if (ud->key == "showSpeedIndicator")
+      {
+        ud->self->_showSpeedIndicator = num != 0;
       }
     }
     else if (event == JSONSAX_NUMBER)
@@ -908,7 +918,7 @@ static const char* s_getFastForwardRatioOptions(int index, void* udata)
 
 void Config::showEmulatorSettingsDialog()
 {
-  const WORD WIDTH = 140;
+  const WORD WIDTH = 170;
   const WORD LINE = 15;
 
   Dialog db;
@@ -925,6 +935,10 @@ void Config::showEmulatorSettingsDialog()
   db.addCheckbox("Play Audio while Fast Forwarding", 51002, 0, y, WIDTH - 10, 8, &playAudio);
   y += LINE;
 
+  bool showSpeedIndicator = _showSpeedIndicator;
+  db.addCheckbox("Show Indicator when Paused or Fast Forwarding", 51004, 0, y, WIDTH - 10, 8, &showSpeedIndicator);
+  y += LINE;
+
   db.addButton("OK", IDOK, WIDTH - 55 - 50, y, 50, 14, true);
   db.addButton("Cancel", IDCANCEL, WIDTH - 50, y, 50, 14, false);
 
@@ -932,6 +946,7 @@ void Config::showEmulatorSettingsDialog()
   {
     _audioWhileFastForwarding = playAudio;
     _fastForwardRatio = fastForwardRatio + 2;
+    _showSpeedIndicator = showSpeedIndicator;
   }
 }
 #endif

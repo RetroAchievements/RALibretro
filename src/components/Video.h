@@ -36,7 +36,7 @@ public:
   virtual void setEnabled(bool enabled) override;
 
   void clear();
-  void draw(bool force = false);
+  void redraw();
 
   virtual bool setGeometry(unsigned width, unsigned height, unsigned maxWidth, unsigned maxHeight, float aspect, enum retro_pixel_format pixelFormat, const struct retro_hw_render_callback* hwRenderCallback) override;
   virtual void refresh(const void* data, unsigned width, unsigned height, size_t pitch) override;
@@ -47,6 +47,9 @@ public:
   virtual retro_proc_address_t getProcAddress(const char* symbol) override;
 
   virtual void showMessage(const char* msg, unsigned frames) override;
+  bool hasMessage() const { return _numMessages != 0; }
+
+  virtual void showSpeedIndicator(Speed visibleIndicator) override;
 
   void windowResized(unsigned width, unsigned height);
   void getFramebufferSize(unsigned* width, unsigned* height, enum retro_pixel_format* format);
@@ -73,6 +76,8 @@ public:
   void setRotationChangedHandler(RotationHandler handler) { _rotationHandler = handler; }
 
 protected:
+  void draw(bool force = false);
+
   GLuint createProgram(GLint* pos, GLint* uv, GLint* tex);
   bool ensureVertexArray(unsigned windowWidth, unsigned windowHeight, float texScaleX, float texScaleY, GLint pos, GLint uv);
   GLuint createTexture(unsigned width, unsigned height, retro_pixel_format pixelFormat, bool linear);
@@ -99,6 +104,7 @@ protected:
   unsigned                _messageWidth[4];
   unsigned                _messageFrames[4];
   unsigned                _numMessages;
+  GLuint                  _speedIndicatorTexture;
 
   unsigned                _windowWidth;
   unsigned                _windowHeight;

@@ -581,7 +581,17 @@ void Application::run()
         case Fsm::State::GamePausedNoOvl:
         default:
           // do no frames
-          Sleep(10);
+          Sleep(1000 / 60); // assume 60fps
+
+          // if a message is on-screen, force repaint to advance the message animation
+          if (_video.hasMessage())
+          {
+            _video.redraw();
+
+            // no more on-screen messages, force repaint to clear the popups
+            if (!_video.hasMessage())
+              _video.redraw();
+          }
           break;
 
         case Fsm::State::FrameStep:
@@ -1319,6 +1329,7 @@ void Application::unloadCore()
   _memory.destroy();
   _core.destroy();
   _video.reset();
+  updateSpeedIndicator();
 }
 
 void Application::resetGame()
@@ -2334,6 +2345,8 @@ void Application::handle(const SDL_SysWMEvent* syswm)
 
     case IDM_EMULATOR_CONFIG:
       _config.showEmulatorSettingsDialog();
+      updateSpeedIndicator();
+      _video.redraw();
       break;
 
     case IDM_SAVING_CONFIG:
@@ -2550,6 +2563,7 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
   // Emulation speed
   case KeyBinds::Action::kStep:
     _fsm.step();
+    updateSpeedIndicator();
     break;
 
   case KeyBinds::Action::kPauseToggle: /* overlay toggle */
@@ -2564,7 +2578,7 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
       _fsm.pauseGame();
       RA_SetPaused(true);
     }
-
+    updateSpeedIndicator();
     break;
 
   case KeyBinds::Action::kPauseToggleNoOvl: /* non-overlay pause toggle */
@@ -2583,6 +2597,7 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
       // not paused, pause without overlay (will fail silently in hardcore)
       _fsm.pauseGameNoOvl();
     }
+    updateSpeedIndicator();
 
     break;
 
@@ -2635,6 +2650,33 @@ void Application::toggleFastForwarding(unsigned extra)
       info.fState = checked ? MFS_UNCHECKED : MFS_CHECKED;
       SetMenuItemInfo(_menu, IDM_TURBO_GAME, false, &info);
       break;
+  }
+
+  updateSpeedIndicator();
+}
+
+void Application::updateSpeedIndicator()
+{
+  if (!_config.getShowSpeedIndicator())
+  {
+    _video.showSpeedIndicator(Video::Speed::None);
+    return;
+  }
+
+  switch (_fsm.currentState())
+  {
+  case Fsm::State::GamePaused:
+  case Fsm::State::GamePausedNoOvl:
+  case Fsm::State::FrameStep:
+    _video.showSpeedIndicator(Video::Speed::Paused);
+    _video.redraw();
+    break;
+
+  default:
+    if (_config.getFastForwarding())
+      _video.showSpeedIndicator(Video::Speed::FastForwarding);
+    else
+      _video.showSpeedIndicator(Video::Speed::None);
   }
 }
 
