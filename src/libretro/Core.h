@@ -69,8 +69,8 @@ namespace libretro
     inline unsigned                getNumDiscs()            const { return (_diskControlInterface.get_num_images != NULL) ? _diskControlInterface.get_num_images() : 0; }
     inline unsigned                getCurrentDiscIndex()    const { return (_diskControlInterface.get_image_index != NULL) ? _diskControlInterface.get_image_index() : 0; }
     void                           setCurrentDiscIndex(unsigned index);
-    bool                           getDiscLabel(unsigned index, std::string& label);
-    bool                           getDiscPath(unsigned index, std::string& path);
+    bool                           getDiscLabel(unsigned index, std::string& label) const;
+    bool                           getDiscPath(unsigned index, std::string& path) const;
     inline bool                    getTrayOpen()            const { return (_diskControlInterface.get_eject_state != NULL) ? (bool)_diskControlInterface.get_eject_state() : false; }
     void                           setTrayOpen(bool open);
 

@@ -862,7 +862,7 @@ bool libretro::Core::setDiskControlExtInterface(const struct retro_disk_control_
   return true;
 }
 
-bool libretro::Core::getDiscLabel(unsigned index, std::string& label)
+bool libretro::Core::getDiscLabel(unsigned index, std::string& label) const
 {
   if (_diskControlInterface.get_image_label)
   {
@@ -877,7 +877,7 @@ bool libretro::Core::getDiscLabel(unsigned index, std::string& label)
   return false;
 }
 
-bool libretro::Core::getDiscPath(unsigned index, std::string& path)
+bool libretro::Core::getDiscPath(unsigned index, std::string& path) const
 {
   if (_diskControlInterface.get_image_path)
   {
