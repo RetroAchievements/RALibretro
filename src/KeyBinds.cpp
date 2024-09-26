@@ -120,6 +120,11 @@ enum
   kLoadCurrent,
   kSaveCurrent,
 
+  // Disc management
+  kToggleTray,
+  kReadyNextDisc,
+  kReadyPreviousDisc,
+
   // Window size
   kSetWindowSize1,
   kSetWindowSize2,
@@ -165,6 +170,8 @@ static const char* bindingNames[] = {
   "NEXT_SLOT", "PREV_SLOT",
   "SLOT1", "SLOT2", "SLOT3", "SLOT4", "SLOT5", "SLOT6", "SLOT7", "SLOT8", "SLOT9", "SLOT0",
   "LOAD_SLOT", "SAVE_SLOT",
+
+  "TRAY_OPEN", "DISK_NEXT", "DISK_PREV",
 
   "WINDOW_1X", "WINDOW_2X", "WINDOW_3X", "WINDOW_4X", "WINDOW_5X",
   "TOGGLE_FULLSCREEN", "ROTATE_RIGHT", "ROTATE_LEFT",
@@ -286,6 +293,9 @@ bool KeyBinds::init(Logger* logger)
   _bindings[kToggleFullscreen] = { 0, SDLK_RETURN, Binding::Type::Key, KMOD_ALT };
   _bindings[kRotateRight] = { 0, SDLK_r, Binding::Type::Key, KMOD_CTRL };
   _bindings[kRotateLeft] = { 0, SDLK_r, Binding::Type::Key, KMOD_CTRL | KMOD_SHIFT };
+  _bindings[kToggleTray] = { 0, SDLK_MINUS, Binding::Type::Key, KMOD_ALT };
+  _bindings[kReadyNextDisc] = { 0, SDLK_EQUALS, Binding::Type::Key, KMOD_ALT };
+  _bindings[kReadyPreviousDisc] = { 0, SDLK_0, Binding::Type::Key, KMOD_ALT };
 
   _bindings[kPauseToggle] = { 0, SDLK_ESCAPE, Binding::Type::Key, 0 };
   _bindings[kPauseToggleNoOvl] = { 0, SDLK_p, Binding::Type::Key, 0 };
@@ -421,6 +431,11 @@ KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
     case kSetSlot10:    *extra = _slot = 10; return Action::kChangeCurrentState;
     case kLoadCurrent:  *extra = _slot; return Action::kLoadState;
     case kSaveCurrent:  *extra = _slot; return Action::kSaveState;
+
+    // Disc management
+    case kToggleTray:        return Action::kToggleTray;
+    case kReadyNextDisc:     return Action::kReadyNextDisc;
+    case kReadyPreviousDisc: return Action::kReadyPreviousDisc;
 
     // Window size
     case kSetWindowSize1:    return Action::kSetWindowSize1;
@@ -1494,6 +1509,9 @@ public:
     addButtonInput(4, 0, "Frame Advance", kStep);
     addButtonInput(5, 0, "Fast Forward (Hold)", kFastForward);
     addButtonInput(6, 0, "Fast Forward (Toggle)", kFastForwardToggle);
+    addButtonInput(7, 0, "Insert/Eject Disc", kToggleTray);
+    addButtonInput(8, 0, "Ready Next Disc", kReadyNextDisc);
+    addButtonInput(9, 0, "Ready Previous Disc", kReadyPreviousDisc);
 
     addButtonInput(0, 2, "Window Size 1x", kSetWindowSize1);
     addButtonInput(1, 2, "Window Size 2x", kSetWindowSize2);
