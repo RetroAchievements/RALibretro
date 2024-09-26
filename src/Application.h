@@ -129,6 +129,10 @@ protected:
   void        toggleFastForwarding(unsigned extra);
   void        toggleBackgroundInput();
   void        setBackgroundInput(bool enabled);
+  void        toggleTray();
+  void        readyNextDisc(int offset);
+  void        readyDisc(unsigned newDiscIndex);
+  std::string getDiscLabel(unsigned index) const;
 
   Fsm _fsm;
   bool lastHardcore;

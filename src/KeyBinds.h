@@ -64,6 +64,11 @@ public:
     kLoadState,
     kChangeCurrentState,
 
+    // Disc management
+    kToggleTray,
+    kReadyNextDisc,
+    kReadyPreviousDisc,
+
     // Window size
     kSetWindowSize1,
     kSetWindowSize2,
@@ -121,7 +126,7 @@ public:
     uint16_t modifiers;
   };
 
-  typedef std::array<Binding, 100> BindingList;
+  typedef std::array<Binding, 103> BindingList;
 
   static void getBindingString(char buffer[32], const KeyBinds::Binding& desc);
 

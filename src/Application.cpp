@@ -1656,6 +1656,62 @@ void Application::enableRecent()
   }
 }
 
+void Application::toggleTray()
+{
+  if (_core.getNumDiscs() > 0)
+  {
+    _core.setTrayOpen(!_core.getTrayOpen());
+    updateDiscMenu(false);
+
+    if (_core.getTrayOpen())
+    {
+      _video.showMessage(_isDriveFloppy ? "Floppy ejected" : "Disc ejected", 200);
+    }
+    else
+    {
+      std::string message = "Inserted " + getDiscLabel(_core.getCurrentDiscIndex());
+      _video.showMessage(message.c_str(), 200);
+    }
+  }
+}
+
+void Application::readyNextDisc(int offset)
+{
+  const unsigned numDiscs = _core.getNumDiscs();
+  if (numDiscs > 0)
+  {
+    if (_core.getTrayOpen())
+      readyDisc((_core.getCurrentDiscIndex() + numDiscs + offset) % numDiscs);
+    else
+      _video.showMessage(_isDriveFloppy ? "Cannot change floppy until previous floppy ejected" : "Cannot change disc until previous disc ejected", 200);
+  }
+}
+
+void Application::readyDisc(unsigned newDiscIndex)
+{
+  if (_core.getCurrentDiscIndex() != newDiscIndex)
+  {
+    std::string path;
+    if (_core.getDiscPath(newDiscIndex, path))
+    {
+      if (!romLoaded(&_core, &_logger, _system, path, NULL, 0, true))
+        return;
+    }
+    else if (newDiscIndex < _discPaths.size())
+    {
+      path = util::replaceFileName(_gamePath, _discPaths.at(newDiscIndex).c_str());
+      if (!romLoaded(&_core, &_logger, _system, path, NULL, 0, true))
+        return;
+    }
+
+    _core.setCurrentDiscIndex(newDiscIndex);
+    updateDiscMenu(false);
+
+    std::string message = "Readied " + getDiscLabel(newDiscIndex);
+    _video.showMessage(message.c_str(), 200);
+  }
+}
+
 void Application::updateDiscMenu(bool updateLabels)
 {
   size_t i = 0;
@@ -1706,27 +1762,8 @@ void Application::updateDiscMenu(bool updateLabels)
 
       if (updateLabels)
       {
-        if (_core.getDiscLabel(i, discLabel))
-        {
-          info.dwTypeData = (char*)discLabel.data();
-        }
-        else if (i < _discPaths.size())
-        {
-          const std::string& path = _discPaths.at(i);
-          size_t index = path.find_last_of('\\');
-          if (index == std::string::npos)
-            index = path.find_last_of('/');
-
-          if (index != std::string::npos)
-            info.dwTypeData = (LPSTR)&path.at(index + 1);
-          else
-            info.dwTypeData = (LPSTR)&path.at(0);
-        }
-        else
-        {
-          sprintf(buffer, "Disc %d", (int)(i + 1));
-          info.dwTypeData = buffer;
-        }
+        discLabel = getDiscLabel(i);
+        info.dwTypeData = (char*)discLabel.data();
       }
 
       info.fState = (i == selectedDisc) ? MFS_CHECKED : MFS_UNCHECKED;
@@ -1738,6 +1775,33 @@ void Application::updateDiscMenu(bool updateLabels)
 
     EnableMenuItem(_menu, IDM_CD_OPEN_TRAY, MF_ENABLED);
   }
+}
+
+std::string Application::getDiscLabel(unsigned index) const
+{
+  std::string discLabel;
+
+  if (_core.getDiscLabel(index, discLabel))
+    return discLabel;
+
+  if (index < _discPaths.size())
+  {
+    const std::string& path = _discPaths.at(index);
+    size_t lastSlashIndex = path.find_last_of('\\');
+    if (lastSlashIndex == std::string::npos)
+      lastSlashIndex = path.find_last_of('/');
+
+    if (lastSlashIndex != std::string::npos)
+      discLabel = path.substr(lastSlashIndex + 1);
+    else
+      discLabel = path;
+  }
+  else
+  {
+    discLabel = "Disc " + index;
+  }
+
+  return discLabel;
 }
 
 std::string Application::getStatePath(unsigned ndx)
@@ -2275,8 +2339,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
     }
     
     case IDM_CD_OPEN_TRAY:
-      _core.setTrayOpen(!_core.getTrayOpen());
-      updateDiscMenu(false);
+      toggleTray();
       break;
 
     case IDM_PAUSE_GAME:
@@ -2394,24 +2457,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       else if (cmd >= IDM_CD_DISC_FIRST && cmd <= IDM_CD_DISC_LAST)
       {
         unsigned newDiscIndex = cmd - IDM_CD_DISC_FIRST;
-        if (_core.getCurrentDiscIndex() != newDiscIndex)
-        {
-          std::string path;
-          if (_core.getDiscPath(newDiscIndex, path))
-          {
-            if (!romLoaded(&_core, &_logger, _system, path, NULL, 0, true))
-              break;
-          }
-          else if (newDiscIndex < _discPaths.size())
-          {
-            path = util::replaceFileName(_gamePath, _discPaths.at(newDiscIndex).c_str());
-            if (!romLoaded(&_core, &_logger, _system, path, NULL, 0, true))
-              break;
-          }
-
-          _core.setCurrentDiscIndex(newDiscIndex);
-          updateDiscMenu(false);
-        }
+        readyDisc(newDiscIndex);
       }
       else if (cmd >= IDM_SYSTEM_FIRST && cmd <= IDM_SYSTEM_LAST)
       {
@@ -2562,6 +2608,11 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
   case KeyBinds::Action::kLoadState:        loadState(extra); break;
   case KeyBinds::Action::kChangeCurrentState: changeCurrentState(extra); break;
 
+  // Disc management
+  case KeyBinds::Action::kToggleTray:       toggleTray(); break;
+  case KeyBinds::Action::kReadyNextDisc:    readyNextDisc(1); break;
+  case KeyBinds::Action::kReadyPreviousDisc:readyNextDisc(-1); break;
+
   // Window size
   case KeyBinds::Action::kSetWindowSize1:   resizeWindow(1); break;
   case KeyBinds::Action::kSetWindowSize2:   resizeWindow(2); break;
@@ -2633,6 +2684,7 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
     updateMenu();
 
     _video.showMessage(_keybinds.hasGameFocus() ? "Game focus enabled" : "Game focus disabled", 60);
+    SDL_SetRelativeMouseMode(_keybinds.hasGameFocus() ? SDL_TRUE : SDL_FALSE);
     break;
   }
 }
