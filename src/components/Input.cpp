@@ -251,8 +251,6 @@ void Input::buttonEvent(int port, Button button, bool pressed)
     case Button::kB:      rbutton = RETRO_DEVICE_ID_JOYPAD_B; break;
     case Button::kL:      rbutton = RETRO_DEVICE_ID_JOYPAD_L; break;
     case Button::kR:      rbutton = RETRO_DEVICE_ID_JOYPAD_R; break;
-    case Button::kL2:     rbutton = RETRO_DEVICE_ID_JOYPAD_L2; break;
-    case Button::kR2:     rbutton = RETRO_DEVICE_ID_JOYPAD_R2; break;
     case Button::kL3:     rbutton = RETRO_DEVICE_ID_JOYPAD_L3; break;
     case Button::kR3:     rbutton = RETRO_DEVICE_ID_JOYPAD_R3; break;
     case Button::kSelect: rbutton = RETRO_DEVICE_ID_JOYPAD_SELECT; break;
@@ -269,6 +267,7 @@ void Input::buttonEvent(int port, Button button, bool pressed)
 void Input::axisEvent(int port, Axis axis, int16_t value)
 {
   int raxis;
+  int rbutton = -1;
 
   switch (axis)
   {
@@ -276,10 +275,22 @@ void Input::axisEvent(int port, Axis axis, int16_t value)
     case Axis::kLeftAxisY:  raxis = (RETRO_DEVICE_INDEX_ANALOG_LEFT  << 1) | RETRO_DEVICE_ID_ANALOG_Y; break;
     case Axis::kRightAxisX: raxis = (RETRO_DEVICE_INDEX_ANALOG_RIGHT << 1) | RETRO_DEVICE_ID_ANALOG_X; break;
     case Axis::kRightAxisY: raxis = (RETRO_DEVICE_INDEX_ANALOG_RIGHT << 1) | RETRO_DEVICE_ID_ANALOG_Y; break;
+    case Axis::kL2:         raxis = (RETRO_DEVICE_INDEX_ANALOG_BUTTON << 1) | 0; rbutton = RETRO_DEVICE_ID_JOYPAD_L2; break;
+    case Axis::kR2:         raxis = (RETRO_DEVICE_INDEX_ANALOG_BUTTON << 1) | 1; rbutton = RETRO_DEVICE_ID_JOYPAD_R2; break;
     default:                return;
   }
 
   _info[port][_devices[port]]._axis[raxis] = value;
+
+  if (rbutton != -1)
+  {
+    const int threshold = static_cast<int>(32767 * getJoystickSensitivity(_devices[port]));
+
+    if (value > threshold)
+      _info[port][_devices[port]]._state |= (1 << rbutton);
+    else
+      _info[port][_devices[port]]._state &= ~(1 << rbutton);
+  }
 }
 
 void Input::processEvent(const SDL_Event* event, KeyBinds* keyBinds)
@@ -562,6 +573,16 @@ int16_t Input::read(unsigned port, unsigned device, unsigned index, unsigned id)
         port_device = _devices[port];
         if (port_device > (int)_info[port].size())
           return 0;
+
+        if (index == RETRO_DEVICE_INDEX_ANALOG_BUTTON)
+        {
+          switch (id)
+          {
+            case RETRO_DEVICE_ID_JOYPAD_L2: id = 0; break;
+            case RETRO_DEVICE_ID_JOYPAD_R2: id = 1; break;
+            default: return 0;
+          }
+        }
 
         return _info[port][port_device]._axis[index << 1 | id];
 

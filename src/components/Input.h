@@ -45,8 +45,6 @@ public:
     kB,
     kL,
     kR,
-    kL2,
-    kR2,
     kL3,
     kR3,
     kSelect,
@@ -58,7 +56,9 @@ public:
     kLeftAxisX,
     kLeftAxisY,
     kRightAxisX,
-    kRightAxisY
+    kRightAxisY,
+    kL2,
+    kR2
   };
 
   enum class MouseButton
@@ -130,7 +130,7 @@ protected:
     std::string _description;
     unsigned    _id = 0;
     int16_t     _state = 0;
-    int16_t     _axis[4] = { 0,0,0,0 };
+    int16_t     _axis[6] = { 0,0,0,0,0,0 };
   };
 
   struct MouseInfo
