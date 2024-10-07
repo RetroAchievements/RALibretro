@@ -75,7 +75,7 @@ public:
   void autoAssign();
   void buttonEvent(int port, Button button, bool pressed);
   void axisEvent(int port, Axis axis, int16_t value);
-  void processEvent(const SDL_Event* event, KeyBinds* keyBinds);
+  void processEvent(const SDL_Event* event, KeyBinds* keyBinds, libretro::VideoComponent* video);
   void mouseButtonEvent(MouseButton button, bool pressed);
   void mouseMoveEvent(int relative_x, int relative_y, int absolute_x, int absolute_y);
   void keyboardEvent(enum retro_key key, bool pressed);
@@ -153,8 +153,8 @@ protected:
   };
 
   SDL_JoystickID addController(int which);
-  void addController(const SDL_Event* event, KeyBinds* keyBinds);
-  void removeController(const SDL_Event* event);
+  void addController(const SDL_Event* event, KeyBinds* keyBinds, libretro::VideoComponent* video);
+  void removeController(const SDL_Event* event, libretro::VideoComponent* video);
 
   static const char* s_getType(int index, void* udata);
   static const char* s_getPad(int index, void* udata);

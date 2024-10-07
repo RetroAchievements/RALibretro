@@ -282,16 +282,16 @@ void Input::axisEvent(int port, Axis axis, int16_t value)
   _info[port][_devices[port]]._axis[raxis] = value;
 }
 
-void Input::processEvent(const SDL_Event* event, KeyBinds* keyBinds)
+void Input::processEvent(const SDL_Event* event, KeyBinds* keyBinds, libretro::VideoComponent* video)
 {
   switch (event->type)
   {
   case SDL_CONTROLLERDEVICEADDED:
-    addController(event, keyBinds);
+    addController(event, keyBinds, video);
     break;
 
   case SDL_CONTROLLERDEVICEREMOVED:
-    removeController(event);
+    removeController(event, video);
     break;
   }
 }
@@ -677,7 +677,7 @@ KeyBinds::Binding Input::captureButtonPress()
   return desc;
 }
 
-void Input::addController(const SDL_Event* event, KeyBinds* keyBinds)
+void Input::addController(const SDL_Event* event, KeyBinds* keyBinds, libretro::VideoComponent* video)
 {
   SDL_JoystickID id = addController(event->cdevice.which);
   if (id >= 0)
@@ -698,11 +698,16 @@ void Input::addController(const SDL_Event* event, KeyBinds* keyBinds)
       }
 
       pad->second._navigationPort = keyBinds->getNavigationPort(id);
+
+      if (pad->second._navigationPort != -1 && video) {
+        std::string message = pad->second._controllerName + std::string(" connected");
+        video->showMessage(message.c_str(), 200);
+      }
     }
   }
 }
 
-void Input::removeController(const SDL_Event* event)
+void Input::removeController(const SDL_Event* event, libretro::VideoComponent* video)
 {
   auto it = _pads.find(event->cdevice.which);
 
@@ -710,6 +715,11 @@ void Input::removeController(const SDL_Event* event)
   {
     Pad* pad = &it->second;
     _logger->info(TAG "Controller %s (%s) removed", pad->_controllerName, pad->_joystickName);
+
+    if (video && pad->_navigationPort != -1) {
+      std::string message = pad->_controllerName + std::string(" disconnected");
+      video->showMessage(message.c_str(), 200);
+    }
 
     // cleanup
     if (pad->_haptic)

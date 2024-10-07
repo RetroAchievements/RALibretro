@@ -371,7 +371,7 @@ void Application::processEvents()
 
       case SDL_CONTROLLERDEVICEADDED:
       case SDL_CONTROLLERDEVICEREMOVED:
-        _input.processEvent(&event, &_keybinds);
+        _input.processEvent(&event, &_keybinds, isGameActive() ? &_video : nullptr);
         break;
 
       case SDL_CONTROLLERBUTTONUP:
