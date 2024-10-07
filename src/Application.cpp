@@ -2590,8 +2590,8 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
   case KeyBinds::Action::kButtonB:          _input.buttonEvent(extra >> 8, Input::Button::kB, (extra & 0xFF) != 0); break;
   case KeyBinds::Action::kButtonL:          _input.buttonEvent(extra >> 8, Input::Button::kL, (extra & 0xFF) != 0); break;
   case KeyBinds::Action::kButtonR:          _input.buttonEvent(extra >> 8, Input::Button::kR, (extra & 0xFF) != 0); break;
-  case KeyBinds::Action::kButtonL2:         _input.buttonEvent(extra >> 8, Input::Button::kL2, (extra & 0xFF) != 0); break;
-  case KeyBinds::Action::kButtonR2:         _input.buttonEvent(extra >> 8, Input::Button::kR2, (extra & 0xFF) != 0); break;
+  case KeyBinds::Action::kAxisL2:           _input.axisEvent(extra >> 16, Input::Axis::kL2, (int16_t)(extra & 0xFFFF)); break;
+  case KeyBinds::Action::kAxisR2:           _input.axisEvent(extra >> 16, Input::Axis::kR2, (int16_t)(extra & 0xFFFF)); break;
   case KeyBinds::Action::kButtonL3:         _input.buttonEvent(extra >> 8, Input::Button::kL3, (extra & 0xFF) != 0); break;
   case KeyBinds::Action::kButtonR3:         _input.buttonEvent(extra >> 8, Input::Button::kR3, (extra & 0xFF) != 0); break;
   case KeyBinds::Action::kButtonSelect:     _input.buttonEvent(extra >> 8, Input::Button::kSelect, (extra & 0xFF) != 0); break;

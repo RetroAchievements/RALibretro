@@ -358,8 +358,8 @@ KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
     case kJoy0B:        *extra = JOY_EXTRA(0, 1); return Action::kButtonB;
     case kJoy0L:        *extra = JOY_EXTRA(0, 1); return Action::kButtonL;
     case kJoy0R:        *extra = JOY_EXTRA(0, 1); return Action::kButtonR;
-    case kJoy0L2:       *extra = JOY_EXTRA(0, 1); return Action::kButtonL2;
-    case kJoy0R2:       *extra = JOY_EXTRA(0, 1); return Action::kButtonR2;
+    case kJoy0L2:       *extra = AXIS_EXTRA(0, 0x7FFF); return Action::kAxisL2;
+    case kJoy0R2:       *extra = AXIS_EXTRA(0, 0x7FFF); return Action::kAxisR2;
     case kJoy0L3:       *extra = JOY_EXTRA(0, 1); return Action::kButtonL3;
     case kJoy0R3:       *extra = JOY_EXTRA(0, 1); return Action::kButtonR3;
     case kJoy0Select:   *extra = JOY_EXTRA(0, 1); return Action::kButtonSelect;
@@ -384,8 +384,8 @@ KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
     case kJoy1B:        *extra = JOY_EXTRA(1, 1); return Action::kButtonB;
     case kJoy1L:        *extra = JOY_EXTRA(1, 1); return Action::kButtonL;
     case kJoy1R:        *extra = JOY_EXTRA(1, 1); return Action::kButtonR;
-    case kJoy1L2:       *extra = JOY_EXTRA(1, 1); return Action::kButtonL2;
-    case kJoy1R2:       *extra = JOY_EXTRA(1, 1); return Action::kButtonR2;
+    case kJoy1L2:       *extra = AXIS_EXTRA(1, 0x7FFF); return Action::kAxisL2;
+    case kJoy1R2:       *extra = AXIS_EXTRA(1, 0x7FFF); return Action::kAxisR2;
     case kJoy1L3:       *extra = JOY_EXTRA(1, 1); return Action::kButtonL3;
     case kJoy1R3:       *extra = JOY_EXTRA(1, 1); return Action::kButtonR3;
     case kJoy1Select:   *extra = JOY_EXTRA(1, 1); return Action::kButtonSelect;
@@ -488,8 +488,8 @@ KeyBinds::Action KeyBinds::translateButtonReleased(int button, unsigned* extra)
     case kJoy0B:        *extra = JOY_EXTRA(0, 0); return Action::kButtonB;
     case kJoy0L:        *extra = JOY_EXTRA(0, 0); return Action::kButtonL;
     case kJoy0R:        *extra = JOY_EXTRA(0, 0); return Action::kButtonR;
-    case kJoy0L2:       *extra = JOY_EXTRA(0, 0); return Action::kButtonL2;
-    case kJoy0R2:       *extra = JOY_EXTRA(0, 0); return Action::kButtonR2;
+    case kJoy0L2:       *extra = AXIS_EXTRA(0, 0); return Action::kAxisL2;
+    case kJoy0R2:       *extra = AXIS_EXTRA(0, 0); return Action::kAxisR2;
     case kJoy0L3:       *extra = JOY_EXTRA(0, 0); return Action::kButtonL3;
     case kJoy0R3:       *extra = JOY_EXTRA(0, 0); return Action::kButtonR3;
     case kJoy0Select:   *extra = JOY_EXTRA(0, 0); return Action::kButtonSelect;
@@ -514,8 +514,8 @@ KeyBinds::Action KeyBinds::translateButtonReleased(int button, unsigned* extra)
     case kJoy1B:        *extra = JOY_EXTRA(1, 0); return Action::kButtonB;
     case kJoy1L:        *extra = JOY_EXTRA(1, 0); return Action::kButtonL;
     case kJoy1R:        *extra = JOY_EXTRA(1, 0); return Action::kButtonR;
-    case kJoy1L2:       *extra = JOY_EXTRA(1, 0); return Action::kButtonL2;
-    case kJoy1R2:       *extra = JOY_EXTRA(1, 0); return Action::kButtonR2;
+    case kJoy1L2:       *extra = AXIS_EXTRA(0, 0); return Action::kAxisL2;
+    case kJoy1R2:       *extra = AXIS_EXTRA(0, 0); return Action::kAxisR2;
     case kJoy1L3:       *extra = JOY_EXTRA(1, 0); return Action::kButtonL3;
     case kJoy1R3:       *extra = JOY_EXTRA(1, 0); return Action::kButtonR3;
     case kJoy1Select:   *extra = JOY_EXTRA(1, 0); return Action::kButtonSelect;
@@ -552,6 +552,8 @@ KeyBinds::Action KeyBinds::translateAnalog(int button, Sint16 value, unsigned* e
     case kJoy0RightAnalogRight: action = Action::kAxisRightX; controller = 0; break;
     case kJoy0RightAnalogUp:
     case kJoy0RightAnalogDown:  action = Action::kAxisRightY; controller = 0; break;
+    case kJoy0L2:               action = Action::kAxisL2;     controller = 0; break;
+    case kJoy0R2:               action = Action::kAxisR2;     controller = 0; break;
     case kJoy1LeftAnalogLeft:
     case kJoy1LeftAnalogRight:  action = Action::kAxisLeftX;  controller = 1; break;
     case kJoy1LeftAnalogUp:
@@ -560,6 +562,8 @@ KeyBinds::Action KeyBinds::translateAnalog(int button, Sint16 value, unsigned* e
     case kJoy1RightAnalogRight: action = Action::kAxisRightX; controller = 1; break;
     case kJoy1RightAnalogUp:
     case kJoy1RightAnalogDown:  action = Action::kAxisRightY; controller = 1; break;
+    case kJoy1L2:               action = Action::kAxisL2;     controller = 1; break;
+    case kJoy1R2:               action = Action::kAxisR2;     controller = 1; break;
 
     default:
       return Action::kNothing;
@@ -857,6 +861,8 @@ static bool IsAnalog(int button)
     case kJoy0RightAnalogRight:
     case kJoy0RightAnalogUp:
     case kJoy0RightAnalogDown:
+    case kJoy0L2:
+    case kJoy0R2:
     case kJoy1LeftAnalogLeft:
     case kJoy1LeftAnalogRight:
     case kJoy1LeftAnalogUp:
@@ -865,6 +871,8 @@ static bool IsAnalog(int button)
     case kJoy1RightAnalogRight:
     case kJoy1RightAnalogUp:
     case kJoy1RightAnalogDown:
+    case kJoy1L2:
+    case kJoy1R2:
       return true;
 
     default:
