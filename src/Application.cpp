@@ -321,12 +321,15 @@ bool Application::init(const char* title, int width, int height)
   }
 
   SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
+
   _coreName.clear();
   _gameData = NULL;
   _validSlots = 0;
   _isDriveFloppy = false;
   lastHardcore = hardcore();
   cancelLoad = false;
+  _absViewMouseX = _absViewMouseY = 0;
+
   updateMenu();
   updateDiscMenu(true);
   return true;
@@ -2420,6 +2423,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
 
     case IDM_EMULATOR_CONFIG:
       _config.showEmulatorSettingsDialog();
+      updateMouseCapture();
       updateSpeedIndicator();
       _video.redraw();
       break;
@@ -2527,34 +2531,45 @@ void Application::handle(const SDL_MouseMotionEvent* motion)
     else if (viewY >= viewScaledHeight)
       viewY = viewScaledHeight - 1;
 
+    if (SDL_GetRelativeMouseMode())
+    {
+      _absViewMouseX += motion->xrel;
+      _absViewMouseY += motion->yrel;
+    }
+    else
+    {
+      _absViewMouseX = viewX;
+      _absViewMouseY = viewY;
+    }
+
     switch (_video.getRotation())
     {
       default:
         rel_x = ((viewX << 16) / viewScaledWidth) - 32767;
         rel_y = ((viewY << 16) / viewScaledHeight) - 32767;
-        abs_x = (viewX * viewWidth) / viewScaledWidth;
-        abs_y = (viewY * viewHeight) / viewScaledHeight;
+        abs_x = (_absViewMouseX * viewWidth) / viewScaledWidth;
+        abs_y = (_absViewMouseY * viewHeight) / viewScaledHeight;
         break;
 
       case Video::Rotation::Ninety:
         rel_x = 32767 - ((viewY << 16) / viewScaledHeight);
         rel_y = ((viewX << 16) / viewScaledWidth) - 32767;
-        abs_x = viewWidth - ((viewY * viewWidth) / viewScaledHeight) - 1;
-        abs_y = (viewX * viewHeight) / viewScaledWidth;
+        abs_x = viewWidth - ((_absViewMouseY * viewWidth) / viewScaledHeight) - 1;
+        abs_y = (_absViewMouseX * viewHeight) / viewScaledWidth;
         break;
 
       case Video::Rotation::OneEighty:
         rel_x = 32767 - ((viewX << 16) / viewScaledWidth);
         rel_y = 32767 - ((viewY << 16) / viewScaledHeight);
-        abs_x = viewWidth - ((viewX * viewWidth) / viewScaledWidth) - 1;
-        abs_y = viewHeight - ((viewY * viewHeight) / viewScaledHeight) - 1;
+        abs_x = viewWidth - ((_absViewMouseX * viewWidth) / viewScaledWidth) - 1;
+        abs_y = viewHeight - ((_absViewMouseY * viewHeight) / viewScaledHeight) - 1;
         break;
 
       case Video::Rotation::TwoSeventy:
         rel_x = ((viewY << 16) / viewScaledHeight) - 32767;
         rel_y = 32767 - ((viewX << 16) / viewScaledWidth);
-        abs_x = (viewY * viewWidth) / viewScaledHeight;
-        abs_y = viewHeight - ((viewX * viewHeight) / viewScaledWidth) - 1;
+        abs_x = (_absViewMouseY * viewWidth) / viewScaledHeight;
+        abs_y = viewHeight - ((_absViewMouseX * viewHeight) / viewScaledWidth) - 1;
         break;
     }
 
@@ -2684,9 +2699,14 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
     updateMenu();
 
     _video.showMessage(_keybinds.hasGameFocus() ? "Game focus enabled" : "Game focus disabled", 60);
-    SDL_SetRelativeMouseMode(_keybinds.hasGameFocus() ? SDL_TRUE : SDL_FALSE);
+    updateMouseCapture();
     break;
   }
+}
+
+void Application::updateMouseCapture()
+{
+  SDL_SetRelativeMouseMode(_keybinds.hasGameFocus() && _config.getGameFocusCaptureMouse() ? SDL_TRUE : SDL_FALSE);
 }
 
 void Application::toggleFastForwarding(unsigned extra)

@@ -159,6 +159,8 @@ namespace libretro
 
     virtual bool getShowSpeedIndicator() = 0;
     virtual void setShowSpeedIndicator(bool value) = 0;
+
+    virtual bool getGameFocusCaptureMouse() = 0;
   };
 
   /**

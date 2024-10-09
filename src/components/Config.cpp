@@ -95,6 +95,7 @@ bool Config::init(libretro::LoggerComponent* logger)
   _fastForwardRatio = 5;
   _backgroundInput = false;
   _showSpeedIndicator = true;
+  _gameFocusCaptureMouse = false;
 
   reset();
   return true;
@@ -570,6 +571,10 @@ std::string Config::serializeEmulatorSettings() const
 
   json.append("\"showSpeedIndicator\":");
   json.append(_showSpeedIndicator ? "true" : "false");
+  json.append(",");
+
+  json.append("\"gameFocusCaptureMouse\":");
+  json.append(_gameFocusCaptureMouse ? "true" : "false");
 
   json.append("}");
   return json;
@@ -607,6 +612,10 @@ bool Config::deserializeEmulatorSettings(const char* json)
       else if (ud->key == "showSpeedIndicator")
       {
         ud->self->_showSpeedIndicator = num != 0;
+      }
+      else if (ud->key == "gameFocusCaptureMouse")
+      {
+        ud->self->_gameFocusCaptureMouse = num != 0;
       }
     }
     else if (event == JSONSAX_NUMBER)
@@ -939,6 +948,10 @@ void Config::showEmulatorSettingsDialog()
   db.addCheckbox("Show Indicator when Paused or Fast Forwarding", 51004, 0, y, WIDTH - 10, 8, &showSpeedIndicator);
   y += LINE;
 
+  bool gameFocusCaptureMouse = _gameFocusCaptureMouse;
+  db.addCheckbox("Capture mouse in Game Focus mode", 51005, 0, y, WIDTH - 10, 8, &gameFocusCaptureMouse);
+  y += LINE;
+
   db.addButton("OK", IDOK, WIDTH - 55 - 50, y, 50, 14, true);
   db.addButton("Cancel", IDCANCEL, WIDTH - 50, y, 50, 14, false);
 
@@ -947,6 +960,7 @@ void Config::showEmulatorSettingsDialog()
     _audioWhileFastForwarding = playAudio;
     _fastForwardRatio = fastForwardRatio + 2;
     _showSpeedIndicator = showSpeedIndicator;
+    _gameFocusCaptureMouse = gameFocusCaptureMouse;
   }
 }
 #endif

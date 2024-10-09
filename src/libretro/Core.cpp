@@ -164,6 +164,11 @@ namespace
     {
       (void)value;
     }
+
+    virtual bool getGameFocusCaptureMouse() override
+    {
+      return false;
+    }
   };
 
   class DummyVideoContext : public libretro::VideoContextComponent

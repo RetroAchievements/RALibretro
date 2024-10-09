@@ -60,6 +60,8 @@ public:
   virtual bool getShowSpeedIndicator() override { return _showSpeedIndicator; }
   virtual void setShowSpeedIndicator(bool value) override { _showSpeedIndicator = value; }
 
+  virtual bool getGameFocusCaptureMouse() override { return _gameFocusCaptureMouse; }
+
   void setSaveDirectory(const std::string& path) { _saveFolder = path; }
 
   const char* getRootFolder()
@@ -152,6 +154,7 @@ protected:
   bool _audioWhileFastForwarding;
   bool _backgroundInput;
   bool _showSpeedIndicator;
+  bool _gameFocusCaptureMouse;
 
   int _fastForwardRatio;
 
