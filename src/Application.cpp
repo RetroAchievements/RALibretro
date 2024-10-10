@@ -1406,6 +1406,8 @@ void Application::pauseGame(bool pause)
   {
     _fsm.pauseGameNoOvl();
   }
+
+  updateSpeedIndicator();
 }
 
 void Application::printf(const char* fmt, ...)

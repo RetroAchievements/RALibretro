@@ -332,7 +332,7 @@ void Memory::attachToCore(libretro::Core* core, int consoleId)
     for (unsigned i = 0; i < memoryRegions.count; i++)
     {
       if (memoryRegions.data[i] != g_memoryRegions.data[i])
-        _logger->info(TAG "memoryRegion[%d] changed from %p to %p", g_memoryRegions.data[i], memoryRegions.data[i]);
+        _logger->info(TAG "memoryRegion[%d] changed from %p to %p", i, g_memoryRegions.data[i], memoryRegions.data[i]);
     }
   }
 
