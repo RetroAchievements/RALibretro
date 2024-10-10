@@ -125,6 +125,7 @@ protected:
   void        loadConfiguration(int* window_x, int* window_y, int* window_width, int* window_height);
   void        saveConfiguration();
   std::string serializeRecentList();
+  void        updateMouseCapture();
   void        updateSpeedIndicator();
   void        toggleFastForwarding(unsigned extra);
   void        toggleBackgroundInput();
@@ -180,4 +181,7 @@ protected:
 
   HMENU _menu;
   HMENU _cdRomMenu;
+
+  int _absViewMouseX;
+  int _absViewMouseY;
 };
