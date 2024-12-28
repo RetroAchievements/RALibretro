@@ -682,21 +682,17 @@ bool Fsm::resetGame() {
         return false;
       }
 
-      bool __ok = resumeGame() &&
-                  resetGame();
 
-      if (__ok) {
-        after(__state);
-        after();
+      ctx.resetGame();
 
-      }
-      else {
+      __state = State::GamePaused;
+      after(__state);
+      after();
+
 #ifdef DEBUG_FSM
-        ctx.printf("FSM %s:%u Failed to switch to %s", __FUNCTION__, __LINE__, stateName(State::GameRunning));
+      ctx.printf("FSM %s:%u Switched to %s", __FUNCTION__, __LINE__, stateName(State::GameRunning));
 #endif
-      }
-
-      return __ok;
+      return true;
     }
     break;
 
@@ -717,21 +713,17 @@ bool Fsm::resetGame() {
         return false;
       }
 
-      bool __ok = resumeGame() &&
-                  resetGame();
 
-      if (__ok) {
-        after(__state);
-        after();
+      ctx.resetGame();
 
-      }
-      else {
+      __state = State::GamePausedNoOvl;
+      after(__state);
+      after();
+
 #ifdef DEBUG_FSM
-        ctx.printf("FSM %s:%u Failed to switch to %s", __FUNCTION__, __LINE__, stateName(State::GameRunning));
+      ctx.printf("FSM %s:%u Switched to %s", __FUNCTION__, __LINE__, stateName(State::GameRunning));
 #endif
-      }
-
-      return __ok;
+      return true;
     }
     break;
 

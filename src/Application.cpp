@@ -2359,6 +2359,9 @@ void Application::handle(const SDL_SysWMEvent* syswm)
 
     case IDM_RESET_GAME:
       _fsm.resetGame();
+
+      if (isPaused())
+        _fsm.step();
       break;
     
     case IDM_SAVE_STATE_1:
@@ -2685,6 +2688,9 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
 
   case KeyBinds::Action::kReset:
     _fsm.resetGame();
+
+    if (isPaused())
+      _fsm.step();
     break;
 
   case KeyBinds::Action::kScreenshot:
