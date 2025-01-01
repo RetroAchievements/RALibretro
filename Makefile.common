@@ -51,33 +51,45 @@ endif
 
 ifdef HAVE_CHD
   CXXFLAGS += -DHAVE_CHD -I./src/libchdr/include
-  CFLAGS += -D_7ZIP_ST -I./src/libchdr/include -I./src/libchdr/deps/lzma-22.01/include -I./src/libchdr/deps/zlib-1.2.12
-  CHD_OBJS = src/libchdr/deps/lzma-22.01/src/Alloc.o \
-             src/libchdr/deps/lzma-22.01/src/Bra86.o \
-             src/libchdr/deps/lzma-22.01/src/BraIA64.o \
-             src/libchdr/deps/lzma-22.01/src/CpuArch.o \
-             src/libchdr/deps/lzma-22.01/src/Delta.o \
-             src/libchdr/deps/lzma-22.01/src/LzFind.o \
-             src/libchdr/deps/lzma-22.01/src/Lzma86Dec.o \
-             src/libchdr/deps/lzma-22.01/src/Lzma86Enc.o \
-             src/libchdr/deps/lzma-22.01/src/LzmaDec.o \
-             src/libchdr/deps/lzma-22.01/src/LzmaEnc.o \
-             src/libchdr/deps/lzma-22.01/src/Sort.o \
-             src/libchdr/deps/zlib-1.2.12/adler32.o \
-             src/libchdr/deps/zlib-1.2.12/compress.o \
-             src/libchdr/deps/zlib-1.2.12/crc32.o \
-             src/libchdr/deps/zlib-1.2.12/deflate.o \
-             src/libchdr/deps/zlib-1.2.12/gzclose.o \
-             src/libchdr/deps/zlib-1.2.12/gzlib.o \
-             src/libchdr/deps/zlib-1.2.12/gzread.o \
-             src/libchdr/deps/zlib-1.2.12/gzwrite.o \
-             src/libchdr/deps/zlib-1.2.12/infback.o \
-             src/libchdr/deps/zlib-1.2.12/inffast.o \
-             src/libchdr/deps/zlib-1.2.12/inflate.o \
-             src/libchdr/deps/zlib-1.2.12/inftrees.o \
-             src/libchdr/deps/zlib-1.2.12/trees.o \
-             src/libchdr/deps/zlib-1.2.12/uncompr.o \
-             src/libchdr/deps/zlib-1.2.12/zutil.o \
+  CFLAGS += -DZ7_ST -I./src/libchdr/include -I./src/libchdr/deps/lzma-24.05/include -I./src/libchdr/deps/zlib-1.3.1 -I./src/libchdr/deps/zstd-1.5.6/lib
+  CHD_OBJS = src/libchdr/deps/lzma-24.05/src/Alloc.o \
+             src/libchdr/deps/lzma-24.05/src/Bra86.o \
+             src/libchdr/deps/lzma-24.05/src/BraIA64.o \
+             src/libchdr/deps/lzma-24.05/src/CpuArch.o \
+             src/libchdr/deps/lzma-24.05/src/Delta.o \
+             src/libchdr/deps/lzma-24.05/src/LzFind.o \
+             src/libchdr/deps/lzma-24.05/src/Lzma86Dec.o \
+             src/libchdr/deps/lzma-24.05/src/Lzma86Enc.o \
+             src/libchdr/deps/lzma-24.05/src/LzmaDec.o \
+             src/libchdr/deps/lzma-24.05/src/LzmaEnc.o \
+             src/libchdr/deps/lzma-24.05/src/Sort.o \
+             src/libchdr/deps/zlib-1.3.1/adler32.o \
+             src/libchdr/deps/zlib-1.3.1/compress.o \
+             src/libchdr/deps/zlib-1.3.1/crc32.o \
+             src/libchdr/deps/zlib-1.3.1/deflate.o \
+             src/libchdr/deps/zlib-1.3.1/gzclose.o \
+             src/libchdr/deps/zlib-1.3.1/gzlib.o \
+             src/libchdr/deps/zlib-1.3.1/gzread.o \
+             src/libchdr/deps/zlib-1.3.1/gzwrite.o \
+             src/libchdr/deps/zlib-1.3.1/infback.o \
+             src/libchdr/deps/zlib-1.3.1/inffast.o \
+             src/libchdr/deps/zlib-1.3.1/inflate.o \
+             src/libchdr/deps/zlib-1.3.1/inftrees.o \
+             src/libchdr/deps/zlib-1.3.1/trees.o \
+             src/libchdr/deps/zlib-1.3.1/uncompr.o \
+             src/libchdr/deps/zlib-1.3.1/zutil.o \
+             src/libchdr/deps/zstd-1.5.6/lib/common/debug.o \
+             src/libchdr/deps/zstd-1.5.6/lib/common/entropy_common.o \
+             src/libchdr/deps/zstd-1.5.6/lib/common/error_private.o \
+             src/libchdr/deps/zstd-1.5.6/lib/common/fse_decompress.o \
+             src/libchdr/deps/zstd-1.5.6/lib/common/pool.o \
+             src/libchdr/deps/zstd-1.5.6/lib/common/threading.o \
+             src/libchdr/deps/zstd-1.5.6/lib/common/xxhash.o \
+             src/libchdr/deps/zstd-1.5.6/lib/common/zstd_common.o \
+             src/libchdr/deps/zstd-1.5.6/lib/decompress/huf_decompress.o \
+             src/libchdr/deps/zstd-1.5.6/lib/decompress/zstd_ddict.o \
+             src/libchdr/deps/zstd-1.5.6/lib/decompress/zstd_decompress.o \
+             src/libchdr/deps/zstd-1.5.6/lib/decompress/zstd_decompress_block.o \
              src/libchdr/src/libchdr_bitstream.o \
              src/libchdr/src/libchdr_cdrom.o \
              src/libchdr/src/libchdr_chd.o \
