@@ -92,6 +92,21 @@ static bool rc_hash_get_chd_metadata(chd_file* file, uint32_t idx, metadata_t* m
     return true;
   }
 
+  /* DVD formatted track is not yet supported by libchdr, but we can fake it. A DVD only has one track, so
+   * if we're looking for the first metadata, and haven't found it yet, look for the DVD tag and go with it. */
+  if (idx == 0)
+  {
+    err = chd_get_metadata(file, CHD_MAKE_TAG('D', 'V', 'D', ' '), idx, meta, sizeof(meta), &meta_size, NULL, NULL);
+    if (err == CHDERR_NONE)
+    {
+      /* DVD-ROM track doesn't have metadata. It's just raw 2048 byte sectors with no header/footer (MODE1) */
+      memset(metadata, 0, sizeof(metadata));
+      metadata->track = 1;
+      memcpy(metadata->type, "MODE1", strlen("MODE1") + 1);
+      return true;
+    }
+  }
+
   return false;
 }
 
@@ -240,7 +255,7 @@ static void* rc_hash_handle_chd_open_track(const char* path, uint32_t track)
   chd_error err = chd_open(path, CHD_OPEN_READ, NULL, &file);
   if (err != CHDERR_NONE) {
     char errmessage[128];
-    snprintf(errmessage, sizeof(errmessage), "CHD %s", chd_error_string(err));
+    snprintf(errmessage, sizeof(errmessage), "chd_open failed: %s", chd_error_string(err));
     rc_hash_error(errmessage);
     return NULL;
   }
