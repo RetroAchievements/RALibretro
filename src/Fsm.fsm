@@ -129,7 +129,9 @@ fsm Fsm {
   GamePaused {
     resumeGame() => GameRunning;
 
-    resetGame() => resumeGame() => resetGame();
+    resetGame() => GamePaused {
+      ctx.resetGame();
+    }
 
     step() => FrameStep  {
       if (ctx.hardcore()) {
@@ -155,7 +157,9 @@ fsm Fsm {
 
     resumeGame() => GameRunning;
 
-    resetGame() => resumeGame() => resetGame();
+    resetGame() => GamePausedNoOvl {
+      ctx.resetGame();
+    }
 
     step() => FrameStep {
       if (ctx.hardcore()) {
