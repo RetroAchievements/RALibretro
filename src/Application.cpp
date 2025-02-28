@@ -2650,7 +2650,7 @@ void Application::handle(const KeyBinds::Action action, unsigned extra)
     break;
 
   case KeyBinds::Action::kPauseToggle: /* overlay toggle */
-    if (_fsm.currentState() == Fsm::State::GamePaused)
+    if (_fsm.currentState() == Fsm::State::GamePaused || RA_IsOverlayFullyVisible())
     {
       // overlay visible. hide and unpause
       pauseGame(false);
