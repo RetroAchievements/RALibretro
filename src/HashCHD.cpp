@@ -100,9 +100,11 @@ static bool rc_hash_get_chd_metadata(chd_file* file, uint32_t idx, metadata_t* m
     err = chd_get_metadata(file, CHD_MAKE_TAG('D', 'V', 'D', ' '), idx, meta, sizeof(meta), &meta_size, NULL, NULL);
     if (err == CHDERR_NONE)
     {
+      const chd_header* header = chd_get_header(file);
       /* DVD-ROM track doesn't have metadata. It's just raw 2048 byte sectors with no header/footer (MODE1) */
       memset(metadata, 0, sizeof(metadata));
       metadata->track = 1;
+      metadata->frames = header->unitcount;
       memcpy(metadata->type, "MODE1", strlen("MODE1") + 1);
       return true;
     }
