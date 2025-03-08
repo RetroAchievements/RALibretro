@@ -36,6 +36,7 @@ typedef struct chd_track_handle_t
   uint32_t frames_per_hunk;    /* Number of frames per hunk */
   uint32_t first_sector;       /* First sector associated to the track */
   uint32_t first_frame;        /* First CHD frame associated to the track */
+  uint32_t frames_in_track;    /* Number of frames in the track */
   uint32_t sector_data_size;   /* Number of data bytes in each sector */
   uint32_t sector_header_size; /* Size of header data for each sector */
 } chd_track_handle_t;
@@ -99,9 +100,11 @@ static bool rc_hash_get_chd_metadata(chd_file* file, uint32_t idx, metadata_t* m
     err = chd_get_metadata(file, CHD_MAKE_TAG('D', 'V', 'D', ' '), idx, meta, sizeof(meta), &meta_size, NULL, NULL);
     if (err == CHDERR_NONE)
     {
+      const chd_header* header = chd_get_header(file);
       /* DVD-ROM track doesn't have metadata. It's just raw 2048 byte sectors with no header/footer (MODE1) */
       memset(metadata, 0, sizeof(metadata));
       metadata->track = 1;
+      metadata->frames = header->unitcount;
       memcpy(metadata->type, "MODE1", strlen("MODE1") + 1);
       return true;
     }
@@ -189,7 +192,11 @@ static size_t rc_hash_handle_chd_read_sector(void* track_handle, uint32_t sector
     return 0;
 
   /* convert the real sector to the chd frame and then use that to find the hunk that contains it */
-  chd_frame = chd_track->first_frame + (sector - chd_track->first_sector);
+  chd_frame = sector - chd_track->first_sector;
+  if (chd_frame > chd_track->frames_in_track)
+    return 0;
+  chd_frame += chd_track->first_frame;
+
   hunk = chd_frame / chd_track->frames_per_hunk;
   offset = (chd_frame % chd_track->frames_per_hunk) * header->unitbytes + chd_track->sector_header_size;
 
@@ -276,6 +283,7 @@ static void* rc_hash_handle_chd_open_track(const char* path, uint32_t track)
   chd_track->frames_per_hunk = header->hunkbytes / header->unitbytes;
   chd_track->first_sector = metadata.sector_offset;
   chd_track->first_frame = metadata.frame_offset;
+  chd_track->frames_in_track = metadata.frames;
 
   /* https://github.com/libyal/libodraw/blob/main/documentation/Optical%20disc%20RAW%20format.asciidoc */
   if (strcmp(metadata.type, "MODE1_RAW") == 0)
