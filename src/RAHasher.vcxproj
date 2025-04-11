@@ -177,6 +177,9 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rhash</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rhash</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="rcheevos\src\rhash\hash_encrypted.c" />
+    <ClCompile Include="rcheevos\src\rhash\hash_rom.c" />
+    <ClCompile Include="rcheevos\src\rhash\hash_zip.c" />
     <ClCompile Include="rcheevos\src\rhash\md5.c" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
