@@ -112,7 +112,7 @@ void Video::destroy()
     _texture = 0;
   }
 
-  for (int i = 0; i < _numMessages; ++i)
+  for (unsigned i = 0; i < _numMessages; ++i)
   {
     if (_messageTexture[i] != 0)
     {
@@ -251,7 +251,7 @@ void Video::draw(bool force)
           Gl::deleteTextures(1, &_messageTexture[i]);
 
           --_numMessages;
-          for (int j = i; j < _numMessages; ++j)
+          for (int j = i; j < (int)_numMessages; ++j)
           {
             _messageTexture[j] = _messageTexture[j + 1];
             _messageWidth[j] = _messageWidth[j + 1];
@@ -412,7 +412,7 @@ void Video::showMessage(const char* msg, unsigned frames)
     Gl::deleteTextures(1, &_messageTexture[0]);
 
     --_numMessages;
-    for (int i = 0; i < _numMessages; ++i)
+    for (unsigned i = 0; i < _numMessages; ++i)
     {
       _messageTexture[i] = _messageTexture[i + 1];
       _messageWidth[i] = _messageWidth[i + 1];
@@ -435,7 +435,7 @@ void Video::showMessage(const char* msg, unsigned frames)
   memset(data, 0, numBytes);
 
   uint16_t* start = &data[messageWidth * OSD_PADDING + OSD_PADDING];
-  for (int i = 0; i < len; i++)
+  for (size_t i = 0; i < len; i++)
   {
     uint16_t* out = &start[i * OSD_CHAR_WIDTH];
     char c = msg[i];
@@ -527,7 +527,7 @@ void Video::showSpeedIndicator(Speed indicator)
         out[i] = 0xFFFF;
         out[width - i - 1] = 0xFFFF;
       }
-      for (int i = 1; i < height; ++i)
+      for (size_t i = 1; i < height; ++i)
         memcpy(&out[i * OSD_SPEED_INDICATOR_WIDTH], out, width * 2);
       break;
 
