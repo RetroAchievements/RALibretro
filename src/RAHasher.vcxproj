@@ -89,7 +89,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <CustomBuildStep>
-      <Command>copy /b/y  $(TargetPath) $(SolutionDir)\bin64</Command>
+      <Command>copy /b/y  "$(TargetPath)" "$(SolutionDir)\bin64"</Command>
     </CustomBuildStep>
     <CustomBuildStep>
       <Message>Copying $(TargetFileName) to bin64 directory</Message>
