@@ -4,6 +4,10 @@
     "systems": [31],
     "platforms": "none"
   },
+  "ardens_libretro":{
+    "name": "Ardens",
+    "systems": [71]
+  },
   "arduous_libretro":{
     "name": "Arduous",
     "systems": [71]

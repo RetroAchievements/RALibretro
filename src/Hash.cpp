@@ -115,6 +115,7 @@ bool romLoaded(libretro::Core* core, Logger* logger, int system, const std::stri
     if (!hash[0])
     {
       struct rc_hash_filereader filereader;
+      rc_hash_iterator_t hash_iterator;
       std::string ext = util::extension(path);
 
       /* register a custom file_open handler for unicode support. use the default implementation for the other methods */
@@ -152,8 +153,8 @@ bool romLoaded(libretro::Core* core, Logger* logger, int system, const std::stri
         initHash3DS(core->getSystemDirectory());
 
       /* generate a hash for the new content */
-      if (!rom || !rc_hash_generate_from_buffer(hash, system, (uint8_t*)rom, size))
-        rc_hash_generate_from_file(hash, (int)system, path.c_str());
+      rc_hash_initialize_iterator(&hash_iterator, path.c_str(), (const uint8_t*)rom, size);
+      rc_hash_generate(hash, (int)system, &hash_iterator);
     }
 
     /* identify the game associated to the hash */
