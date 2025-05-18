@@ -72,6 +72,18 @@
     <ClCompile Include="libmincrypt/sha256.c">
       <Filter>Source Files\libmincrypt</Filter>
     </ClCompile>
+    <ClCompile Include="rcheevos\src\rhash\hash_encrypted.c">
+      <Filter>Source Files\rhash</Filter>
+    </ClCompile>
+    <ClCompile Include="rcheevos\src\rhash\hash_rom.c">
+      <Filter>Source Files\rhash</Filter>
+    </ClCompile>
+    <ClCompile Include="rcheevos\src\rhash\hash_zip.c">
+      <Filter>Source Files\rhash</Filter>
+    </ClCompile>
+    <ClCompile Include="rcheevos\src\rhash\hash_disc.c">
+      <Filter>Source Files\rhash</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rcheevos\include\rhash.h">

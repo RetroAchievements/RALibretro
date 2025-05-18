@@ -27,6 +27,8 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 #define TAG "[INP] "
 
+#define UNUSED_PORT 0xFFFFFFFF
+
 static const char* s_gameControllerDB[] =
 {
   // Updated on 2023-01-15 (https://github.com/gabomdq/SDL_GameControllerDB)
@@ -71,7 +73,7 @@ bool Input::init(libretro::LoggerComponent* logger)
   keyb._controllerName = "Keyboard";
   keyb._joystickName = "Keyboard";
   keyb._sensitivity = 0.5f;
-  keyb._navigationPort = 0xFFFFFFFF;
+  keyb._navigationPort = UNUSED_PORT;
 
   _pads.insert(std::make_pair(keyb._id, keyb));
   _logger->info(TAG "Controller %s (%s) added", keyb._controllerName, keyb._joystickName);
@@ -130,7 +132,7 @@ SDL_JoystickID Input::addController(int which)
   {
     Pad pad;
     memset(&pad, 0, sizeof(pad));
-    pad._navigationPort = 0xFFFFFFFF;
+    pad._navigationPort = UNUSED_PORT;
 
     pad._controller = SDL_GameControllerOpen(which);
 
@@ -720,7 +722,7 @@ void Input::addController(const SDL_Event* event, KeyBinds* keyBinds, libretro::
 
       pad->second._navigationPort = keyBinds->getNavigationPort(id);
 
-      if (pad->second._navigationPort != -1 && video) {
+      if (pad->second._navigationPort != UNUSED_PORT && video) {
         std::string message = pad->second._controllerName + std::string(" connected");
         video->showMessage(message.c_str(), 200);
       }
@@ -737,7 +739,7 @@ void Input::removeController(const SDL_Event* event, libretro::VideoComponent* v
     Pad* pad = &it->second;
     _logger->info(TAG "Controller %s (%s) removed", pad->_controllerName, pad->_joystickName);
 
-    if (video && pad->_navigationPort != -1) {
+    if (video && pad->_navigationPort != UNUSED_PORT) {
       std::string message = pad->_controllerName + std::string(" disconnected");
       video->showMessage(message.c_str(), 200);
     }

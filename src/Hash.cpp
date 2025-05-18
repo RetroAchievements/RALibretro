@@ -106,7 +106,7 @@ bool romLoaded(libretro::Core* core, Logger* logger, int system, const std::stri
   else
   {
     g_core = core;
-    rc_libretro_hash_set_init(&g_hashSet, path.c_str(), rhash_get_image_path);
+    rc_libretro_hash_set_init(&g_hashSet, path.c_str(), rhash_get_image_path, NULL);
     g_core = NULL;
   }
 

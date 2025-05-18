@@ -227,6 +227,10 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     <ClCompile Include="rcheevos\src\rhash\hash.c">
       <ObjectFileName>$(IntDir)rhash</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="rcheevos\src\rhash\hash_disc.c" />
+    <ClCompile Include="rcheevos\src\rhash\hash_encrypted.c" />
+    <ClCompile Include="rcheevos\src\rhash\hash_rom.c" />
+    <ClCompile Include="rcheevos\src\rhash\hash_zip.c" />
     <ClCompile Include="rcheevos\src\rhash\md5.c" />
     <ClCompile Include="speex\resample.c" />
     <ClCompile Include="States.cpp" />
