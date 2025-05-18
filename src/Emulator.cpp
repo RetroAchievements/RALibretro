@@ -304,6 +304,7 @@ const char* getSystemManufacturer(int system)
 {
   switch (system)
   {
+    case RC_CONSOLE_FAMICOM_DISK_SYSTEM:
     case RC_CONSOLE_GAMEBOY:
     case RC_CONSOLE_GAMEBOY_COLOR:
     case RC_CONSOLE_GAMEBOY_ADVANCE:
