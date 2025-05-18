@@ -132,7 +132,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)bin</Command>
       <AdditionalDependencies>SDL2main.lib;SDL2.lib;dinput8.lib;winmm.lib;imm32.lib;version.lib;winhttp.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
-      <Command>copy /b/y $(TargetPath) $(SolutionDir)\bin64</Command>
+      <Command>copy /b/y "$(TargetPath)" "$(SolutionDir)\bin64"</Command>
       <Outputs>$(SolutionDir)\bin64\$(TargetFileName)</Outputs>
       <Inputs>$(TargetPath)</Inputs>
       <Message>Copying $(TargetFileName) to bin64 directory</Message>
