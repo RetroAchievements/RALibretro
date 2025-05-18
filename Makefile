@@ -83,6 +83,7 @@ OBJS=\
 	src/rcheevos/src/rhash/cdreader.o \
 	src/rcheevos/src/rhash/md5.o \
 	src/rcheevos/src/rhash/hash.o \
+	src/rcheevos/src/rhash/hash_disc.o \
 	src/rcheevos/src/rhash/hash_encrypted.o \
 	src/rcheevos/src/rhash/hash_rom.o \
 	src/rcheevos/src/rhash/hash_zip.o \

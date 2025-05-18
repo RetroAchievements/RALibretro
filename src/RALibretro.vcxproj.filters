@@ -180,6 +180,9 @@
     <ClCompile Include="rcheevos\src\rhash\hash_zip.c">
       <Filter>Source Files\rhash</Filter>
     </ClCompile>
+    <ClCompile Include="rcheevos\src\rhash\hash_disc.c">
+      <Filter>Source Files\rhash</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="About.h">
