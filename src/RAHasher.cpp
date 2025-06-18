@@ -73,7 +73,7 @@ static void rhash_log(const char* message)
   printf("%s\n", message);
 }
 
-static void rhash_log_error(const char* message)
+void rhash_log_error_message(const char* message)
 {
   fprintf(stderr, "%s\n", message);
 }
@@ -275,7 +275,7 @@ int main(int argc, char* argv[])
   }
 
   logger.reset(new StdErrLogger);
-  rc_hash_init_error_message_callback(rhash_log_error);
+  rc_hash_init_error_message_callback(rhash_log_error_message);
 
   if (consoleId == RC_CONSOLE_NINTENDO_3DS)
     initHash3DS(systemDirectory);
