@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License
 along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#define WINDOWS_IGNORE_PACKING_MISMATCH 1 // prevent "Windows headers require the default packing option" error - need to upgrade SDL library to fix it
+
 #include <SDL.h>
 #include <SDL_syswm.h>
 
