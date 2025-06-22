@@ -864,6 +864,7 @@ bool Application::loadCore(const std::string& coreName)
   case RC_CONSOLE_APPLE_II:
   case RC_CONSOLE_ATARI_ST:
   case RC_CONSOLE_COMMODORE_64:
+  case RC_CONSOLE_FAMICOM_DISK_SYSTEM:
   case RC_CONSOLE_MS_DOS:
   case RC_CONSOLE_MSX:
   case RC_CONSOLE_NINTENDO: // FDS
