@@ -20,7 +20,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef HAVE_CHD
 
 #include <rc_hash.h>
-extern "C" int rc_hash_error(const char* message);
+#include <rcheevos/src/rhash/rc_hash_internal.h>
 
 #include <libchdr/include/libchdr/chd.h>
 
@@ -104,7 +104,7 @@ static bool rc_hash_get_chd_metadata(chd_file* file, uint32_t idx, metadata_t* m
       /* DVD-ROM track doesn't have metadata. It's just raw 2048 byte sectors with no header/footer (MODE1) */
       memset(metadata, 0, sizeof(metadata));
       metadata->track = 1;
-      metadata->frames = header->unitcount;
+      metadata->frames = (uint32_t)header->unitcount;
       memcpy(metadata->type, "MODE1", strlen("MODE1") + 1);
       return true;
     }
@@ -251,7 +251,7 @@ static void rc_hash_handle_chd_close_track(void* track_handle)
   }
 }
 
-static void* rc_hash_handle_chd_open_track(const char* path, uint32_t track)
+static void* rc_hash_handle_chd_open_track(const char* path, uint32_t track, const rc_hash_iterator_t* iterator)
 {
   chd_track_handle_t* chd_track;
   chd_file* file;
@@ -261,9 +261,7 @@ static void* rc_hash_handle_chd_open_track(const char* path, uint32_t track)
 
   chd_error err = chd_open(path, CHD_OPEN_READ, NULL, &file);
   if (err != CHDERR_NONE) {
-    char errmessage[128];
-    snprintf(errmessage, sizeof(errmessage), "chd_open failed: %s", chd_error_string(err));
-    rc_hash_error(errmessage);
+    rc_hash_iterator_error_formatted(iterator, "chd_open failed: %s", chd_error_string(err));
     return NULL;
   }
 
@@ -381,7 +379,7 @@ void rc_hash_init_chd_cdreader()
   struct rc_hash_cdreader cdreader;
 
   memset(&cdreader, 0, sizeof(cdreader));
-  cdreader.open_track = rc_hash_handle_chd_open_track;
+  cdreader.open_track_iterator = rc_hash_handle_chd_open_track;
   cdreader.read_sector = rc_hash_handle_chd_read_sector;
   cdreader.close_track = rc_hash_handle_chd_close_track;
   cdreader.first_track_sector = rc_hash_handle_chd_first_track_sector;

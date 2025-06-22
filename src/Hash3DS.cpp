@@ -27,9 +27,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string.h>
 
-RC_BEGIN_C_DECLS
-  int RC_CCONV rc_hash_error(const char* message); /* in hash.c */
-RC_END_C_DECLS
+void rhash_log_error_message(const char* message); /* in Hash.c */
 
 #undef DEBUG_AES_KEYS
 
@@ -124,7 +122,7 @@ static int rhash_3ds_lookup_cia_normal_key(uint8_t index, uint8_t key[16])
   FILE* fp = util::openFile(nullptr, g_systemDir + "/aes_keys.txt", "r");
   if (!fp)
   {
-    rc_hash_error("Could not open aes_keys.txt");
+    rhash_log_error_message("Could not open aes_keys.txt");
     return 0;
   }
 
@@ -167,7 +165,7 @@ static int rhash_3ds_lookup_ncch_normal_key(uint8_t primaryKeyY[16],
   FILE* fp = util::openFile(nullptr, g_systemDir + "/aes_keys.txt", "r");
   if (!fp)
   {
-    rc_hash_error("Could not open aes_keys.txt");
+    rhash_log_error_message("Could not open aes_keys.txt");
     return 0;
   }
 
@@ -219,7 +217,7 @@ static int rhash_3ds_lookup_ncch_normal_key(uint8_t primaryKeyY[16],
     fp = util::openFile(nullptr, g_systemDir + "/seeddb.bin", "rb");
     if (!fp)
     {
-      rc_hash_error("Could not open seeddb.bin");
+      rhash_log_error_message("Could not open seeddb.bin");
       return 0;
     }
 

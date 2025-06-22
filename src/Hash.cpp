@@ -62,7 +62,7 @@ static void* rhash_file_open(const char* path)
   return util::openFile(g_logger, path, "rb");
 }
 
-static void rhash_log_error_message(const char* message)
+void rhash_log_error_message(const char* message)
 {
   g_logger->warn(TAG "%s", message);
 }
