@@ -37,11 +37,19 @@ if not exist "%SRCDIR%" (
 )
 
 if not exist "%BINDIR%\%LIBSTDCPP%" (
-    echo Copying %LIBSTDCPP% from %SRCDIR%
-    copy /y "%SRCDIR%\bin\%LIBSTDCPP%" "%BINDIR%"
+    if not exist "%SRCDIR%\bin\%LIBSTDCPP%" (
+        echo WARNING: %LIBSTDCPP% not found in %SRCDIR%\bin
+    ) else (
+        echo Copying %LIBSTDCPP% from %SRCDIR%
+        copy /y "%SRCDIR%\bin\%LIBSTDCPP%" "%BINDIR%"
+    )
 )
 
 if not exist "%BINDIR%\%LIBPTHREAD%" (
-    echo Copying %LIBPTHREAD% from %SRCDIR%
-    copy /y "%SRCDIR%\bin\%LIBPTHREAD%" "%BINDIR%"
+    if not exist "%SRCDIR%\bin\%LIBPTHREAD%" (
+        echo WARNING: %LIBPTHREAD% not found in %SRCDIR%\bin
+    ) else (
+        echo Copying %LIBPTHREAD% from %SRCDIR%
+        copy /y "%SRCDIR%\bin\%LIBPTHREAD%" "%BINDIR%"
+    )
 )
