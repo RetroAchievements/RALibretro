@@ -105,9 +105,15 @@ bool romLoaded(libretro::Core* core, Logger* logger, int system, const std::stri
   }
   else
   {
+    rc_hash_iterator_t hash_iterator;
+    rc_hash_initialize_iterator(&hash_iterator, NULL, NULL, 0);
+    hash_iterator.callbacks.filereader.open = rhash_file_open;
+
     g_core = core;
-    rc_libretro_hash_set_init(&g_hashSet, path.c_str(), rhash_get_image_path, NULL);
+    rc_libretro_hash_set_init(&g_hashSet, path.c_str(), rhash_get_image_path, &hash_iterator.callbacks.filereader);
     g_core = NULL;
+
+    rc_hash_destroy_iterator(&hash_iterator);
   }
 
   if (!found)
