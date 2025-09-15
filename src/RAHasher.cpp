@@ -88,7 +88,7 @@ static void* rhash_file_open(const char* path)
 static int process_file(int consoleId, const std::string& file)
 {
   char hash[33];
-  int result = 1;
+  int count = 0;
 
   std::string filePath = util::fullPath(file);
   std::string ext = util::extension(file);
@@ -102,7 +102,10 @@ static int process_file(int consoleId, const std::string& file)
     if (data)
     {
       if (rc_hash_generate_from_buffer(hash, consoleId, (uint8_t*)data, size))
+      {
         printf("%s", hash);
+        count = 1;
+      }
 
       free(data);
     }
@@ -134,17 +137,23 @@ static int process_file(int consoleId, const std::string& file)
       rc_hash_iterator iterator;
       rc_hash_initialize_iterator(&iterator, filePath.c_str(), NULL, 0);
       while (rc_hash_iterate(hash, &iterator))
+      {
         printf("%s", hash);
+        count++;
+      }
       rc_hash_destroy_iterator(&iterator);
     }
     else
     {
       if (rc_hash_generate_from_file(hash, consoleId, filePath.c_str()))
+      {
         printf("%s", hash);
+        count++;
+      }
     }
   }
 
-  return result;
+  return count;
 }
 
 static int process_iterated_file(int console_id, const std::string& file)
@@ -264,14 +273,14 @@ int main(int argc, char* argv[])
   if (argi + 2 > argc)
   {
     usage(argv[0]);
-    return 1;
+    return EXIT_FAILURE;
   }
 
   consoleId = atoi(argv[argi++]);
   if (consoleId == 0)
   {
     usage(argv[0]);
-    return 1;
+    return EXIT_FAILURE;
   }
 
   logger.reset(new StdErrLogger);
@@ -285,7 +294,7 @@ int main(int argc, char* argv[])
     if (consoleId > RC_CONSOLE_MAX)
     {
       printf("Specific console must be specified when processing multiple files\n");
-      return 0;
+      return EXIT_FAILURE;
     }
 
     singleFile = 0;
@@ -298,7 +307,7 @@ int main(int argc, char* argv[])
       if (consoleId > RC_CONSOLE_MAX)
       {
         printf("Specific console must be specified when using wildcards\n");
-        return 0;
+        return EXIT_FAILURE;
       }
 
       singleFile = 0;
@@ -318,7 +327,7 @@ int main(int argc, char* argv[])
     if (file.find('*') != std::string::npos || file.find('?') != std::string::npos)
     {
       if (!process_files(consoleId, file))
-        return 0;
+        return EXIT_FAILURE;
     }
     else
     {
@@ -330,9 +339,9 @@ int main(int argc, char* argv[])
         printf(" %s\n", util::fileNameWithExtension(file).c_str());
 
       if (!result)
-        return result;
+        return EXIT_FAILURE;
     }
   }
 
-  return 1;
+  return EXIT_SUCCESS;
 }
