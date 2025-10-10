@@ -74,7 +74,7 @@
       <AdditionalDependencies>SDL2main.lib;SDL2.lib;dinput8.lib;winmm.lib;imm32.lib;version.lib;winhttp.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>$(ProjectDir)..\etc\MakeGitCpp.bat</Command>
+      <Command>$(ProjectDir)RAInterface\MakeBuildVer.bat $(ProjectDir)\RA_BuildVer.h "" RA_LIBRETRO</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>copy /b/y $(TargetPath) $(SolutionDir)\bin</Command>
@@ -111,7 +111,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)bin</Command>
       <Message>Copying $(TargetFileName) to bin directory</Message>
     </CustomBuildStep>
     <PreBuildEvent>
-      <Command>$(ProjectDir)..\etc\MakeGitCpp.bat</Command>
+      <Command>$(ProjectDir)RAInterface\MakeBuildVer.bat $(ProjectDir)\RA_BuildVer.h "" RA_LIBRETRO</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>$(SolutionDir)etc\CopyDLLs.bat x86 $(ProjectDir) $(SolutionDir)bin
@@ -140,7 +140,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)bin</Command>
       <Message>Copying $(TargetFileName) to bin64 directory</Message>
     </CustomBuildStep>
     <PreBuildEvent>
-      <Command>$(ProjectDir)..\etc\MakeGitCpp.bat</Command>
+      <Command>$(ProjectDir)RAInterface\MakeBuildVer.bat $(ProjectDir)\RA_BuildVer.h "" RA_LIBRETRO</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy /D /Q /Y $(SolutionDir)bin\Cores\cores.json $(SolutionDir)bin64\Cores\
@@ -172,7 +172,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
       <Message>Copying $(TargetFileName) to bin64 directory</Message>
     </CustomBuildStep>
     <PreBuildEvent>
-      <Command>$(ProjectDir)..\etc\MakeGitCpp.bat</Command>
+      <Command>$(ProjectDir)RAInterface\MakeBuildVer.bat $(ProjectDir)\RA_BuildVer.h "" RA_LIBRETRO</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy /D /Q /Y $(SolutionDir)bin\Cores\cores.json $(SolutionDir)bin64\Cores\
@@ -197,7 +197,6 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     <ClCompile Include="dynlib\dynlib.c" />
     <ClCompile Include="Emulator.cpp" />
     <ClCompile Include="Fsm.cpp" />
-    <ClCompile Include="Git.cpp" />
     <ClCompile Include="Gl.cpp" />
     <ClCompile Include="GlUtil.cpp" />
     <ClCompile Include="Hash.cpp">
@@ -260,6 +259,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     <ClInclude Include="libretro\Components.h" />
     <ClInclude Include="libretro\Core.h" />
     <ClInclude Include="libretro\libretro.h" />
+    <ClInclude Include="RA_BuildVer.h" />
     <ClInclude Include="rcheevos\include\rcheevos.h" />
     <ClInclude Include="rcheevos\include\rc_consoles.h" />
     <ClInclude Include="Util.h" />

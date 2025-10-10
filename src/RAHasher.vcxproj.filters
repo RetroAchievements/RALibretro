@@ -48,9 +48,6 @@
     <ClCompile Include="components\Logger.cpp">
       <Filter>Source Files\RALibRetro</Filter>
     </ClCompile>
-    <ClCompile Include="Git.cpp">
-      <Filter>Source Files\RALibRetro</Filter>
-    </ClCompile>
     <ClCompile Include="rcheevos\src\rhash\md5.c">
       <Filter>Source Files\rhash</Filter>
     </ClCompile>

@@ -4,7 +4,7 @@
 
 #include <windows.h>
 
-#include "Git.h"
+#include "RA_BuildVer.h"
 
 extern HWND g_mainWindow;
 
@@ -98,7 +98,7 @@ void LoadROM(const char* sFullPath)
 void RA_Init(HWND hWnd)
 {
   // initialize the DLL
-  RA_Init(hWnd, RA_Libretro, git::getReleaseVersion());
+  RA_Init(hWnd, RA_Libretro, RA_LIBRETRO_VERSION_FULL);
 
   // provide callbacks to the DLL
   RA_InstallSharedFunctions(NULL, &CauseUnpause, &CausePause, &RebuildMenu, &GetEstimatedGameTitle, &ResetEmulation, &LoadROM);

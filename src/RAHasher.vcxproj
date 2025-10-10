@@ -162,7 +162,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="components\Logger.cpp" />
-    <ClCompile Include="Git.cpp" />
     <ClCompile Include="HashCHD.cpp" />
     <ClCompile Include="Hash3DS.cpp" />
     <ClCompile Include="libmincrypt/sha256.c" />

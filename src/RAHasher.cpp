@@ -1,7 +1,7 @@
 // RAHasher.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
-#include "Git.h"
+#include "RA_BuildVer.h"
 #include "Util.h"
 
 #include <rcheevos/include/rc_hash.h>
@@ -33,7 +33,7 @@ void   initHash3DS(const std::string& systemDir); /* in Hash3DS.cpp */
 
 static void usage(const char* appname)
 {
-  printf("RAHasher %s\n====================\n", git::getReleaseVersion());
+  printf("RAHasher %s\n====================\n", RA_LIBRETRO_VERSION_SHORT);
 
   printf("Usage: %s [-v] [-s systempath] systemid filepath\n", util::fileName(appname).c_str());
   printf("\n");

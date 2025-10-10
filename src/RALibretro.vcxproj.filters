@@ -72,9 +72,6 @@
     <ClCompile Include="RA_Implementation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Git.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GlUtil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -256,6 +253,9 @@
     </ClInclude>
     <ClInclude Include="rcheevos\include\rc_consoles.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RA_BuildVer.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

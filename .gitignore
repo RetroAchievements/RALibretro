@@ -12,6 +12,6 @@
 /bin
 /bin64
 /obj
-/src/Git.cpp
+/src/RA_BuildVer.h
 
 .vscode
