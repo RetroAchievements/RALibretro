@@ -225,14 +225,32 @@ static void installMemoryBank(int bankId, int validBankId, int firstRegion, size
   g_memoryBankFirstRegion[validBankId] = firstRegion;
 }
 
+static uint32_t g_refreshAttempts = 0;
 static clock_t g_lastMemoryRefresh = 0;
 static unsigned char deferredMemoryRead(unsigned addr)
 {
-  const clock_t now = clock();
-  const clock_t elapsed = now - g_lastMemoryRefresh;
-  if (elapsed < CLOCKS_PER_SEC / 100) /* 10ms */
+  /* after 4500ms, give up. */
+  if (g_refreshAttempts >= 100)
     return '\0';
 
+  const clock_t now = clock();
+  const clock_t elapsed = now - g_lastMemoryRefresh;
+
+  /* for the first 100ms, check every 10ms.
+   * after 100ms, only check every 20ms.
+   * after 300ms, only check every 30ms.
+   * after 600ms, only check every 40ms.
+   * after 1000ms, only check every 50ms.
+   * after 1500ms, only check every 60ms.
+   * after 2100ms, only check every 70ms.
+   * after 2800ms, only check every 80ms.
+   * after 3600ms, only check every 90ms.
+   */
+  const uint32_t delay_factor = (g_refreshAttempts / 10) + 1;
+  if (elapsed < (CLOCKS_PER_SEC / 100) * delay_factor)
+    return '\0';
+
+  g_refreshAttempts++;
   g_lastMemoryRefresh = now;
 
   extern Application app;
@@ -250,6 +268,7 @@ void Memory::destroy()
 {
   rc_libretro_memory_destroy(&g_memoryRegions);
   g_lastMemoryRefresh = 0;
+  g_refreshAttempts = 0;
   RA_ClearMemoryBanks();
 }
 
@@ -347,6 +366,7 @@ void Memory::attachToCore(libretro::Core* core, int consoleId)
   {
     _logger->info(TAG "delaying memory bank installation");
     g_lastMemoryRefresh = clock();
+    g_refreshAttempts = 0;
     RA_ClearMemoryBanks();
     RA_InstallMemoryBank(0, deferredMemoryRead, memoryWrite0, g_memoryRegions.total_size);
   }
