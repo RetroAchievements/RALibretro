@@ -236,6 +236,7 @@ bool Application::init(const char* title, int width, int height)
   if (_audioDev == 0)
   {
     _logger.error(TAG "SDL_OpenAudioDevice: %s", SDL_GetError());
+    MessageBox(g_mainWindow, "No audio device found", "Initialization failed", MB_OK);
     goto error;
   }
 
