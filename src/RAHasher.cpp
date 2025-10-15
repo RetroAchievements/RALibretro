@@ -14,8 +14,11 @@
  #define WIN32_LEAN_AND_MEAN
  #include <Windows.h>
 #elif defined(__unix__)
- #include <glob.h>
- #include <sys/stat.h>
+ #define IGNORE_WILDCARDS /* expect unix to do the globbing before calling us */
+ #ifndef IGNORE_WILDCARDS
+  #include <glob.h>
+  #include <sys/stat.h>
+ #endif
 #else
  #include <dirent.h>
  #include <fnmatch.h>
@@ -147,6 +150,8 @@ static int process_file(int consoleId, const std::string& file)
   return result;
 }
 
+#ifndef IGNORE_WILDCARDS
+
 static int process_iterated_file(int console_id, const std::string& file)
 {
   int result = process_file(console_id, file);
@@ -234,6 +239,8 @@ static int process_files(int consoleId, const std::string& pattern)
   return count;
 }
 
+#endif /* IGNORE_WILDCARDS */
+
 int main(int argc, char* argv[])
 {
   int consoleId = 0;
@@ -290,6 +297,7 @@ int main(int argc, char* argv[])
 
     singleFile = 0;
   }
+#ifndef IGNORE_WILDCARDS
   else
   {
     std::string file = argv[argi];
@@ -304,6 +312,7 @@ int main(int argc, char* argv[])
       singleFile = 0;
     }
   }
+#endif
 
   if (!singleFile)
   {
@@ -315,17 +324,19 @@ int main(int argc, char* argv[])
   {
     std::string file = argv[argi++];
 
+#ifndef IGNORE_WILDCARDS
     if (file.find('*') != std::string::npos || file.find('?') != std::string::npos)
     {
       if (!process_files(consoleId, file))
         return 0;
     }
     else
+#endif
     {
       int result = process_file(consoleId, file);
 
       if (singleFile)
-	printf("\n");
+        printf("\n");
       else
         printf(" %s\n", util::fileNameWithExtension(file).c_str());
 
