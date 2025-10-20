@@ -164,14 +164,13 @@
   },
   "fceumm_libretro":{
     "name": "FCEUmm",
-    "extensions": "nes|fds",
+    "extensions": "nes",
     "systems": [7]
   },
   "fceumm_libretro":{
     "name": "FCEUmm",
     "extensions": "fds",
-    "systems": [81],
-    "platforms": "none"
+    "systems": [81]
   },
   "flycast_libretro":{
     "name": "Flycast",
@@ -465,14 +464,13 @@
   },
   "mesen_libretro":{
     "name": "Mesen",
-    "extensions": "nes|fds",
+    "extensions": "nes",
     "systems": [7]
   },
   "mesen_libretro":{
     "name": "Mesen",
     "extensions": "fds",
-    "systems": [81],
-    "platforms": "none"
+    "systems": [81]
   },
   "mesen-s_libretro":{
     "name": "Mesen-S",
