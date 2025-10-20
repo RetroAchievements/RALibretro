@@ -93,7 +93,6 @@ OBJS=\
 	src/CdRom.o \
 	src/Emulator.o \
 	src/Fsm.o \
-	src/Git.o \
 	src/Gl.o \
 	src/GlUtil.o \
 	src/Hash.o \
@@ -110,6 +109,8 @@ ifdef HAVE_CHD
           src/HashCHD.o
 endif
 
+all: $(OUTDIR)/RALibretro.exe $(OUTDIR)/SDL2.dll $(OUTDIR)/libwinpthread-1.dll
+
 src/rcheevos/src/rc_libretro.o: CFLAGS += -I./src/libretro
 
 src/components/Config.o: CFLAGS += -I./src/libretro
@@ -124,10 +125,14 @@ src/Hash.o: CFLAGS += -I./src/libretro
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+src/RA_BuildVer.h: .git/HEAD
+	src/RAInterface/MakeBuildVer.sh src/RA_BuildVer.h "" RA_LIBRETRO
+
+src/RA_Implementation.o: src/RA_Implementation.cpp src/RA_BuildVer.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
 %.res: %.rc
 	$(RC) $< -O coff -o $@
-
-all: $(OUTDIR)/RALibretro.exe $(OUTDIR)/SDL2.dll $(OUTDIR)/libwinpthread-1.dll
 
 $(OUTDIR)/SDL2.dll: $(SDLLIBDIR)/SDL2.dll
 	cp -f $< $@
@@ -138,9 +143,6 @@ $(OUTDIR)/libwinpthread-1.dll: $(MINGWLIBDIR)/libwinpthread-1.dll
 $(OUTDIR)/RALibretro.exe: $(OBJS)
 	mkdir -p $(OUTDIR)
 	$(CXX) -o $@ $+ $(LDFLAGS)
-
-src/Git.cpp: etc/Git.cpp.template FORCE
-	cat $< | sed s/GITFULLHASH/`git rev-parse HEAD | tr -d "\n"`/g | sed s/GITMINIHASH/`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`/g | sed s/GITRELEASE/`git describe --tags | sed s/\-.*//g | tr -d "\n"`/g > $@
 
 zip:
 	rm -f $(OUTDIR)/RALibretro-*.zip RALibretro-*.zip

@@ -37,7 +37,6 @@ OBJS=\
 	src/rcheevos/src/rhash/hash_rom.o \
 	src/rcheevos/src/rhash/hash_zip.o \
 	src/rcheevos/src/rhash/md5.o \
-	src/Git.o \
 	src/Hash3DS.o \
 	src/Util.o \
 	src/RAHasher.o
@@ -47,20 +46,23 @@ ifdef HAVE_CHD
           src/HashCHD.o
 endif
 
+all: $(OUTDIR)/RAHasher$(EXE)
+
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-all: $(OUTDIR)/RAHasher$(EXE)
+src/RA_BuildVer.h: .git/HEAD
+	src/RAInterface/MakeBuildVer.sh src/RA_BuildVer.h "" RA_LIBRETRO
+
+src/RAHasher.o: src/RAHasher.cpp src/RA_BuildVer.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OUTDIR)/RAHasher$(EXE): $(OBJS)
 	mkdir -p $(OUTDIR)
 	$(CXX) -o $@ $+ $(LDFLAGS)
-
-src/Git.cpp: etc/Git.cpp.template FORCE
-	cat $< | sed s/GITFULLHASH/`git rev-parse HEAD | tr -d "\n"`/g | sed s/GITMINIHASH/`git rev-parse HEAD | tr -d "\n" | cut -c 1-7`/g | sed s/GITRELEASE/`git describe --tags | sed s/\-.*//g | tr -d "\n"`/g > $@
 
 zip: $(OUTDIR)/RAHasher$(EXE)
 	rm -f $(OUTDIR)/RAHasher-*.zip RAHasher-*.zip
