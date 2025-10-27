@@ -63,12 +63,12 @@ namespace libretro
       log(level, line, length);
     }
 
-    void setLogLevel(enum retro_log_level level)
+    void setLogLevel(enum retro_log_level level) noexcept
     {
       _level = level;
     }
 
-    bool logLevel(enum retro_log_level level)
+    bool logLevel(enum retro_log_level level) const noexcept
     {
       return (_level <= level);
     }

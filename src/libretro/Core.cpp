@@ -2287,6 +2287,9 @@ void libretro::Core::s_logCallback(enum retro_log_level level, const char *fmt, 
   if (!s_instance)
     return;
 
+  if (!s_instance->_logger->logLevel(level))
+    return;
+
   va_list args;
   va_start(args, fmt);
   s_instance->_logger->vprintf(level, fmt, args);
