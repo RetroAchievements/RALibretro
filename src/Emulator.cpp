@@ -55,6 +55,17 @@ struct CoreInfo
 
 static std::vector<CoreInfo> s_coreInfos;
 
+bool isKnownCore(const std::string& coreName)
+{
+  for (const auto& coreInfo : s_coreInfos)
+  {
+    if (coreInfo.filename == coreName)
+      return true;
+  }
+
+  return false;
+}
+
 static const CoreInfo* getCoreInfo(const std::string& coreName, int system)
 {
   for (const auto& coreInfo : s_coreInfos)

@@ -24,6 +24,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <rc_consoles.h>
 
+bool isKnownCore(const std::string& coreName);
 const std::string& getEmulatorName(const std::string& coreName, int system);
 const char* getEmulatorExtensions(const std::string& coreName, int system);
 const char* getSystemName(int system);

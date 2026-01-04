@@ -2872,8 +2872,13 @@ bool Application::handleArgs(int argc, char* argv[])
   }
 
   if (!doesCoreSupportSystem(core, system)) {
-    std::string message = core + " core does not support system " + std::to_string(system);
-    
+    std::string message;
+
+    if (isKnownCore(core))
+      message = core + " core does not support system " + std::to_string(system);
+    else
+      message = "Unknown core: " + core;
+
     _logger.error(message.c_str());
 
     MessageBox(g_mainWindow, message.c_str(), "Failed to load game", MB_OK);
