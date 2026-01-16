@@ -271,7 +271,8 @@ void Config::setVariables(const struct retro_core_option_v2_definition* options,
     Category category;
     category._key = categories->key;
     category._name = categories->desc;
-    category._description = categories->info;
+    if (categories->info)
+      category._description = categories->info;
 
     _categories.push_back(category);
   }
