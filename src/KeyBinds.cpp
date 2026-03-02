@@ -84,6 +84,56 @@ enum
   kJoy1RightAnalogUp,
   kJoy1RightAnalogDown,
 
+  kJoy2Up,
+  kJoy2Down,
+  kJoy2Left,
+  kJoy2Right,
+  kJoy2X,
+  kJoy2Y,
+  kJoy2A,
+  kJoy2B,
+  kJoy2L,
+  kJoy2R,
+  kJoy2L2,
+  kJoy2R2,
+  kJoy2L3,
+  kJoy2R3,
+  kJoy2Select,
+  kJoy2Start,
+  kJoy2LeftAnalogLeft,
+  kJoy2LeftAnalogRight,
+  kJoy2LeftAnalogUp,
+  kJoy2LeftAnalogDown,
+  kJoy2RightAnalogLeft,
+  kJoy2RightAnalogRight,
+  kJoy2RightAnalogUp,
+  kJoy2RightAnalogDown,
+
+  kJoy3Up,
+  kJoy3Down,
+  kJoy3Left,
+  kJoy3Right,
+  kJoy3X,
+  kJoy3Y,
+  kJoy3A,
+  kJoy3B,
+  kJoy3L,
+  kJoy3R,
+  kJoy3L2,
+  kJoy3R2,
+  kJoy3L3,
+  kJoy3R3,
+  kJoy3Select,
+  kJoy3Start,
+  kJoy3LeftAnalogLeft,
+  kJoy3LeftAnalogRight,
+  kJoy3LeftAnalogUp,
+  kJoy3LeftAnalogDown,
+  kJoy3RightAnalogLeft,
+  kJoy3RightAnalogRight,
+  kJoy3RightAnalogUp,
+  kJoy3RightAnalogDown,
+
   // State management
   kSaveState1,
   kSaveState2,
@@ -167,6 +217,16 @@ static const char* bindingNames[] = {
   "J1_LSTICK_LEFT", "J1_LSTICK_RIGHT", "J1_LSTICK_UP", "J1_LSTICK_DOWN",
   "J1_RSTICK_LEFT", "J1_RSTICK_RIGHT", "J1_RSTICK_UP", "J1_RSTICK_DOWN",
 
+  "J2_UP", "J2_DOWN", "J2_LEFT", "J2_RIGHT", "J2_X", "J2_Y", "J2_A", "J2_B",
+  "J2_L", "J2_R", "J2_L2", "J2_R2", "J2_L3", "J2_R3", "J2_SELECT", "J2_START",
+  "J2_LSTICK_LEFT", "J2_LSTICK_RIGHT", "J2_LSTICK_UP", "J2_LSTICK_DOWN",
+  "J2_RSTICK_LEFT", "J2_RSTICK_RIGHT", "J2_RSTICK_UP", "J2_RSTICK_DOWN",
+
+  "J3_UP", "J3_DOWN", "J3_LEFT", "J3_RIGHT", "J3_X", "J3_Y", "J3_A", "J3_B",
+  "J3_L", "J3_R", "J3_L2", "J3_R2", "J3_L3", "J3_R3", "J3_SELECT", "J3_START",
+  "J3_LSTICK_LEFT", "J3_LSTICK_RIGHT", "J3_LSTICK_UP", "J3_LSTICK_DOWN",
+  "J3_RSTICK_LEFT", "J3_RSTICK_RIGHT", "J3_RSTICK_UP", "J3_RSTICK_DOWN",
+
   "SAVE1", "SAVE2", "SAVE3", "SAVE4", "SAVE5", "SAVE6", "SAVE7", "SAVE8", "SAVE9", "SAVE0",
   "LOAD1", "LOAD2", "LOAD3", "LOAD4", "LOAD5", "LOAD6", "LOAD7", "LOAD8", "LOAD9", "LOAD0",
   "NEXT_SLOT", "PREV_SLOT",
@@ -195,7 +255,7 @@ bool KeyBinds::init(Logger* logger)
   _logger = logger;
   _slot = 1;
   _gameFocus = false;
-  _axesHeld = 0;
+  memset(_axesHeld, 0, sizeof(_axesHeld));
 
   if (SDL_NumJoysticks() > 0)
   {
@@ -320,28 +380,21 @@ bool KeyBinds::init(Logger* logger)
 
 // Flags for _axesHeld
 enum {
-  kJ0LL = 1<<0,
-  kJ0LR = 1<<1,
-  kJ0LU = 1<<2,
-  kJ0LD = 1<<3,
-  kJ0RL = 1<<4,
-  kJ0RR = 1<<5,
-  kJ0RU = 1<<6,
-  kJ0RD = 1<<7,
-  kJ1LL = 1<<8,
-  kJ1LR = 1<<9,
-  kJ1LU = 1<<10,
-  kJ1LD = 1<<11,
-  kJ1RL = 1<<12,
-  kJ1RR = 1<<13,
-  kJ1RU = 1<<14,
-  kJ1RD = 1<<15,
-  kNegative = 0x5555,
+  kLL = 1 << 0,
+  kLR = 1 << 1,
+  kLU = 1 << 2,
+  kLD = 1 << 3,
+  kRL = 1 << 4,
+  kRR = 1 << 5,
+  kRU = 1 << 6,
+  kRD = 1 << 7,
+
+  kNegative = 0x55,
 };
 
 #define JOY_EXTRA(port, pressed) ((port << 8) | pressed)
 #define AXIS_EXTRA(controller, value) ((controller << 16) | (value))
-#define AXIS_EXTRA_UNSET(controller, axis) AXIS_EXTRA(controller, _axesHeld & axis ? (axis & kNegative ? 0x8001 : 0x7FFF) : 0)
+#define AXIS_EXTRA_UNSET(controller, axis) AXIS_EXTRA(controller, _axesHeld[controller] & axis ? (axis & kNegative ? 0x8001 : 0x7FFF) : 0)
 
 KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
 {
@@ -365,14 +418,14 @@ KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
     case kJoy0Select:   *extra = JOY_EXTRA(0, 1); return Action::kButtonSelect;
     case kJoy0Start:    *extra = JOY_EXTRA(0, 1); return Action::kButtonStart;
 
-    case kJoy0LeftAnalogLeft:   _axesHeld |= kJ0LL; *extra = AXIS_EXTRA(0, 0x8001); return Action::kAxisLeftX;
-    case kJoy0LeftAnalogRight:  _axesHeld |= kJ0LR; *extra = AXIS_EXTRA(0, 0x7FFF); return Action::kAxisLeftX;
-    case kJoy0LeftAnalogUp:     _axesHeld |= kJ0LU; *extra = AXIS_EXTRA(0, 0x8001); return Action::kAxisLeftY;
-    case kJoy0LeftAnalogDown:   _axesHeld |= kJ0LD; *extra = AXIS_EXTRA(0, 0x7FFF); return Action::kAxisLeftY;
-    case kJoy0RightAnalogLeft:  _axesHeld |= kJ0RL; *extra = AXIS_EXTRA(0, 0x8001); return Action::kAxisRightX;
-    case kJoy0RightAnalogRight: _axesHeld |= kJ0RR; *extra = AXIS_EXTRA(0, 0x7FFF); return Action::kAxisRightX;
-    case kJoy0RightAnalogUp:    _axesHeld |= kJ0RU; *extra = AXIS_EXTRA(0, 0x8001); return Action::kAxisRightY;
-    case kJoy0RightAnalogDown:  _axesHeld |= kJ0RD; *extra = AXIS_EXTRA(0, 0x7FFF); return Action::kAxisRightY;
+    case kJoy0LeftAnalogLeft:   _axesHeld[0] |= kLL; *extra = AXIS_EXTRA(0, 0x8001); return Action::kAxisLeftX;
+    case kJoy0LeftAnalogRight:  _axesHeld[0] |= kLR; *extra = AXIS_EXTRA(0, 0x7FFF); return Action::kAxisLeftX;
+    case kJoy0LeftAnalogUp:     _axesHeld[0] |= kLU; *extra = AXIS_EXTRA(0, 0x8001); return Action::kAxisLeftY;
+    case kJoy0LeftAnalogDown:   _axesHeld[0] |= kLD; *extra = AXIS_EXTRA(0, 0x7FFF); return Action::kAxisLeftY;
+    case kJoy0RightAnalogLeft:  _axesHeld[0] |= kRL; *extra = AXIS_EXTRA(0, 0x8001); return Action::kAxisRightX;
+    case kJoy0RightAnalogRight: _axesHeld[0] |= kRR; *extra = AXIS_EXTRA(0, 0x7FFF); return Action::kAxisRightX;
+    case kJoy0RightAnalogUp:    _axesHeld[0] |= kRU; *extra = AXIS_EXTRA(0, 0x8001); return Action::kAxisRightY;
+    case kJoy0RightAnalogDown:  _axesHeld[0] |= kRD; *extra = AXIS_EXTRA(0, 0x7FFF); return Action::kAxisRightY;
 
     case kJoy1Up:       *extra = JOY_EXTRA(1, 1); return Action::kButtonUp;
     case kJoy1Down:     *extra = JOY_EXTRA(1, 1); return Action::kButtonDown;
@@ -391,14 +444,66 @@ KeyBinds::Action KeyBinds::translateButtonPress(int button, unsigned* extra)
     case kJoy1Select:   *extra = JOY_EXTRA(1, 1); return Action::kButtonSelect;
     case kJoy1Start:    *extra = JOY_EXTRA(1, 1); return Action::kButtonStart;
 
-    case kJoy1LeftAnalogLeft:   _axesHeld |= kJ1LL; *extra = AXIS_EXTRA(1, 0x8001); return Action::kAxisLeftX;
-    case kJoy1LeftAnalogRight:  _axesHeld |= kJ1LR; *extra = AXIS_EXTRA(1, 0x7FFF); return Action::kAxisLeftX;
-    case kJoy1LeftAnalogUp:     _axesHeld |= kJ1LU; *extra = AXIS_EXTRA(1, 0x8001); return Action::kAxisLeftY;
-    case kJoy1LeftAnalogDown:   _axesHeld |= kJ1LD; *extra = AXIS_EXTRA(1, 0x7FFF); return Action::kAxisLeftY;
-    case kJoy1RightAnalogLeft:  _axesHeld |= kJ1RL; *extra = AXIS_EXTRA(1, 0x8001); return Action::kAxisRightX;
-    case kJoy1RightAnalogRight: _axesHeld |= kJ1RR; *extra = AXIS_EXTRA(1, 0x7FFF); return Action::kAxisRightX;
-    case kJoy1RightAnalogUp:    _axesHeld |= kJ1RU; *extra = AXIS_EXTRA(1, 0x8001); return Action::kAxisRightY;
-    case kJoy1RightAnalogDown:  _axesHeld |= kJ1RD; *extra = AXIS_EXTRA(1, 0x7FFF); return Action::kAxisRightY;
+    case kJoy1LeftAnalogLeft:   _axesHeld[1] |= kLL; *extra = AXIS_EXTRA(1, 0x8001); return Action::kAxisLeftX;
+    case kJoy1LeftAnalogRight:  _axesHeld[1] |= kLR; *extra = AXIS_EXTRA(1, 0x7FFF); return Action::kAxisLeftX;
+    case kJoy1LeftAnalogUp:     _axesHeld[1] |= kLU; *extra = AXIS_EXTRA(1, 0x8001); return Action::kAxisLeftY;
+    case kJoy1LeftAnalogDown:   _axesHeld[1] |= kLD; *extra = AXIS_EXTRA(1, 0x7FFF); return Action::kAxisLeftY;
+    case kJoy1RightAnalogLeft:  _axesHeld[1] |= kRL; *extra = AXIS_EXTRA(1, 0x8001); return Action::kAxisRightX;
+    case kJoy1RightAnalogRight: _axesHeld[1] |= kRR; *extra = AXIS_EXTRA(1, 0x7FFF); return Action::kAxisRightX;
+    case kJoy1RightAnalogUp:    _axesHeld[1] |= kRU; *extra = AXIS_EXTRA(1, 0x8001); return Action::kAxisRightY;
+    case kJoy1RightAnalogDown:  _axesHeld[1] |= kRD; *extra = AXIS_EXTRA(1, 0x7FFF); return Action::kAxisRightY;
+
+    case kJoy2Up:       *extra = JOY_EXTRA(2, 1); return Action::kButtonUp;
+    case kJoy2Down:     *extra = JOY_EXTRA(2, 1); return Action::kButtonDown;
+    case kJoy2Left:     *extra = JOY_EXTRA(2, 1); return Action::kButtonLeft;
+    case kJoy2Right:    *extra = JOY_EXTRA(2, 1); return Action::kButtonRight;
+    case kJoy2X:        *extra = JOY_EXTRA(2, 1); return Action::kButtonX;
+    case kJoy2Y:        *extra = JOY_EXTRA(2, 1); return Action::kButtonY;
+    case kJoy2A:        *extra = JOY_EXTRA(2, 1); return Action::kButtonA;
+    case kJoy2B:        *extra = JOY_EXTRA(2, 1); return Action::kButtonB;
+    case kJoy2L:        *extra = JOY_EXTRA(2, 1); return Action::kButtonL;
+    case kJoy2R:        *extra = JOY_EXTRA(2, 1); return Action::kButtonR;
+    case kJoy2L2:       *extra = AXIS_EXTRA(2, 0x7FFF); return Action::kAxisL2;
+    case kJoy2R2:       *extra = AXIS_EXTRA(2, 0x7FFF); return Action::kAxisR2;
+    case kJoy2L3:       *extra = JOY_EXTRA(2, 1); return Action::kButtonL3;
+    case kJoy2R3:       *extra = JOY_EXTRA(2, 1); return Action::kButtonR3;
+    case kJoy2Select:   *extra = JOY_EXTRA(2, 1); return Action::kButtonSelect;
+    case kJoy2Start:    *extra = JOY_EXTRA(2, 1); return Action::kButtonStart;
+
+    case kJoy2LeftAnalogLeft:   _axesHeld[2] |= kLL; *extra = AXIS_EXTRA(2, 0x8001); return Action::kAxisLeftX;
+    case kJoy2LeftAnalogRight:  _axesHeld[2] |= kLR; *extra = AXIS_EXTRA(2, 0x7FFF); return Action::kAxisLeftX;
+    case kJoy2LeftAnalogUp:     _axesHeld[2] |= kLU; *extra = AXIS_EXTRA(2, 0x8001); return Action::kAxisLeftY;
+    case kJoy2LeftAnalogDown:   _axesHeld[2] |= kLD; *extra = AXIS_EXTRA(2, 0x7FFF); return Action::kAxisLeftY;
+    case kJoy2RightAnalogLeft:  _axesHeld[2] |= kRL; *extra = AXIS_EXTRA(2, 0x8001); return Action::kAxisRightX;
+    case kJoy2RightAnalogRight: _axesHeld[2] |= kRR; *extra = AXIS_EXTRA(2, 0x7FFF); return Action::kAxisRightX;
+    case kJoy2RightAnalogUp:    _axesHeld[2] |= kRU; *extra = AXIS_EXTRA(2, 0x8001); return Action::kAxisRightY;
+    case kJoy2RightAnalogDown:  _axesHeld[2] |= kRD; *extra = AXIS_EXTRA(2, 0x7FFF); return Action::kAxisRightY;
+
+    case kJoy3Up:       *extra = JOY_EXTRA(3, 1); return Action::kButtonUp;
+    case kJoy3Down:     *extra = JOY_EXTRA(3, 1); return Action::kButtonDown;
+    case kJoy3Left:     *extra = JOY_EXTRA(3, 1); return Action::kButtonLeft;
+    case kJoy3Right:    *extra = JOY_EXTRA(3, 1); return Action::kButtonRight;
+    case kJoy3X:        *extra = JOY_EXTRA(3, 1); return Action::kButtonX;
+    case kJoy3Y:        *extra = JOY_EXTRA(3, 1); return Action::kButtonY;
+    case kJoy3A:        *extra = JOY_EXTRA(3, 1); return Action::kButtonA;
+    case kJoy3B:        *extra = JOY_EXTRA(3, 1); return Action::kButtonB;
+    case kJoy3L:        *extra = JOY_EXTRA(3, 1); return Action::kButtonL;
+    case kJoy3R:        *extra = JOY_EXTRA(3, 1); return Action::kButtonR;
+    case kJoy3L2:       *extra = AXIS_EXTRA(3, 0x7FFF); return Action::kAxisL2;
+    case kJoy3R2:       *extra = AXIS_EXTRA(3, 0x7FFF); return Action::kAxisR2;
+    case kJoy3L3:       *extra = JOY_EXTRA(3, 1); return Action::kButtonL3;
+    case kJoy3R3:       *extra = JOY_EXTRA(3, 1); return Action::kButtonR3;
+    case kJoy3Select:   *extra = JOY_EXTRA(3, 1); return Action::kButtonSelect;
+    case kJoy3Start:    *extra = JOY_EXTRA(3, 1); return Action::kButtonStart;
+
+    case kJoy3LeftAnalogLeft:   _axesHeld[3] |= kLL; *extra = AXIS_EXTRA(3, 0x8001); return Action::kAxisLeftX;
+    case kJoy3LeftAnalogRight:  _axesHeld[3] |= kLR; *extra = AXIS_EXTRA(3, 0x7FFF); return Action::kAxisLeftX;
+    case kJoy3LeftAnalogUp:     _axesHeld[3] |= kLU; *extra = AXIS_EXTRA(3, 0x8001); return Action::kAxisLeftY;
+    case kJoy3LeftAnalogDown:   _axesHeld[3] |= kLD; *extra = AXIS_EXTRA(3, 0x7FFF); return Action::kAxisLeftY;
+    case kJoy3RightAnalogLeft:  _axesHeld[3] |= kRL; *extra = AXIS_EXTRA(3, 0x8001); return Action::kAxisRightX;
+    case kJoy3RightAnalogRight: _axesHeld[3] |= kRR; *extra = AXIS_EXTRA(3, 0x7FFF); return Action::kAxisRightX;
+    case kJoy3RightAnalogUp:    _axesHeld[3] |= kRU; *extra = AXIS_EXTRA(3, 0x8001); return Action::kAxisRightY;
+    case kJoy3RightAnalogDown:  _axesHeld[3] |= kRD; *extra = AXIS_EXTRA(3, 0x7FFF); return Action::kAxisRightY;
 
     // State state management
     case kSaveState1:   *extra = 1; return Action::kSaveState;
@@ -495,14 +600,14 @@ KeyBinds::Action KeyBinds::translateButtonReleased(int button, unsigned* extra)
     case kJoy0Select:   *extra = JOY_EXTRA(0, 0); return Action::kButtonSelect;
     case kJoy0Start:    *extra = JOY_EXTRA(0, 0); return Action::kButtonStart;
 
-    case kJoy0LeftAnalogLeft:   _axesHeld &= ~kJ0LL; *extra = AXIS_EXTRA_UNSET(0, kJ0LR); return Action::kAxisLeftX;
-    case kJoy0LeftAnalogRight:  _axesHeld &= ~kJ0LR; *extra = AXIS_EXTRA_UNSET(0, kJ0LL); return Action::kAxisLeftX;
-    case kJoy0LeftAnalogUp:     _axesHeld &= ~kJ0LU; *extra = AXIS_EXTRA_UNSET(0, kJ0LD); return Action::kAxisLeftY;
-    case kJoy0LeftAnalogDown:   _axesHeld &= ~kJ0LD; *extra = AXIS_EXTRA_UNSET(0, kJ0LU); return Action::kAxisLeftY;
-    case kJoy0RightAnalogLeft:  _axesHeld &= ~kJ0RL; *extra = AXIS_EXTRA_UNSET(0, kJ0RR); return Action::kAxisRightX;
-    case kJoy0RightAnalogRight: _axesHeld &= ~kJ0RR; *extra = AXIS_EXTRA_UNSET(0, kJ0RL); return Action::kAxisRightX;
-    case kJoy0RightAnalogUp:    _axesHeld &= ~kJ0RU; *extra = AXIS_EXTRA_UNSET(0, kJ0RD); return Action::kAxisRightY;
-    case kJoy0RightAnalogDown:  _axesHeld &= ~kJ0RD; *extra = AXIS_EXTRA_UNSET(0, kJ0RU); return Action::kAxisRightY;
+    case kJoy0LeftAnalogLeft:   _axesHeld[0] &= ~kLL; *extra = AXIS_EXTRA_UNSET(0, kLR); return Action::kAxisLeftX;
+    case kJoy0LeftAnalogRight:  _axesHeld[0] &= ~kLR; *extra = AXIS_EXTRA_UNSET(0, kLL); return Action::kAxisLeftX;
+    case kJoy0LeftAnalogUp:     _axesHeld[0] &= ~kLU; *extra = AXIS_EXTRA_UNSET(0, kLD); return Action::kAxisLeftY;
+    case kJoy0LeftAnalogDown:   _axesHeld[0] &= ~kLD; *extra = AXIS_EXTRA_UNSET(0, kLU); return Action::kAxisLeftY;
+    case kJoy0RightAnalogLeft:  _axesHeld[0] &= ~kRL; *extra = AXIS_EXTRA_UNSET(0, kRR); return Action::kAxisRightX;
+    case kJoy0RightAnalogRight: _axesHeld[0] &= ~kRR; *extra = AXIS_EXTRA_UNSET(0, kRL); return Action::kAxisRightX;
+    case kJoy0RightAnalogUp:    _axesHeld[0] &= ~kRU; *extra = AXIS_EXTRA_UNSET(0, kRD); return Action::kAxisRightY;
+    case kJoy0RightAnalogDown:  _axesHeld[0] &= ~kRD; *extra = AXIS_EXTRA_UNSET(0, kRU); return Action::kAxisRightY;
 
     case kJoy1Up:       *extra = JOY_EXTRA(1, 0); return Action::kButtonUp;
     case kJoy1Down:     *extra = JOY_EXTRA(1, 0); return Action::kButtonDown;
@@ -514,21 +619,73 @@ KeyBinds::Action KeyBinds::translateButtonReleased(int button, unsigned* extra)
     case kJoy1B:        *extra = JOY_EXTRA(1, 0); return Action::kButtonB;
     case kJoy1L:        *extra = JOY_EXTRA(1, 0); return Action::kButtonL;
     case kJoy1R:        *extra = JOY_EXTRA(1, 0); return Action::kButtonR;
-    case kJoy1L2:       *extra = AXIS_EXTRA(0, 0); return Action::kAxisL2;
-    case kJoy1R2:       *extra = AXIS_EXTRA(0, 0); return Action::kAxisR2;
+    case kJoy1L2:       *extra = AXIS_EXTRA(1, 0); return Action::kAxisL2;
+    case kJoy1R2:       *extra = AXIS_EXTRA(1, 0); return Action::kAxisR2;
     case kJoy1L3:       *extra = JOY_EXTRA(1, 0); return Action::kButtonL3;
     case kJoy1R3:       *extra = JOY_EXTRA(1, 0); return Action::kButtonR3;
     case kJoy1Select:   *extra = JOY_EXTRA(1, 0); return Action::kButtonSelect;
     case kJoy1Start:    *extra = JOY_EXTRA(1, 0); return Action::kButtonStart;
 
-    case kJoy1LeftAnalogLeft:   _axesHeld &= ~kJ1LL; *extra = AXIS_EXTRA_UNSET(1, kJ1LR); return Action::kAxisLeftX;
-    case kJoy1LeftAnalogRight:  _axesHeld &= ~kJ1LR; *extra = AXIS_EXTRA_UNSET(1, kJ1LL); return Action::kAxisLeftX;
-    case kJoy1LeftAnalogUp:     _axesHeld &= ~kJ1LU; *extra = AXIS_EXTRA_UNSET(1, kJ1LD); return Action::kAxisLeftY;
-    case kJoy1LeftAnalogDown:   _axesHeld &= ~kJ1LD; *extra = AXIS_EXTRA_UNSET(1, kJ1LU); return Action::kAxisLeftY;
-    case kJoy1RightAnalogLeft:  _axesHeld &= ~kJ1RL; *extra = AXIS_EXTRA_UNSET(1, kJ1RR); return Action::kAxisRightX;
-    case kJoy1RightAnalogRight: _axesHeld &= ~kJ1RR; *extra = AXIS_EXTRA_UNSET(1, kJ1RL); return Action::kAxisRightX;
-    case kJoy1RightAnalogUp:    _axesHeld &= ~kJ1RU; *extra = AXIS_EXTRA_UNSET(1, kJ1RD); return Action::kAxisRightY;
-    case kJoy1RightAnalogDown:  _axesHeld &= ~kJ1RD; *extra = AXIS_EXTRA_UNSET(1, kJ1RU); return Action::kAxisRightY;
+    case kJoy1LeftAnalogLeft:   _axesHeld[1] &= ~kLL; *extra = AXIS_EXTRA_UNSET(1, kLR); return Action::kAxisLeftX;
+    case kJoy1LeftAnalogRight:  _axesHeld[1] &= ~kLR; *extra = AXIS_EXTRA_UNSET(1, kLL); return Action::kAxisLeftX;
+    case kJoy1LeftAnalogUp:     _axesHeld[1] &= ~kLU; *extra = AXIS_EXTRA_UNSET(1, kLD); return Action::kAxisLeftY;
+    case kJoy1LeftAnalogDown:   _axesHeld[1] &= ~kLD; *extra = AXIS_EXTRA_UNSET(1, kLU); return Action::kAxisLeftY;
+    case kJoy1RightAnalogLeft:  _axesHeld[1] &= ~kRL; *extra = AXIS_EXTRA_UNSET(1, kRR); return Action::kAxisRightX;
+    case kJoy1RightAnalogRight: _axesHeld[1] &= ~kRR; *extra = AXIS_EXTRA_UNSET(1, kRL); return Action::kAxisRightX;
+    case kJoy1RightAnalogUp:    _axesHeld[1] &= ~kRU; *extra = AXIS_EXTRA_UNSET(1, kRD); return Action::kAxisRightY;
+    case kJoy1RightAnalogDown:  _axesHeld[1] &= ~kRD; *extra = AXIS_EXTRA_UNSET(1, kRU); return Action::kAxisRightY;
+
+    case kJoy2Up:       *extra = JOY_EXTRA(2, 0); return Action::kButtonUp;
+    case kJoy2Down:     *extra = JOY_EXTRA(2, 0); return Action::kButtonDown;
+    case kJoy2Left:     *extra = JOY_EXTRA(2, 0); return Action::kButtonLeft;
+    case kJoy2Right:    *extra = JOY_EXTRA(2, 0); return Action::kButtonRight;
+    case kJoy2X:        *extra = JOY_EXTRA(2, 0); return Action::kButtonX;
+    case kJoy2Y:        *extra = JOY_EXTRA(2, 0); return Action::kButtonY;
+    case kJoy2A:        *extra = JOY_EXTRA(2, 0); return Action::kButtonA;
+    case kJoy2B:        *extra = JOY_EXTRA(2, 0); return Action::kButtonB;
+    case kJoy2L:        *extra = JOY_EXTRA(2, 0); return Action::kButtonL;
+    case kJoy2R:        *extra = JOY_EXTRA(2, 0); return Action::kButtonR;
+    case kJoy2L2:       *extra = AXIS_EXTRA(2, 0); return Action::kAxisL2;
+    case kJoy2R2:       *extra = AXIS_EXTRA(2, 0); return Action::kAxisR2;
+    case kJoy2L3:       *extra = JOY_EXTRA(2, 0); return Action::kButtonL3;
+    case kJoy2R3:       *extra = JOY_EXTRA(2, 0); return Action::kButtonR3;
+    case kJoy2Select:   *extra = JOY_EXTRA(2, 0); return Action::kButtonSelect;
+    case kJoy2Start:    *extra = JOY_EXTRA(2, 0); return Action::kButtonStart;
+
+    case kJoy2LeftAnalogLeft:   _axesHeld[2] &= ~kLL; *extra = AXIS_EXTRA_UNSET(2, kLR); return Action::kAxisLeftX;
+    case kJoy2LeftAnalogRight:  _axesHeld[2] &= ~kLR; *extra = AXIS_EXTRA_UNSET(2, kLL); return Action::kAxisLeftX;
+    case kJoy2LeftAnalogUp:     _axesHeld[2] &= ~kLU; *extra = AXIS_EXTRA_UNSET(2, kLD); return Action::kAxisLeftY;
+    case kJoy2LeftAnalogDown:   _axesHeld[2] &= ~kLD; *extra = AXIS_EXTRA_UNSET(2, kLU); return Action::kAxisLeftY;
+    case kJoy2RightAnalogLeft:  _axesHeld[2] &= ~kRL; *extra = AXIS_EXTRA_UNSET(2, kRR); return Action::kAxisRightX;
+    case kJoy2RightAnalogRight: _axesHeld[2] &= ~kRR; *extra = AXIS_EXTRA_UNSET(2, kRL); return Action::kAxisRightX;
+    case kJoy2RightAnalogUp:    _axesHeld[2] &= ~kRU; *extra = AXIS_EXTRA_UNSET(2, kRD); return Action::kAxisRightY;
+    case kJoy2RightAnalogDown:  _axesHeld[2] &= ~kRD; *extra = AXIS_EXTRA_UNSET(2, kRU); return Action::kAxisRightY;
+
+    case kJoy3Up:       *extra = JOY_EXTRA(3, 0); return Action::kButtonUp;
+    case kJoy3Down:     *extra = JOY_EXTRA(3, 0); return Action::kButtonDown;
+    case kJoy3Left:     *extra = JOY_EXTRA(3, 0); return Action::kButtonLeft;
+    case kJoy3Right:    *extra = JOY_EXTRA(3, 0); return Action::kButtonRight;
+    case kJoy3X:        *extra = JOY_EXTRA(3, 0); return Action::kButtonX;
+    case kJoy3Y:        *extra = JOY_EXTRA(3, 0); return Action::kButtonY;
+    case kJoy3A:        *extra = JOY_EXTRA(3, 0); return Action::kButtonA;
+    case kJoy3B:        *extra = JOY_EXTRA(3, 0); return Action::kButtonB;
+    case kJoy3L:        *extra = JOY_EXTRA(3, 0); return Action::kButtonL;
+    case kJoy3R:        *extra = JOY_EXTRA(3, 0); return Action::kButtonR;
+    case kJoy3L2:       *extra = AXIS_EXTRA(3, 0); return Action::kAxisL2;
+    case kJoy3R2:       *extra = AXIS_EXTRA(3, 0); return Action::kAxisR2;
+    case kJoy3L3:       *extra = JOY_EXTRA(3, 0); return Action::kButtonL3;
+    case kJoy3R3:       *extra = JOY_EXTRA(3, 0); return Action::kButtonR3;
+    case kJoy3Select:   *extra = JOY_EXTRA(3, 0); return Action::kButtonSelect;
+    case kJoy3Start:    *extra = JOY_EXTRA(3, 0); return Action::kButtonStart;
+
+    case kJoy3LeftAnalogLeft:   _axesHeld[3] &= ~kLL; *extra = AXIS_EXTRA_UNSET(3, kLR); return Action::kAxisLeftX;
+    case kJoy3LeftAnalogRight:  _axesHeld[3] &= ~kLR; *extra = AXIS_EXTRA_UNSET(3, kLL); return Action::kAxisLeftX;
+    case kJoy3LeftAnalogUp:     _axesHeld[3] &= ~kLU; *extra = AXIS_EXTRA_UNSET(3, kLD); return Action::kAxisLeftY;
+    case kJoy3LeftAnalogDown:   _axesHeld[3] &= ~kLD; *extra = AXIS_EXTRA_UNSET(3, kLU); return Action::kAxisLeftY;
+    case kJoy3RightAnalogLeft:  _axesHeld[3] &= ~kRL; *extra = AXIS_EXTRA_UNSET(3, kRR); return Action::kAxisRightX;
+    case kJoy3RightAnalogRight: _axesHeld[3] &= ~kRR; *extra = AXIS_EXTRA_UNSET(3, kRL); return Action::kAxisRightX;
+    case kJoy3RightAnalogUp:    _axesHeld[3] &= ~kRU; *extra = AXIS_EXTRA_UNSET(3, kRD); return Action::kAxisRightY;
+    case kJoy3RightAnalogDown:  _axesHeld[3] &= ~kRD; *extra = AXIS_EXTRA_UNSET(3, kRU); return Action::kAxisRightY;
 
     // Emulation speed
     case kFastForward:  *extra = 0; return Action::kFastForward;
@@ -554,6 +711,7 @@ KeyBinds::Action KeyBinds::translateAnalog(int button, Sint16 value, unsigned* e
     case kJoy0RightAnalogDown:  action = Action::kAxisRightY; controller = 0; break;
     case kJoy0L2:               action = Action::kAxisL2;     controller = 0; break;
     case kJoy0R2:               action = Action::kAxisR2;     controller = 0; break;
+
     case kJoy1LeftAnalogLeft:
     case kJoy1LeftAnalogRight:  action = Action::kAxisLeftX;  controller = 1; break;
     case kJoy1LeftAnalogUp:
@@ -564,6 +722,28 @@ KeyBinds::Action KeyBinds::translateAnalog(int button, Sint16 value, unsigned* e
     case kJoy1RightAnalogDown:  action = Action::kAxisRightY; controller = 1; break;
     case kJoy1L2:               action = Action::kAxisL2;     controller = 1; break;
     case kJoy1R2:               action = Action::kAxisR2;     controller = 1; break;
+
+    case kJoy2LeftAnalogLeft:
+    case kJoy2LeftAnalogRight:  action = Action::kAxisLeftX;  controller = 2; break;
+    case kJoy2LeftAnalogUp:
+    case kJoy2LeftAnalogDown:   action = Action::kAxisLeftY;  controller = 2; break;
+    case kJoy2RightAnalogLeft:
+    case kJoy2RightAnalogRight: action = Action::kAxisRightX; controller = 2; break;
+    case kJoy2RightAnalogUp:
+    case kJoy2RightAnalogDown:  action = Action::kAxisRightY; controller = 2; break;
+    case kJoy2L2:               action = Action::kAxisL2;     controller = 2; break;
+    case kJoy2R2:               action = Action::kAxisR2;     controller = 2; break;
+
+    case kJoy3LeftAnalogLeft:
+    case kJoy3LeftAnalogRight:  action = Action::kAxisLeftX;  controller = 3; break;
+    case kJoy3LeftAnalogUp:
+    case kJoy3LeftAnalogDown:   action = Action::kAxisLeftY;  controller = 3; break;
+    case kJoy3RightAnalogLeft:
+    case kJoy3RightAnalogRight: action = Action::kAxisRightX; controller = 3; break;
+    case kJoy3RightAnalogUp:
+    case kJoy3RightAnalogDown:  action = Action::kAxisRightY; controller = 3; break;
+    case kJoy3L2:               action = Action::kAxisL2;     controller = 3; break;
+    case kJoy3R2:               action = Action::kAxisR2;     controller = 3; break;
 
     default:
       return Action::kNothing;
@@ -812,16 +992,28 @@ unsigned KeyBinds::getNavigationPort(SDL_JoystickID joystickID)
     return 0;
   if (_bindings[kJoy1Right].type == Binding::Type::Button && _bindings[kJoy1Right].joystick_id == joystickID)
     return 1;
+  if (_bindings[kJoy2Right].type == Binding::Type::Button && _bindings[kJoy2Right].joystick_id == joystickID)
+    return 2;
+  if (_bindings[kJoy3Right].type == Binding::Type::Button && _bindings[kJoy3Right].joystick_id == joystickID)
+    return 3;
 
   if (_bindings[kJoy0LeftAnalogLeft].type == Binding::Type::Axis && _bindings[kJoy0LeftAnalogLeft].joystick_id == joystickID)
     return 0;
   if (_bindings[kJoy1LeftAnalogLeft].type == Binding::Type::Axis && _bindings[kJoy1LeftAnalogLeft].joystick_id == joystickID)
     return 1;
+  if (_bindings[kJoy2LeftAnalogLeft].type == Binding::Type::Axis && _bindings[kJoy2LeftAnalogLeft].joystick_id == joystickID)
+    return 2;
+  if (_bindings[kJoy3LeftAnalogLeft].type == Binding::Type::Axis && _bindings[kJoy3LeftAnalogLeft].joystick_id == joystickID)
+    return 3;
 
   if (_bindings[kJoy0LeftAnalogLeft].type == Binding::Type::Button && _bindings[kJoy0LeftAnalogLeft].joystick_id == joystickID)
     return 0;
   if (_bindings[kJoy1LeftAnalogLeft].type == Binding::Type::Button && _bindings[kJoy1LeftAnalogLeft].joystick_id == joystickID)
     return 1;
+  if (_bindings[kJoy2LeftAnalogLeft].type == Binding::Type::Button && _bindings[kJoy2LeftAnalogLeft].joystick_id == joystickID)
+    return 2;
+  if (_bindings[kJoy3LeftAnalogLeft].type == Binding::Type::Button && _bindings[kJoy3LeftAnalogLeft].joystick_id == joystickID)
+    return 3;
 
   return 0xFFFFFFFF;
 }
@@ -873,6 +1065,26 @@ static bool IsAnalog(int button)
     case kJoy1RightAnalogDown:
     case kJoy1L2:
     case kJoy1R2:
+    case kJoy2LeftAnalogLeft:
+    case kJoy2LeftAnalogRight:
+    case kJoy2LeftAnalogUp:
+    case kJoy2LeftAnalogDown:
+    case kJoy2RightAnalogLeft:
+    case kJoy2RightAnalogRight:
+    case kJoy2RightAnalogUp:
+    case kJoy2RightAnalogDown:
+    case kJoy2L2:
+    case kJoy2R2:
+    case kJoy3LeftAnalogLeft:
+    case kJoy3LeftAnalogRight:
+    case kJoy3LeftAnalogUp:
+    case kJoy3LeftAnalogDown:
+    case kJoy3RightAnalogLeft:
+    case kJoy3RightAnalogRight:
+    case kJoy3RightAnalogUp:
+    case kJoy3RightAnalogDown:
+    case kJoy3L2:
+    case kJoy3R2:
       return true;
 
     default:
@@ -1066,8 +1278,19 @@ static void remapBinding(KeyBinds::BindingList& keyBinds, const std::string& key
   int bindIndex = (key[10] == 'Y') ? kJoy0LeftAnalogUp : kJoy0LeftAnalogLeft;
   if (key[3] == 'R')
     bindIndex += (kJoy0RightAnalogLeft - kJoy0LeftAnalogLeft);
-  if (key[1] == '1')
-    bindIndex += (kJoy1LeftAnalogLeft - kJoy0LeftAnalogLeft);
+
+  switch (key[1])
+  {
+    case '1':
+      bindIndex += (kJoy1LeftAnalogLeft - kJoy0LeftAnalogLeft);
+      break;
+    case '2':
+      bindIndex += (kJoy2LeftAnalogLeft - kJoy0LeftAnalogLeft);
+      break;
+    case '3':
+      bindIndex += (kJoy3LeftAnalogLeft - kJoy0LeftAnalogLeft);
+      break;
+  }
 
   keyBinds[bindIndex] = binding;
   keyBinds[bindIndex].modifiers = 0xFF;
@@ -1503,6 +1726,7 @@ public:
 
     addButton("Export", IDC_EXPORT, 0, HEIGHT - 14, 50, 14, false);
     addButton("Import", IDC_IMPORT, 55, HEIGHT - 14, 50, 14, false);
+    addButton("Clear", IDC_CLEAR, 110, HEIGHT - 14, 50, 14, false);
 
     addButton("OK", IDOK, WIDTH - 55 - 50, HEIGHT - 14, 50, 14, true);
     addButton("Cancel", IDCANCEL, WIDTH - 50, HEIGHT - 14, 50, 14, false);
@@ -1578,6 +1802,7 @@ protected:
 
   static const WORD IDC_EXPORT = 20000 - 1;
   static const WORD IDC_IMPORT = IDC_EXPORT - 1;
+  static const WORD IDC_CLEAR = IDC_IMPORT - 1;
 
   void retrieveData(HWND hwnd) override
   {
@@ -1621,6 +1846,8 @@ protected:
           exportJson(hwnd);
         else if (controlId == IDC_IMPORT)
           importJson(hwnd);
+        else if (controlId == IDC_CLEAR)
+          clear(hwnd);
         break;
       }
     }
@@ -1743,6 +1970,17 @@ protected:
       });
     }
   }
+
+  void clear(HWND hwnd)
+  {
+    for (int i = kJoy0Up; i < kJoy1Up; ++i)
+    {
+      const int button = _firstBinding + i;
+      parseBindingString("none", _bindings[button]);
+      updateButtonLabel(button);
+      SetDlgItemText(hwnd, 10000 + button, _buttonLabels[button]);
+    }
+  }
 };
 
 void KeyBinds::showControllerDialog(Input& input, int port)
@@ -1763,6 +2001,12 @@ void KeyBinds::showControllerDialog(Input& input, int port)
       break;
     case 1:
       db.initControllerButtons(_bindings, kJoy1Up);
+      break;
+    case 2:
+      db.initControllerButtons(_bindings, kJoy2Up);
+      break;
+    case 3:
+      db.initControllerButtons(_bindings, kJoy3Up);
       break;
   }
 

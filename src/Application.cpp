@@ -2428,6 +2428,14 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       _keybinds.showControllerDialog(_input, 1);
       break;
 
+    case IDM_INPUT_CONTROLLER_3:
+      _keybinds.showControllerDialog(_input, 2);
+      break;
+
+    case IDM_INPUT_CONTROLLER_4:
+      _keybinds.showControllerDialog(_input, 3);
+      break;
+
     case IDM_INPUT_BACKGROUND_INPUT:
       toggleBackgroundInput();
       break;
