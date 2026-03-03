@@ -114,6 +114,11 @@ namespace
       (void)display;
     }
 
+    virtual void setUpdateDisplayCallback(const struct retro_core_options_update_display_callback* data) override
+    {
+      (void)data;
+    }
+
     virtual bool varUpdated() override
     {
       return false;
@@ -1792,6 +1797,13 @@ bool libretro::Core::setCoreOptionsDisplay(const struct retro_core_option_displa
   return true;
 }
 
+bool libretro::Core::setCoreOptionsUpdateDisplayCallback(const struct retro_core_options_update_display_callback* data)
+{
+  _config->setUpdateDisplayCallback(data);
+  return true;
+}
+
+
 static bool clearAllWaitThreadsCallback(unsigned clear_threads, void* data)
 {
   return true;
@@ -2079,10 +2091,13 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
     ret = getMicrophoneInterface((struct retro_microphone_interface*)data);
     break;
 
-  /* RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK cannot be supported because
-   * we don't update the variable values in real time. values are only updated when the config
-   * dialog is closed.
-   */
+  case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK:
+    /* NOTE: we don't update the variable values in real time. values are only updated when the config
+     * dialog is closed. As such, the update display callback is only called after the dialog is closed
+     * and the updated visibility is only reflected the next time the user opens the dialog.
+     */
+    ret = setCoreOptionsUpdateDisplayCallback((const struct retro_core_options_update_display_callback*)data);
+    break;
 
   case RETRO_ENVIRONMENT_SET_SAVE_STATE_IN_BACKGROUND:
     _logger->warn(TAG "Unimplemented env call: %s", "RETRO_ENVIRONMENT_SET_SAVE_STATE_IN_BACKGROUND");

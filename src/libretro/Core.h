@@ -178,6 +178,7 @@ namespace libretro
     bool setCoreOptionsV2(const struct retro_core_options_v2* data);
     bool setCoreOptionsV2Intl(const struct retro_core_options_v2_intl* data);
     bool setCoreOptionsDisplay(const struct retro_core_option_display* data);
+    bool setCoreOptionsUpdateDisplayCallback(const struct retro_core_options_update_display_callback* data);
     bool getPreferredHWRender(unsigned* data);
     bool getMicrophoneInterface(struct retro_microphone_interface* data);
 

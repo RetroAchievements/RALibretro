@@ -96,6 +96,7 @@ bool Config::init(libretro::LoggerComponent* logger)
   _backgroundInput = false;
   _showSpeedIndicator = true;
   _gameFocusCaptureMouse = false;
+  memset(&_updateDisplayCallback, 0, sizeof(_updateDisplayCallback));
 
   reset();
   return true;
@@ -324,6 +325,11 @@ void Config::setVariableDisplay(const struct retro_core_option_display* display)
   }
 
   _logger->info(TAG "Could not set visibility on unknown variable %s", display->key);
+}
+
+void Config::setUpdateDisplayCallback(const struct retro_core_options_update_display_callback* data)
+{
+  memcpy(&_updateDisplayCallback, data, sizeof(_updateDisplayCallback));
 }
 
 bool Config::varUpdated()
@@ -906,6 +912,9 @@ void Config::showDialog(const std::string& coreName, Input& input)
         _selections[var._key] = var._options[var._selected];
       }
     }
+
+    if (_updateDisplayCallback.callback)
+      _updateDisplayCallback.callback();
   }
 }
 
