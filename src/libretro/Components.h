@@ -145,6 +145,7 @@ namespace libretro
     virtual void setVariables(const struct retro_core_option_v2_definition* options, unsigned count,
       const struct retro_core_option_v2_category* categories, unsigned category_count) = 0;
     virtual void setVariableDisplay(const struct retro_core_option_display* display) = 0;
+    virtual void setUpdateDisplayCallback(const struct retro_core_options_update_display_callback* data) = 0;
     virtual bool varUpdated() = 0;
     virtual const char* getVariable(const char* variable) = 0;
 
