@@ -45,6 +45,7 @@ public:
   virtual void setVariables(const struct retro_core_option_v2_definition* options, unsigned count,
     const struct retro_core_option_v2_category* categories, unsigned category_count) override;
   virtual void setVariableDisplay(const struct retro_core_option_display* display) override;
+  virtual void setUpdateDisplayCallback(const struct retro_core_options_update_display_callback* data) override;
   virtual bool varUpdated() override;
   virtual const char* getVariable(const char* variable) override;
 
@@ -147,6 +148,7 @@ protected:
   std::vector<Category> _categories;
   std::vector<Variable> _variables;
   std::unordered_map<std::string, std::string> _selections;
+  struct retro_core_options_update_display_callback _updateDisplayCallback;
 
   bool _updated;
   bool _fastForwarding;

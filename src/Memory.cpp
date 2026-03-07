@@ -372,39 +372,10 @@ void Memory::attachToCore(libretro::Core* core, int consoleId)
   }
 }
 
-static bool g_bVersionChecked = false;
-static bool g_bVersionSupported = false;
-
 void Memory::installMemoryBanks()
 {
   _logger->info(TAG "installing memory banks");
   RA_ClearMemoryBanks();
-
-  // 0.78 DLL will crash if passed NULL as a read function - detect 0.79 DLL by looking for the _RA_SuspendRepaint export
-  if (!g_bVersionChecked)
-  {
-    wchar_t sBuffer[MAX_PATH];
-    DWORD iIndex = GetModuleFileNameW(0, sBuffer, MAX_PATH);
-    while (iIndex > 0 && sBuffer[iIndex - 1] != '\\' && sBuffer[iIndex - 1] != '/')
-      --iIndex;
-
-    wcscpy_s(&sBuffer[iIndex], sizeof(sBuffer) / sizeof(sBuffer[0]) - iIndex, L"RA_Integration.dll");
-    HINSTANCE hRADLL = LoadLibraryW(sBuffer);
-    if (hRADLL)
-    {
-      g_bVersionSupported = GetProcAddress(hRADLL, "_RA_SuspendRepaint") != NULL;
-      FreeLibrary(hRADLL);
-    }
-
-    g_bVersionChecked = true;
-  }
-
-  if (!g_bVersionSupported)
-  {
-    // have an 0.78 DLL - register a read function that will return 0 for the unsupported regions
-    RA_InstallMemoryBank(0, memoryRead0, memoryWrite0, g_memoryRegions.total_size);
-    return;
-  }
 
   // have an 0.79 DLL - register invalid banks for unsupported regions
   int bankId = 0;

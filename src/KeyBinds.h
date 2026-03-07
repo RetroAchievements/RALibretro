@@ -126,7 +126,7 @@ public:
     uint16_t modifiers;
   };
 
-  typedef std::array<Binding, 103> BindingList;
+  typedef std::array<Binding, 151> BindingList;
 
   static void getBindingString(char buffer[32], const KeyBinds::Binding& desc);
 
@@ -151,6 +151,6 @@ protected:
   unsigned _slot;
   bool _gameFocus;
 
-  unsigned _axesHeld;
+  uint8_t _axesHeld[4];
 };
 

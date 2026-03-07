@@ -87,7 +87,9 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #define IDM_CD_OPEN_TRAY                        40013
 #define IDM_INPUT_CONTROLLER_1                  40014
 #define IDM_INPUT_CONTROLLER_2                  40015
-#define IDM_MANAGE_CORES                        40016
-#define IDM_SAVING_CONFIG                       40017
-#define IDM_EMULATOR_CONFIG                     40018
-#define IDM_INPUT_BACKGROUND_INPUT              40019
+#define IDM_INPUT_CONTROLLER_3                  40016
+#define IDM_INPUT_CONTROLLER_4                  40017
+#define IDM_MANAGE_CORES                        40018
+#define IDM_SAVING_CONFIG                       40019
+#define IDM_EMULATOR_CONFIG                     40020
+#define IDM_INPUT_BACKGROUND_INPUT              40021
