@@ -96,63 +96,76 @@ static int process_file(int consoleId, const std::string& file)
   std::string filePath = util::fullPath(file);
   std::string ext = util::extension(file);
 
-  if (consoleId != RC_CONSOLE_ARCADE && consoleId <= RC_CONSOLE_MAX && ext.length() == 4 &&
+  if (consoleId <= RC_CONSOLE_MAX && ext.length() == 4 &&
       tolower(ext[1]) == 'z' && tolower(ext[2]) == 'i' && tolower(ext[3]) == 'p')
   {
-    std::string unzippedFilename;
-    size_t size;
-    void* data = util::loadZippedFile(logger.get(), filePath, &size, unzippedFilename);
-    if (data)
+    bool loadZipContents = true;
+
+    if (consoleId == RC_CONSOLE_ARCADE)
     {
-      if (rc_hash_generate_from_buffer(hash, consoleId, (uint8_t*)data, size))
+      // if the zip contents are a single .neo file, load it. otherwise, pass the whole zip file to the hasher.
+      std::string unzippedFilename = util::getZippedFilename(filePath);
+      ext = util::extension(unzippedFilename);
+      loadZipContents = (ext.length() == 4 && tolower(ext[1]) == 'n' && tolower(ext[2]) == 'e' && tolower(ext[3]) == 'o');
+    }
+
+    if (loadZipContents)
+    {
+      std::string unzippedFilename;
+      size_t size;
+      void* data = util::loadZippedFile(logger.get(), filePath, &size, unzippedFilename);
+      if (data)
       {
-        printf("%s", hash);
-        count = 1;
+        if (rc_hash_generate_from_buffer(hash, consoleId, (uint8_t*)data, size))
+        {
+          printf("%s", hash);
+          count = 1;
+        }
+
+        free(data);
       }
 
-      free(data);
+      return count;
     }
+  }
+
+  /* register a custom file_open handler for unicode support. use the default implementation for the other methods */
+  struct rc_hash_filereader filereader;
+  memset(&filereader, 0, sizeof(filereader));
+  filereader.open = rhash_file_open;
+  rc_hash_init_custom_filereader(&filereader);
+
+  if (ext.length() == 4 && tolower(ext[1]) == 'c' && tolower(ext[2]) == 'h' && tolower(ext[3]) == 'd')
+  {
+#ifdef HAVE_CHD
+    rc_hash_init_chd_cdreader();
+#else
+    printf("CHD not supported without HAVE_CHD compile flag");
+    return 0;
+#endif
   }
   else
   {
-    /* register a custom file_open handler for unicode support. use the default implementation for the other methods */
-    struct rc_hash_filereader filereader;
-    memset(&filereader, 0, sizeof(filereader));
-    filereader.open = rhash_file_open;
-    rc_hash_init_custom_filereader(&filereader);
+    rc_hash_init_default_cdreader();
+  }
 
-    if (ext.length() == 4 && tolower(ext[1]) == 'c' && tolower(ext[2]) == 'h' && tolower(ext[3]) == 'd')
+  if (consoleId > RC_CONSOLE_MAX)
+  {
+    rc_hash_iterator iterator;
+    rc_hash_initialize_iterator(&iterator, filePath.c_str(), NULL, 0);
+    while (rc_hash_iterate(hash, &iterator))
     {
-#ifdef HAVE_CHD
-      rc_hash_init_chd_cdreader();
-#else
-      printf("CHD not supported without HAVE_CHD compile flag");
-      return 0;
-#endif
+      printf("%s", hash);
+      count++;
     }
-    else
+    rc_hash_destroy_iterator(&iterator);
+  }
+  else
+  {
+    if (rc_hash_generate_from_file(hash, consoleId, filePath.c_str()))
     {
-      rc_hash_init_default_cdreader();
-    }
-
-    if (consoleId > RC_CONSOLE_MAX)
-    {
-      rc_hash_iterator iterator;
-      rc_hash_initialize_iterator(&iterator, filePath.c_str(), NULL, 0);
-      while (rc_hash_iterate(hash, &iterator))
-      {
-        printf("%s", hash);
-        count++;
-      }
-      rc_hash_destroy_iterator(&iterator);
-    }
-    else
-    {
-      if (rc_hash_generate_from_file(hash, consoleId, filePath.c_str()))
-      {
-        printf("%s", hash);
-        count++;
-      }
+      printf("%s", hash);
+      count++;
     }
   }
 

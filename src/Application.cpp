@@ -1044,13 +1044,9 @@ bool Application::loadGame(const std::string& path)
       }
 
       while (*ptr && *ptr != '|')
-      {
         ++ptr;
-      }
       if (*ptr == '|')
-      {
         ++ptr;
-      }
     }
 
     if (!issupportedzip)
@@ -1086,11 +1082,39 @@ bool Application::loadGame(const std::string& path)
       util::saveFile(&_logger, newPath, data, size);
       free(data);
 
+      bool isRecent = false;
+      for (size_t i = 0; i < _recentList.size(); i++)
+      {
+        const RecentItem item = _recentList[i];
+
+        if (item.path == path && item.coreName == _coreName && item.system == _system)
+        {
+          if (i > 0)
+          {
+            _recentList.erase(_recentList.begin() + i);
+            _recentList.insert(_recentList.begin(), item);
+            _logger.debug(TAG "Moved recent file %zu to front \"%s\" - %s - %u", i, util::fileName(item.path).c_str(), item.coreName.c_str(), (unsigned)item.system);
+          }
+
+          // update the path to the temporary file
+          _recentList[i].path = newPath;
+          isRecent = true;
+          break;
+        }
+      }
+
       if (!loadGame(newPath))
       {
+        if (isRecent)
+          _recentList[0].path = path; // restore the path to the zip file
+
         util::deleteFile(newPath);
         return false;
       }
+
+      // loadGame would have put the temporary file into the recent list, update the path to the zip
+      // because the temporary file will get deleted.
+      _recentList[0].path = path;
 
       _gamePathIsTemporary = true;
       return true;
