@@ -170,7 +170,8 @@
   "fceumm_libretro":{
     "name": "FCEUmm",
     "extensions": "fds",
-    "systems": [81]
+    "systems": [81],
+    "platforms": "none"
   },
   "flycast_libretro":{
     "name": "Flycast",
