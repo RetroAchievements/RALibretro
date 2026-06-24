@@ -173,6 +173,32 @@ void* util::loadFile(Logger* logger, const std::string& path, size_t* size)
 }
 
 #ifndef NO_MINIZ
+std::string util::getZippedFilename(const std::string& path)
+{
+  std::string zippedFilename;
+  mz_bool status;
+  mz_zip_archive zip_archive;
+  mz_zip_archive_file_stat file_stat;
+  int file_count;
+
+  memset(&zip_archive, 0, sizeof(zip_archive));
+
+  status = mz_zip_reader_init_file(&zip_archive, path.c_str(), 0);
+  if (status)
+  {
+    file_count = mz_zip_reader_get_num_files(&zip_archive);
+    if (file_count == 1 && !mz_zip_reader_is_file_a_directory(&zip_archive, 0))
+    {
+      if (mz_zip_reader_file_stat(&zip_archive, 0, &file_stat))
+        zippedFilename = file_stat.m_filename;
+    }
+
+    mz_zip_reader_end(&zip_archive);
+  }
+
+  return zippedFilename;
+}
+
 void* util::loadZippedFile(Logger* logger, const std::string& path, size_t* size, std::string& unzippedFileName)
 {
   mz_bool status;

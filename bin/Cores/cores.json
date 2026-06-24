@@ -267,6 +267,16 @@
     "extensions": "sg",
     "systems": [33]
   },
+  "geolith_libretro":{
+    "name": "Geolith",
+    "extensions": "neo|zip",
+    "systems": [27]
+  },
+  "geolith_libretro":{
+    "name": "Geolith",
+    "extensions": "chd|cue",
+    "systems": [56]
+  },
   "gpsp_libretro":{
     "name": "gpSP",
     "systems": [5],
@@ -554,7 +564,7 @@
     "name": "PCSX-ReARMed",
     "extensions": "m3u|cue|chd",
     "systems": [12],
-    "platforms": "win64"
+    "platforms": "none"
   },
   "picodrive_libretro":{
     "name": "PicoDrive",
