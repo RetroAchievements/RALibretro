@@ -1169,8 +1169,8 @@ bool libretro::Core::getNeedsFullPath(const std::string& extension) const
   if (_contentInfoOverride && extensionMatches(_contentInfoOverride->extensions, extension))
     return _contentInfoOverride->need_fullpath;
 
-  /* never pass a buffered m3u to the core, even if the core suggests that's okay. */
-  if (extensionMatches("m3u", extension))
+  /* never pass a buffered m3u or cue file to the core, even if the core suggests that's okay. */
+  if (extensionMatches("m3u", extension) || extensionMatches("cue", extension))
     return true;
 
   return _systemInfo.need_fullpath;
