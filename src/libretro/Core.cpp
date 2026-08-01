@@ -1771,6 +1771,9 @@ bool libretro::Core::setCoreOptionsV2(const struct retro_core_options_v2* data)
   const struct retro_core_option_v2_category* category;
   unsigned count, category_count;
 
+  if (!data->categories)
+    return false;
+
   for (category = data->categories; category->key != NULL; category++)
     ;
   category_count = category - data->categories;

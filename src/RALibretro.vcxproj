@@ -114,7 +114,8 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)bin</Command>
       <Command>$(ProjectDir)RAInterface\MakeBuildVer.bat $(ProjectDir)\RA_BuildVer.h "" RA_LIBRETRO</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>$(SolutionDir)etc\CopyDLLs.bat x86 $(ProjectDir) $(SolutionDir)bin
+      <Command>xcopy /D /Q /Y $(SolutionDir)etc\cores.json $(SolutionDir)bin\Cores\
+$(SolutionDir)etc\CopyDLLs.bat x86 $(ProjectDir) $(SolutionDir)bin
 $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)bin</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -143,7 +144,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)bin</Command>
       <Command>$(ProjectDir)RAInterface\MakeBuildVer.bat $(ProjectDir)\RA_BuildVer.h "" RA_LIBRETRO</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy /D /Q /Y $(SolutionDir)bin\Cores\cores.json $(SolutionDir)bin64\Cores\
+      <Command>xcopy /D /Q /Y $(SolutionDir)etc\cores.json $(SolutionDir)bin64\Cores\
 $(SolutionDir)etc\CopyDLLs.bat x64 $(ProjectDir) $(SolutionDir)\bin64
 $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     </PostBuildEvent>
