@@ -1897,7 +1897,7 @@ protected:
     extensions.append("\0", 1);
     extensions.append("*.json");
     extensions.append("\0", 2);
-    std::string path = util::saveFileDialog(hwnd, extensions, "json");
+    std::string path = util::saveFileDialog(hwnd, extensions, "json", _config->getRootFolder());
 
     if (!path.empty())
     {

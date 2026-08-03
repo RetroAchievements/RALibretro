@@ -696,9 +696,10 @@ std::string util::openFileDialog(HWND hWnd, const std::string& extensionsFilter,
   return "";
 }
 
-std::string util::saveFileDialog(HWND hWnd, const std::string& extensionsFilter, const char* defaultExtension)
+std::string util::saveFileDialog(HWND hWnd, const std::string& extensionsFilter, const char* defaultExtension, const std::string& initialDirectory)
 {
   std::wstring unicodeExtensionsFilter = util::utf8ToUChar(extensionsFilter);
+  std::wstring unicodeInitialDirectory = util::utf8ToUChar(initialDirectory);
   std::wstring unicodeDefaultExtension;
   wchar_t path[_MAX_PATH];
   path[0] = 0;
@@ -714,6 +715,9 @@ std::string util::saveFileDialog(HWND hWnd, const std::string& extensionsFilter,
   cfg.nMaxFile = sizeof(path)/sizeof(path[0]);
   cfg.lpstrTitle = L"Save";
   cfg.Flags = OFN_NOREADONLYRETURN | OFN_OVERWRITEPROMPT;
+
+  if (!initialDirectory.empty())
+    cfg.lpstrInitialDir = unicodeInitialDirectory.c_str();
 
   if (defaultExtension)
   {

@@ -1913,7 +1913,7 @@ void Application::saveState()
   extensions.append("\0", 1);
   extensions.append("*.state");
   extensions.append("\0", 2);
-  std::string path = util::saveFileDialog(g_mainWindow, extensions, "state");
+  std::string path = util::saveFileDialog(g_mainWindow, extensions, "state", _config.getRomPath(_system));
 
   if (!path.empty())
   {
