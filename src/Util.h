@@ -77,7 +77,7 @@ namespace util
 #endif
 
 #ifdef _WINDOWS
-  std::string openFileDialog(HWND hWnd, const std::string& extensionsFilter);
+  std::string openFileDialog(HWND hWnd, const std::string& extensionsFilter, const std::string& initialDirectory);
   std::string saveFileDialog(HWND hWnd, const std::string& extensionsFilter, const char* defaultExtension = NULL);
 #endif
 

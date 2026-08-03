@@ -149,7 +149,7 @@ bool Application::init(const char* title, int width, int height)
   inited = kSdlInited;
 
   // keybinds must be initialized before calling loadConfiguration
-  if (!_keybinds.init(&_logger))
+  if (!_keybinds.init(&_logger, &_config))
   {
     goto error;
   }
@@ -1598,10 +1598,12 @@ void Application::loadGame()
   file_types.append("*.*");
   file_types.append("\0", 2);
 
-  std::string path = util::openFileDialog(g_mainWindow, file_types);
+  std::string path = util::openFileDialog(g_mainWindow, file_types, _config.getRomPath(_system));
 
   if (!path.empty())
   {
+    _config.setRomPath(_system, util::directory(path));
+
     /* some cores need to be reset to flush any previous state information */
     /* this also ensures the disc menu is reset if the core built it dynamically */
     /* ASSERT: loadCore will unload the current core, even if it's the same core */
@@ -1965,10 +1967,12 @@ void Application::loadState()
   extensions.append("\0", 1);
   extensions.append("*.*");
   extensions.append("\0", 2);
-  std::string path = util::openFileDialog(g_mainWindow, extensions);
+  std::string path = util::openFileDialog(g_mainWindow, extensions, _config.getRomPath(_system));
 
   if (!path.empty())
   {
+    _config.setRomPath(_system, util::directory(path));
+
     loadState(path);
   }
 }

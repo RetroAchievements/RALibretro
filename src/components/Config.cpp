@@ -125,6 +125,16 @@ const char* Config::getSystemPath()
   return _systemFolder.c_str();
 }
 
+const std::string& Config::getRomPath(int system_id)
+{
+  return _romFolders[system_id];
+}
+
+void Config::setRomPath(int system_id, const std::string& path)
+{
+  _romFolders[system_id] = path;
+}
+
 void Config::setVariables(const struct retro_variable* variables, unsigned count)
 {
   _variables.clear();
@@ -583,6 +593,22 @@ std::string Config::serializeEmulatorSettings() const
   json.append("\"gameFocusCaptureMouse\":");
   json.append(_gameFocusCaptureMouse ? "true" : "false");
 
+  const char* comma = "";
+  json.append(",\"romFolders\":{");
+  for (const auto& pair : _romFolders)
+  {
+    json.append(comma);
+    comma = ",";
+
+    json.append("\"");
+    json.append(std::to_string(pair.first));
+    json.append("\":\"");
+    json.append(util::jsonEscape(pair.second));
+    json.append("\"");
+  }
+
+  json.append("}");
+
   json.append("}");
   return json;
 }
@@ -602,40 +628,62 @@ bool Config::deserializeEmulatorSettings(const char* json)
   {
     auto ud = (Deserialize*)udata;
 
-    if (event == JSONSAX_KEY)
+    switch (event)
     {
-      ud->key = std::string(str, num);
-    }
-    else if (event == JSONSAX_BOOLEAN)
-    {
-      if (ud->key == "audioWhileFastForwarding" || ud->key == "_audioWhileFastForwarding")
-      {
-        ud->self->_audioWhileFastForwarding = num != 0;
-      }
-      else if (ud->key == "backgroundInput")
-      {
-        ud->self->_backgroundInput = num != 0;
-      }
-      else if (ud->key == "showSpeedIndicator")
-      {
-        ud->self->_showSpeedIndicator = num != 0;
-      }
-      else if (ud->key == "gameFocusCaptureMouse")
-      {
-        ud->self->_gameFocusCaptureMouse = num != 0;
-      }
-    }
-    else if (event == JSONSAX_NUMBER)
-    {
-      if (ud->key == "fastForwardRatio" || ud->key == "_fastForwardRatio")
-      {
-        auto value = strtoul(str, NULL, 10);
-        if (value < 2)
-          value = 2;
-        else if (value > 10)
-          value = 10;
-        ud->self->_fastForwardRatio = value;
-      }
+      case JSONSAX_KEY:
+        ud->key = std::string(str, num);
+        break;
+
+      case JSONSAX_BOOLEAN:
+        if (ud->key == "audioWhileFastForwarding" || ud->key == "_audioWhileFastForwarding")
+          ud->self->_audioWhileFastForwarding = num != 0;
+        else if (ud->key == "backgroundInput")
+          ud->self->_backgroundInput = num != 0;
+        else if (ud->key == "showSpeedIndicator")
+          ud->self->_showSpeedIndicator = num != 0;
+        else if (ud->key == "gameFocusCaptureMouse")
+          ud->self->_gameFocusCaptureMouse = num != 0;
+        break;
+
+      case JSONSAX_NUMBER:
+        if (ud->key == "fastForwardRatio" || ud->key == "_fastForwardRatio")
+        {
+          auto value = strtoul(str, NULL, 10);
+          if (value < 2)
+            value = 2;
+          else if (value > 10)
+            value = 10;
+          ud->self->_fastForwardRatio = value;
+        }
+        break;
+
+      case JSONSAX_OBJECT:
+        if (num == 1 && ud->key == "romFolders")
+        {
+          jsonsax_result_t res2 = jsonsax_parse((char*)str, ud, [](void* udata, jsonsax_event_t event, const char* str, size_t num)
+          {
+            auto ud = (Deserialize*)udata;
+
+            if (event == JSONSAX_KEY)
+            {
+              ud->key = std::string(str, num);
+            }
+            else if (event == JSONSAX_STRING)
+            {
+              int system_id = std::stoi(ud->key);
+              ud->self->_romFolders[system_id] = util::jsonUnescape(std::string(str, num));
+            }
+
+            return 0;
+          });
+
+          if (res2 != JSONSAX_OK)
+            return -1;
+        }
+        break;
+
+      default:
+        break;
     }
 
     return 0;

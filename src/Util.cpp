@@ -668,9 +668,10 @@ void util::ensureDirectoryExists(const std::string& directory)
 #endif
 
 #ifdef _WINDOWS
-std::string util::openFileDialog(HWND hWnd, const std::string& extensionsFilter)
+std::string util::openFileDialog(HWND hWnd, const std::string& extensionsFilter, const std::string& initialDirectory)
 {
   std::wstring unicodeExtensionsFilter = util::utf8ToUChar(extensionsFilter);
+  std::wstring unicodeInitialDirectory = util::utf8ToUChar(initialDirectory);
   wchar_t path[_MAX_PATH];
   path[0] = 0;
 
@@ -686,14 +687,13 @@ std::string util::openFileDialog(HWND hWnd, const std::string& extensionsFilter)
   cfg.lpstrTitle = L"Load";
   cfg.Flags = OFN_FILEMUSTEXIST;
 
+  if (!unicodeInitialDirectory.empty())
+    cfg.lpstrInitialDir = unicodeInitialDirectory.c_str();
+
   if (GetOpenFileNameW(&cfg) == TRUE)
-  {
     return util::ucharToUtf8(path);
-  }
-  else
-  {
-    return "";
-  }
+
+  return "";
 }
 
 std::string util::saveFileDialog(HWND hWnd, const std::string& extensionsFilter, const char* defaultExtension)
@@ -722,13 +722,9 @@ std::string util::saveFileDialog(HWND hWnd, const std::string& extensionsFilter,
   }
 
   if (GetSaveFileNameW(&cfg) == TRUE)
-  {
     return util::ucharToUtf8(path);
-  }
-  else
-  {
-    return "";
-  }
+
+  return "";
 }
 #endif
 

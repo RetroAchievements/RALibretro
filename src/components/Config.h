@@ -39,6 +39,8 @@ public:
   virtual const char* getCoreAssetsDirectory() override;
   virtual const char* getSaveDirectory() override;
   virtual const char* getSystemPath() override;
+  virtual const std::string& getRomPath(int system_id) override;
+  virtual void setRomPath(int system_id, const std::string& path) override;
 
   virtual void setVariables(const struct retro_variable* variables, unsigned count) override;
   virtual void setVariables(const struct retro_core_option_definition* options, unsigned count) override;
@@ -144,6 +146,7 @@ protected:
   std::string _saveFolder;
   std::string _systemFolder;
   std::string _screenshotsFolder;
+  std::map<int, std::string> _romFolders;
 
   std::vector<Category> _categories;
   std::vector<Variable> _variables;

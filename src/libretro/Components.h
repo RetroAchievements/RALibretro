@@ -139,6 +139,8 @@ namespace libretro
     virtual const char* getCoreAssetsDirectory() = 0;
     virtual const char* getSaveDirectory() = 0;
     virtual const char* getSystemPath() = 0;
+    virtual const std::string& getRomPath(int system_id) = 0;
+    virtual void setRomPath(int system_id, const std::string& path) = 0;
 
     virtual void setVariables(const struct retro_variable* variables, unsigned count) = 0;
     virtual void setVariables(const struct retro_core_option_definition* options, unsigned count) = 0;
