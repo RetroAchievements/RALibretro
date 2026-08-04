@@ -23,6 +23,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stddef.h>
 #include <string>
+#include <vector>
 
 // _WINDOWS says we're building _for_ Windows
 #ifdef _WINDOWS
@@ -71,6 +72,7 @@ namespace util
   std::string sanitizeFileName(const std::string& fileName);
 
   std::string directory(const std::string& path);
+  bool getFiles(const std::string& path, const std::string& extension, std::vector<std::string>& matches);
 
 #ifdef _WINDOWS
   void        ensureDirectoryExists(const std::string& path);

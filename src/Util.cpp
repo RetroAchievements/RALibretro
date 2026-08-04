@@ -662,9 +662,41 @@ void util::ensureDirectoryExists(const std::string& directory)
   if (!util::exists(directory))
   {
     /* warning: this requires a full path */
-    SHCreateDirectoryEx(NULL, directory.c_str(), NULL);
+    std::wstring unicodeDirectory = util::utf8ToUChar(directory);
+    SHCreateDirectoryExW(NULL, unicodeDirectory.c_str(), NULL);
   }
 }
+
+#endif
+
+#if defined(_WINDOWS) || defined(_CONSOLE)
+
+bool util::getFiles(const std::string& path, const std::string& extension, std::vector<std::string>& matches)
+{
+  std::wstring unicodePath = util::utf8ToUChar(path) + L"\\*";
+  if (!extension.empty()) {
+    unicodePath.push_back('.');
+    unicodePath.append(util::utf8ToUChar(extension));
+  }
+
+  WIN32_FIND_DATAW findData;
+  // Look for all files using a wildcard pattern
+  HANDLE hFind = FindFirstFileW(unicodePath.c_str(), &findData);
+  if (hFind == INVALID_HANDLE_VALUE)
+    return false;
+
+  do {
+    // Skip current and parent directory shortcuts
+    if (findData.cFileName[0] == '.')
+      continue;
+
+    matches.emplace_back(util::ucharToUtf8(findData.cFileName));
+  } while (FindNextFileW(hFind, &findData) != 0);
+
+  FindClose(hFind);
+  return true;
+}
+
 #endif
 
 #ifdef _WINDOWS
@@ -1007,11 +1039,11 @@ void* util::fromPng(Logger* logger, const void* data, int len, unsigned* width, 
 #ifdef _WINDOWS
 std::string util::ucharToUtf8(const std::wstring& unicodeString)
 {
-  const auto len = unicodeString.length();
+  const int len = (int)unicodeString.length();
   const auto needed = WideCharToMultiByte(CP_UTF8, 0, unicodeString.c_str(), len + 1, nullptr, 0, nullptr, nullptr);
 
   std::string str(needed, '\0');
-  WideCharToMultiByte(CP_UTF8, 0, unicodeString.c_str(), len + 1, (LPSTR)str.data(), str.capacity(), nullptr, nullptr);
+  WideCharToMultiByte(CP_UTF8, 0, unicodeString.c_str(), len + 1, (LPSTR)str.data(), (int)str.capacity(), nullptr, nullptr);
   str.resize(needed - 1); // terminator is not actually part of the string
 
   return str;
@@ -1019,11 +1051,11 @@ std::string util::ucharToUtf8(const std::wstring& unicodeString)
 
 std::wstring util::utf8ToUChar(const std::string& utf8String)
 {
-  const auto len = utf8String.length();
+  const int len = (int)utf8String.length();
   const auto needed = MultiByteToWideChar(CP_UTF8, 0, utf8String.c_str(), len + 1, nullptr, 0);
 
   std::wstring wstr(needed, '\0');
-  MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8String.c_str(), len + 1, (LPWSTR)wstr.data(), wstr.capacity());
+  MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8String.c_str(), len + 1, (LPWSTR)wstr.data(), (int)wstr.capacity());
   wstr.resize(needed - 1); // terminator is not actually part of the string
 
   return wstr;
