@@ -34,6 +34,8 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #include <shlobj.h>
 #include <winhttp.h>
 #include <share.h>
+#else
+#include <dirent.h>
 #endif
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -585,13 +587,9 @@ std::string util::extension(const std::string& path)
   const char* dot = strrchr(str, '.');
 
   if (dot == NULL)
-  {
     return "";
-  }
-  else
-  {
-    return path.substr(dot - str);
-  }
+
+  return path.substr(dot - str);
 }
 
 std::string util::replaceFileName(const std::string& originalPath, const char* newFileName)
@@ -669,7 +667,7 @@ void util::ensureDirectoryExists(const std::string& directory)
 
 #endif
 
-#if defined(_WINDOWS) || defined(_CONSOLE)
+#if defined(_WINDOWS)
 
 bool util::getFiles(const std::string& path, const std::string& extension, std::vector<std::string>& matches)
 {
@@ -694,6 +692,34 @@ bool util::getFiles(const std::string& path, const std::string& extension, std::
   } while (FindNextFileW(hFind, &findData) != 0);
 
   FindClose(hFind);
+  return true;
+}
+
+#else
+
+bool util::getFiles(const std::string& path, const std::string& extension, std::vector<std::string>& matches)
+{
+  DIR* dir = opendir(path.c_str());
+  if (!dir)
+    return false;
+
+  struct dirent *entry;
+  while ((entry = readdir(dir)) != NULL) {
+    // Skip current and parent directory shortcuts (also skips hidden files - assume they won't match extension)
+    if (entry->d_name[0] == '.')
+      continue;
+
+    if (extension.empty()) {
+      matches.emplace_back(entry->d_name);
+    } else {
+      std::string filename = entry->d_name;
+      std::string file_extension = util::extension(filename);
+      if (!file_extension.empty() && strcasecmp(util::extension(filename).c_str() + 1, extension.c_str()) == 0)
+        matches.emplace_back(filename);
+    }
+  }
+
+  closedir(dir);
   return true;
 }
 

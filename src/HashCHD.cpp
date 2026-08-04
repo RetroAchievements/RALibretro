@@ -104,7 +104,7 @@ static bool rc_hash_get_chd_metadata(chd_file* file, uint32_t idx, metadata_t* m
     {
       const chd_header* header = chd_get_header(file);
       /* DVD-ROM track doesn't have metadata. It's just raw 2048 byte sectors with no header/footer (MODE1) */
-      memset(metadata, 0, sizeof(metadata));
+      memset(metadata, 0, sizeof(*metadata));
       metadata->track = 1;
       metadata->frames = (uint32_t)header->unitcount;
       memcpy(metadata->type, "MODE1", strlen("MODE1") + 1);
@@ -313,7 +313,7 @@ static void* rc_hash_handle_chd_open_track(const char* path, uint32_t track, con
     }
 
     if (parent == NULL) {
-      rc_hash_iterator_error_formatted(iterator, "could not find parent chd");
+      rc_hash_iterator_error_formatted(iterator, "Could not find parent chd");
       return NULL;
     }
 
