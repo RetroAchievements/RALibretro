@@ -27,6 +27,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory.h>
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
 
 #include "Util.h"
 
@@ -286,6 +287,13 @@ static void* rc_hash_handle_chd_open_track(const char* path, uint32_t track, con
     if (!util::getFiles(directory, "chd", matchingFiles)) {
       rc_hash_iterator_error_formatted(iterator, "Failed to locate parent chd: %s", "iterate directory failed");
       return NULL;
+    }
+
+    // assume the parent file will have a similar name and prioritize anything that starts with the same first four characters
+    for (size_t i = 1; i < matchingFiles.size(); ++i) {
+      if (matchingFiles[i].length() > 4 && strncasecmp(matchingFiles[i].c_str(), filename.c_str(), 4) == 0) {
+        std::rotate(matchingFiles.begin(), matchingFiles.begin() + i, matchingFiles.begin() + i + 1);
+      }
     }
 
     rc_hash_iterator_verbose_formatted(iterator, "Scanning for parent chd in %s", directory.c_str());
