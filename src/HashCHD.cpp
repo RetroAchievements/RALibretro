@@ -296,6 +296,13 @@ static void* rc_hash_handle_chd_open_track(const char* path, uint32_t track, con
       }
     }
 
+    uint8_t zeroes[32];
+    memset(zeroes, 0, sizeof(zeroes));
+    static_assert(sizeof(zeroes) > sizeof(child_header.parentmd5), "zeroes not large enough for md5");
+    static_assert(sizeof(zeroes) > sizeof(child_header.parentsha1), "zeroes not large enough for sha1");
+    const bool hasMD5 = memcmp(zeroes, child_header.md5, sizeof(child_header.md5)) != 0;
+    const bool hasSHA1 = memcmp(zeroes, child_header.sha1, sizeof(child_header.sha1)) != 0;
+
     rc_hash_iterator_verbose_formatted(iterator, "Scanning for parent chd in %s", directory.c_str());
     chd_file* parent = NULL;
     int parents_tried = 0;
@@ -307,17 +314,23 @@ static void* rc_hash_handle_chd_open_track(const char* path, uint32_t track, con
       std::string parent_path = directory + "/" + match;
       chd_header parent_header;
       err = chd_read_header(parent_path.c_str(), &parent_header);
-      if (err == CHDERR_NONE && memcmp(parent_header.md5, child_header.parentmd5, sizeof(parent_header.md5)) == 0) {
-        rc_hash_iterator_verbose_formatted(iterator, "Found parent chd (%d tried): %s", parents_tried, match.c_str());
+      if (err != CHDERR_NONE)
+        continue;
 
-        chd_error err = chd_open(parent_path.c_str(), CHD_OPEN_READ, NULL, &parent);
-        if (err != CHDERR_NONE) {
-          rc_hash_iterator_error_formatted(iterator, "chd_open for parent failed: %s", chd_error_string(err));
-          return NULL;
-        }
+      if (hasMD5 && memcmp(parent_header.md5, child_header.parentmd5, sizeof(parent_header.md5)) != 0)
+        continue;
+      if (hasSHA1 && memcmp(parent_header.sha1, child_header.parentsha1, sizeof(parent_header.sha1)) != 0)
+        continue;
 
-        break;
+      rc_hash_iterator_verbose_formatted(iterator, "Found parent chd (%d tried): %s", parents_tried, match.c_str());
+
+      chd_error err = chd_open(parent_path.c_str(), CHD_OPEN_READ, NULL, &parent);
+      if (err != CHDERR_NONE) {
+        rc_hash_iterator_error_formatted(iterator, "chd_open for parent failed: %s", chd_error_string(err));
+        return NULL;
       }
+
+      break;
     }
 
     if (parent == NULL) {
