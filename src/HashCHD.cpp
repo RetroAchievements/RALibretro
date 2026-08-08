@@ -27,6 +27,9 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory.h>
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
+
+#include "Util.h"
 
 typedef struct chd_track_handle_t
 {
@@ -102,7 +105,7 @@ static bool rc_hash_get_chd_metadata(chd_file* file, uint32_t idx, metadata_t* m
     {
       const chd_header* header = chd_get_header(file);
       /* DVD-ROM track doesn't have metadata. It's just raw 2048 byte sectors with no header/footer (MODE1) */
-      memset(metadata, 0, sizeof(metadata));
+      memset(metadata, 0, sizeof(*metadata));
       metadata->track = 1;
       metadata->frames = (uint32_t)header->unitcount;
       memcpy(metadata->type, "MODE1", strlen("MODE1") + 1);
@@ -261,8 +264,85 @@ static void* rc_hash_handle_chd_open_track(const char* path, uint32_t track, con
 
   chd_error err = chd_open(path, CHD_OPEN_READ, NULL, &file);
   if (err != CHDERR_NONE) {
-    rc_hash_iterator_error_formatted(iterator, "chd_open failed: %s", chd_error_string(err));
-    return NULL;
+    if (err != CHDERR_REQUIRES_PARENT) {
+      rc_hash_iterator_error_formatted(iterator, "chd_open failed: %s", chd_error_string(err));
+      return NULL;
+    }
+
+    rc_hash_iterator_verbose(iterator, "Parent CHD required");
+
+    chd_header child_header;
+    err = chd_read_header(path, &child_header);
+    if (err != CHDERR_NONE) {
+      rc_hash_iterator_error_formatted(iterator, "chd_read_header failed: %s", chd_error_string(err));
+      return NULL;
+    }
+
+    std::string filename = util::fileNameWithExtension(path);
+    std::string directory = util::directory(path);
+    if (directory.empty())
+      directory = ".";
+
+    std::vector<std::string> matchingFiles;
+    if (!util::getFiles(directory, "chd", matchingFiles)) {
+      rc_hash_iterator_error_formatted(iterator, "Failed to locate parent chd: %s", "iterate directory failed");
+      return NULL;
+    }
+
+    // assume the parent file will have a similar name and prioritize anything that starts with the same first four characters
+    for (size_t i = 1; i < matchingFiles.size(); ++i) {
+      if (matchingFiles[i].length() > 4 && strncasecmp(matchingFiles[i].c_str(), filename.c_str(), 4) == 0) {
+        std::rotate(matchingFiles.begin(), matchingFiles.begin() + i, matchingFiles.begin() + i + 1);
+      }
+    }
+
+    uint8_t zeroes[32];
+    memset(zeroes, 0, sizeof(zeroes));
+    static_assert(sizeof(zeroes) > sizeof(child_header.parentmd5), "zeroes not large enough for md5");
+    static_assert(sizeof(zeroes) > sizeof(child_header.parentsha1), "zeroes not large enough for sha1");
+    const bool hasMD5 = memcmp(zeroes, child_header.md5, sizeof(child_header.md5)) != 0;
+    const bool hasSHA1 = memcmp(zeroes, child_header.sha1, sizeof(child_header.sha1)) != 0;
+
+    rc_hash_iterator_verbose_formatted(iterator, "Scanning for parent chd in %s", directory.c_str());
+    chd_file* parent = NULL;
+    int parents_tried = 0;
+    for (const auto& match : matchingFiles) {
+      if (match.length() == filename.length() && strcasecmp(match.c_str(), filename.c_str()) == 0)
+        continue;
+
+      ++parents_tried;
+      std::string parent_path = directory + "/" + match;
+      chd_header parent_header;
+      err = chd_read_header(parent_path.c_str(), &parent_header);
+      if (err != CHDERR_NONE)
+        continue;
+
+      if (hasMD5 && memcmp(parent_header.md5, child_header.parentmd5, sizeof(parent_header.md5)) != 0)
+        continue;
+      if (hasSHA1 && memcmp(parent_header.sha1, child_header.parentsha1, sizeof(parent_header.sha1)) != 0)
+        continue;
+
+      rc_hash_iterator_verbose_formatted(iterator, "Found parent chd (%d tried): %s", parents_tried, match.c_str());
+
+      chd_error err = chd_open(parent_path.c_str(), CHD_OPEN_READ, NULL, &parent);
+      if (err != CHDERR_NONE) {
+        rc_hash_iterator_error_formatted(iterator, "chd_open for parent failed: %s", chd_error_string(err));
+        return NULL;
+      }
+
+      break;
+    }
+
+    if (parent == NULL) {
+      rc_hash_iterator_error_formatted(iterator, "Could not find parent chd");
+      return NULL;
+    }
+
+    err = chd_open(path, CHD_OPEN_READ, parent, &file);
+    if (err != CHDERR_NONE) {
+      rc_hash_iterator_error_formatted(iterator, "chd_open for child failed: %s", chd_error_string(err));
+      return NULL;
+    }
   }
 
   memset(&metadata, 0, sizeof(metadata));
