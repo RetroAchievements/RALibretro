@@ -21,6 +21,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Util.h"
 
+#include "components/Config.h"
 #include "components/Dialog.h"
 #include "components/Input.h"
 
@@ -248,11 +249,12 @@ static const char* bindingNames[] = {
 };
 static_assert(sizeof(bindingNames) / sizeof(bindingNames[0]) == kMaxBindings, "bindingNames does not contain an appropriate number of elements");
 
-bool KeyBinds::init(Logger* logger)
+bool KeyBinds::init(Logger* logger, Config *config)
 {
   static_assert(sizeof(_bindings) / sizeof(_bindings[0]) == kMaxBindings, "BindingList does not contain an appropriate number of elements");
 
   _logger = logger;
+  _config = config;
   _slot = 1;
   _gameFocus = false;
   memset(_axesHeld, 0, sizeof(_axesHeld));
@@ -1792,6 +1794,7 @@ public:
   Input* _input = nullptr;
   std::map<SDL_JoystickID, SDL_JoystickID>* _bindingMap = nullptr;
   Logger* _logger = nullptr;
+  Config* _config = nullptr;
 
   const KeyBinds::BindingList& getBindings() const { return _bindings; }
 
@@ -1894,7 +1897,7 @@ protected:
     extensions.append("\0", 1);
     extensions.append("*.json");
     extensions.append("\0", 2);
-    std::string path = util::saveFileDialog(hwnd, extensions, "json");
+    std::string path = util::saveFileDialog(hwnd, extensions, "json", _config->getRootFolder());
 
     if (!path.empty())
     {
@@ -1929,7 +1932,7 @@ protected:
     extensions.append("\0", 1);
     extensions.append("*.json");
     extensions.append("\0", 2);
-    std::string path = util::openFileDialog(hwnd, extensions);
+    std::string path = util::openFileDialog(hwnd, extensions, _config->getRootFolder());
 
     if (!path.empty())
     {
@@ -1993,6 +1996,7 @@ void KeyBinds::showControllerDialog(Input& input, int port)
   db._input = &input;
   db._bindingMap = &_bindingMap;
   db._logger = _logger;
+  db._config = _config;
 
   switch (port)
   {

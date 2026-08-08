@@ -77,8 +77,8 @@ namespace util
 #endif
 
 #ifdef _WINDOWS
-  std::string openFileDialog(HWND hWnd, const std::string& extensionsFilter);
-  std::string saveFileDialog(HWND hWnd, const std::string& extensionsFilter, const char* defaultExtension = NULL);
+  std::string openFileDialog(HWND hWnd, const std::string& extensionsFilter, const std::string& initialDirectory);
+  std::string saveFileDialog(HWND hWnd, const std::string& extensionsFilter, const char* defaultExtension, const std::string& initialDirectory);
 #endif
 
   const void* toPng(Logger* logger, const void* data, unsigned width, unsigned height, unsigned pitch, enum retro_pixel_format format, int* len);

@@ -88,6 +88,16 @@ namespace
       return "./";
     }
 
+    virtual const std::string& getRomPath(int system_id) override
+    {
+      static std::string path = "./";
+      return path;
+    }
+
+    virtual void setRomPath(int system_id, const std::string& path) override
+    {
+    }
+
     virtual void setVariables(const struct retro_variable* variables, unsigned count) override
     {
       (void)variables;

@@ -27,6 +27,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 
 class Input; // forward reference
+class Config; // forward reference
 
 class KeyBinds
 {
@@ -96,7 +97,7 @@ public:
     kKeyboardInput  // (extra = key << 8 | pressed)
   };
 
-  bool init(Logger* logger);
+  bool init(Logger* logger, Config* config);
   void destroy() {}
 
   Action translate(const SDL_KeyboardEvent* event, unsigned* extra);
@@ -136,7 +137,8 @@ public:
   bool hasGameFocus() const noexcept { return _gameFocus; }
 
 protected:
-  Logger* _logger;
+  Logger* _logger = nullptr;
+  Config* _config = nullptr;
 
   KeyBinds::Action translateButtonPress(int button, unsigned* extra);
   KeyBinds::Action translateButtonReleased(int button, unsigned* extra);
@@ -148,9 +150,9 @@ protected:
 
   std::map<SDL_JoystickID, SDL_JoystickID> _bindingMap;
 
-  unsigned _slot;
-  bool _gameFocus;
+  unsigned _slot = 1;
+  bool _gameFocus = false;
 
-  uint8_t _axesHeld[4];
+  uint8_t _axesHeld[4] = {};
 };
 
