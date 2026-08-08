@@ -4,6 +4,28 @@
     "systems": [31],
     "platforms": "none"
   },
+  "a5200_libretro":{
+    "name": "a5200",
+    "systems": [50],
+    "platforms": "none"
+  },
+  "amiarcadia_libretro":{
+    "name": "AmiArcadia",
+    "extensions": "bin|zip",
+    "systems": [73,74],
+    "platforms": "none"
+  },
+  "amiarcadia_libretro":{
+    "name": "AmiArcadia",
+    "extensions": "tvc|zip",
+    "systems": [75],
+    "platforms": "none"
+  },
+  "applewin_libretro":{
+    "name": "AppleWin",
+    "systems": [38],
+    "platforms": "none"
+  },
   "ardens_libretro":{
     "name": "Ardens",
     "systems": [71]
@@ -15,6 +37,11 @@
   "atari800_libretro":{
     "name": "Atari800",
     "systems": [50],
+    "platforms": "none"
+  },
+  "azahar_libretro":{
+    "name": "Azahar",
+    "systems": [62],
     "platforms": "none"
   },
   "blastem_libretro":{
@@ -120,6 +147,18 @@
     "systems": [62],
     "platforms": "none"
   },
+  "clownmdemu_libretro":{
+    "name": "ClownMDEmu",
+    "extensions": "bin|md|gen",
+    "systems": [1],
+    "platforms": "none"
+  },
+  "clownmdemu_libretro":{
+    "name": "ClownMDEmu",
+    "extensions": "iso|cue|chd",
+    "systems": [9],
+    "platforms": "none"
+  },
   "crocods_libretro":{
     "name": "CrocoDS",
     "systems": [37],
@@ -146,11 +185,28 @@
     "systems": [26],
     "platforms": "none"
   },
+  "DoubleCherryGB_libretro":{
+    "name": "DoubleCherryGB",
+    "extensions": "gb|zip",
+    "systems": [4],
+    "platforms": "none"
+  },
+  "DoubleCherryGB_libretro":{
+    "name": "DoubleCherryGB",
+    "extensions": "gbc|zip",
+    "systems": [6],
+    "platforms": "none"
+  },
   "duckstation_libretro":{
     "name": "DuckStation",
     "extensions": "m3u|cue|chd",
     "deprecated": "DuckStation is no longer maintained. Please use SwanStation.",
     "systems": [12]
+  },
+  "ep128emu_core_libretro":{
+    "name": "ep128emu",
+    "systems": [37],
+    "platforms": "none"
   },
   "fbalpha_libretro":{
     "name": "FB Alpha",
@@ -171,6 +227,18 @@
     "name": "FCEUmm",
     "extensions": "fds",
     "systems": [81],
+    "platforms": "none"
+  },
+  "fixgb_libretro":{
+    "name": "fixGB",
+    "extensions": "gb",
+    "systems": [4],
+    "platforms": "none"
+  },
+  "fixgb_libretro":{
+    "name": "fixGB",
+    "extensions": "gbc",
+    "systems": [6],
     "platforms": "none"
   },
   "flycast_libretro":{
@@ -233,6 +301,23 @@
     "systems": [44],
     "platforms": "none"
   },
+  "geargrafx_libretro":{
+    "name": "GearGrafx",
+    "extensions": "pce|sgx",
+    "systems": [8],
+    "platforms": "none"
+  },
+  "geargrafx_libretro":{
+    "name": "GearGrafx",
+    "extensions": "cue|chd",
+    "systems": [76],
+    "platforms": "none"
+  },
+  "gearlynx_libretro":{
+    "name": "Gearlynx",
+    "systems": [13],
+    "platforms": "none"
+  },
   "gearsystem_libretro":{
     "name": "Gearsystem",
     "extensions": "bin|sms|rom",
@@ -268,6 +353,30 @@
     "extensions": "sg",
     "systems": [33]
   },
+  "genesis_plus_gx_wide_libretro":{
+    "name": "Genesis Plus GX Wide",
+    "extensions": "bin|gen|smd|md|sms",
+    "systems": [1,11],
+    "platforms": "none"
+  },
+  "genesis_plus_gx_wide_libretro":{
+    "name": "Genesis Plus GX Wide",
+    "extensions": "gg|sg",
+    "systems": [15],
+    "platforms": "none"
+  },
+  "genesis_plus_gx_wide_libretro":{
+    "name": "Genesis Plus GX Wide",
+    "extensions": "cue|iso|m3u|chd",
+    "systems": [9],
+    "platforms": "none"
+  },
+  "genesis_plus_gx_wide_libretro":{
+    "name": "Genesis Plus GX Wide",
+    "extensions": "sg",
+    "systems": [33],
+    "platforms": "none"
+  },
   "geolith_libretro":{
     "name": "Geolith",
     "extensions": "neo|zip",
@@ -286,12 +395,6 @@
   "gw_libretro":{
     "name": "GW",
     "systems": [60],
-    "platforms": "none"
-  },
-  "kronos_libretro":{
-    "name": "Kronos",
-    "extensions": "m3u|cue",
-    "systems": [39],
     "platforms": "none"
   },
   "handy_libretro":{
@@ -344,9 +447,37 @@
     "systems": [6],
     "platforms": "none"
   },
+  "holani_libretro":{
+    "name": "holani",
+    "systems": [13],
+    "platforms": "none"
+  },
+  "irogb_libretro":{
+    "name": "iro",
+    "extensions": "gb|zip",
+    "systems": [4],
+    "platforms": "none"
+  },
+  "irogb_libretro":{
+    "name": "iro",
+    "extensions": "gbc|zip",
+    "systems": [6],
+    "platforms": "none"
+  },
   "ishiiruka_libretro":{
     "name": "Ishiiruka",
     "systems": [16,19],
+    "platforms": "none"
+  },
+  "jollycv_libretro":{
+    "name": "Jolly CV",
+    "systems": [44],
+    "platforms": "none"
+  },
+  "kronos_libretro":{
+    "name": "Kronos",
+    "extensions": "m3u|cue",
+    "systems": [39],
     "platforms": "none"
   },
   "mame2003_libretro":{
@@ -538,9 +669,19 @@
     "systems": [7],
     "platforms": "none"
   },
+  "noods_libretro":{
+    "name": "NooDS",
+    "systems": [18],
+    "platforms": "none"
+  },
   "np2kai_libretro":{
     "name": "Neko Project II Kai",
     "systems": [48],
+    "platforms": "none"
+  },
+  "numero_libretro":{
+    "name": "Numero",
+    "systems": [79],
     "platforms": "none"
   },
   "o2em_libretro":{
@@ -550,6 +691,11 @@
   "opera_libretro":{
     "name": "Opera",
     "systems": [43]
+  },
+  "panda3ds_libretro":{
+    "name": "Panda3DS",
+    "systems": [62],
+    "platforms": "none"
   },
   "parallel_n64_libretro":{
     "name": "ParaLLEl N64",
@@ -565,6 +711,11 @@
     "name": "PCSX-ReARMed",
     "extensions": "m3u|cue|chd",
     "systems": [12],
+    "platforms": "none"
+  },
+  "pd777_libretro":{
+    "name": "PD777",
+    "systems": [54],
     "platforms": "none"
   },
   "picodrive_libretro":{
@@ -632,6 +783,23 @@
     "systems": [14],
     "platforms": "none"
   },
+  "rustynes_libretro":{
+    "name": "RustyNES",
+    "extensions": "nes|zip",
+    "systems": [7],
+    "platforms": "none"
+  },
+  "rustynes_libretro":{
+    "name": "RustyNES",
+    "extensions": "fds|zip",
+    "systems": [81],
+    "platforms": "none"
+  },
+  "same_cdi_libretro":{
+    "name": "SAME_CDI",
+    "systems": [42],
+    "platforms": "none"
+  },
   "sameboy_libretro":{
     "name": "SameBoy",
     "extensions": "gb",
@@ -647,6 +815,30 @@
   "sameduck_libretro":{
     "name": "SameDuck",
     "systems": [69]
+  },
+  "skyemu_libretro":{
+    "name": "SkyEMU",
+    "extensions": "gb|zip",
+    "systems": [4],
+    "platforms": "none"
+  },
+  "skyemu_libretro":{
+    "name": "SkyEMU",
+    "extensions": "gbc|zip",
+    "systems": [6],
+    "platforms": "none"
+  },
+  "skyemu_libretro":{
+    "name": "SkyEMU",
+    "extensions": "gba|zip",
+    "systems": [5],
+    "platforms": "none"
+  },
+  "skyemu_libretro":{
+    "name": "SkyEMU",
+    "extensions": "nds|zip",
+    "systems": [18],
+    "platforms": "none"
   },
   "smsplus_libretro":{
     "name": "SMS Plus GX",
@@ -682,6 +874,11 @@
     "systems": [25],
     "platforms": "none"
   },
+  "stella2023_libretro":{
+    "name": "Stella 2023",
+    "systems": [25],
+    "platforms": "none"
+  },
   "stella_libretro":{
     "name": "Stella",
     "systems": [25]
@@ -708,14 +905,14 @@
     "systems": [66],
     "platforms": "none"
   },
+  "tia_libretro":{
+    "name": "tia",
+    "systems": [25],
+    "platforms": "none"
+  },
   "tic80_libretro":{
     "name": "TIC-80",
     "systems": [65],
-    "platforms": "none"
-  },
-  "ume2015_libretro":{
-    "name": "UME 2015",
-    "systems": [27],
     "platforms": "none"
   },
   "uzem_libretro":{
@@ -814,5 +1011,10 @@
     "name": "Yabause",
     "extensions": "cue|m3u|iso",
     "systems": [39]
+  },
+  "ymir_libretro":{
+    "name": "Ymir",
+    "systems": [39],
+    "platforms": "none"
   }
 }
