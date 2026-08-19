@@ -380,7 +380,7 @@ const char* getSystemManufacturer(int system)
       return "Commodore";
 
     case RC_CONSOLE_SHARPX1:
-    case RC_CONSOLE_X86000:
+    case RC_CONSOLE_X68000:
       return "Sharp";
 
     case RC_CONSOLE_ZX81:
