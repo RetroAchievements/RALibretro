@@ -29,6 +29,7 @@ SOFTWARE.
 
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
 
 #ifdef _WINDOWS
 #include <RA_Interface.h>
@@ -468,6 +469,10 @@ public:
 
     if ((level == RETRO_LOG_ERROR || level == RETRO_LOG_WARN) && _errorBuffer)
     {
+      // don't capture unimplemented env call errors. it will just confuse the user.
+      if (strncmp(line, TAG "Unimplemented env call", sizeof(TAG "Unimplemented env call") - 1) == 0)
+        return;
+
       if (!_errorBuffer->empty())
         _errorBuffer->push_back('\n');
 
@@ -482,12 +487,48 @@ private:
 
 bool libretro::Core::loadGame(const char* game_path, void* data, size_t size, std::string* errorBuffer)
 {
+  std::string game_dir, base_name, ext, archive_path, archive_file;
+
   if (game_path == NULL)
   {
     _logger->error(TAG "Can't load game data without a ROM path");
     goto error;
   }
-  
+
+  game_dir = util::directory(game_path);
+  base_name = util::fileName(game_path);
+  ext = util::extension(game_path);
+  memset(&_gameInfo, 0, sizeof(_gameInfo));
+  _gameInfo.full_path = game_path;
+  _gameInfo.dir = game_dir.c_str();
+  _gameInfo.name = base_name.c_str();
+  _gameInfo.data = data;
+  _gameInfo.size = size;
+  _gameInfo.persistent_data = false;
+
+  // NOTE: if game_path is "a.zip#a.foo", util::extension will still return ".foo"
+  std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) {
+    return std::tolower(c);
+  });
+  _gameInfo.ext = ext.empty() ? "" : &ext[1];
+
+  if (base_name.find('#') != std::string::npos)
+  {
+    _gameInfo.file_in_archive = true;
+    _gameInfo.full_path = nullptr;
+
+    archive_path = game_path;
+    const auto hash_index = archive_path.rfind('#');
+    archive_file = archive_path.substr(hash_index + 1);
+    _gameInfo.archive_file = archive_file.c_str();
+
+    archive_path.resize(hash_index);
+    _gameInfo.archive_path = archive_path.c_str();
+
+    base_name = util::fileName(archive_path);
+    _gameInfo.name = base_name.c_str();
+  }
+
   retro_game_info game;
   game.path = game_path;
   game.data = data;
@@ -528,7 +569,10 @@ bool libretro::Core::loadGame(const char* game_path, void* data, size_t size, st
       _ports[i] = RETRO_DEVICE_NONE;
     }
   }
-  
+
+  // strings pointed at don't exist outside of this function.
+  memset(&_gameInfo, 0, sizeof(_gameInfo));
+
   _gameLoaded = true;
   return true;
   
@@ -711,6 +755,7 @@ void libretro::Core::reset()
   _ports = NULL;
   _input->setKeyboardCallback(nullptr);
   memset(&_diskControlInterface, 0, sizeof(_diskControlInterface));
+  memset(&_gameInfo, 0, sizeof(_gameInfo));
   memset(&_memoryMap, 0, sizeof(_memoryMap));
   memset(&_calls, 0, sizeof(_calls));
 }
@@ -1284,6 +1329,12 @@ bool libretro::Core::setSupportNoGame(bool data)
 bool libretro::Core::getLibretroPath(const char** data) const
 {
   *data = getLibretroPath();
+  return true;
+}
+
+bool libretro::Core::getGameInfoExt(const struct retro_game_info_ext** data) const
+{
+  *data = &_gameInfo;
   return true;
 }
 
@@ -2090,6 +2141,10 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
 
   case RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE:
     ret = setContentInfoOverride((const struct retro_system_content_info_override*)data);
+    break;
+
+  case RETRO_ENVIRONMENT_GET_GAME_INFO_EXT:
+    ret = getGameInfoExt((const struct retro_game_info_ext**)data);
     break;
 
   case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2:

@@ -181,6 +181,7 @@ namespace libretro
     bool setCoreOptionsUpdateDisplayCallback(const struct retro_core_options_update_display_callback* data);
     bool getPreferredHWRender(unsigned* data);
     bool getMicrophoneInterface(struct retro_microphone_interface* data);
+    bool getGameInfoExt(const struct retro_game_info_ext** data) const;
 
     // Callbacks
     bool                 environmentCallback(unsigned cmd, void* data);
@@ -256,6 +257,8 @@ namespace libretro
     unsigned*                       _ports;
 
     struct retro_disk_control_ext_callback _diskControlInterface;
+
+    struct retro_game_info_ext      _gameInfo;
 
     struct retro_memory_map         _memoryMap;
 
