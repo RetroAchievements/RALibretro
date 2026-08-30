@@ -316,6 +316,7 @@ const char* getSystemManufacturer(int system)
   switch (system)
   {
     case RC_CONSOLE_FAMICOM_DISK_SYSTEM:
+    case RC_CONSOLE_GAME_AND_WATCH:
     case RC_CONSOLE_GAMEBOY:
     case RC_CONSOLE_GAMEBOY_COLOR:
     case RC_CONSOLE_GAMEBOY_ADVANCE:
@@ -368,6 +369,27 @@ const char* getSystemManufacturer(int system)
     case RC_CONSOLE_NEO_GEO_CD:
     case RC_CONSOLE_NEOGEO_POCKET:
       return "SNK";
+
+    case RC_CONSOLE_MS_DOS:
+    case RC_CONSOLE_XBOX:
+      return "Microsoft";
+
+    case RC_CONSOLE_VIC20:
+    case RC_CONSOLE_COMMODORE_64:
+    case RC_CONSOLE_AMIGA:
+      return "Commodore";
+
+    case RC_CONSOLE_SHARPX1:
+    case RC_CONSOLE_X68K:
+      return "Sharp";
+
+    case RC_CONSOLE_ZX81:
+    case RC_CONSOLE_ZX_SPECTRUM:
+      return "Sinclair";
+
+    case RC_CONSOLE_CASSETTEVISION:
+    case RC_CONSOLE_SUPER_CASSETTEVISION:
+      return "Epoch";
 
     default:
       return "Other";
