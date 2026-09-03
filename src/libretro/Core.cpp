@@ -1064,14 +1064,169 @@ static int retro_vfs_file_rename_impl(const char* old_path, const char* new_path
   return (_wrename(unicodeOldPath.c_str(), unicodeNewPath.c_str()) == 0) ? 0 : -1;
 }
 
-int64_t retro_vfs_file_truncate_impl(retro_vfs_file_handle* stream, int64_t length)
+static int64_t retro_vfs_file_truncate_impl(retro_vfs_file_handle* stream, int64_t length)
 {
   return (stream && _chsize_s(_fileno(stream->fp), length) == 0) ? 0 : -1;
 }
 
+static int retro_vfs_file_stat64_impl(const char* path, int64_t* size)
+{
+  int ret = RETRO_VFS_STAT_IS_VALID;
+
+#ifdef _WINDOWS
+  const std::wstring unicodePath = util::utf8ToUChar(path);
+  DWORD fileInfo = GetFileAttributesW(unicodePath.c_str());
+  if (fileInfo == INVALID_FILE_ATTRIBUTES)
+    return 0;
+  if (fileInfo & FILE_ATTRIBUTE_DIRECTORY)
+    ret |= RETRO_VFS_STAT_IS_DIRECTORY;
+
+  struct _stat64 filestat;
+  if (_wstat64(unicodePath.c_str(), &filestat) < 0)
+    return 0;
+#else
+ #if defined(_LARGEFILE64_SOURCE)
+  struct stat64 filestat;
+  if (stat64(path, &filestat) < 0)
+    return 0;
+ #else
+  struct stat filestat;
+  if (stat(path, &filestat) < 0)
+    return 0;
+ #endif
+
+  if (S_ISDIR(filestat.st_mode))
+    ret |= RETRO_VFS_STAT_IS_DIRECTORY;
+  if (S_ISCHR(filestat.st_mode))
+    ret |= RETRO_VFS_STAT_IS_CHARACTER_SPECIAL;
+#endif
+
+  if (size)
+    *size = (int64_t)filestat.st_size;
+
+  return ret;
+}
+
+static int retro_vfs_file_stat_impl(const char* path, int32_t* size)
+{
+  int64_t size64;
+  int ret = retro_vfs_file_stat64_impl(path, &size64);
+
+  if (size) /* truncate to the maximum 32-bit value */
+    *size = (size64 > 0x7FFFFFFF) ? 0x7FFFFFFF : (int32_t)size64;
+
+  return ret;
+}
+
+static int retro_vfs_file_mkdir_impl(const char* dir)
+{
+#ifdef _WINDOWS
+  const std::wstring unicodePath = util::utf8ToUChar(dir);
+  return _wmkdir(unicodePath.c_str());
+#else
+  return mkdir(dir, 0750);
+#endif
+}
+
+struct retro_vfs_dir_handle
+{
+#ifdef _WINDOWS
+  HANDLE directory;
+  WIN32_FIND_DATAW entry;
+  std::string utf8Path;
+  bool next;
+#else
+  DIR* directory;
+  const struct dirent *entry;
+#endif
+};
+
+static struct retro_vfs_dir_handle* retro_vfs_file_opendir_impl(const char* dir, bool include_hidden)
+{
+  if (!dir || !*dir)
+    return NULL;
+
+  retro_vfs_dir_handle* dirstream = (retro_vfs_dir_handle*)calloc(1, sizeof(retro_vfs_dir_handle));
+  if (dirstream) {
+#ifdef _WINDOWS
+    const std::wstring unicodePath = util::utf8ToUChar(dir);
+    dirstream->directory = FindFirstFileW(unicodePath.c_str(), &dirstream->entry);
+
+    if (include_hidden)
+      dirstream->entry.dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+    else
+      dirstream->entry.dwFileAttributes &= ~FILE_ATTRIBUTE_HIDDEN;
+#else
+    dirstream->directory = opendir(dir);
+#endif
+  }
+
+  return dirstream;
+}
+
+#ifdef _WINDOWS
+
+static bool retro_vfs_file_readdir_impl(struct retro_vfs_dir_handle* dirstream)
+{
+  if (dirstream->next)
+    return FindNextFileW(dirstream->directory, &dirstream->entry) != 0;
+
+  dirstream->next = false;
+  return (dirstream->directory != INVALID_HANDLE_VALUE);
+}
+
+static const char* retro_vfs_file_dirent_get_name_impl(struct retro_vfs_dir_handle* dirstream)
+{
+  dirstream->utf8Path = util::ucharToUtf8(dirstream->entry.cFileName);
+  return dirstream->utf8Path.c_str();
+}
+
+static bool retro_vfs_file_dirent_is_dir_impl(struct retro_vfs_dir_handle* dirstream)
+{
+  return dirstream->entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+}
+
+static int retro_vfs_file_closedir_impl(struct retro_vfs_dir_handle* dirstream)
+{
+  if (dirstream->directory != INVALID_HANDLE_VALUE)
+    FindClose(dirstream->directory);
+
+  free(dirstream);
+  return 0;
+}
+
+#else
+
+static bool retro_vfs_file_readdir_impl(struct retro_vfs_dir_handle* dirstream)
+{
+  dirstream->entry = readdir(dirstream->directory);
+  return (dirstream->entry != NULL);
+}
+
+static const char* retro_vfs_file_dirent_get_name_impl(struct retro_vfs_dir_handle* dirstream)
+{
+  return dirstream->entry->d_name;
+}
+
+static bool retro_vfs_file_dirent_is_dir_impl(struct retro_vfs_dir_handle* dirstream)
+{
+  return dirstream->entry->d_type == DT_DIR;
+}
+
+static int retro_vfs_file_closedir_impl(struct retro_vfs_dir_handle* dirstream)
+{
+  if (dirstream->directory)
+    closedir(dirstream->directory);
+
+  free(dirstream);
+  return 0;
+}
+
+#endif
+
 bool libretro::Core::getVfsInterface(struct retro_vfs_interface_info* data)
 {
-  const uint32_t supported_vfs_version = 2;
+  const uint32_t supported_vfs_version = 4;
   static struct retro_vfs_interface vfs_iface =
   {
     /* VFS API v1 */
@@ -1089,13 +1244,15 @@ bool libretro::Core::getVfsInterface(struct retro_vfs_interface_info* data)
     /* VFS API v2 */
     retro_vfs_file_truncate_impl,
     /* VFS API v3 */
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr
+    retro_vfs_file_stat_impl,
+    retro_vfs_file_mkdir_impl,
+    retro_vfs_file_opendir_impl,
+    retro_vfs_file_readdir_impl,
+    retro_vfs_file_dirent_get_name_impl,
+    retro_vfs_file_dirent_is_dir_impl,
+    retro_vfs_file_closedir_impl,
+    /* VFS API v4 */
+    retro_vfs_file_stat64_impl,
   };
 
   if (data->required_interface_version > supported_vfs_version)
@@ -1904,6 +2061,22 @@ static void getEnvName(char* name, size_t size, unsigned cmd)
     "GET_MICROPHONE_INTERFACE",
     "SET_NETPACKET_INTERFACE",
     "GET_DEVICE_POWER",
+    "SET_NETPACKET_INTERFACE",
+    "GET_PLAYLIST_DIRECTORY",
+    "GET_FILE_BROWSER_START_DIRECTORY",        // 80
+    "GET_TARGET_SAMPLE_RATE",
+    "GET_NETPLAY_CLIENT_INDEX",
+    "EXEC_MEM_ALLOC",
+    "EXEC_MEM_FREE",
+    "GET_AUDIO_SAMPLE_BATCH_FLOAT",
+    "GET_MEMORY_STATUS",
+    "SET_SERIALIZATION_QUIRKS",
+    "GET_SCREEN_10BPC_CAPABLE",
+    "GET_HDR_PAPER_WHITE_NITS",
+    "GET_HDR_EXPAND_GAMUT",                    // 90
+    "GET_HDR_OUTPUT_MODE",
+    "GET_HDR_MAX_NITS",
+    "GET_VFS_AUTHORIZED_LOCATIONS"
   };
 
   cmd &= ~RETRO_ENVIRONMENT_EXPERIMENTAL;
