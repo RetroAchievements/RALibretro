@@ -25,7 +25,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 
 #ifndef NO_MINIZ
-#include <miniz_zip.h>
+#include <miniz.h>
 #endif
 
 #ifdef _WINDOWS

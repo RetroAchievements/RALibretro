@@ -73,10 +73,7 @@ OBJS=\
 	src/components/Video.o \
 	src/components/VideoContext.o \
 	src/libmincrypt/sha256.o \
-	src/miniz/miniz.o \
-	src/miniz/miniz_tdef.o \
-	src/miniz/miniz_tinfl.o \
-	src/miniz/miniz_zip.o \
+	src/libchdr/deps/miniz-3.1.2/miniz.o \
 	src/rcheevos/src/rcheevos/consoleinfo.o \
 	src/rcheevos/src/rc_libretro.o \
 	src/rcheevos/src/rhash/aes.o \
