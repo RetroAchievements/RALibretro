@@ -63,7 +63,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)miniz;$(ProjectDir)RAInterface;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)libchdr\deps\miniz-3.1.2;$(ProjectDir)RAInterface;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>LOG_TO_FILE;NOMINMAX;WIN32;_DEBUG;_WINDOWS;OUTSIDE_SPEEX;RANDOM_PREFIX=speex;_USE_SSE2;FIXED_POINT;HAVE_CHD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -93,7 +93,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)bin</Command>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)miniz;$(ProjectDir)RAInterface;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)libchdr\deps\miniz-3.1.2;$(ProjectDir)RAInterface;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -121,7 +121,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)bin</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)miniz;$(ProjectDir)RAInterface;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)libchdr\deps\miniz-3.1.2;$(ProjectDir)RAInterface;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
       <OmitFramePointers>false</OmitFramePointers>
       <PreprocessorDefinitions>LOG_TO_FILE;NOMINMAX;_WIN64;_DEBUG;_WINDOWS;OUTSIDE_SPEEX;RANDOM_PREFIX=speex;_USE_SSE2;FIXED_POINT;HAVE_CHD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -151,7 +151,7 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)miniz;$(ProjectDir)RAInterface;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)libchdr\deps\miniz-3.1.2;$(ProjectDir)RAInterface;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
       <OmitFramePointers>false</OmitFramePointers>
       <PreprocessorDefinitions>LOG_TO_FILE;NOMINMAX;_WIN64;NDEBUG;_WINDOWS;OUTSIDE_SPEEX;RANDOM_PREFIX=speex;_USE_SSE2;FIXED_POINT;HAVE_CHD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -214,10 +214,6 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     <ClCompile Include="Memory.cpp">
       <AdditionalIncludeDirectories>$(SolutionDir)src\libretro;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
-    <ClCompile Include="miniz\miniz.c" />
-    <ClCompile Include="miniz\miniz_tdef.c" />
-    <ClCompile Include="miniz\miniz_tinfl.c" />
-    <ClCompile Include="miniz\miniz_zip.c" />
     <ClCompile Include="RAInterface\RA_Interface.cpp" />
     <ClCompile Include="RA_Implementation.cpp" />
     <ClCompile Include="rcheevos\src\rcheevos\consoleinfo.c" />
@@ -272,6 +268,9 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     <ProjectReference Include="libchdr.vcxproj">
       <Project>{6cfbe506-0bc2-4dbc-b7f2-d879c140d5d1}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\etc\cores.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
