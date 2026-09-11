@@ -57,7 +57,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WINDOWS;HAVE_CHD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)RAInterface;$(ProjectDir)miniz;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)RAInterface;$(ProjectDir)libchdr\deps\miniz-3.1.2;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -82,7 +82,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_WINDOWS;HAVE_CHD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)RAInterface;$(ProjectDir)miniz;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)RAInterface;$(ProjectDir)libchdr\deps\miniz-3.1.2;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -110,7 +110,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_WINDOWS;HAVE_CHD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)RAInterface;$(ProjectDir)miniz;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)RAInterface;$(ProjectDir)libchdr\deps\miniz-3.1.2;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -139,7 +139,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;_WINDOWS;HAVE_CHD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)RAInterface;$(ProjectDir)miniz;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)RAInterface;$(ProjectDir)libchdr\deps\miniz-3.1.2;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -165,10 +165,6 @@
     <ClCompile Include="HashCHD.cpp" />
     <ClCompile Include="Hash3DS.cpp" />
     <ClCompile Include="libmincrypt/sha256.c" />
-    <ClCompile Include="miniz\miniz.c" />
-    <ClCompile Include="miniz\miniz_tdef.c" />
-    <ClCompile Include="miniz\miniz_tinfl.c" />
-    <ClCompile Include="miniz\miniz_zip.c" />
     <ClCompile Include="RAHasher.cpp" />
     <ClCompile Include="rcheevos\src\rhash\aes.c" />
     <ClCompile Include="rcheevos\src\rhash\cdreader.c" />

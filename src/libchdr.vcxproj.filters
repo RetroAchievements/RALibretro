@@ -4,7 +4,7 @@
     <Filter Include="libchdr">
       <UniqueIdentifier>{1b09ea08-feeb-4e7c-9bc0-0170bd1de538}</UniqueIdentifier>
     </Filter>
-    <Filter Include="zlib">
+    <Filter Include="miniz">
       <UniqueIdentifier>{76db1418-5622-496b-9c92-8bcd9649b6f3}</UniqueIdentifier>
     </Filter>
     <Filter Include="lzma">
@@ -12,12 +12,6 @@
     </Filter>
     <Filter Include="zstd">
       <UniqueIdentifier>{b2f0fccc-ffbd-4f14-8ca3-932cbaa6f40a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="zstd\common">
-      <UniqueIdentifier>{71dd06ce-b02e-479d-b4a3-925e844d3690}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="zstd\decompress">
-      <UniqueIdentifier>{c00242e4-c3dc-4570-8f3f-ee04033a440c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -36,116 +30,44 @@
     <ClCompile Include="libchdr\src\libchdr_huffman.c">
       <Filter>libchdr</Filter>
     </ClCompile>
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\adler32.c">
-      <Filter>zlib</Filter>
+    <ClCompile Include="libchdr\deps\zstd-1.5.7\zstddeclib.c">
+      <Filter>zstd</Filter>
     </ClCompile>
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\compress.c">
-      <Filter>zlib</Filter>
+    <ClCompile Include="libchdr\deps\miniz-3.1.2\miniz.c">
+      <Filter>miniz</Filter>
     </ClCompile>
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\crc32.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\deflate.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\gzclose.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\gzlib.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\gzread.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\gzwrite.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\infback.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\inffast.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\inflate.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\inftrees.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\trees.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\uncompr.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\zutil.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\Lzma86Dec.c">
+    <ClCompile Include="libchdr\deps\lzma-26.02\src\LzmaDec.c">
       <Filter>lzma</Filter>
     </ClCompile>
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\LzmaDec.c">
-      <Filter>lzma</Filter>
+    <ClCompile Include="libchdr\src\libchdr_codec_zstd.c">
+      <Filter>libchdr</Filter>
     </ClCompile>
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\LzmaEnc.c">
-      <Filter>lzma</Filter>
+    <ClCompile Include="libchdr\src\libchdr_codec_avhuff.c">
+      <Filter>libchdr</Filter>
     </ClCompile>
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\LzFind.c">
-      <Filter>lzma</Filter>
+    <ClCompile Include="libchdr\src\libchdr_codec_cdfl.c">
+      <Filter>libchdr</Filter>
     </ClCompile>
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\CpuArch.c">
-      <Filter>lzma</Filter>
+    <ClCompile Include="libchdr\src\libchdr_codec_cdlz.c">
+      <Filter>libchdr</Filter>
     </ClCompile>
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\Sort.c">
-      <Filter>lzma</Filter>
+    <ClCompile Include="libchdr\src\libchdr_codec_cdzl.c">
+      <Filter>libchdr</Filter>
     </ClCompile>
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\Alloc.c">
-      <Filter>lzma</Filter>
+    <ClCompile Include="libchdr\src\libchdr_codec_cdzs.c">
+      <Filter>libchdr</Filter>
     </ClCompile>
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\Bra86.c">
-      <Filter>lzma</Filter>
+    <ClCompile Include="libchdr\src\libchdr_codec_flac.c">
+      <Filter>libchdr</Filter>
     </ClCompile>
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\BraIA64.c">
-      <Filter>lzma</Filter>
+    <ClCompile Include="libchdr\src\libchdr_codec_huff.c">
+      <Filter>libchdr</Filter>
     </ClCompile>
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\Delta.c">
-      <Filter>lzma</Filter>
+    <ClCompile Include="libchdr\src\libchdr_codec_lzma.c">
+      <Filter>libchdr</Filter>
     </ClCompile>
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\common\zstd_common.c">
-      <Filter>zstd\common</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\common\debug.c">
-      <Filter>zstd\common</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\common\entropy_common.c">
-      <Filter>zstd\common</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\common\error_private.c">
-      <Filter>zstd\common</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\common\fse_decompress.c">
-      <Filter>zstd\common</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\common\pool.c">
-      <Filter>zstd\common</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\common\threading.c">
-      <Filter>zstd\common</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\common\xxhash.c">
-      <Filter>zstd\common</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\decompress\zstd_decompress_block.c">
-      <Filter>zstd\decompress</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\decompress\huf_decompress.c">
-      <Filter>zstd\decompress</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\decompress\zstd_ddict.c">
-      <Filter>zstd\decompress</Filter>
-    </ClCompile>
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\decompress\zstd_decompress.c">
-      <Filter>zstd\decompress</Filter>
+    <ClCompile Include="libchdr\src\libchdr_codec_zlib.c">
+      <Filter>libchdr</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

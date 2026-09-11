@@ -29,7 +29,7 @@ along with RALibRetro.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <jsonsax/jsonsax.h>
 #include <rcheevos/include/rc_consoles.h>
-#include <miniz/miniz.h>
+#include <miniz.h>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
