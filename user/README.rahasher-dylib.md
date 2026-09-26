@@ -4,10 +4,10 @@ This user-local implementation exposes a stateless, file-path-based hashing API 
 builds a shared library without changing existing src/ code.
 
 ## Output layout
-- user/release/{platform}/{arch}/dynamic/libRAHasher.{dylib|so|dll}
-- user/release/{platform}/{arch}/include/rahasher_stream.h
-- user/release/{platform}/{arch}/static/libRAHasher.a
-- user/release/{platform}/{arch}/bin/rahasher_stream_sample
+- user/release/{platform}/{arch}/{version}/dynamic/libRAHasher.{dylib|so|dll}
+- user/release/{platform}/{arch}/{version}/include/rahasher_stream.h
+- user/release/{platform}/{arch}/{version}/static/libRAHasher.a
+- user/release/{platform}/{arch}/{version}/bin/rahasher_stream_sample
 - intermediate objects: user/_build
 
 ## Build

@@ -7,10 +7,10 @@
 ROOT := .
 TARGET_PLATFORM ?= mac
 TARGET_ARCH ?= arm64
-VERSION ?= dev
+VERSION ?= $(shell date +%Y%m%d)
 BUILD_TYPE ?= dynamic
 BUILD_DIR ?= user/_build/$(TARGET_PLATFORM)/$(TARGET_ARCH)
-RELEASE_BASE ?= user/release/$(TARGET_PLATFORM)/$(TARGET_ARCH)
+RELEASE_BASE ?= user/release/$(TARGET_PLATFORM)/$(TARGET_ARCH)/$(VERSION)
 
 CC ?= gcc
 CXX ?= g++

@@ -11,7 +11,8 @@ cd "$SUBMODULE_ROOT"
 
 TARGET="auto"
 TYPE="dynamic"
-VERSION="dev"
+# No upstream version to track, so each build is named after its build date.
+VERSION="$(date +%Y%m%d)"
 
 usage() {
   cat <<EOF
@@ -20,7 +21,7 @@ Usage: user/build_rahasher.sh [--target auto|mac|windows|linux|iphone|android] [
 Defaults:
   --target auto
   --type dynamic
-  --version dev
+  --version <build date, YYYYMMdd>
 EOF
 }
 
@@ -108,6 +109,7 @@ for mt in "${MAKE_TARGETS[@]}"; do
   make -f user/Makefile.rahasher "$mt" TARGET_PLATFORM="$TARGET" TARGET_ARCH="$ARCH" VERSION="$VERSION"
 done
 
-echo "Build done. Output root: $SUBMODULE_ROOT/user/release/$TARGET/$ARCH"
-echo "Dynamic lib: $SUBMODULE_ROOT/user/release/$TARGET/$ARCH/dynamic"
-echo "Header: $SUBMODULE_ROOT/user/release/$TARGET/$ARCH/include"
+OUT_ROOT="$SUBMODULE_ROOT/user/release/$TARGET/$ARCH/$VERSION"
+echo "Build done. Output root: $OUT_ROOT"
+echo "Dynamic lib: $OUT_ROOT/dynamic"
+echo "Header: $OUT_ROOT/include"
