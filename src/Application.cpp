@@ -2439,7 +2439,7 @@ void Application::handle(const SDL_SysWMEvent* syswm)
       break;
       
     case IDM_CORE_CONFIG:
-      _config.showDialog(_core.getSystemInfo()->library_name, _input);
+      _config.showDialog(_core.getSystemInfo()->library_name, _input, _system);
       if (isGameActive())
         refreshMemoryMap();
       break;

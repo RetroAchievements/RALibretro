@@ -463,15 +463,16 @@ bool Config::validateSettingsForHardcore(const char* library_name, int console_i
   if (_hadDisallowedSetting && !RA_HardcoreModeIsActive())
     return true;
 
-
   const rc_disallowed_setting_t* disallowed_settings = rc_libretro_get_disallowed_settings(library_name);
-  if (disallowed_settings)
+  const rc_disallowed_setting_t* system_disallowed_settings = console_id ? rc_libretro_get_disallowed_settings_for_system(library_name, console_id) : nullptr;
+  if (disallowed_settings || system_disallowed_settings)
   {
     bool hadDisallowedSetting = _hadDisallowedSetting;
     for (auto& var : _variables)
     {
       const char* value = var._options[var._selected].c_str();
-      if (!rc_libretro_is_setting_allowed(disallowed_settings, var._key.c_str(), value))
+      if ((disallowed_settings && !rc_libretro_is_setting_allowed(disallowed_settings, var._key.c_str(), value)) ||
+          (system_disallowed_settings && !rc_libretro_is_setting_allowed(system_disallowed_settings, var._key.c_str(), value)))
       {
         if (RA_HardcoreModeIsActive())
         {
@@ -502,7 +503,8 @@ bool Config::validateSettingsForHardcore(const char* library_name, int console_i
 
     for (auto& var : _selections)
     {
-      if (!rc_libretro_is_setting_allowed(disallowed_settings, var.first.c_str(), var.second.c_str()))
+      if ((disallowed_settings && !rc_libretro_is_setting_allowed(disallowed_settings, var.first.c_str(), var.second.c_str())) ||
+          (system_disallowed_settings && !rc_libretro_is_setting_allowed(system_disallowed_settings, var.first.c_str(), var.second.c_str())))
       {
         if (RA_HardcoreModeIsActive())
         {
@@ -800,7 +802,7 @@ INT_PTR Config::ConfigDialog::dialogProc(HWND hwnd, UINT msg, WPARAM wparam, LPA
   return Dialog::dialogProc(hwnd, msg, wparam, lparam);
 }
 
-void Config::showDialog(const std::string& coreName, Input& input)
+void Config::showDialog(const std::string& coreName, Input& input, int system_id)
 {
   const WORD HEADER_WIDTH = 90;
   const WORD VALUE_WIDTH = 100;
@@ -921,13 +923,15 @@ void Config::showDialog(const std::string& coreName, Input& input)
     if (RA_HardcoreModeIsActive())
     {
       const rc_disallowed_setting_t* disallowed_settings = rc_libretro_get_disallowed_settings(coreName.c_str());
-      if (disallowed_settings)
+      const rc_disallowed_setting_t* system_disallowed_settings = system_id ? rc_libretro_get_disallowed_settings_for_system(coreName.c_str(), system_id) : nullptr;
+      if (disallowed_settings || system_disallowed_settings)
       {
         for (unsigned i = 0; i < db.variables.size(); ++i)
         {
           auto& var = *db.variables[i];
           const char* value = var._options[db.selections[i]].c_str();
-          if (!rc_libretro_is_setting_allowed(disallowed_settings, var._key.c_str(), value))
+          if ((disallowed_settings && !rc_libretro_is_setting_allowed(disallowed_settings, var._key.c_str(), value)) ||
+              (system_disallowed_settings && !rc_libretro_is_setting_allowed(system_disallowed_settings, var._key.c_str(), value)))
           {
             if (db.selections[i] < (int)var._labels.size())
               value = var._labels[db.selections[i]].c_str();

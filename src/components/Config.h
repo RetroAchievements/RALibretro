@@ -86,7 +86,7 @@ public:
   bool deserializeEmulatorSettings(const char* json);
 
 #ifdef _WINDOWS
-  void showDialog(const std::string& coreName, Input& input);
+  void showDialog(const std::string& coreName, Input& input, int console_id);
   void showEmulatorSettingsDialog();
 #endif
 
