@@ -1913,7 +1913,7 @@ void Application::saveState()
   extensions.append("\0", 1);
   extensions.append("*.state");
   extensions.append("\0", 2);
-  std::string path = util::saveFileDialog(g_mainWindow, extensions, "state", _config.getRomPath(_system));
+  std::string path = util::saveFileDialog(g_mainWindow, extensions, "state", "");
 
   if (!path.empty())
   {
@@ -1967,7 +1967,7 @@ void Application::loadState()
   extensions.append("\0", 1);
   extensions.append("*.*");
   extensions.append("\0", 2);
-  std::string path = util::openFileDialog(g_mainWindow, extensions, _config.getRomPath(_system));
+  std::string path = util::openFileDialog(g_mainWindow, extensions, "");
 
   if (!path.empty())
   {
