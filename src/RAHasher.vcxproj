@@ -18,17 +18,19 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <PropertyGroup Label="Globals">
-    <VCProjectVersion>16.0</VCProjectVersion>
-    <ProjectGuid>{5E39410E-0276-4024-8697-1BD685207142}</ProjectGuid>
-    <Keyword>Win32Proj</Keyword>
-    <RootNamespace>RAHasher</RootNamespace>
-    <ConfigurationType>Application</ConfigurationType>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Globals">
+    <ProjectName>RAHasher</ProjectName>
+    <ProjectGuid>{5E39410E-0276-4024-8697-1BD685207142}</ProjectGuid>
+    <TargetName>RAHasher</TargetName>
+    <RootNamespace>RAHasher</RootNamespace>
+  </PropertyGroup>
   <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>$(DefaultPlatformToolset)</PlatformToolset>
+    <VCToolsVersion />
     <OutDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\RAHasher\</IntDir>
   </PropertyGroup>
@@ -50,114 +52,57 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+  <ItemDefinitionGroup>
     <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WINDOWS;HAVE_CHD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CONSOLE;_WINDOWS;HAVE_CHD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)RAInterface;$(ProjectDir)libchdr\deps\miniz-3.1.2;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Platform)'=='Win32'">
     <CustomBuildStep>
       <Command>copy /b/y $(TargetPath) $(SolutionDir)\bin</Command>
-    </CustomBuildStep>
-    <CustomBuildStep>
       <Outputs>$(SolutionDir)\bin\$(TargetFileName)</Outputs>
-    </CustomBuildStep>
-    <CustomBuildStep>
       <Inputs>$(TargetPath)</Inputs>
       <Message>Copying $(TargetFileName) to bin directory</Message>
     </CustomBuildStep>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <ItemDefinitionGroup Condition="'$(Platform)'=='x64'">
     <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_WINDOWS;HAVE_CHD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)RAInterface;$(ProjectDir)libchdr\deps\miniz-3.1.2;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
     <CustomBuildStep>
-      <Command>copy /b/y  "$(TargetPath)" "$(SolutionDir)\bin64"</Command>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <Message>Copying $(TargetFileName) to bin64 directory</Message>
-    </CustomBuildStep>
-    <CustomBuildStep>
+      <Command>copy /b/y $(TargetPath) $(SolutionDir)\bin64</Command>
       <Outputs>$(SolutionDir)\bin64\$(TargetFileName)</Outputs>
-    </CustomBuildStep>
-    <CustomBuildStep>
       <Inputs>$(TargetPath)</Inputs>
-    </CustomBuildStep>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_WINDOWS;HAVE_CHD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)RAInterface;$(ProjectDir)libchdr\deps\miniz-3.1.2;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include</AdditionalIncludeDirectories>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-    <CustomBuildStep>
-      <Command>copy /b/y $(TargetPath) $(SolutionDir)\bin</Command>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <Outputs>$(SolutionDir)\bin\$(TargetFileName)</Outputs>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <Inputs>$(TargetPath)</Inputs>
-      <Message>Copying $(TargetFileName) to bin directory</Message>
-    </CustomBuildStep>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_WINDOWS;HAVE_CHD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)RAInterface;$(ProjectDir)libchdr\deps\miniz-3.1.2;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include</AdditionalIncludeDirectories>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-    <CustomBuildStep>
-      <Command>copy /b/y  $(TargetPath) $(SolutionDir)\bin64</Command>
-    </CustomBuildStep>
-    <CustomBuildStep>
       <Message>Copying $(TargetFileName) to bin64 directory</Message>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <Outputs>$(SolutionDir)\bin64\$(TargetFileName)</Outputs>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <Inputs>$(TargetPath)</Inputs>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -166,25 +111,14 @@
     <ClCompile Include="Hash3DS.cpp" />
     <ClCompile Include="libmincrypt/sha256.c" />
     <ClCompile Include="RAHasher.cpp" />
-    <ClCompile Include="rcheevos\src\rhash\aes.c" />
-    <ClCompile Include="rcheevos\src\rhash\cdreader.c" />
-    <ClCompile Include="rcheevos\src\rhash\hash.c">
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rhash</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rhash</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="rcheevos\src\rhash\hash_disc.c" />
-    <ClCompile Include="rcheevos\src\rhash\hash_encrypted.c" />
-    <ClCompile Include="rcheevos\src\rhash\hash_rom.c" />
-    <ClCompile Include="rcheevos\src\rhash\hash_zip.c" />
-    <ClCompile Include="rcheevos\src\rhash\md5.c" />
     <ClCompile Include="Util.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="rcheevos\include\rhash.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="libchdr.vcxproj">
       <Project>{6cfbe506-0bc2-4dbc-b7f2-d879c140d5d1}</Project>
+    </ProjectReference>
+    <ProjectReference Include="rcheevos\src\hash\rc_hash.vcxproj">
+      <Project>{cdff5a5f-8de5-4081-981f-7a5ee4983710}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

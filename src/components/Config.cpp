@@ -23,7 +23,7 @@ along with RALibretro.  If not, see <http://www.gnu.org/licenses/>.
 #include "jsonsax/jsonsax.h"
 #include "RA_Interface.h"
 
-#include <rcheevos/src/rc_libretro.h>
+#include <rcheevos/src/libretro/rc_libretro.h>
 #include <rcheevos/include/rc_consoles.h>
 
 #ifdef _WINDOWS

@@ -28,9 +28,6 @@
     <Filter Include="Source Files\RAInterface">
       <UniqueIdentifier>{32b33d66-cfa3-44be-839e-0cc44f28fb9d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\rhash">
-      <UniqueIdentifier>{f33813cb-a0fd-4f12-a236-85aae13cff32}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\components">
       <UniqueIdentifier>{2bcecd49-e2e4-41ba-96ea-7b083991da9a}</UniqueIdentifier>
     </Filter>
@@ -96,15 +93,6 @@
     <ClCompile Include="Hash.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="rcheevos\src\rhash\cdreader.c">
-      <Filter>Source Files\rhash</Filter>
-    </ClCompile>
-    <ClCompile Include="rcheevos\src\rhash\hash.c">
-      <Filter>Source Files\rhash</Filter>
-    </ClCompile>
-    <ClCompile Include="rcheevos\src\rhash\md5.c">
-      <Filter>Source Files\rhash</Filter>
-    </ClCompile>
     <ClCompile Include="components\Audio.cpp">
       <Filter>Source Files\components</Filter>
     </ClCompile>
@@ -126,9 +114,6 @@
     <ClCompile Include="components\VideoContext.cpp">
       <Filter>Source Files\components</Filter>
     </ClCompile>
-    <ClCompile Include="rcheevos\src\rcheevos\consoleinfo.c">
-      <Filter>Source Files\rcheevos</Filter>
-    </ClCompile>
     <ClCompile Include="Memory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -141,29 +126,17 @@
     <ClCompile Include="components\Microphone.cpp">
       <Filter>Source Files\components</Filter>
     </ClCompile>
-    <ClCompile Include="rcheevos\src\rc_libretro.c">
-      <Filter>Source Files\rcheevos</Filter>
-    </ClCompile>
-    <ClCompile Include="rcheevos\src\rhash\aes.c">
-      <Filter>Source Files\rhash</Filter>
-    </ClCompile>
     <ClCompile Include="Hash3DS.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="libmincrypt\sha256.c">
       <Filter>Source Files\libmincrypt</Filter>
     </ClCompile>
-    <ClCompile Include="rcheevos\src\rhash\hash_rom.c">
-      <Filter>Source Files\rhash</Filter>
+    <ClCompile Include="rcheevos\src\libretro\rc_libretro.c">
+      <Filter>Source Files\rcheevos</Filter>
     </ClCompile>
-    <ClCompile Include="rcheevos\src\rhash\hash_encrypted.c">
-      <Filter>Source Files\rhash</Filter>
-    </ClCompile>
-    <ClCompile Include="rcheevos\src\rhash\hash_zip.c">
-      <Filter>Source Files\rhash</Filter>
-    </ClCompile>
-    <ClCompile Include="rcheevos\src\rhash\hash_disc.c">
-      <Filter>Source Files\rhash</Filter>
+    <ClCompile Include="rcheevos\src\runtime\rc_consoleinfo.c">
+      <Filter>Source Files\rcheevos</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

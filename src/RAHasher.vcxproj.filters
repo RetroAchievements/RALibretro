@@ -16,9 +16,6 @@
     <Filter Include="Source Files\RALibRetro">
       <UniqueIdentifier>{dbb91ad7-cb9c-4d0b-8000-4c52930b4044}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\rhash">
-      <UniqueIdentifier>{4ea653d5-1cc2-4ca4-b75e-4e5ec8fe3ecd}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\libmincrypt">
       <UniqueIdentifier>{be15c3d6-6a8d-418e-b432-31e7fc552895}</UniqueIdentifier>
     </Filter>
@@ -33,43 +30,14 @@
     <ClCompile Include="components\Logger.cpp">
       <Filter>Source Files\RALibRetro</Filter>
     </ClCompile>
-    <ClCompile Include="rcheevos\src\rhash\md5.c">
-      <Filter>Source Files\rhash</Filter>
-    </ClCompile>
-    <ClCompile Include="rcheevos\src\rhash\hash.c">
-      <Filter>Source Files\rhash</Filter>
-    </ClCompile>
-    <ClCompile Include="rcheevos\src\rhash\cdreader.c">
-      <Filter>Source Files\rhash</Filter>
-    </ClCompile>
     <ClCompile Include="HashCHD.cpp">
       <Filter>Source Files\RALibRetro</Filter>
     </ClCompile>
     <ClCompile Include="Hash3DS.cpp">
       <Filter>Source Files\RALibRetro</Filter>
     </ClCompile>
-    <ClCompile Include="rcheevos\src\rhash\aes.c">
-      <Filter>Source Files\rhash</Filter>
-    </ClCompile>
     <ClCompile Include="libmincrypt/sha256.c">
       <Filter>Source Files\libmincrypt</Filter>
     </ClCompile>
-    <ClCompile Include="rcheevos\src\rhash\hash_encrypted.c">
-      <Filter>Source Files\rhash</Filter>
-    </ClCompile>
-    <ClCompile Include="rcheevos\src\rhash\hash_rom.c">
-      <Filter>Source Files\rhash</Filter>
-    </ClCompile>
-    <ClCompile Include="rcheevos\src\rhash\hash_zip.c">
-      <Filter>Source Files\rhash</Filter>
-    </ClCompile>
-    <ClCompile Include="rcheevos\src\rhash\hash_disc.c">
-      <Filter>Source Files\rhash</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="rcheevos\include\rhash.h">
-      <Filter>Source Files\rhash</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>
