@@ -57,7 +57,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;Z7_ST;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CompileAs>CompileAsC</CompileAs>
-      <AdditionalIncludeDirectories>$(ProjectDir)libchdr\include;$(ProjectDir)libchdr\deps\lzma-24.05\include;$(ProjectDir)libchdr\deps\zstd-1.5.6\lib;$(ProjectDir)libchdr\deps\zlib-1.3.1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)libchdr\include;$(ProjectDir)libchdr\deps\lzma-26.02\include;$(ProjectDir)libchdr\deps\zstd-1.5.7\lib;$(ProjectDir)libchdr\deps\miniz-3.1.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExceptionHandling>false</ExceptionHandling>
       <ConformanceMode>true</ConformanceMode>
       <WarningLevel>Level2</WarningLevel>
@@ -80,7 +80,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;Z7_ST;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CompileAs>CompileAsC</CompileAs>
-      <AdditionalIncludeDirectories>$(ProjectDir)libchdr\include;$(ProjectDir)libchdr\deps\lzma-24.05\include;$(ProjectDir)libchdr\deps\zstd-1.5.6\lib;$(ProjectDir)libchdr\deps\zlib-1.3.1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)libchdr\include;$(ProjectDir)libchdr\deps\lzma-26.02\include;$(ProjectDir)libchdr\deps\zstd-1.5.7\lib;$(ProjectDir)libchdr\deps\miniz-3.1.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExceptionHandling>false</ExceptionHandling>
       <ConformanceMode>true</ConformanceMode>
       <WarningLevel>Level2</WarningLevel>
@@ -102,7 +102,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;Z7_ST;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CompileAs>CompileAsC</CompileAs>
-      <AdditionalIncludeDirectories>$(ProjectDir)libchdr\include;$(ProjectDir)libchdr\deps\lzma-24.05\include;$(ProjectDir)libchdr\deps\zstd-1.5.6\lib;$(ProjectDir)libchdr\deps\zlib-1.3.1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)libchdr\include;$(ProjectDir)libchdr\deps\lzma-26.02\include;$(ProjectDir)libchdr\deps\zstd-1.5.7\lib;$(ProjectDir)libchdr\deps\miniz-3.1.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ConformanceMode>true</ConformanceMode>
@@ -118,7 +118,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;Z7_ST;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CompileAs>CompileAsC</CompileAs>
-      <AdditionalIncludeDirectories>$(ProjectDir)libchdr\include;$(ProjectDir)libchdr\deps\lzma-24.05\include;$(ProjectDir)libchdr\deps\zstd-1.5.6\lib;$(ProjectDir)libchdr\deps\zlib-1.3.1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)libchdr\include;$(ProjectDir)libchdr\deps\lzma-26.02\include;$(ProjectDir)libchdr\deps\zstd-1.5.7\lib;$(ProjectDir)libchdr\deps\miniz-3.1.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ConformanceMode>true</ConformanceMode>
@@ -131,46 +131,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\Alloc.c" />
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\Bra86.c" />
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\BraIA64.c" />
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\CpuArch.c" />
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\Delta.c" />
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\LzFind.c" />
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\Lzma86Dec.c" />
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\LzmaDec.c" />
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\LzmaEnc.c" />
-    <ClCompile Include="libchdr\deps\lzma-24.05\src\Sort.c" />
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\adler32.c" />
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\compress.c" />
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\crc32.c" />
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\deflate.c" />
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\gzclose.c" />
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\gzlib.c" />
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\gzread.c" />
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\gzwrite.c" />
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\infback.c" />
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\inffast.c" />
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\inflate.c" />
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\inftrees.c" />
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\trees.c" />
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\uncompr.c" />
-    <ClCompile Include="libchdr\deps\zlib-1.3.1\zutil.c" />
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\common\debug.c" />
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\common\entropy_common.c" />
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\common\error_private.c" />
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\common\fse_decompress.c" />
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\common\pool.c" />
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\common\threading.c" />
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\common\xxhash.c" />
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\common\zstd_common.c" />
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\decompress\huf_decompress.c" />
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\decompress\zstd_ddict.c" />
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\decompress\zstd_decompress.c" />
-    <ClCompile Include="libchdr\deps\zstd-1.5.6\lib\decompress\zstd_decompress_block.c" />
+    <ClCompile Include="libchdr\deps\lzma-26.02\src\LzmaDec.c" />
+    <ClCompile Include="libchdr\deps\miniz-3.1.2\miniz.c" />
+    <ClCompile Include="libchdr\deps\zstd-1.5.7\zstddeclib.c" />
     <ClCompile Include="libchdr\src\libchdr_bitstream.c" />
     <ClCompile Include="libchdr\src\libchdr_cdrom.c" />
     <ClCompile Include="libchdr\src\libchdr_chd.c" />
+    <ClCompile Include="libchdr\src\libchdr_codec_avhuff.c" />
+    <ClCompile Include="libchdr\src\libchdr_codec_cdfl.c" />
+    <ClCompile Include="libchdr\src\libchdr_codec_cdlz.c" />
+    <ClCompile Include="libchdr\src\libchdr_codec_cdzl.c" />
+    <ClCompile Include="libchdr\src\libchdr_codec_cdzs.c" />
+    <ClCompile Include="libchdr\src\libchdr_codec_flac.c" />
+    <ClCompile Include="libchdr\src\libchdr_codec_huff.c" />
+    <ClCompile Include="libchdr\src\libchdr_codec_lzma.c" />
+    <ClCompile Include="libchdr\src\libchdr_codec_zlib.c" />
+    <ClCompile Include="libchdr\src\libchdr_codec_zstd.c" />
     <ClCompile Include="libchdr\src\libchdr_flac.c" />
     <ClCompile Include="libchdr\src\libchdr_huffman.c" />
   </ItemGroup>

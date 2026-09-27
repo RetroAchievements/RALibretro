@@ -96,11 +96,11 @@ static bool rc_hash_get_chd_metadata(chd_file* file, uint32_t idx, metadata_t* m
     return true;
   }
 
-  /* DVD formatted track is not yet supported by libchdr, but we can fake it. A DVD only has one track, so
-   * if we're looking for the first metadata, and haven't found it yet, look for the DVD tag and go with it. */
+  /* A DVD only has one track, so if we're looking for the first metadata, and haven't found it yet,
+   * look for the DVD tag and go with it. */
   if (idx == 0)
   {
-    err = chd_get_metadata(file, CHD_MAKE_TAG('D', 'V', 'D', ' '), idx, meta, sizeof(meta), &meta_size, NULL, NULL);
+    err = chd_get_metadata(file, DVD_METADATA_TAG, idx, meta, sizeof(meta), &meta_size, NULL, NULL);
     if (err == CHDERR_NONE)
     {
       const chd_header* header = chd_get_header(file);

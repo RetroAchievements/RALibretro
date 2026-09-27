@@ -19,9 +19,6 @@
     <Filter Include="Source Files\dynlib">
       <UniqueIdentifier>{321f2861-5b70-4141-a843-8a7d704a5624}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\miniz">
-      <UniqueIdentifier>{c6bd24ca-4aa5-4eed-8f4f-0dbd5fd5f845}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\libretro">
       <UniqueIdentifier>{2e31befd-421f-451b-b48f-be36a52c02ca}</UniqueIdentifier>
     </Filter>
@@ -81,9 +78,6 @@
     <ClCompile Include="dynlib\dynlib.c">
       <Filter>Source Files\dynlib</Filter>
     </ClCompile>
-    <ClCompile Include="miniz\miniz_zip.c">
-      <Filter>Source Files\miniz</Filter>
-    </ClCompile>
     <ClCompile Include="libretro\BareCore.cpp">
       <Filter>Source Files\libretro</Filter>
     </ClCompile>
@@ -92,15 +86,6 @@
     </ClCompile>
     <ClCompile Include="speex\resample.c">
       <Filter>Source Files\speex</Filter>
-    </ClCompile>
-    <ClCompile Include="miniz\miniz.c">
-      <Filter>Source Files\miniz</Filter>
-    </ClCompile>
-    <ClCompile Include="miniz\miniz_tinfl.c">
-      <Filter>Source Files\miniz</Filter>
-    </ClCompile>
-    <ClCompile Include="miniz\miniz_tdef.c">
-      <Filter>Source Files\miniz</Filter>
     </ClCompile>
     <ClCompile Include="RAInterface\RA_Interface.cpp">
       <Filter>Source Files\RAInterface</Filter>

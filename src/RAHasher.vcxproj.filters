@@ -16,9 +16,6 @@
     <Filter Include="Source Files\RALibRetro">
       <UniqueIdentifier>{dbb91ad7-cb9c-4d0b-8000-4c52930b4044}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\miniz">
-      <UniqueIdentifier>{1e293426-6398-4c86-81b8-5e0004cc542d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\rhash">
       <UniqueIdentifier>{4ea653d5-1cc2-4ca4-b75e-4e5ec8fe3ecd}</UniqueIdentifier>
     </Filter>
@@ -32,18 +29,6 @@
     </ClCompile>
     <ClCompile Include="Util.cpp">
       <Filter>Source Files\RALibRetro</Filter>
-    </ClCompile>
-    <ClCompile Include="miniz\miniz.c">
-      <Filter>Source Files\miniz</Filter>
-    </ClCompile>
-    <ClCompile Include="miniz\miniz_tdef.c">
-      <Filter>Source Files\miniz</Filter>
-    </ClCompile>
-    <ClCompile Include="miniz\miniz_tinfl.c">
-      <Filter>Source Files\miniz</Filter>
-    </ClCompile>
-    <ClCompile Include="miniz\miniz_zip.c">
-      <Filter>Source Files\miniz</Filter>
     </ClCompile>
     <ClCompile Include="components\Logger.cpp">
       <Filter>Source Files\RALibRetro</Filter>

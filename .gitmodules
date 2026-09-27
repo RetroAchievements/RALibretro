@@ -4,10 +4,6 @@
 [submodule "src/jsonsax"]
 	path = src/jsonsax
 	url = https://github.com/leiradel/jsonsax
-[submodule "src/miniz"]
-	path = src/miniz
-	url = https://github.com/richgel999/miniz.git
-	ignore = untracked
 [submodule "src/RAInterface"]
 	path = src/RAInterface
 	url = https://github.com/RetroAchievements/RAInterface.git
