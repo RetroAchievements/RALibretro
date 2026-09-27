@@ -434,13 +434,15 @@ bool States::loadState(const std::string& path)
   if (memcmp(data, "#RZIPv", 6) == 0)
   {
     void* decompressed = decompressRzip((uint8_t*)data, &size, _logger);
+    free(data);
+
     if (decompressed == NULL)
     {
       _logger->error(TAG "Failed to decompress rzip save state");
       MessageBox(g_mainWindow, "Failed to decompress rzip save state", "RALibRetro", MB_OK);
+      return false;
     }
 
-    free(data);
     data = decompressed;
   }
 
