@@ -74,16 +74,16 @@ OBJS=\
 	src/components/VideoContext.o \
 	src/libmincrypt/sha256.o \
 	src/libchdr/deps/miniz-3.1.2/miniz.o \
-	src/rcheevos/src/rcheevos/consoleinfo.o \
-	src/rcheevos/src/rc_libretro.o \
-	src/rcheevos/src/rhash/aes.o \
-	src/rcheevos/src/rhash/cdreader.o \
-	src/rcheevos/src/rhash/md5.o \
-	src/rcheevos/src/rhash/hash.o \
-	src/rcheevos/src/rhash/hash_disc.o \
-	src/rcheevos/src/rhash/hash_encrypted.o \
-	src/rcheevos/src/rhash/hash_rom.o \
-	src/rcheevos/src/rhash/hash_zip.o \
+	src/rcheevos/src/hash/aes.o \
+	src/rcheevos/src/hash/rc_cdreader.o \
+	src/rcheevos/src/hash/rc_hash.o \
+	src/rcheevos/src/hash/rc_hash_disc.o \
+	src/rcheevos/src/hash/rc_hash_encrypted.o \
+	src/rcheevos/src/hash/rc_hash_rom.o \
+	src/rcheevos/src/hash/rc_hash_zip.o \
+	src/rcheevos/src/libretro/rc_libretro.o \
+	src/rcheevos/src/runtime/rc_consoleinfo.o \
+	src/rcheevos/src/util/md5.o \
 	src/speex/resample.o \
 	src/About.o \
 	src/Application.o \
@@ -108,7 +108,7 @@ endif
 
 all: $(OUTDIR)/RALibretro.exe $(OUTDIR)/SDL2.dll $(OUTDIR)/libwinpthread-1.dll
 
-src/rcheevos/src/rc_libretro.o: CFLAGS += -I./src/libretro
+src/rcheevos/src/libretro/rc_libretro.o: CFLAGS += -I./src/libretro
 
 src/components/Config.o: CFLAGS += -I./src/libretro
 
