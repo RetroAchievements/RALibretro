@@ -18,26 +18,29 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Globals">
-    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectName>RALibretro</ProjectName>
     <ProjectGuid>{418D11DE-D07C-4BF2-A454-ACCCB451BBE1}</ProjectGuid>
-    <Keyword>Win32Proj</Keyword>
+    <TargetName>RALibretro</TargetName>
+    <RootNamespace>RALibretro</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <PlatformToolset>$(DefaultPlatformToolset)</PlatformToolset>
+    <VCToolsVersion />
     <OutDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
     <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
     <LinkIncremental>false</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration">
-    <PlatformToolset>$(DefaultPlatformToolset)</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -58,51 +61,47 @@
     <LocalDebuggerCommand>$(ProjectDir)..\bin64\RALibRetro.exe</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>$(ProjectDir)..\bin64</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+  <ItemDefinitionGroup>
     <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)libchdr\deps\miniz-3.1.2;$(ProjectDir)RAInterface;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>LOG_TO_FILE;NOMINMAX;WIN32;_WINDOWS;OUTSIDE_SPEEX;RANDOM_PREFIX=speex;_USE_SSE2;FIXED_POINT;HAVE_CHD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>SDL2main.lib;SDL2.lib;dinput8.lib;winmm.lib;imm32.lib;version.lib;winhttp.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PreBuildEvent>
+      <Command>$(ProjectDir)RAInterface\MakeBuildVer.bat $(ProjectDir)\RA_BuildVer.h "" RA_LIBRETRO</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <ClCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)libchdr\deps\miniz-3.1.2;$(ProjectDir)RAInterface;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>LOG_TO_FILE;NOMINMAX;WIN32;_DEBUG;_WINDOWS;OUTSIDE_SPEEX;RANDOM_PREFIX=speex;_USE_SSE2;FIXED_POINT;HAVE_CHD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <TargetMachine>MachineX86</TargetMachine>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(ProjectDir)SDL2\lib\x86;$(DXSDK_DIR)Lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2main.lib;SDL2.lib;dinput8.lib;winmm.lib;imm32.lib;version.lib;winhttp.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command>$(ProjectDir)RAInterface\MakeBuildVer.bat $(ProjectDir)\RA_BuildVer.h "" RA_LIBRETRO</Command>
-    </PreBuildEvent>
-    <CustomBuildStep>
-      <Command>copy /b/y $(TargetPath) $(SolutionDir)\bin</Command>
-      <Outputs>$(SolutionDir)\bin\RALibretro.exe</Outputs>
-      <Inputs>$(TargetPath)</Inputs>
-      <Message>Copying $(TargetFileName) to bin directory</Message>
-    </CustomBuildStep>
-    <PostBuildEvent>
-      <Command>$(SolutionDir)etc\CopyDLLs.bat x86 $(ProjectDir) $(SolutionDir)bin
-$(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)bin</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
-      <PreprocessorDefinitions>LOG_TO_FILE;NOMINMAX;WIN32;NDEBUG;_WINDOWS;OUTSIDE_SPEEX;RANDOM_PREFIX=speex;_USE_SSE2;FIXED_POINT;HAVE_CHD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)libchdr\deps\miniz-3.1.2;$(ProjectDir)RAInterface;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <TargetMachine>MachineX86</TargetMachine>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Platform)'=='Win32'">
+    <Link>
+      <TargetMachine>MachineX86</TargetMachine>
       <AdditionalLibraryDirectories>$(ProjectDir)SDL2\lib\x86;$(DXSDK_DIR)Lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2main.lib;SDL2.lib;dinput8.lib;winmm.lib;imm32.lib;version.lib;winhttp.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
       <Command>copy /b/y $(TargetPath) $(SolutionDir)\bin</Command>
@@ -110,29 +109,19 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)bin</Command>
       <Inputs>$(TargetPath)</Inputs>
       <Message>Copying $(TargetFileName) to bin directory</Message>
     </CustomBuildStep>
-    <PreBuildEvent>
-      <Command>$(ProjectDir)RAInterface\MakeBuildVer.bat $(ProjectDir)\RA_BuildVer.h "" RA_LIBRETRO</Command>
-    </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy /D /Q /Y $(SolutionDir)etc\cores.json $(SolutionDir)bin\Cores\
 $(SolutionDir)etc\CopyDLLs.bat x86 $(ProjectDir) $(SolutionDir)bin
 $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)bin</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <ItemDefinitionGroup Condition="'$(Platform)'=='x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)libchdr\deps\miniz-3.1.2;$(ProjectDir)RAInterface;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <Optimization>Disabled</Optimization>
-      <OmitFramePointers>false</OmitFramePointers>
-      <PreprocessorDefinitions>LOG_TO_FILE;NOMINMAX;_WIN64;_DEBUG;_WINDOWS;OUTSIDE_SPEEX;RANDOM_PREFIX=speex;_USE_SSE2;FIXED_POINT;HAVE_CHD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PreprocessorDefinitions>_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX64</TargetMachine>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
       <AdditionalLibraryDirectories>$(ProjectDir)SDL2\lib\x64;$(DXSDK_DIR)Lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2main.lib;SDL2.lib;dinput8.lib;winmm.lib;imm32.lib;version.lib;winhttp.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
       <Command>copy /b/y "$(TargetPath)" "$(SolutionDir)\bin64"</Command>
@@ -140,43 +129,8 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)bin</Command>
       <Inputs>$(TargetPath)</Inputs>
       <Message>Copying $(TargetFileName) to bin64 directory</Message>
     </CustomBuildStep>
-    <PreBuildEvent>
-      <Command>$(ProjectDir)RAInterface\MakeBuildVer.bat $(ProjectDir)\RA_BuildVer.h "" RA_LIBRETRO</Command>
-    </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy /D /Q /Y $(SolutionDir)etc\cores.json $(SolutionDir)bin64\Cores\
-$(SolutionDir)etc\CopyDLLs.bat x64 $(ProjectDir) $(SolutionDir)\bin64
-$(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
-    </PostBuildEvent>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)SDL2\include;$(ProjectDir)libchdr\deps\miniz-3.1.2;$(ProjectDir)RAInterface;$(ProjectDir)libchdr\include;$(ProjectDir)rcheevos\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <Optimization>Disabled</Optimization>
-      <OmitFramePointers>false</OmitFramePointers>
-      <PreprocessorDefinitions>LOG_TO_FILE;NOMINMAX;_WIN64;NDEBUG;_WINDOWS;OUTSIDE_SPEEX;RANDOM_PREFIX=speex;_USE_SSE2;FIXED_POINT;HAVE_CHD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-    </ClCompile>
-    <Link>
-      <TargetMachine>MachineX64</TargetMachine>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(ProjectDir)SDL2\lib\x64;$(DXSDK_DIR)Lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2main.lib;SDL2.lib;dinput8.lib;winmm.lib;imm32.lib;version.lib;winhttp.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <CustomBuildStep>
-      <Command>copy /b/y $(TargetPath) $(SolutionDir)\bin64</Command>
-      <Outputs>$(SolutionDir)\bin64\$(TargetFileName)</Outputs>
-      <Inputs>$(TargetPath)</Inputs>
-      <Message>Copying $(TargetFileName) to bin64 directory</Message>
-    </CustomBuildStep>
-    <PreBuildEvent>
-      <Command>$(ProjectDir)RAInterface\MakeBuildVer.bat $(ProjectDir)\RA_BuildVer.h "" RA_LIBRETRO</Command>
-    </PreBuildEvent>
-    <PostBuildEvent>
-      <Command>xcopy /D /Q /Y $(SolutionDir)bin\Cores\cores.json $(SolutionDir)bin64\Cores\
 $(SolutionDir)etc\CopyDLLs.bat x64 $(ProjectDir) $(SolutionDir)\bin64
 $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     </PostBuildEvent>
@@ -216,20 +170,10 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
     </ClCompile>
     <ClCompile Include="RAInterface\RA_Interface.cpp" />
     <ClCompile Include="RA_Implementation.cpp" />
-    <ClCompile Include="rcheevos\src\rcheevos\consoleinfo.c" />
-    <ClCompile Include="rcheevos\src\rc_libretro.c">
+    <ClCompile Include="rcheevos\src\libretro\rc_libretro.c">
       <AdditionalIncludeDirectories>$(SolutionDir)src\libretro;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
-    <ClCompile Include="rcheevos\src\rhash\aes.c" />
-    <ClCompile Include="rcheevos\src\rhash\cdreader.c" />
-    <ClCompile Include="rcheevos\src\rhash\hash.c">
-      <ObjectFileName>$(IntDir)rhash</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="rcheevos\src\rhash\hash_disc.c" />
-    <ClCompile Include="rcheevos\src\rhash\hash_encrypted.c" />
-    <ClCompile Include="rcheevos\src\rhash\hash_rom.c" />
-    <ClCompile Include="rcheevos\src\rhash\hash_zip.c" />
-    <ClCompile Include="rcheevos\src\rhash\md5.c" />
+    <ClCompile Include="rcheevos\src\runtime\rc_consoleinfo.c" />
     <ClCompile Include="speex\resample.c" />
     <ClCompile Include="States.cpp" />
     <ClCompile Include="Util.cpp" />
@@ -267,6 +211,9 @@ $(ProjectDir)RAInterface\CopyOverlay.bat $(SolutionDir)\bin64</Command>
   <ItemGroup>
     <ProjectReference Include="libchdr.vcxproj">
       <Project>{6cfbe506-0bc2-4dbc-b7f2-d879c140d5d1}</Project>
+    </ProjectReference>
+    <ProjectReference Include="rcheevos\src\hash\rc_hash.vcxproj">
+      <Project>{cdff5a5f-8de5-4081-981f-7a5ee4983710}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

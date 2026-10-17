@@ -1216,7 +1216,7 @@ static bool retro_vfs_file_readdir_impl(struct retro_vfs_dir_handle* dirstream)
   if (dirstream->next)
     return FindNextFileW(dirstream->directory, &dirstream->entry) != 0;
 
-  dirstream->next = false;
+  dirstream->next = true;
   return (dirstream->directory != INVALID_HANDLE_VALUE);
 }
 
