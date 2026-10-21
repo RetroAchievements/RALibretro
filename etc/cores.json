@@ -333,6 +333,12 @@
     "extensions": "sg",
     "systems": [33]
   },
+  "geartowns_libretro":{
+    "name": "Geartowns",
+    "extensions": "cue|iso|m3u|chd|hdm|bin|d88",
+    "systems": [58],
+    "platforms": "none"
+  },
   "genesis_plus_gx_libretro":{
     "name": "Genesis Plus GX",
     "extensions": "bin|gen|smd|md|sms",

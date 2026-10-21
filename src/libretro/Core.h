@@ -148,6 +148,7 @@ namespace libretro
     bool setDiskControlInterface(const struct retro_disk_control_callback* data);
     bool setDiskControlExtInterface(const struct retro_disk_control_ext_callback* data);
     bool getVfsInterface(struct retro_vfs_interface_info* data);
+    bool getMessageInterfaceVersion(unsigned* data);
     bool getLEDInterface(struct retro_led_interface* data);
     bool setHWRender(struct retro_hw_render_callback* data);
     bool getVariable(struct retro_variable* data);
@@ -182,6 +183,7 @@ namespace libretro
     bool getPreferredHWRender(unsigned* data);
     bool getMicrophoneInterface(struct retro_microphone_interface* data);
     bool getGameInfoExt(const struct retro_game_info_ext** data) const;
+    bool setSerializationQuirks(uint64_t* quirks);
 
     // Callbacks
     bool                 environmentCallback(unsigned cmd, void* data);
