@@ -957,6 +957,12 @@ bool libretro::Core::getDiscPath(unsigned index, std::string& path) const
   return false;
 }
 
+bool libretro::Core::getMessageInterfaceVersion(unsigned* data)
+{
+  *data = 0;
+  return true;
+}
+
 #ifndef _WINDOWS
 
 bool libretro::Core::getVfsInterface(struct retro_vfs_interface_info* data)
@@ -1194,7 +1200,8 @@ static struct retro_vfs_dir_handle* retro_vfs_file_opendir_impl(const char* dir,
   retro_vfs_dir_handle* dirstream = (retro_vfs_dir_handle*)calloc(1, sizeof(retro_vfs_dir_handle));
   if (dirstream) {
 #ifdef _WINDOWS
-    const std::wstring unicodePath = util::utf8ToUChar(dir);
+    // Append a wildcard to the path indicating that we want all the items in the folder.
+    std::wstring unicodePath = util::utf8ToUChar(dir) + L"\\*";
     dirstream->directory = FindFirstFileW(unicodePath.c_str(), &dirstream->entry);
 
     if (include_hidden)
@@ -1528,6 +1535,37 @@ bool libretro::Core::getSaveDirectory(const char** data) const
 {
   *data = _config->getSaveDirectory();
   util::ensureDirectoryExists(*data);
+  return true;
+}
+
+bool libretro::Core::setSerializationQuirks(uint64_t* quirks)
+{
+  std::string msg = "Serialization quirks (";
+  char buffer[16];
+  snprintf(buffer, sizeof(buffer), "%02X", (uint32_t)*quirks);
+  msg += buffer;
+  msg += "): ";
+
+  if (*quirks & RETRO_SERIALIZATION_QUIRK_INCOMPLETE)
+    msg += "INCOMPLETE, ";
+  if (*quirks & RETRO_SERIALIZATION_QUIRK_MUST_INITIALIZE)
+    msg += "MUST_INITIALIZE, ";
+  if (*quirks & RETRO_SERIALIZATION_QUIRK_CORE_VARIABLE_SIZE)
+    msg += "VARIABLE_SIZE, ";
+  if (*quirks & RETRO_SERIALIZATION_QUIRK_FRONT_VARIABLE_SIZE)
+    msg += "FRONT_VARIABLE_SIZE, ";
+  if (*quirks & RETRO_SERIALIZATION_QUIRK_SINGLE_SESSION)
+    msg += "SINGLE_SESSION, ";
+  if (*quirks & RETRO_SERIALIZATION_QUIRK_ENDIAN_DEPENDENT)
+    msg += "ENDIAN_DEPENDENT, ";
+  if (*quirks & RETRO_SERIALIZATION_QUIRK_PLATFORM_DEPENDENT)
+    msg += "PLATFORM_DEPENDENT, ";
+  if (*quirks >= (RETRO_SERIALIZATION_QUIRK_PLATFORM_DEPENDENT << 1))
+    msg += "OTHER, ";
+
+  msg.pop_back();
+  msg.pop_back();
+  _logger->info(TAG "%s", msg.c_str());
   return true;
 }
 
@@ -2312,6 +2350,10 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
     ret = setDiskControlExtInterface((const struct retro_disk_control_ext_callback*)data);
     break;
 
+  case RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION:
+    ret = getMessageInterfaceVersion((unsigned*)data);
+    break;
+
   case RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE:
     ret = setContentInfoOverride((const struct retro_system_content_info_override*)data);
     break;
@@ -2328,16 +2370,20 @@ bool libretro::Core::environmentCallback(unsigned cmd, void* data)
     ret = setCoreOptionsV2Intl((const struct retro_core_options_v2_intl*)data);
     break;
 
-  case RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE:
-    ret = getMicrophoneInterface((struct retro_microphone_interface*)data);
-    break;
-
   case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK:
     /* NOTE: we don't update the variable values in real time. values are only updated when the config
      * dialog is closed. As such, the update display callback is only called after the dialog is closed
      * and the updated visibility is only reflected the next time the user opens the dialog.
      */
     ret = setCoreOptionsUpdateDisplayCallback((const struct retro_core_options_update_display_callback*)data);
+    break;
+
+  case RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE:
+    ret = getMicrophoneInterface((struct retro_microphone_interface*)data);
+    break;
+
+  case RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS:
+    ret = setSerializationQuirks((uint64_t*)data);
     break;
 
   case RETRO_ENVIRONMENT_SET_SAVE_STATE_IN_BACKGROUND:
