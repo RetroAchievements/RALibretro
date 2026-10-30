@@ -108,6 +108,10 @@ static int process_file(int consoleId, const std::string& file)
       ext = util::extension(unzippedFilename);
       loadZipContents = (ext.length() == 4 && tolower(ext[1]) == 'n' && tolower(ext[2]) == 'e' && tolower(ext[3]) == 'o');
     }
+    else if (consoleId == RC_CONSOLE_ZEEBO)
+    {
+      loadZipContents = false;
+    }
 
     if (loadZipContents)
     {
