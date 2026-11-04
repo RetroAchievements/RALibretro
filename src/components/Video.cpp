@@ -299,7 +299,17 @@ bool Video::setGeometry(unsigned width, unsigned height, unsigned maxWidth, unsi
   if (!ensureFramebuffer(std::max(width, maxWidth), std::max(height, maxHeight), pixelFormat, _linearFilter))
     return false;
 
-  _aspect = aspect;
+  switch (_rotation)
+  {
+    case Rotation::Ninety:
+    case Rotation::TwoSeventy:
+      _aspect = 1 / aspect;
+      break;
+
+    default:
+      _aspect = aspect;
+      break;
+  }
 
   _logger->debug(TAG "Geometry set to %u x %u (max %u x %u) (1:%f)", width, height, maxWidth, maxHeight, aspect);
   return true;
@@ -1041,6 +1051,7 @@ bool Video::ensureView(unsigned width, unsigned height, unsigned windowWidth, un
   {
     _windowWidth = windowWidth;
     _windowHeight = windowHeight;
+    _rotation = rotation;
     return true;
   }
 

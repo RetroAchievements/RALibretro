@@ -63,7 +63,8 @@ Application app;
 
 static void s_onRotationChanged(Video::Rotation oldRotation, Video::Rotation newRotation)
 {
-  app.onRotationChanged(oldRotation, newRotation);
+  if (app.isGameActive())
+    app.onRotationChanged(oldRotation, newRotation);
 }
 
 Application::Application(): _fsm(*this)
