@@ -669,21 +669,6 @@ void Application::saveConfiguration()
     json += "\"x\":" + std::to_string(x) + ",\"y\":" + std::to_string(y);
 
     SDL_GetWindowSize(_window, &x, &y);
-    switch (_video.getRotation())
-    {
-      case Video::Rotation::Ninety:
-      case Video::Rotation::TwoSeventy:
-      {
-        int tmp = x;
-        x = y;
-        y = tmp;
-        break;
-      }
-
-      default:
-        break;
-    }
-
     json += ",\"w\":" + std::to_string(x) + ",\"h\":" + std::to_string(y);
 
     json += "}";
@@ -2001,6 +1986,16 @@ void Application::screenshot()
   {
     _logger.error(TAG "Error getting framebuffer from the video component");
     return;
+  }
+
+  if (_video.getRotation() != Video::Rotation::None)
+  {
+    const void* rotated = Video::rotatePixels((const uint8_t*)data, &width, &height, &pitch, format, _video.getRotation());
+    if (rotated != NULL)
+    {
+      free((void*)data);
+      data = rotated;
+    }
   }
 
   std::string path = getScreenshotPath();

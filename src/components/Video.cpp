@@ -585,6 +585,101 @@ void Video::windowResized(unsigned width, unsigned height)
   _ctx->enableCoreContext(true);
 }
 
+uint8_t* Video::rotatePixels(const uint8_t* pixels, unsigned* width, unsigned* height, unsigned* pitch, retro_pixel_format format, Video::Rotation rotation)
+{
+  const unsigned bpp = format == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 2;
+  const unsigned local_pitch = *pitch;
+  unsigned new_width, new_height;
+  const uint8_t* read_ptr;
+
+  switch (rotation)
+  {
+    case Video::Rotation::Ninety:
+      read_ptr = pixels + (*width - 1) * bpp;
+      new_width = *height;
+      new_height = *width;
+      break;
+
+    case Video::Rotation::OneEighty:
+      read_ptr = pixels + (*height - 1) * local_pitch + (*width - 1) * bpp;
+      new_width = *width;
+      new_height = *height;
+      break;
+
+    case Video::Rotation::TwoSeventy:
+      read_ptr = pixels + (*height - 1) * local_pitch;
+      new_width = *height;
+      new_height = *width;
+      break;
+
+    default:
+      return nullptr;
+  }
+
+  const unsigned new_pitch = ((new_width + 3) & ~3) * bpp;
+  const unsigned pitch_fill = new_pitch - (new_width * bpp);
+
+  uint8_t* new_pixels = (uint8_t*)malloc(new_height * new_pitch);
+  if (!new_pixels)
+    return nullptr;
+
+  const uint8_t* line_ptr = read_ptr;
+  uint8_t* write_ptr = new_pixels;
+  for (unsigned y = 0; y < new_height; ++y)
+  {
+    read_ptr = line_ptr;
+    for (unsigned i = 0; i < new_width; ++i)
+    {
+      if (bpp == 4) {
+        memcpy(write_ptr, read_ptr, 4);
+        write_ptr += 4;
+      }
+      else {
+        memcpy(write_ptr, read_ptr, 2);
+        write_ptr += 2;
+      }
+
+      switch (rotation)
+      {
+        case Video::Rotation::Ninety:
+          read_ptr += local_pitch;
+          break;
+
+        case Video::Rotation::OneEighty:
+          read_ptr -= bpp;
+          break;
+
+        case Video::Rotation::TwoSeventy:
+          read_ptr -= local_pitch;
+          break;
+      }
+    }
+
+    memset(write_ptr, 0, pitch_fill);
+    write_ptr += pitch_fill;
+
+    switch (rotation)
+    {
+      case Video::Rotation::Ninety:
+        line_ptr -= bpp;
+        break;
+
+      case Video::Rotation::OneEighty:
+        line_ptr -= local_pitch;
+        break;
+
+      case Video::Rotation::TwoSeventy:
+        line_ptr += bpp;
+        break;
+    }
+  }
+
+  *width = new_width;
+  *height = new_height;
+  *pitch = new_pitch;
+  return new_pixels;
+}
+
 void Video::getFramebufferSize(unsigned* width, unsigned* height, enum retro_pixel_format* format)
 {
   unsigned w, h;
