@@ -55,6 +55,7 @@ public:
   void getFramebufferSize(unsigned* width, unsigned* height, enum retro_pixel_format* format);
   const void* getFramebuffer(unsigned* width, unsigned* height, unsigned* pitch, enum retro_pixel_format* format);
   void setFramebuffer(void* pixels, unsigned width, unsigned height, unsigned pitch);
+  static uint8_t* rotatePixels(const uint8_t* pixels, unsigned* width, unsigned* height, unsigned* pitch, retro_pixel_format format, Video::Rotation rotation);
 
   std::string serializeSettings();
   bool deserializeSettings(const char* json);
