@@ -1022,5 +1022,11 @@
     "name": "Ymir",
     "systems": [39],
     "platforms": "none"
+  },
+  "zeebx_libretro":{
+    "name": "Zeebx",
+    "extensions": "mod|zip",
+    "systems": [70],
+    "platforms": "none"
   }
 }
