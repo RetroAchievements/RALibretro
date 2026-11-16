@@ -514,6 +514,9 @@ void Application::runSmoothed()
       _core.step(true, true);
       RA_DoAchievementsFrame();
 
+      // check for periodic SRAM flush
+      _states.periodicSaveSRAM(&_core);
+
       _audioGeneratedDuringFastForward = 0;
       ++numFrames;
     }
